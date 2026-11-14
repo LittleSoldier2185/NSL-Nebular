@@ -289,7 +289,7 @@ class _Toolbar extends StatelessWidget {
     final style = f.diagram.style;
     return CanvasToolbarBox(children: [
       canvasToolItem(
-          key: const ValueKey('wf-tool-select'),
+          key: const ValueKey('wf-tool-pointer'),
           label: tr('เลือก'),
           icon: Icons.near_me_outlined,
           on: f.tool == WfTool.select,
