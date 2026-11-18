@@ -328,6 +328,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  nsl_ui:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: main
+      resolved-ref: "4e056252bcc2754ed07ea0743b9579821d42756f"
+      url: "https://github.com/LittleSoldier2185/NSL-UI-Core.git"
+    source: git
+    version: "1.1.0"
   objective_c:
     dependency: transitive
     description:
