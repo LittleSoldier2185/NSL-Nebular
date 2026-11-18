@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/db/db_session.dart';
-import 'package:nsl_dev/core/db/saved_connections.dart';
-import 'package:nsl_dev/core/db/secret_codec.dart';
-import 'package:nsl_dev/core/l10n/l10n.dart';
-import 'package:nsl_dev/main.dart';
-import 'package:nsl_dev/state/app_settings.dart';
-import 'package:nsl_dev/ui/db_connect_dialog.dart';
+import 'package:nsl_nebular/core/db/db_session.dart';
+import 'package:nsl_nebular/core/db/saved_connections.dart';
+import 'package:nsl_nebular/core/db/secret_codec.dart';
+import 'package:nsl_nebular/core/l10n/l10n.dart';
+import 'package:nsl_nebular/main.dart';
+import 'package:nsl_nebular/state/app_settings.dart';
+import 'package:nsl_nebular/ui/db_connect_dialog.dart';
 
 /// ตัวเข้ารหัสปลอมที่ทำงานได้ทุกแพลตฟอร์ม (กลับตัวอักษร) — ของจริง (DPAPI) ทดสอบใน secret_codec_test
 class _FakeCodec implements SecretCodec {

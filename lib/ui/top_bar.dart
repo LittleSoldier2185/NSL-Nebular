@@ -21,6 +21,7 @@ import 'shortcuts.dart';
 import 'whats_new_dialog.dart';
 import 'workspace_issues_dialog.dart';
 import 'theme.dart';
+import 'theme_dialog.dart';
 import 'window_chrome.dart';
 
 class TopBar extends StatelessWidget {
@@ -57,7 +58,7 @@ class TopBar extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             const Text(
-              'NSL Dev',
+              'NSL Nebular',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
             ),
             const SizedBox(width: 14),
@@ -104,6 +105,13 @@ class TopBar extends StatelessWidget {
                           s.toggleDark,
                         );
                       },
+                    ),
+                    // เลือกธีมกลางของ NSL (ซ่อนเมื่อไม่มีที่เก็บธีม)
+                    ThemeButton(
+                      builder: (open) => Padding(
+                        padding: const EdgeInsets.only(left: 4),
+                        child: _IconBtn(Icons.palette_outlined, tr('เลือกธีม'), open),
+                      ),
                     ),
                     // ปุ่มที่เกี่ยวกับ ER/SQL ซ่อนบนแท็บ DFD
                     if (isEr) ...[
@@ -336,7 +344,7 @@ class TopBar extends StatelessWidget {
         items: [
           cmd(tr('ดูคีย์ลัดทั้งหมด'), Cmd.help),
           _item(tr('มีอะไรใหม่ (Patch note)…'), '', () => showWhatsNew(context)),
-          _item(tr('เกี่ยวกับ NSL Dev…'), '', () => showAbout(context)),
+          _item(tr('เกี่ยวกับ NSL Nebular…'), '', () => showAbout(context)),
           div,
           for (final l in Lang.values)
             _item(

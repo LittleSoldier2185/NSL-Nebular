@@ -1,10 +1,10 @@
-# NSL Dev — ความคืบหน้า
+# NSL Nebular — ความคืบหน้า
 
 รุ่นปัจจุบัน: **Betelgeuse 0.6.0** (ดู `CHANGELOG.md`)
 
 เครื่องมือออกแบบฐานข้อมูลแบบลากวาง (Flutter Desktop / Windows) สร้าง SQL ได้สำหรับ MySQL/MariaDB, PostgreSQL, SQLite และ SQL Server
 
-อัปเดตล่าสุด: 2026-11-14 · เปลี่ยนชื่อโปรแกรมเป็น NSL Dev (สกุลไฟล์ `.nsld`) · เทสต์ 1,262 ข้อผ่านทั้งหมด · `flutter analyze` ไม่พบปัญหา
+อัปเดตล่าสุด: 2026-11-18 (เริ่มใช้ NSL UI Core ขั้นธีม — ดูหัวข้อ "ใช้ NSL UI Core") · เดิม 2026-11-14 · เปลี่ยนชื่อโปรแกรมเป็น NSL Dev (สกุลไฟล์ `.nsld`) · เทสต์ 1,262 ข้อผ่านทั้งหมด · `flutter analyze` ไม่พบปัญหา
 
 ## กำลังทำ: ยกระดับเป็น Project Workspace (branch `feature/workspace`)
 
@@ -136,6 +136,77 @@
 7. เทียบกับไฟล์ (ไฟล์เก่าและ v3), Export HTML / ภาพ DFD, ค้นหา DFD ใน palette, สลับภาษาอังกฤษไม่มีไทยหลุด
 - ความเสี่ยงที่รู้: ไฟล์ v3 เปิดด้วยรุ่นเก่าไม่ได้ ; snapshot ประวัติแรกหลังอัปเกรดจะซ้ำ 1 อัน ; `merge3` ยังทำกับ ER เท่านั้น
 
+## แผนงานใหม่: NSL Nebular ครบวงจร + UI ตามดีไซน์ (เริ่ม 2026-11-18)
+
+แผนเต็ม/ข้อจำกัด/ระบบสี/ข้อตัดสินใจที่ยังเปิดอยู่: `plan.md` · ดีไซน์: Artifact https://claude.ai/artifact/AfFCTth52Bgg8qnkfbmrqU
+ชื่อโปรแกรมคือ **NSL Nebular** (NSL Dev / NSL Modeler เป็นชื่อเก่า) · แอปออฟไลน์ ผู้ใช้คนเดียว (ไม่มี host)
+
+สถานะรวม: **Phase 0 โค้ดเสร็จ (ยังไม่ commit)** — เหลือลองมือธีม + สั่ง commit/push (ดู Phase 0 ด้านล่าง) ; Phase 1 เริ่มได้หลังนั้น
+
+### ฟีเจอร์
+| ฟีเจอร์ | ความสำคัญ | Phase |
+|---|---|---|
+| เปลี่ยนชื่อเป็น NSL Nebular + ปิดงานค้าง + token สีชนิดเอกสาร | Must | 0 |
+| โครงหน้าต่างใหม่ตามดีไซน์ | Must | 1 |
+| หน้า Start + สร้างโปรเจกต์ใหม่ + แม่แบบ + ไฟล์ล่าสุด | Must | 2 |
+| Project Home แบบใหม่ | Must | 3 |
+| Flowchart รูปทรง 34 แบบเท่า draw.io + คลัง/minimap | Must | 4 |
+| โน้ตและงานค้าง (ใช้คนเดียว) | Should | 5 |
+| พจนานุกรมข้อมูล | Should | 6 |
+| ประวัติเวอร์ชัน + Diff + migration | Should | 7 |
+| API Designer | Should | 8 |
+| Requirements และ Traceability | Nice | 9 |
+| Code Generation หลายเป้าหมาย | Should | 10 |
+| Mock Server (localhost) | Nice | 11 |
+| เก็บงาน + ออกรุ่น | Must | 12 |
+
+### Phases
+#### Phase 0: ปิดงานค้าง + เปลี่ยนชื่อ + ฐานดีไซน์ — [~] โค้ดเสร็จ ยังไม่ commit (รอลองมือธีม + ผู้ใช้สั่ง commit/push)
+- [x] ตัดสินใจ (2026-11-18): สกุลไฟล์เปลี่ยนเป็น `.nsln` ไม่ทำ migration ; NSL-UI-Core = git dependency + `pubspec_overrides.yaml` ในเครื่อง
+- [x] เปลี่ยน NSL Dev → NSL Nebular: ชื่อแพ็กเกจ `nsl_nebular` (`package:` ทั้ง lib/test), `app_info`, หัวไฟล์ที่สร้าง, ชื่อหน้าต่าง/`.exe`/platform channel/`Runner.rc`/CMake, installer `nsl_nebular.iss` (`NSL-Nebular-Setup-*.exe`, ProgId `NSLNebular.Project`), `tool/*.ps1`, README, คำแปลอังกฤษ
+  - สกุลไฟล์ `.nsln` ; สกุลเก่า `.nsld`/`.nslm`/`.erd` ยังเปิดได้ (`kLegacyProjectExts`) และบันทึกเป็น `.nsln` ; ไฟล์ทดสอบรูปแบบเก่า `test/fixtures/v2_*.nsld` คงชื่อเดิม
+  - **ไม่เปลี่ยน:** salt DPAPI `NSL-Modeler/db-connection/v1` (เปลี่ยนแล้วรหัสผ่านฐานข้อมูลที่บันทึกไว้ถอดไม่ได้), `AppId` GUID ของ installer, `format: "nsl-erd"` ในไฟล์ (รหัสรูปแบบภายใน)
+  - ยังเหลือ: `CHANGELOG.md`/patch note ของรุ่น 0.6.0 ถูกเปลี่ยนชื่อไปด้วย (ประวัติ) ; รายการใหม่ของรุ่นถัดไปทำใน phase 12
+  - ตรวจแล้ว: `flutter analyze` สะอาด · เทสต์ 1,313 ผ่าน (ก่อนเพิ่มเทสต์สีชนิดเอกสาร) · `flutter build windows --debug` ได้ `nsl_nebular.exe` · ลบ cache `build/windows` แล้ว (CMake จำชื่อเดิม)
+- [x] NSL-UI-Core: เพิ่ม token สีประจำชนิดเอกสาร 18 คีย์ (`docEr/Dfd/Flow/Wire/Screen/Api` × หลัก/Ink/Tint) ในส่วนขยาย `nebular` — derive ครบ (สว่างตรงดีไซน์ ; มืดคำนวณ), ไม่ตาม accent, Ink/Tint ผ่าน 4.5:1 ทั้งสองโหมด ; อัปเดต schema + fixture เว็บ + พอร์ต TS (`web/src/core/extensions.ts`) + พรีวิว Nebular ของเว็บ ; เทสต์ Dart 534 + เว็บ 173 ผ่าน, analyze/typecheck สะอาด ; บันทึกใน `NSL-UI-Core/CHANGELOG.md` (Unreleased — ต้องกำหนดเป็น core 1.2 ตอนปล่อย) — **ยังไม่ commit/push Core**
+- [x] แอปใช้สีใหม่: `Palette.docColor(DocType)` / `C.doc(DocType)` + `kDocColorKeys` (`lib/ui/theme.dart`) + `test/doc_colors_test.dart` ; ชนิด API ต่อใน `kDocColorKeys` ตอนเพิ่ม `DocType.api` (phase 8)
+- [x] บันทึกสำเนา Artifact ลง `design/` (13 ไฟล์ + `design/README.md`) ; แก้สกุลไฟล์ในดีไซน์เป็น `.nsln` ทั้ง Artifact และสำเนา
+- [x] `pubspec.yaml`: `nsl_ui` เป็น git dependency (`ref: main`) ; `pubspec_overrides.yaml` (ไม่เข้า git) ชี้ `../NSL-UI-Core` ; README หัวข้อ "พัฒนาคู่กับ NSL-UI-Core"
+- [ ] **ลองมือธีม UI Core ทั้งสองโหมดด้วยตา** (ต้องผู้ใช้ — ยังไม่เคยเปิดแอปดูหลังเปลี่ยนมาใช้ธีมจาก Core และหลังเปลี่ยนชื่อ) ; ดูด้วยว่าชื่อหน้าต่าง/ไอคอน/ชื่อใน installer ขึ้น NSL Nebular
+- [ ] commit แอป + commit UI-Core + **push UI-Core ก่อน** (git dependency ถึงจะ resolve บนเครื่องอื่น/ไม่มี override) — รอผู้ใช้สั่ง ; ไฟล์ `windows/flutter/generated_*` ที่แก้ค้างอยู่ก่อนแล้วให้ตัดสินใจแยก
+#### Phase 1: โครงหน้าต่างใหม่ — [ ] ยังไม่เริ่ม
+- [ ] แถบบน + ช่องค้นหา · [ ] แถบไอคอนชนิดเอกสาร · [ ] Explorer จัดกลุ่ม/จุดสี · [ ] แท็บมีจุดสี · [ ] แผงขวา + "ใช้งานที่" · [ ] แถบสถานะ · [ ] ธีมมืด/หน้าต่างแคบ
+#### Phase 2: Start + สร้างโปรเจกต์ใหม่ — [ ] ยังไม่เริ่ม
+- [ ] ไฟล์ล่าสุดใน settings · [ ] หน้า Start · [ ] กล่องสร้างโปรเจกต์ · [ ] แม่แบบ ≥ 3 แบบ · [ ] ลากไฟล์มาวางเพื่อเปิด
+#### Phase 3: Project Home แบบใหม่ — [ ] ยังไม่เริ่ม
+- [ ] การ์ดรายชนิด · [ ] เอกสารล่าสุด · [ ] ปัญหาข้ามเอกสาร · [ ] ปรับเทสต์ `project_home_test`
+#### Phase 4: Flowchart เท่า draw.io — [ ] ยังไม่เริ่ม
+- [ ] เทียบรายชื่อรูปทรงกับ draw.io จริง · [ ] เพิ่ม `FcShape` ~20 แบบ (geometry/painter/SVG/clipboard/validator) · [ ] คลังแบบหมวด + ค้นหา + มุมมองรายชื่อ · [ ] minimap + พอดีจอ · [ ] เทสต์ต่อรูปทรง
+#### Phase 5: โน้ตและงานค้าง — [ ] ยังไม่เริ่ม
+- [ ] โมเดลโน้ตใน `.nsld` · [ ] หมุดบนแคนวาสทุกชนิด · [ ] แผงโน้ต + แท็บทั้งโปรเจกต์ · [ ] รวมในการส่งออก
+#### Phase 6: พจนานุกรมข้อมูล — [ ] ยังไม่เริ่ม
+- [ ] ฟิลด์คำอธิบายตาราง/คอลัมน์ · [ ] ช่องแก้ + ตัวบอกที่ยังว่าง · [ ] พรีวิว/ส่งออก HTML+Markdown · [ ] ตัดสินใจ PDF/Word
+#### Phase 7: ประวัติเวอร์ชันและ Diff — [ ] ยังไม่เริ่ม
+- [ ] ตั้งชื่อเวอร์ชัน · [ ] diff ER แบบเห็นภาพ · [ ] สร้าง migration จากความต่าง · [ ] ย้อนกลับเวอร์ชัน
+#### Phase 8: API Designer — [ ] ยังไม่เริ่ม
+- [ ] `DocType.api` + โมเดล/codec · [ ] ผูกตาราง ER + ตัวตรวจ · [ ] เชื่อม workspace (แท็บ/Explorer/Home/palette/ปัญหา/export) · [ ] OpenAPI 3.1 · [ ] ลิงก์ย้อนจากเอกสารอื่น
+#### Phase 9: Requirements และ Traceability — [ ] ยังไม่เริ่ม
+- [ ] โมเดลความต้องการ · [ ] เมทริกซ์ + สรุป · [ ] สร้างเอกสารที่ผูกจากช่องว่าง
+#### Phase 10: Code Generation หลายเป้าหมาย — [ ] ยังไม่เริ่ม
+- [ ] ตรวจของเดิมใน `codegen.dart` · [ ] หน้าเลือกเป้าหมาย/พรีวิว/โฟลเดอร์ · [ ] เป้าหมายใหม่ (OpenAPI, Laravel, Wireframe→Flutter/HTML) · [ ] ถามก่อนเขียนทับไฟล์ที่แก้มือ
+#### Phase 11: Mock Server — [ ] ยังไม่เริ่ม
+- [ ] เซิร์ฟเวอร์ `dart:io` · [ ] สถานการณ์ต่อ endpoint · [ ] log + ตรวจสัญญา · [ ] เทสต์ยิงจริง
+#### Phase 12: เก็บงาน + ออกรุ่น — [ ] ยังไม่เริ่ม
+- [ ] เช็คลิสต์ลองมือที่ค้าง · [ ] แก้ช่องว่างที่รู้ (นำเข้า .sql สร้าง ER ใหม่, merge3, dirty รายเอกสาร) · [ ] CHANGELOG/patch note/README
+
+### บันทึก / ข้อตัดสินใจ / ข้อควรระวัง
+- 2026-11-18: ผู้ใช้สั่งให้ "แบ่ง phase แล้วให้ UI อิงตาม Artifact" — สร้าง `plan.md` ใหม่ (ยังไม่เคยมี) ; แผนนี้ต่อจากงาน Workspace ที่เสร็จแล้วด้านบน
+- 2026-11-18: ผู้ใช้ยืนยันว่า **แอปออฟไลน์ ไม่มี host** → ตัดคอมเมนต์หลายคน/อนุมัติ/@เรียกคน เปลี่ยนเป็น "โน้ตและงานค้าง" (phase 5) ; Mock Server ทำได้เพราะรันใน localhost
+- 2026-11-18: ผู้ใช้ยืนยันชื่อโปรแกรม = **NSL Nebular** (NSL Dev เป็นชื่อเก่า) ; โค้ด/installer/README ยังใช้ NSL Dev → ทำใน phase 0
+- 2026-11-18: ดีไซน์คลังรูปทรง Flowchart เขียนจากความจำ ยังไม่เทียบ draw.io จริง → เทียบใน phase 4 ก่อนเพิ่ม enum
+- 2026-11-18: ตอนเขียนแผน working tree มีงานค้างยังไม่ commit: ธีม UI Core (`theme.dart`, `pubspec.*`, `test/theme_nsl_ui_parity_test.dart`), `progress.md`, และ `windows/flutter/generated_*` — **ยังไม่ได้ commit แผนนี้** (รอผู้ใช้สั่ง เพื่อไม่ให้ปนกับงานธีม)
+- ลำดับ phase: UI (0–3) → Flowchart (4) → ฟีเจอร์ที่ไม่พึ่งใคร (5–7) → ชุด API (8–11) → ออกรุ่น (12) ; Phase 9–11 พึ่ง Phase 8
+
 ## ทำเสร็จแล้ว
 
 ### แกนหลัก
@@ -253,6 +324,32 @@
 - แท็บแผนภาพ DFD และแถบชื่อหน้าต่างบนเครื่องจริง (DFD ผ่านเทสต์ครบแต่ยังไม่ได้ลองใช้มือจริง: ลาก ต่อเส้น ซูม ความอ่านง่ายของเส้น)
 - หน้าเปิดดู/แก้ข้อมูล (ผ่านเทสต์กับ SQLite จริง แต่ยังไม่ได้ลองใช้มือ : ความลื่นของกริด, การเลื่อนแนวนอน, ตารางใหญ่)
 - ฟอร์มแก้โครงสร้างตาราง, ขอบเขตระบบ/จุดจับ/จัดวางอัตโนมัติใน DFD, เส้น FK วิ่งตลอดเวลา (ดูว่ากินเครื่องเมื่อเส้นเยอะไหม), ปุ่มรัน migration กับ SQLite, การจำรหัสผ่านด้วย DPAPI, การเปิด `.nsld`/`.erd` — ทั้งหมดผ่านเทสต์แต่ยังไม่ได้ลองมือจริง
+
+## ใช้ NSL UI Core (`nsl_ui`) — เริ่ม 2026-11-18 (ขั้น "ธีม")
+
+ตัดสินใจ: ทำในแอปจริงตรง ๆ (ไม่ใช้สำเนา) และเริ่มที่ "ธีม + ThemeData" ก่อน ยังไม่เปลี่ยนปุ่ม/แผงทีละจุด — แผนรวมอยู่ใน `NSL-UI-Core/Plan.md` และ `NSL-UI-Core/progress.md`
+
+**ที่ทำแล้ว**
+- `pubspec.yaml`: เพิ่ม dependency `nsl_ui` แบบ `path: ../NSL-UI-Core` — **ต้องมีโฟลเดอร์ `NSL-UI-Core` อยู่ข้างโฟลเดอร์นี้** ถึงจะ `flutter pub get`/build ได้
+- `lib/ui/theme.dart`:
+  - `kLightPalette` / `kDarkPalette` คำนวณจากธีมในตัว `nsl.nebular` ของ core (ผ่าน `Palette.fromTokens`) ไม่มีค่าสีตายตัวในไฟล์นี้อีก
+  - `Palette` เพิ่ม 7 ช่องที่เดิมฝังอยู่ใน `C`: `boardOutside`, `boardEdge`, `danger`, `dangerBg`, `dangerText`, `fkSource`, `fkChip` — `C.*` อ่านจากพาเลตต์
+  - `buildTheme([Palette? palette])` (เดิมค่าตั้งต้นเป็น const) — **API เดิมคงครบ** (`C.*`, `Palette`, `kLightPalette/kDarkPalette`, `buildTheme`) จึงไม่ต้องแก้ไฟล์ UI อื่น
+- `test/theme_nsl_ui_parity_test.dart` (ใหม่ 7 ข้อ): เก็บค่าสีเดิมเป็นค่าตายตัวแล้วเทียบทุกช่อง × 2 โหมด + `C.*` + `buildTheme` — ถ้าสีเพี้ยนเทสต์จะล้ม (ถ้าตั้งใจเปลี่ยนสีให้แก้ที่ธีมใน core และอัปเดตเทสต์นี้พร้อมกัน)
+- ผล: เทสต์ **1,313 ผ่าน** (เดิมไม่แก้ + 7 ใหม่), `flutter analyze` สะอาด, `flutter build windows --debug` สำเร็จ ; เทสต์ `parity_dev_test` ฝั่ง core (อ่าน `theme.dart` ของแอปนี้แบบอ่านอย่างเดียว) ยังผ่าน
+
+**ยังไม่ได้ทำ / ต้องตัดสินใจ**
+- `buildTheme` ยังเป็นของเดิม ยังไม่ใช้ `buildNslThemeData` ของ core — เปลี่ยนแล้วหน้าตา dialog/เมนูโหมดมืดและฟอนต์จะต่างจากเดิม (พบตอนทำ Orbit) ควรทำเป็นขั้นแยกและดูด้วยตา
+
+**ขั้น "ธีมกลาง" (2026-11-18, ต่อจากขั้นธีม):** `main()` สร้าง `NslThemeController` จาก `NslThemeStore.standard(documents)` (ไฟล์ธีมที่ `DocumentsNSLThemes`, ค่าตั้งที่ `%APPDATA%NSL`) แล้ว `startWatching()` ; `--safe-mode` = ไม่ใช้ธีมผู้ใช้ ; ล้มเหลวทุกกรณี = ธีมในตัว ; `NslDevApp(themes:)` ฟังตัวควบคุม → สร้างต้นไม้ใหม่ตอนธีมเปลี่ยน (เอกสารอยู่ใน State จึงไม่หาย) ; `paletteFor(brightness, {theme, lookup})` ใน `theme.dart` ถอยไปธีมในตัวเมื่อธีมใช้ไม่ได้ ; โหมดสว่าง/มืดยังตามค่าตั้งของแอป (ไม่ใช้โหมดของ core) ; **ภาพ export (PNG) ยังใช้ธีมในตัวเสมอ** · เทสต์ใหม่ `test/theme_controller_test.dart` 8 ข้อ (เลือกธีมแล้วสีเปลี่ยน, safe mode เปิด-ปิดสด, เปลี่ยนธีมแล้ว State ไม่ถูกสร้างใหม่, ธีมฐานหาย/ธีมของแอปอื่นไม่โยน) → **Nebular 1,327 ผ่าน, analyze สะอาด** · ข้อสังเกต: ส่วนขยาย `nebular` มีค่าเริ่มต้นเสมอ ธีมของแอปอื่นจึงใช้กับ Nebular ได้ (สีที่ไม่ได้กำหนดเป็นค่าเริ่มต้น) · ยังไม่ได้ทดสอบ `Directory.watch` กับ NSL Palette จริงข้ามโปรเซส และยังไม่ได้เปิดแอปดูด้วยตา
+**ขั้น "หน้าเลือกธีม" (2026-11-18, ต่อจากธีมกลาง):** ปุ่มจานสีในแถบบน (ข้างปุ่มสว่าง/มืด ; ซ่อนเมื่อไม่มีที่เก็บธีม) เปิด `lib/ui/theme_dialog.dart` — สวิตช์โหมดปลอดภัย, เลือก "ธีมในตัว" หรือธีมของผู้ใช้, ส่งออกธีมเป็น `.nslt`, นำเข้าไฟล์ `.nslt` (ไม่เกิน 64 KB ผ่านตัวตรวจของ core แล้วเลือกใช้ให้เลย), แสดงปัญหาของไฟล์ในโฟลเดอร์ธีม ; ข้อความไทย/อังกฤษครบ (`l10n_en.dart`) ; **เมื่อเลือกธีม/สลับ safe mode หน้านี้ปิดเอง** เพราะแอปสร้างต้นไม้ใหม่ทั้งหมด (สีมาจากตัวแปรกลาง `C` — แบบเดียวกับปุ่มสว่าง/มืด) · ผ่านเทสต์ใหม่ 3 ข้อในเทสต์ `theme_controller_test.dart` (ปุ่มโผล่/ซ่อน, เลือก→safe mode→กลับธีมในตัว, อังกฤษไม่มีไทยหลุดและไม่ overflow ที่ 360px) → **Nebular 1,330 ผ่าน, analyze สะอาด** · **ยังไม่ได้ทดสอบ:** ปุ่มนำเข้า/ส่งออกกับตัวเลือกไฟล์จริง (เทสต์ไม่เรียก FilePicker ; ตรรกะนำเข้าครอบโดยเทสต์ของ core) และยังไม่ได้เปิดแอปดูด้วยตา · ข้อสังเกต: หน้าต่างแอปแคบมาก (420px) ทำให้แถบบน/หน้าหลักเดิม overflow อยู่ก่อนแล้ว (ไม่เกี่ยวกับงานนี้)
+- UI เลือกธีมทำแล้ว (ดูขั้น "หน้าเลือกธีม") ; ยังไม่ทำ: สร้าง/แก้ธีมในแอป (ใช้ NSL Palette) ; ยังไม่ย้ายสีฮาร์ดโค้ดนอก `theme.dart` (`Color(0x…)` ~87 จุด, `BorderRadius.circular` ~75, ปุ่ม ~108) ; ตัวเลือกสีของแอป (`color_picker_dialog.dart`) ยังไม่ใช้ `NslColorPicker` กลาง (ลองแล้วเฉพาะในสำเนาทดลอง)
+- **ยังไม่ได้เปิดแอปดูด้วยตาทั้งสองโหมด** (ตรวจแค่ผ่านเทสต์) — ต้องลองมือว่าสีเหมือนเดิม
+- **ยังไม่ได้ commit** (มีไฟล์ `windows/flutter/generated_*` ที่แก้ค้างอยู่ก่อนแล้ว)
+
+**ข้อควรรู้:** ถ้า `flutter run -d windows` ขึ้น `No target "nsl_modeler"` (หรือ `nsl_dev`) แปลว่า `build/windows` เป็น cache เก่าก่อนเปลี่ยนชื่อโปรแกรม (CMake จำชื่อ target เดิม ตอนนี้คือ `nsl_nebular`) — ลบโฟลเดอร์ `build/windows` แล้ว build ใหม่ ; exe ที่ build ไว้ก่อนเปลี่ยนชื่อ (`nsl_dev.exe`) ใช้ไม่ได้แล้ว
+
+**ไอคอนแอป (2026-11-18):** แทนที่ด้วยชุดจาก `NSL-Brand-Pack/apps/nsl-nebula` — `assets/icon/app_icon.png` (= `nebula_icon_rounded_1024.png`, ใช้ในแถบบนและหน้า "มีอะไรใหม่") และ `windows/runner/resources/app_icon.ico` (= `nebula_windows.ico`) ; ยังไม่ได้ build ดูไอคอนจริง (Windows อาจแคชไอคอนเก่า)
 
 ## วิธีรัน
 

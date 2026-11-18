@@ -24,7 +24,7 @@ abstract class WindowBackend {
 /// สถานะแถบชื่อหน้าต่างของแอป: มี [backend] = ซ่อนแถบของระบบแล้วใช้แถบของเราเอง
 ///
 /// ใช้เฉพาะ Windows: โค้ดฝั่ง runner (windows/runner/flutter_window.cpp) ตัดแถบชื่อของระบบออก
-/// แต่คงขอบปรับขนาด/snap/เงาไว้ และรับคำสั่งจากช่อง "nsl_dev/window"
+/// แต่คงขอบปรับขนาด/snap/เงาไว้ และรับคำสั่งจากช่อง "nsl_nebular/window"
 /// ระบบอื่นยังใช้แถบชื่อของระบบตามปกติ
 class WindowChrome {
   WindowChrome._();
@@ -63,7 +63,7 @@ class WindowChrome {
 }
 
 class _ChannelBackend implements WindowBackend {
-  static const _channel = MethodChannel('nsl_dev/window');
+  static const _channel = MethodChannel('nsl_nebular/window');
   final _max = StreamController<bool>.broadcast();
 
   Future<void> start() async {

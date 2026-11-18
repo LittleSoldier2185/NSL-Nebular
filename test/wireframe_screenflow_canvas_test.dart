@@ -3,16 +3,16 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/l10n/l10n.dart';
-import 'package:nsl_dev/core/models/screenflow_model.dart';
-import 'package:nsl_dev/core/models/wireframe_model.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/main.dart';
-import 'package:nsl_dev/state/app_settings.dart';
-import 'package:nsl_dev/state/screenflow_controller.dart';
-import 'package:nsl_dev/state/wireframe_controller.dart';
-import 'package:nsl_dev/state/workspace_controller.dart';
-import 'package:nsl_dev/ui/home_page.dart';
+import 'package:nsl_nebular/core/l10n/l10n.dart';
+import 'package:nsl_nebular/core/models/screenflow_model.dart';
+import 'package:nsl_nebular/core/models/wireframe_model.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/main.dart';
+import 'package:nsl_nebular/state/app_settings.dart';
+import 'package:nsl_nebular/state/screenflow_controller.dart';
+import 'package:nsl_nebular/state/wireframe_controller.dart';
+import 'package:nsl_nebular/state/workspace_controller.dart';
+import 'package:nsl_nebular/ui/home_page.dart';
 import 'package:provider/provider.dart';
 
 /// เทสต์วิดเจ็ตของแคนวาส Wireframe / Screen Flow ที่จำลองเมาส์และคีย์บอร์ดจริง

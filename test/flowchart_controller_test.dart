@@ -2,13 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/layout/dfd_resize.dart';
-import 'package:nsl_dev/core/layout/flowchart_layout.dart';
-import 'package:nsl_dev/core/models/flowchart_model.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/storage/project_codec.dart';
-import 'package:nsl_dev/state/flowchart_controller.dart';
-import 'package:nsl_dev/state/workspace_controller.dart';
+import 'package:nsl_nebular/core/layout/dfd_resize.dart';
+import 'package:nsl_nebular/core/layout/flowchart_layout.dart';
+import 'package:nsl_nebular/core/models/flowchart_model.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/storage/project_codec.dart';
+import 'package:nsl_nebular/state/flowchart_controller.dart';
+import 'package:nsl_nebular/state/workspace_controller.dart';
 
 void main() {
   late WorkspaceController w;

@@ -2,16 +2,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/models/dfd_model.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/storage/autosave.dart';
-import 'package:nsl_dev/core/storage/history_store.dart';
-import 'package:nsl_dev/core/storage/project_codec.dart';
-import 'package:nsl_dev/core/storage/project_file.dart';
-import 'package:nsl_dev/state/autosave_coordinator.dart';
-import 'package:nsl_dev/state/project_controller.dart';
+import 'package:nsl_nebular/core/models/dfd_model.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/storage/autosave.dart';
+import 'package:nsl_nebular/core/storage/history_store.dart';
+import 'package:nsl_nebular/core/storage/project_codec.dart';
+import 'package:nsl_nebular/core/storage/project_file.dart';
+import 'package:nsl_nebular/state/autosave_coordinator.dart';
+import 'package:nsl_nebular/state/project_controller.dart';
 
 import 'support/project_helpers.dart';
 
@@ -71,7 +71,7 @@ void main() {
     expectErGolden(erOf(back), 'v1_er_only.er.json');
   });
 
-  test('v2 (.nsld) ER + DFD: แท็บ ชื่อแท็บ ER ที่ไม่ใช่ค่าเริ่มต้น childId tableId boundary', () {
+  test('v2 (.nsln) ER + DFD: แท็บ ชื่อแท็บ ER ที่ไม่ใช่ค่าเริ่มต้น childId tableId boundary', () {
     final w = ProjectFile.decode(fixture('v2_er_dfd.nsld'));
     expect(w.documents.map((d) => (d.id, d.name, d.type)), [
       ('d0', 'Level 0', DocType.dfd),

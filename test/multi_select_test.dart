@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/layout/diagram_geometry.dart';
-import 'package:nsl_dev/core/clipboard/table_clipboard.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/state/project_controller.dart';
+import 'package:nsl_nebular/core/layout/diagram_geometry.dart';
+import 'package:nsl_nebular/core/clipboard/table_clipboard.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/state/project_controller.dart';
 
 import 'migration_fixtures.dart';
 

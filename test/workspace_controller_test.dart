@@ -2,18 +2,18 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/clipboard/dfd_clipboard.dart';
-import 'package:nsl_dev/core/models/dfd_model.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/models/diagram.dart';
-import 'package:nsl_dev/core/storage/autosave.dart';
-import 'package:nsl_dev/core/storage/project_codec.dart';
-import 'package:nsl_dev/core/storage/project_file.dart';
-import 'package:nsl_dev/state/autosave_coordinator.dart';
-import 'package:nsl_dev/state/dfd_controller.dart';
-import 'package:nsl_dev/state/project_controller.dart';
-import 'package:nsl_dev/state/workspace_controller.dart';
+import 'package:nsl_nebular/core/clipboard/dfd_clipboard.dart';
+import 'package:nsl_nebular/core/models/dfd_model.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/models/diagram.dart';
+import 'package:nsl_nebular/core/storage/autosave.dart';
+import 'package:nsl_nebular/core/storage/project_codec.dart';
+import 'package:nsl_nebular/core/storage/project_file.dart';
+import 'package:nsl_nebular/state/autosave_coordinator.dart';
+import 'package:nsl_nebular/state/dfd_controller.dart';
+import 'package:nsl_nebular/state/project_controller.dart';
+import 'package:nsl_nebular/state/workspace_controller.dart';
 
 import 'migration_fixtures.dart';
 import 'support/project_helpers.dart';
@@ -86,7 +86,7 @@ void main() {
           ProjectDocument.dfd(id: 'd1', name: 'Flow', content: DfdDiagram()),
         ],
       );
-      final path = '${dir.path}/shop.nsld';
+      final path = '${dir.path}/shop.nsln';
       await ProjectFile.save(src, path);
       final text = File(path).readAsStringSync();
       final c = ProjectController()..loadWorkspace(await ProjectFile.load(path), path);
@@ -211,16 +211,16 @@ void main() {
     tearDown(() => w.dispose());
 
     test('dirty รวมทุกเอกสาร: แก้ DFD ใด ๆ = โปรเจกต์ยังไม่บันทึก ; บันทึกแล้วล้างทุกเอกสาร', () {
-      w.markSaved('x.nsld');
+      w.markSaved('x.nsln');
       expect(w.dirty, isFalse);
       db.addNode(DfdKind.entity, 0, 0);
       expect((w.dirty, db.docDirty, da.docDirty, er.docDirty, w.structureDirty), (true, true, false, false, false));
       expect(er.dirty, isTrue); // ProjectController.dirty = ทั้งโปรเจกต์ (ของเดิม)
-      w.markSaved('x.nsld');
+      w.markSaved('x.nsln');
       expect((w.dirty, db.docDirty), (false, false));
       expect(w.renameDocument(a, 'A2'), isTrue);
       expect((w.dirty, w.structureDirty, da.docDirty), (true, true, false));
-      w.markSaved('x.nsld');
+      w.markSaved('x.nsln');
       er.addTable(name: 'later');
       expect((w.dirty, er.docDirty), (true, true));
     });
@@ -287,7 +287,7 @@ void main() {
       final store = _CountingStore();
       final auto = AutosaveCoordinator(w, store, debounce: const Duration(milliseconds: 5));
       addTearDown(auto.dispose);
-      w.markSaved('x.nsld');
+      w.markSaved('x.nsln');
       await auto.idle();
 
       da.addNode(DfdKind.entity, 0, 0);
@@ -306,7 +306,7 @@ void main() {
       expect(erOf(store.last!).tables.any((t) => t.name == 'later'), isTrue);
 
       // ลากสด (ยังไม่จบ) ไม่นับว่าแก้ ; จบการลากแล้วนับ
-      w.markSaved('x.nsld');
+      w.markSaved('x.nsln');
       await auto.idle();
       da.selectAll();
       da.beginMove();

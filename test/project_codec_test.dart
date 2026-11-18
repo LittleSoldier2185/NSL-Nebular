@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/models/dfd_model.dart';
-import 'package:nsl_dev/core/models/doc_ref.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/storage/project_codec.dart';
-import 'package:nsl_dev/core/storage/project_file.dart';
+import 'package:nsl_nebular/core/models/dfd_model.dart';
+import 'package:nsl_nebular/core/models/doc_ref.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/storage/project_codec.dart';
+import 'package:nsl_nebular/core/storage/project_file.dart';
 
 String fixture(String name) => File('test/fixtures/$name').readAsStringSync();
 

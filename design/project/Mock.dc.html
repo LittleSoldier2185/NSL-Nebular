@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Mock Server</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid #0F766E;outline-offset:1px}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #EEF1F5; color: #1B2430; font-size: 13px; line-height: 1.4">
+
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 12px; background: #1F2A37; color: #E6EBF2">
+<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="#0F766E"/><circle cx="11" cy="11" r="4" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="17" cy="7" r="1.6" fill="#F4B860"/></svg>
+<span style="font-weight: 700">NSL Nebular</span>
+<span style="color: #AEB9C8">ร้านขายของออนไลน์ / Mock Server</span>
+</div>
+
+<!-- server bar -->
+<div style="height: 60px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 18px; background: #fff; border-bottom: 1px solid #D8DEE6">
+<span style="display: flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px; background: #D1FAE5; color: #065F46; font-weight: 600"><span style="width: 8px; height: 8px; border-radius: 50%; background: #059669"></span>กำลังทำงาน</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600">http://localhost:4010</span>
+<button style="height: 28px; padding: 0 10px; border: 1px solid #D8DEE6; border-radius: 7px; background: #fff; font-size: 12px">คัดลอก</button>
+<span style="color: #5B6778">จาก Store API v1 · 9 endpoints · ข้อมูลจาก seed ของ ER</span>
+<div style="flex: 1"></div>
+<label style="display: flex; align-items: center; gap: 8px"><input type="checkbox" checked>จำข้อมูลที่ POST เข้ามา</label>
+<button style="height: 34px; padding: 0 14px; border: 1px solid #F1B5B0; border-radius: 9px; background: #fff; color: #7A1F1F; font-weight: 600; font-size: 13px">หยุด</button>
+</div>
+
+<div style="flex: 1; display: flex; min-height: 0">
+
+<!-- endpoints with scenario -->
+<div style="width: 340px; flex: none; background: #fff; border-right: 1px solid #D8DEE6; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px">
+<div style="font-weight: 700; padding: 0 6px 8px">Endpoints · สถานการณ์</div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 8px 8px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="width: 50px; color: #0B5A54; font-weight: 600">GET</span><span style="flex: 1">/products</span><span style="font-family: 'Noto Sans Thai', sans-serif; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #F3F5F8; color: #334155">ปกติ</span></div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 8px 8px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #E0F2F7; box-shadow: inset 3px 0 0 #0E7490"><span style="width: 50px; color: #1E4F8A; font-weight: 600">POST</span><span style="flex: 1">/orders</span><span style="font-family: 'Noto Sans Thai', sans-serif; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #FEF3C7; color: #5C3D00">สต็อกหมด 409</span></div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 8px 8px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="width: 50px; color: #0B5A54; font-weight: 600">GET</span><span style="flex: 1">/orders</span><span style="font-family: 'Noto Sans Thai', sans-serif; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #F3F5F8; color: #334155">ช้า 2 วิ</span></div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 8px 8px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="width: 50px; color: #0B5A54; font-weight: 600">GET</span><span style="flex: 1">/orders/{id}</span><span style="font-family: 'Noto Sans Thai', sans-serif; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #F3F5F8; color: #334155">ปกติ</span></div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 8px 8px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="width: 50px; color: #1E4F8A; font-weight: 600">POST</span><span style="flex: 1">/auth/login</span><span style="font-family: 'Noto Sans Thai', sans-serif; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #F3F5F8; color: #334155">ปกติ</span></div>
+
+<div style="margin-top: 14px; padding: 12px; border: 1px solid #E6EAF0; border-radius: 10px">
+<div style="font-weight: 600; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px">POST /orders · สถานการณ์</div>
+<label style="display: flex; align-items: center; gap: 10px; padding: 5px 0"><input type="radio" name="sc">ปกติ · 201</label>
+<label style="display: flex; align-items: center; gap: 10px; padding: 5px 0"><input type="radio" name="sc" checked>สต็อกหมด · 409</label>
+<label style="display: flex; align-items: center; gap: 10px; padding: 5px 0"><input type="radio" name="sc">ยังไม่ล็อกอิน · 401</label>
+<label style="display: flex; align-items: center; gap: 10px; padding: 5px 0"><input type="radio" name="sc">เซิร์ฟเวอร์ล่ม · 500</label>
+<label style="display: flex; align-items: center; gap: 10px; padding: 5px 0"><input type="radio" name="sc">สุ่ม ตามสัดส่วน</label>
+<div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; color: #5B6778">หน่วงเวลา<span style="flex: 1; height: 4px; border-radius: 2px; background: #E6EAF0; position: relative"><span style="position: absolute; left: 0; top: 0; width: 20%; height: 4px; border-radius: 2px; background: #0F766E"></span></span>300 ms</div>
+</div>
+</div>
+
+<!-- request log -->
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; background: #fff">
+<div style="padding: 14px 18px; display: flex; align-items: center; border-bottom: 1px solid #E6EAF0"><span style="font-weight: 700">คำขอที่เข้ามา</span><span style="margin-left: 10px; color: #5B6778">128 รายการ</span><button style="margin-left: auto; height: 28px; padding: 0 10px; border: 1px solid #D8DEE6; border-radius: 7px; background: #fff; font-size: 12px">ล้าง</button></div>
+<div style="display: grid; grid-template-columns: 80px 70px 1fr 70px 80px; padding: 8px 18px; background: #F3F5F8; font-size: 11px; font-weight: 600; color: #5B6778"><span>เวลา</span><span>Method</span><span>Path</span><span>สถานะ</span><span>ใช้เวลา</span></div>
+<div style="display: grid; grid-template-columns: 80px 70px 1fr 70px 80px; padding: 9px 18px; border-bottom: 1px solid #F3F5F8; font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #FFFBEF; box-shadow: inset 3px 0 0 #D97706"><span style="color: #5B6778">10:42:18</span><span style="color: #1E4F8A">POST</span><span>/orders</span><span style="color: #5C3D00; font-weight: 600">409</span><span style="color: #5B6778">304 ms</span></div>
+<div style="display: grid; grid-template-columns: 80px 70px 1fr 70px 80px; padding: 9px 18px; border-bottom: 1px solid #F3F5F8; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="color: #5B6778">10:42:11</span><span style="color: #0B5A54">GET</span><span>/products?q=เสื้อ</span><span style="color: #065F46; font-weight: 600">200</span><span style="color: #5B6778">12 ms</span></div>
+<div style="display: grid; grid-template-columns: 80px 70px 1fr 70px 80px; padding: 9px 18px; border-bottom: 1px solid #F3F5F8; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="color: #5B6778">10:41:57</span><span style="color: #0B5A54">GET</span><span>/orders</span><span style="color: #065F46; font-weight: 600">200</span><span style="color: #5B6778">2004 ms</span></div>
+<div style="display: grid; grid-template-columns: 80px 70px 1fr 70px 80px; padding: 9px 18px; border-bottom: 1px solid #F3F5F8; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="color: #5B6778">10:41:40</span><span style="color: #1E4F8A">POST</span><span>/auth/login</span><span style="color: #065F46; font-weight: 600">200</span><span style="color: #5B6778">8 ms</span></div>
+<div style="display: grid; grid-template-columns: 80px 70px 1fr 70px 80px; padding: 9px 18px; border-bottom: 1px solid #F3F5F8; font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #FEF2F2"><span style="color: #5B6778">10:41:22</span><span style="color: #0B5A54">GET</span><span>/customers/17</span><span style="color: #7A1F1F; font-weight: 600">404</span><span style="color: #5B6778">3 ms</span></div>
+<div style="padding: 10px 18px; font-size: 12px; color: #7A1F1F">GET /customers/17 ไม่มีใน API Designer · <span style="text-decoration: underline">เพิ่ม endpoint นี้</span></div>
+<div style="flex: 1"></div>
+</div>
+
+<!-- detail -->
+<div style="width: 380px; flex: none; display: flex; flex-direction: column; background: #19212B; color: #E6EBF2; border-left: 1px solid #D8DEE6">
+<div style="padding: 14px 16px; border-bottom: 1px solid #2E3946; font-family: 'JetBrains Mono', monospace; font-size: 12px">POST /orders → <span style="color: #FCD34D">409 Conflict</span></div>
+<div style="padding: 12px 16px 4px; font-size: 11px; color: #AEB9C8; font-weight: 600">REQUEST</div>
+<div style="padding: 0 16px 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.7; white-space: pre">{
+  <span style="color: #7DD3FC">"customer_id"</span>: <span style="color: #FCD34D">17</span>,
+  <span style="color: #7DD3FC">"items"</span>: [{ <span style="color: #7DD3FC">"product_id"</span>: <span style="color: #FCD34D">5</span>, <span style="color: #7DD3FC">"qty"</span>: <span style="color: #FCD34D">2</span> }]
+}</div>
+<div style="padding: 12px 16px 4px; font-size: 11px; color: #AEB9C8; font-weight: 600; border-top: 1px solid #2E3946">RESPONSE</div>
+<div style="padding: 0 16px 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.7; white-space: pre">{
+  <span style="color: #7DD3FC">"error"</span>: <span style="color: #86EFAC">"OUT_OF_STOCK"</span>,
+  <span style="color: #7DD3FC">"product_id"</span>: <span style="color: #FCD34D">5</span>,
+  <span style="color: #7DD3FC">"available"</span>: <span style="color: #FCD34D">0</span>
+}</div>
+<div style="padding: 12px 16px; border-top: 1px solid #2E3946; font-size: 12px; color: #AEB9C8">
+<div style="color: #5ED0C4; font-weight: 600; margin-bottom: 4px">ตรงตามสัญญา API</div>
+Request ผ่านการตรวจกับฟิลด์ที่กำหนดใน API Designer
+</div>
+<div style="flex: 1"></div>
+<div style="padding: 12px 16px; border-top: 1px solid #2E3946; display: flex; gap: 8px">
+<button style="flex: 1; height: 34px; border: 1px solid #3B4859; border-radius: 8px; background: none; color: #E6EBF2; font-size: 12px">ส่งซ้ำ</button>
+<button style="flex: 1; height: 34px; border: 1px solid #3B4859; border-radius: 8px; background: none; color: #E6EBF2; font-size: 12px">บันทึกเป็นตัวอย่าง</button>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

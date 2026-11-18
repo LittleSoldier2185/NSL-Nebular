@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/export/html_doc_export.dart';
-import 'package:nsl_dev/core/export/markdown_export.dart';
-import 'package:nsl_dev/core/export/sql_export.dart';
-import 'package:nsl_dev/core/l10n/l10n.dart';
-import 'package:nsl_dev/core/models/column_model.dart';
-import 'package:nsl_dev/core/models/dfd_model.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/relation_model.dart';
-import 'package:nsl_dev/core/models/table_model.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/ui/export/text_export_dialog.dart';
+import 'package:nsl_nebular/core/export/html_doc_export.dart';
+import 'package:nsl_nebular/core/export/markdown_export.dart';
+import 'package:nsl_nebular/core/export/sql_export.dart';
+import 'package:nsl_nebular/core/l10n/l10n.dart';
+import 'package:nsl_nebular/core/models/column_model.dart';
+import 'package:nsl_nebular/core/models/dfd_model.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/relation_model.dart';
+import 'package:nsl_nebular/core/models/table_model.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/ui/export/text_export_dialog.dart';
 
 final _thai = RegExp(r'[฀-๿]');
 

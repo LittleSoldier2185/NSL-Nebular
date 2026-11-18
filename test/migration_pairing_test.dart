@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/diff/migration.dart';
-import 'package:nsl_dev/core/diff/schema_diff.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/ui/migration_dialog.dart';
+import 'package:nsl_nebular/core/diff/migration.dart';
+import 'package:nsl_nebular/core/diff/schema_diff.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/ui/migration_dialog.dart';
 
 import 'migration_fixtures.dart';
 

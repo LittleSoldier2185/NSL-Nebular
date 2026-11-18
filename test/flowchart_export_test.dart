@@ -1,16 +1,16 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/export/flowchart_svg.dart';
-import 'package:nsl_dev/core/export/html_doc_export.dart';
-import 'package:nsl_dev/core/export/markdown_export.dart';
-import 'package:nsl_dev/core/export/workspace_summary.dart';
-import 'package:nsl_dev/core/l10n/l10n.dart';
-import 'package:nsl_dev/core/models/dfd_model.dart';
-import 'package:nsl_dev/core/models/flowchart_model.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/ui/export/flowchart_png.dart';
+import 'package:nsl_nebular/core/export/flowchart_svg.dart';
+import 'package:nsl_nebular/core/export/html_doc_export.dart';
+import 'package:nsl_nebular/core/export/markdown_export.dart';
+import 'package:nsl_nebular/core/export/workspace_summary.dart';
+import 'package:nsl_nebular/core/l10n/l10n.dart';
+import 'package:nsl_nebular/core/models/dfd_model.dart';
+import 'package:nsl_nebular/core/models/flowchart_model.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/ui/export/flowchart_png.dart';
 
 FlowchartDiagram flow() => FlowchartDiagram(nodes: [
       FcNode(id: 's', shape: FcShape.start, text: 'Start', x: 0, y: 0),

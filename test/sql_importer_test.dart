@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/ddl/ddl_generator.dart';
-import 'package:nsl_dev/core/models/column_model.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/models/index_model.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/relation_model.dart';
-import 'package:nsl_dev/core/models/table_model.dart';
-import 'package:nsl_dev/core/parser/sql_importer.dart';
-import 'package:nsl_dev/core/parser/sql_lexer.dart';
+import 'package:nsl_nebular/core/ddl/ddl_generator.dart';
+import 'package:nsl_nebular/core/models/column_model.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/models/index_model.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/relation_model.dart';
+import 'package:nsl_nebular/core/models/table_model.dart';
+import 'package:nsl_nebular/core/parser/sql_importer.dart';
+import 'package:nsl_nebular/core/parser/sql_lexer.dart';
 
 TableModel tableOf(ImportResult r, String name) =>
     r.project.tables.firstWhere((t) => t.name.toLowerCase() == name.toLowerCase());

@@ -49,3 +49,6 @@ app.*.map.json
 
 # ไฟล์ zip ของรุ่นที่ build แล้ว (แนบเป็น GitHub Release ไม่ commit)
 /dist/
+
+# ใช้เฉพาะเครื่อง: ชี้ NSL-UI-Core ในเครื่องแทน git
+pubspec_overrides.yaml

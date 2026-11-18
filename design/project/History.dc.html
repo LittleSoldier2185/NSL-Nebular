@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>ประวัติเวอร์ชันและ Diff</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid #0F766E;outline-offset:1px}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #EEF1F5; color: #1B2430; font-size: 13px; line-height: 1.4">
+
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 12px; background: #1F2A37; color: #E6EBF2">
+<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="#0F766E"/><circle cx="11" cy="11" r="4" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="17" cy="7" r="1.6" fill="#F4B860"/></svg>
+<span style="font-weight: 700">NSL Nebular</span>
+<span style="color: #AEB9C8">ร้านขายของออนไลน์ / ประวัติเวอร์ชัน</span>
+<div style="flex: 1"></div>
+<button style="height: 28px; padding: 0 12px; border: 1px solid #3B4859; border-radius: 8px; background: #19212B; color: #E6EBF2; font-size: 12px">+ บันทึกเวอร์ชันนี้</button>
+</div>
+
+<div style="flex: 1; display: flex; min-height: 0">
+
+<!-- timeline -->
+<div style="width: 290px; flex: none; background: #fff; border-right: 1px solid #D8DEE6; padding: 18px 16px; display: flex; flex-direction: column; gap: 4px">
+<div style="font-weight: 700; font-size: 15px; margin-bottom: 10px">เวอร์ชัน</div>
+
+<div style="display: flex; gap: 12px; padding: 10px; border-radius: 10px">
+<div style="width: 12px; display: flex; flex-direction: column; align-items: center"><span style="width: 10px; height: 10px; border-radius: 50%; background: #0F766E; margin-top: 4px"></span><span style="flex: 1; width: 2px; background: #E6EAF0"></span></div>
+<div><div style="font-weight: 600">ปัจจุบัน (ยังไม่บันทึก)</div><div style="font-size: 12px; color: #5B6778">วันนี้ 10:42</div></div>
+</div>
+
+<div style="display: flex; gap: 12px; padding: 10px; border-radius: 10px; background: #E2F3F1; box-shadow: inset 0 0 0 1px #0F766E">
+<div style="width: 12px; display: flex; flex-direction: column; align-items: center"><span style="width: 10px; height: 10px; border-radius: 50%; border: 2px solid #0F766E; background: #fff; margin-top: 3px"></span><span style="flex: 1; width: 2px; background: #E6EAF0"></span></div>
+<div><div style="font-weight: 600; color: #0B5A54">v3 · ส่งให้ลูกค้าดู</div><div style="font-size: 12px; color: #5B6778">15 พ.ย. 16:10 · เทียบกับปัจจุบัน</div></div>
+</div>
+
+<div style="display: flex; gap: 12px; padding: 10px; border-radius: 10px">
+<div style="width: 12px; display: flex; flex-direction: column; align-items: center"><span style="width: 10px; height: 10px; border-radius: 50%; background: #CBD3DE; margin-top: 4px"></span><span style="flex: 1; width: 2px; background: #E6EAF0"></span></div>
+<div><div style="font-weight: 600">v2 · เพิ่ม DFD</div><div style="font-size: 12px; color: #5B6778">10 พ.ย. 11:30</div></div>
+</div>
+
+<div style="display: flex; gap: 12px; padding: 10px; border-radius: 10px">
+<div style="width: 12px; display: flex; flex-direction: column; align-items: center"><span style="width: 10px; height: 10px; border-radius: 50%; background: #CBD3DE; margin-top: 4px"></span></div>
+<div><div style="font-weight: 600">v1 · โครง ER แรก</div><div style="font-size: 12px; color: #5B6778">2 พ.ย. 09:05</div></div>
+</div>
+
+<div style="margin-top: 12px; font-size: 11px; font-weight: 600; color: #5B6778; letter-spacing: 0.04em">บันทึกอัตโนมัติ</div>
+<div style="padding: 6px 10px; color: #5B6778; font-size: 12px">วันนี้ 10:30 · 10:15 · 09:58 · อีก 12</div>
+</div>
+
+<!-- visual diff -->
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 16px; background: #fff; border-bottom: 1px solid #D8DEE6">
+<span style="font-weight: 600">v3</span><span style="color: #5B6778">→</span><span style="font-weight: 600">ปัจจุบัน</span>
+<span style="color: #5B6778">· ER ร้านค้า</span>
+<div style="flex: 1"></div>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #D1FAE5; border: 1px solid #059669"></span>เพิ่ม</span>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #FEF3C7; border: 1px solid #D97706"></span>แก้</span>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #FDE8E8; border: 1px solid #B42318"></span>ลบ</span>
+</div>
+<div style="flex: 1; position: relative; overflow: hidden; background-color: #F6F8FB; background-image: radial-gradient(#C3CCD8 1px, transparent 1px); background-size: 20px 20px">
+
+<div style="position: absolute; left: 60px; top: 60px; width: 220px; background: #fff; border: 1px solid #D8DEE6; border-radius: 10px; overflow: hidden; opacity: 0.75">
+<div style="height: 32px; display: flex; align-items: center; padding: 0 12px; background: #1F2A37; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600">customers</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px">id</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px">name</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px">email</div>
+</div>
+
+<div style="position: absolute; left: 340px; top: 60px; width: 230px; background: #fff; border: 2px solid #D97706; border-radius: 10px; overflow: hidden">
+<div style="height: 32px; display: flex; align-items: center; padding: 0 12px; background: #1F2A37; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600">orders</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px">id</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px">customer_id</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #FEF3C7; color: #5C3D00">status <span style="color: #8A5A12">varchar(10) → varchar(20)</span></div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #FDE8E8; color: #7A1F1F; text-decoration: line-through">discount</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #D1FAE5; color: #065F46">+ note</div>
+</div>
+
+<div style="position: absolute; left: 630px; top: 60px; width: 220px; background: #fff; border: 2px solid #059669; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 4px #D1FAE5">
+<div style="height: 32px; display: flex; align-items: center; padding: 0 12px; background: #059669; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600">+ payments</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px">id</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px">order_id</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px">method</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px">paid_at</div>
+</div>
+
+<div style="position: absolute; left: 340px; top: 320px; width: 220px; background: #fff; border: 2px dashed #B42318; border-radius: 10px; overflow: hidden; opacity: 0.8">
+<div style="height: 32px; display: flex; align-items: center; padding: 0 12px; background: #FDE8E8; color: #7A1F1F; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; text-decoration: line-through">coupons</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #7A1F1F">id</div>
+<div style="padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #7A1F1F">code</div>
+</div>
+</div>
+</div>
+
+<!-- change list -->
+<div style="width: 320px; flex: none; background: #fff; border-left: 1px solid #D8DEE6; padding: 18px 16px; display: flex; flex-direction: column; gap: 14px">
+<div style="font-weight: 700; font-size: 15px">ความเปลี่ยนแปลง · 6</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; gap: 10px; align-items: flex-start"><span style="font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #D1FAE5; color: #065F46; font-weight: 600">เพิ่ม</span><span>ตาราง <b>payments</b> (4 คอลัมน์)</span></div>
+<div style="display: flex; gap: 10px; align-items: flex-start"><span style="font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #D1FAE5; color: #065F46; font-weight: 600">เพิ่ม</span><span>คอลัมน์ <b>orders.note</b></span></div>
+<div style="display: flex; gap: 10px; align-items: flex-start"><span style="font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #FEF3C7; color: #5C3D00; font-weight: 600">แก้</span><span><b>orders.status</b> ขยายความยาว</span></div>
+<div style="display: flex; gap: 10px; align-items: flex-start"><span style="font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #FDE8E8; color: #7A1F1F; font-weight: 600">ลบ</span><span>คอลัมน์ <b>orders.discount</b></span></div>
+<div style="display: flex; gap: 10px; align-items: flex-start"><span style="font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #FDE8E8; color: #7A1F1F; font-weight: 600">ลบ</span><span>ตาราง <b>coupons</b></span></div>
+<div style="display: flex; gap: 10px; align-items: flex-start"><span style="font-size: 11px; padding: 1px 6px; border-radius: 4px; background: #E8EEF8; color: #1E3A6B; font-weight: 600">DFD</span><span>เพิ่มกระบวนการ P5 ชำระเงิน</span></div>
+</div>
+
+<div style="padding: 12px; border-radius: 10px; background: #FDE8E8; color: #7A1F1F; font-size: 12px">
+การลบ 2 รายการจะทำให้ข้อมูลหายถ้ารันบนฐานข้อมูลจริง
+</div>
+
+<div style="flex: 1"></div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<button style="height: 38px; border: 0; border-radius: 10px; background: #0F766E; color: #fff; font-weight: 600; font-size: 13px">สร้าง migration จากความต่างนี้</button>
+<button style="height: 38px; border: 1px solid #CBD3DE; border-radius: 10px; background: #fff; font-weight: 600; font-size: 13px">ย้อนกลับไปเวอร์ชัน v3</button>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

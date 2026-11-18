@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:nsl_ui/nsl_ui.dart' show NslThemeController, NslThemeStore;
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -44,7 +45,7 @@ Future<void> main(List<String> args) async {
   } catch (_) {
     store = null;
   }
-  // ดับเบิลคลิกไฟล์ .nsld / .nslm / .erd (หรือ nsl_dev.exe <ไฟล์>) = เปิดไฟล์นั้นทันที ไม่ถามกู้คืนงานค้าง
+  // ดับเบิลคลิกไฟล์ .nsln / .nslm / .erd (หรือ nsl_nebular.exe <ไฟล์>) = เปิดไฟล์นั้นทันที ไม่ถามกู้คืนงานค้าง
   Workspace? initial;
   String? initialPath;
   for (final a in args) {
@@ -58,11 +59,29 @@ Future<void> main(List<String> args) async {
     break;
   }
   // หาที่เก็บไม่ได้ = ใช้ค่าเริ่มต้น (ไทย/สว่าง) โดยไม่ถามภาษา เพราะบันทึกคำตอบไม่ได้อยู่ดี
-  runApp(NslDevApp(autosave: store, recovery: recovery, settings: settings ?? AppSettings(lang: Lang.th), initialProject: initial, initialPath: initialPath));
+  runApp(NslDevApp(autosave: store, recovery: recovery, settings: settings ?? AppSettings(lang: Lang.th), initialProject: initial, initialPath: initialPath, themes: await _openThemes(args)));
+}
+
+/// ที่เก็บธีมกลางของ NSL (ธีมที่ทำจาก NSL Palette แชร์กับแอปอื่น) — ล้มเหลวทุกกรณี = null = ใช้ธีมในตัว ไม่ให้แอปเปิดไม่ขึ้น
+/// `--safe-mode` = ไม่ใช้ธีมของผู้ใช้เลย (กู้กรณีธีมทำให้อ่านไม่ออก)
+Future<NslThemeController?> _openThemes(List<String> args) async {
+  try {
+    final docs = await getApplicationDocumentsDirectory();
+    final c = NslThemeController(NslThemeStore.standard(documents: docs));
+    await c.reload();
+    if (args.contains('--safe-mode')) await c.setSafeMode(true);
+    c.startWatching();
+    return c;
+  } catch (_) {
+    return null;
+  }
 }
 
 class NslDevApp extends StatefulWidget {
-  const NslDevApp({super.key, this.autosave, this.recovery, this.settings, this.initialProject, this.initialPath});
+  const NslDevApp({super.key, this.autosave, this.recovery, this.settings, this.initialProject, this.initialPath, this.themes});
+
+  /// ที่เก็บ/ตัวเลือกธีมกลางของ NSL (null = ใช้ธีมในตัว) — ธีมเปลี่ยนสดตามไฟล์ที่ NSL Palette หรือแอปอื่นเขียน
+  final NslThemeController? themes;
 
   /// โปรเจกต์ที่เปิดตั้งแต่เริ่ม (จากไฟล์ที่ส่งมาทางบรรทัดคำสั่ง) — null = เริ่มว่าง
   final Workspace? initialProject;
@@ -94,13 +113,19 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _settings.addListener(_onSettings);
+    widget.themes?.addListener(_onThemes);
     final p = widget.initialProject;
     if (p != null) _workspace.loadWorkspace(p, widget.initialPath);
     _workspace.addListener(_onWorkspace);
     _onWorkspace();
   }
 
+  int _themeRevision = 0;
+
   void _onSettings() => setState(() {});
+
+  /// ธีมกลางเปลี่ยน → สร้างต้นไม้วิดเจ็ตใหม่ (สีมาจากตัวแปรกลาง `C` ไม่ใช่ InheritedWidget — เหมือนตอนสลับสว่าง/มืด) ; เอกสารที่เปิดอยู่ไม่หาย เพราะ controller อยู่นอกต้นไม้
+  void _onThemes() => setState(() => _themeRevision++);
 
   /// มุมมอง (เลื่อน/ซูม) ของแคนวาส ER แยกต่อเอกสาร
   void _onWorkspace() => _canvas.showDoc(_workspace.currentEr.docId);
@@ -115,6 +140,7 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _settings.removeListener(_onSettings);
+    widget.themes?.removeListener(_onThemes);
     _workspace.removeListener(_onWorkspace);
     _autosave?.dispose();
     _workspace.dispose();
@@ -125,7 +151,8 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     // ธีม/ภาษาเปลี่ยน -> สร้างต้นไม้วิดเจ็ตใหม่ทั้งหมด (สีมาจากตัวแปรกลาง ไม่ใช่ InheritedWidget)
-    final palette = _settings.dark ? kDarkPalette : kLightPalette;
+    final themes = widget.themes;
+    final palette = paletteFor(_settings.dark ? Brightness.dark : Brightness.light, theme: themes?.activeSpec, lookup: themes?.lookup);
     C.use(palette);
     return MultiProvider(
       providers: [
@@ -133,6 +160,7 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: _workspace),
         ChangeNotifierProvider.value(value: _canvas),
         Provider<AutosaveCoordinator?>.value(value: _autosave),
+        ChangeNotifierProvider<NslThemeController?>.value(value: widget.themes),
       ],
       // controller ของเอกสาร ER/DFD/Flowchart ที่ใช้งานอยู่: เปลี่ยนตามแท็บ (วิดเจ็ตเดิมใช้ watch<ProjectController>() ได้ต่อ)
       child: ListenableBuilder(
@@ -148,8 +176,8 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
           child: child,
         ),
         child: MaterialApp(
-          key: ValueKey('${_settings.lang.code}-${_settings.dark}'),
-          title: 'NSL Dev',
+          key: ValueKey('${_settings.lang.code}-${_settings.dark}-$_themeRevision'),
+          title: 'NSL Nebular',
           debugShowCheckedModeBanner: false,
           theme: buildTheme(palette),
           home: HomePage(

@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-  ผูกไฟล์ .nsld (และ .erd รุ่นเก่า) กับ NSL Dev ใน Windows — ดับเบิลคลิกแล้วเปิดในแอป
+  ผูกไฟล์ .nsln (และ .erd รุ่นเก่า) กับ NSL Nebular ใน Windows — ดับเบิลคลิกแล้วเปิดในแอป
 
 .DESCRIPTION
   ลงทะเบียนเฉพาะผู้ใช้ปัจจุบัน (HKCU\Software\Classes) ไม่ต้องใช้สิทธิ์ผู้ดูแลระบบ
@@ -8,7 +8,7 @@
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tool\register_file_association.ps1
-  powershell -ExecutionPolicy Bypass -File tool\register_file_association.ps1 -ExePath "C:\Apps\NSL\nsl_dev.exe"
+  powershell -ExecutionPolicy Bypass -File tool\register_file_association.ps1 -ExePath "C:\Apps\NSL\nsl_nebular.exe"
   powershell -ExecutionPolicy Bypass -File tool\register_file_association.ps1 -Unregister
 #>
 param(
@@ -18,7 +18,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$progId = 'NSLDev.Project'
+$progId = 'NSLNebular.Project'
 $classes = 'HKCU:\Software\Classes'
 
 function Notify-Shell {
@@ -30,11 +30,11 @@ public static extern void SHChangeNotify(int eventId, uint flags, System.IntPtr 
   [Win32.Shell]::SHChangeNotify(0x08000000, 0, [IntPtr]::Zero, [IntPtr]::Zero)
 }
 
-$extensions = @('.nsld')
+$extensions = @('.nsln')
 if ($IncludeLegacyErd) { $extensions += '.erd' }
 
 if ($Unregister) {
-  foreach ($ext in @('.nsld', '.nslm', '.erd')) {
+  foreach ($ext in @('.nsln', '.nslm', '.erd')) {
     $key = Join-Path $classes $ext
     if (Test-Path $key) {
       $cur = (Get-Item $key).GetValue('')
@@ -45,30 +45,30 @@ if ($Unregister) {
   $progKey = Join-Path $classes $progId
   if (Test-Path $progKey) { Remove-Item $progKey -Recurse -Force }
   Notify-Shell
-  Write-Host 'ถอนการผูกไฟล์ .nsld / .erd แล้ว'
+  Write-Host 'ถอนการผูกไฟล์ .nsln / .erd แล้ว'
   return
 }
 
 if (-not $ExePath) {
   $root = Split-Path -Parent $PSScriptRoot
   $candidates = @(
-    'build\windows\x64\runner\Release\nsl_dev.exe',
-    'build\windows\x64\runner\Debug\nsl_dev.exe'
+    'build\windows\x64\runner\Release\nsl_nebular.exe',
+    'build\windows\x64\runner\Debug\nsl_nebular.exe'
   ) | ForEach-Object { Join-Path $root $_ }
   $ExePath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
   if (-not $ExePath) {
-    $sibling = Join-Path $PSScriptRoot 'nsl_dev.exe'
+    $sibling = Join-Path $PSScriptRoot 'nsl_nebular.exe'
     if (Test-Path $sibling) { $ExePath = $sibling }
   }
 }
 if (-not $ExePath -or -not (Test-Path $ExePath)) {
-  throw 'ไม่พบ nsl_dev.exe — build ก่อน (flutter build windows) หรือระบุ -ExePath'
+  throw 'ไม่พบ nsl_nebular.exe — build ก่อน (flutter build windows) หรือระบุ -ExePath'
 }
 $ExePath = (Resolve-Path $ExePath).Path
 
 $progKey = Join-Path $classes $progId
 New-Item -Path $progKey -Force | Out-Null
-Set-ItemProperty -Path $progKey -Name '(default)' -Value 'NSL Dev Project'
+Set-ItemProperty -Path $progKey -Name '(default)' -Value 'NSL Nebular Project'
 New-Item -Path "$progKey\DefaultIcon" -Force | Out-Null
 Set-ItemProperty -Path "$progKey\DefaultIcon" -Name '(default)' -Value "`"$ExePath`",0"
 New-Item -Path "$progKey\shell\open\command" -Force | Out-Null

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/search/fuzzy.dart';
-import 'package:nsl_dev/main.dart';
-import 'package:nsl_dev/state/project_controller.dart';
-import 'package:nsl_dev/ui/canvas/canvas_controller.dart';
-import 'package:nsl_dev/ui/home_page.dart';
-import 'package:nsl_dev/ui/palette/command_palette.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/search/fuzzy.dart';
+import 'package:nsl_nebular/main.dart';
+import 'package:nsl_nebular/state/project_controller.dart';
+import 'package:nsl_nebular/ui/canvas/canvas_controller.dart';
+import 'package:nsl_nebular/ui/home_page.dart';
+import 'package:nsl_nebular/ui/palette/command_palette.dart';
 import 'package:provider/provider.dart';
 
 import 'migration_fixtures.dart';

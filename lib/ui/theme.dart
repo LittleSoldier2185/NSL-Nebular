@@ -1,10 +1,29 @@
+import 'package:nsl_ui/nsl_ui.dart' show NslResolveException, NslThemeLookup, NslThemeSpec, NslTokens, kBuiltinDev, resolveTokens;
 import 'package:flutter/material.dart';
+import '../core/models/workspace.dart' show DocType;
 
 export '../core/types/type_label.dart';
+
+/// สีประจำชนิดเอกสาร: [main] = จุด/เส้น/ขอบ, [ink] = ตัวอักษรบนพื้นอ่อน, [tint] = พื้นอ่อน (ผ่าน 4.5:1 ทั้งคู่)
+class DocColor {
+  const DocColor(this.main, this.ink, this.tint);
+  final Color main, ink, tint;
+}
+
+/// ชื่อคีย์ของสีชนิดเอกสารใน token `nebular` (`doc<คีย์>` / `doc<คีย์>Ink` / `doc<คีย์>Tint`)
+/// ชนิดที่ยังไม่มีเป็น [DocType] (API) ต่อที่นี่เมื่อเพิ่มชนิดเอกสาร
+const kDocColorKeys = <DocType, String>{
+  DocType.er: 'Er',
+  DocType.dfd: 'Dfd',
+  DocType.flowchart: 'Flow',
+  DocType.wireframe: 'Wire',
+  DocType.screenflow: 'Screen',
+};
 
 /// ชุดสีของหนึ่งธีม
 class Palette {
   const Palette({
+    this.docColors = const {},
     required this.brightness,
     required this.bg,
     required this.canvas,
@@ -32,7 +51,65 @@ class Palette {
     required this.nnBg,
     required this.nnText,
     required this.shadow,
+    required this.boardOutside,
+    required this.boardEdge,
+    required this.danger,
+    required this.dangerBg,
+    required this.dangerText,
+    required this.fkSource,
+    required this.fkChip,
   });
+
+  /// สร้างจากโทเค็นของ nsl_ui (ธีม `nsl.nebular` หรือธีมที่ผู้ใช้เลือก) — ชื่อช่องของแอปกับโทเค็นต่างกันเล็กน้อย ตารางแปลงอยู่ที่นี่ที่เดียว
+  factory Palette.fromTokens(NslTokens t, Brightness brightness) {
+    final c = t.colors;
+    Color x(String k) => t.ext('nebular', k)!;
+    return Palette(
+      docColors: {
+        for (final e in kDocColorKeys.entries) e.key: DocColor(x('doc${e.value}'), x('doc${e.value}Ink'), x('doc${e.value}Tint')),
+      },
+      brightness: brightness,
+      bg: c['bg'],
+      canvas: x('canvas'),
+      dot: x('dot'),
+      surface: c['surface'],
+      surfaceHi: c['surfaceRaised'],
+      border: c['border'],
+      borderSoft: c['borderSoft'],
+      inputBorder: c['borderStrong'],
+      text: c['text'],
+      muted: c['textMuted'],
+      primary: c['accent'],
+      primaryDark: c['accentInk'],
+      primaryTint: c['accentTint'],
+      tableHead: x('tableHead'),
+      warnBg: c['warnBg'],
+      warnText: c['warnText'],
+      infoBg: c['infoBg'],
+      infoText: c['infoText'],
+      field: c['surfaceSunken'],
+      pkBg: x('pkBg'),
+      pkText: x('pkText'),
+      uqBg: x('uqBg'),
+      uqText: x('uqText'),
+      nnBg: x('nnBg'),
+      nnText: x('nnText'),
+      shadow: c['shadow'],
+      boardOutside: x('boardOutside'),
+      boardEdge: x('boardEdge'),
+      danger: c['danger'],
+      dangerBg: c['dangerBg'],
+      dangerText: c['dangerText'],
+      fkSource: x('fkSource'),
+      fkChip: x('fkChip'),
+    );
+  }
+
+  /// สีประจำชนิดเอกสารแต่ละชนิด (จาก token `nebular.doc*` ของ nsl_ui) — ใช้ผ่าน [docColor] / [C.doc]
+  final Map<DocType, DocColor> docColors;
+
+  /// สีของชนิดเอกสารนั้น ; ชนิดที่ไม่มีในพาเลตต์ (ไม่ควรเกิดกับพาเลตต์จาก `fromTokens`) ใช้สีหลักของธีมแทน
+  DocColor docColor(DocType t) => docColors[t] ?? DocColor(primary, primaryDark, primaryTint);
 
   final Brightness brightness;
   final Color bg, canvas, dot, surface, surfaceHi, border, borderSoft, inputBorder;
@@ -42,69 +119,31 @@ class Palette {
 
   /// สีเงา (ธีมมืดต้องเข้มกว่าเพื่อให้เห็นความลึก)
   final Color shadow;
+
+  /// พื้นนอกกรอบกระดาน/ขอบกรอบ, สีอันตราย, สีแถวต้นทาง FK (เดิมเป็นค่าตายตัวใน `C`)
+  final Color boardOutside, boardEdge, danger, dangerBg, dangerText, fkSource, fkChip;
 }
 
-const kLightPalette = Palette(
-  brightness: Brightness.light,
-  bg: Color(0xFFEEF1F5),
-  canvas: Color(0xFFF6F8FB),
-  dot: Color(0xFFC3CCD8),
-  surface: Colors.white,
-  surfaceHi: Colors.white,
-  border: Color(0xFFD8DEE6),
-  borderSoft: Color(0xFFE6EAF0),
-  inputBorder: Color(0xFFCBD3DE),
-  text: Color(0xFF1B2430),
-  muted: Color(0xFF5B6778),
-  primary: Color(0xFF0F766E),
-  primaryDark: Color(0xFF0B5A54),
-  primaryTint: Color(0xFFE2F3F1),
-  tableHead: Color(0xFF1F2A37),
-  warnBg: Color(0xFFFFF4D6),
-  warnText: Color(0xFF5C3D00),
-  infoBg: Color(0xFFE8EEF8),
-  infoText: Color(0xFF1E3A6B),
-  field: Color(0xFFF3F5F8),
-  pkBg: Color(0xFFFDEBD3),
-  pkText: Color(0xFF8A4B08),
-  uqBg: Color(0xFFEDE9FE),
-  uqText: Color(0xFF5B21B6),
-  nnBg: Color(0xFFE6EAF0),
-  nnText: Color(0xFF334155),
-  shadow: Color(0xFF0F172A),
-);
+/// พาเลตต์ในตัว คำนวณจากธีม `nsl.nebular` ของ nsl_ui (ไม่มีค่าสีตายตัวในไฟล์นี้ — ค่าเดิมถูกเก็บเป็นเทสต์ `test/theme_nsl_ui_parity_test.dart`)
+final Palette kLightPalette = Palette.fromTokens(resolveTokens(kBuiltinDev, Brightness.light), Brightness.light);
+final Palette kDarkPalette = Palette.fromTokens(resolveTokens(kBuiltinDev, Brightness.dark), Brightness.dark);
 
-const kDarkPalette = Palette(
-  brightness: Brightness.dark,
-  bg: Color(0xFF0E1319),
-  canvas: Color(0xFF121820),
-  dot: Color(0xFF2A3544),
-  surface: Color(0xFF19212B),
-  surfaceHi: Color(0xFF212B37),
-  border: Color(0xFF2E3946),
-  borderSoft: Color(0xFF242E3A),
-  inputBorder: Color(0xFF3B4859),
-  text: Color(0xFFE6EBF2),
-  muted: Color(0xFF9AA7B8),
-  primary: Color(0xFF14958B),
-  primaryDark: Color(0xFF5ED0C4),
-  primaryTint: Color(0xFF133533),
-  tableHead: Color(0xFF2A3848),
-  warnBg: Color(0xFF3A2E10),
-  warnText: Color(0xFFF4D58A),
-  infoBg: Color(0xFF1B2A44),
-  infoText: Color(0xFF9DBBEA),
-  field: Color(0xFF222C38),
-  pkBg: Color(0xFF4A3213),
-  pkText: Color(0xFFF5B66B),
-  uqBg: Color(0xFF2E2552),
-  uqText: Color(0xFFC4B0FA),
-  nnBg: Color(0xFF2A3441),
-  nnText: Color(0xFFB5C0CE),
-  shadow: Color(0xFF000000),
-);
+/// พาเลตต์ของโหมด [brightness] จากธีม [theme] (ไฟล์ธีมของผู้ใช้/ธีมที่เลือก ; null = ธีมในตัว `nsl.nebular`)
+/// ธีมใช้ไม่ได้ (ธีมฐานหาย, วนลูป, ลึกเกิน, ขาดสีที่แอปต้องใช้) = ถอยไปธีมในตัว ไม่ให้แอปเปิดไม่ขึ้น
+Palette paletteFor(Brightness brightness, {NslThemeSpec? theme, NslThemeLookup? lookup}) {
+  final builtin = brightness == Brightness.dark ? kDarkPalette : kLightPalette;
+  if (theme == null) return builtin;
+  try {
+    return Palette.fromTokens(resolveTokens(theme, brightness, lookup: lookup), brightness);
+  } on NslResolveException {
+    return builtin;
+  } catch (_) {
+    return builtin; // ธีมที่ไม่มีส่วนขยาย nebular (เช่นธีมของแอปอื่น) ทำให้ ext() เป็น null — ถอยกลับ
+  }
+}
 
-/// สีและสไตล์ตามดีไซน์ "NSL Dev — หน้าหลัก"
+
+/// สีและสไตล์ตามดีไซน์ "NSL Nebular — หน้าหลัก"
 ///
 /// อ่านจากพาเลตต์ที่ใช้อยู่ตอนนี้ ([use]) — ตอนสลับธีมแอปจะสร้างต้นไม้วิดเจ็ตใหม่ทั้งหมด
 class C {
@@ -146,17 +185,20 @@ class C {
   static Color get field => _p.field;
 
   /// พื้นนอกกรอบกระดาน (เข้มกว่าพื้นกระดาน เพื่อให้เห็นขอบ)
-  static Color get boardOutside => isDark ? const Color(0xFF0A0E13) : const Color(0xFFE2E7EE);
-  static Color get boardEdge => isDark ? const Color(0xFF3F4E62) : const Color(0xFFB4BFCD);
+  static Color get boardOutside => _p.boardOutside;
+  static Color get boardEdge => _p.boardEdge;
 
   /// สีอันตราย (ลบ / error)
-  static Color get danger => isDark ? const Color(0xFFF97066) : const Color(0xFFB42318);
-  static Color get dangerBg => isDark ? const Color(0xFF3F1B1B) : const Color(0xFFFDE8E8);
-  static Color get dangerText => isDark ? const Color(0xFFFCA5A5) : const Color(0xFF7A1F1F);
+  static Color get danger => _p.danger;
+  static Color get dangerBg => _p.dangerBg;
+  static Color get dangerText => _p.dangerText;
+
+  /// สีประจำชนิดเอกสาร (จุดในแท็บ/Explorer, ขอบการ์ด, ปุ่มหลักของเอกสารนั้น)
+  static DocColor doc(DocType t) => _p.docColor(t);
 
   /// แถวที่กำลังเป็นต้นทางของการลากเส้น FK
-  static Color get fkSource => isDark ? const Color(0xFF5A4A12) : const Color(0xFFFFE9A8);
-  static Color get fkChip => isDark ? const Color(0xFF16403D) : const Color(0xFFD9F0EC);
+  static Color get fkSource => _p.fkSource;
+  static Color get fkChip => _p.fkChip;
 
   static Color get pkBg => _p.pkBg;
   static Color get pkText => _p.pkText;
@@ -206,7 +248,8 @@ TextStyle tableFont(TextStyle base, String? family) =>
 
 const monoStyle = TextStyle(fontFamily: kMono, fontFamilyFallback: ['Consolas']);
 
-ThemeData buildTheme([Palette p = kLightPalette]) {
+ThemeData buildTheme([Palette? palette]) {
+  final p = palette ?? kLightPalette;
   final dark = p.brightness == Brightness.dark;
   final base = dark ? ThemeData.dark() : ThemeData.light();
   return ThemeData(

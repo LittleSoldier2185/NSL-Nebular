@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/layout/refresh_import.dart';
-import 'package:nsl_dev/core/models/column_model.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/models/group_model.dart';
-import 'package:nsl_dev/core/models/note_model.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/relation_model.dart';
-import 'package:nsl_dev/core/models/table_model.dart';
-import 'package:nsl_dev/core/parser/sql_importer.dart';
+import 'package:nsl_nebular/core/layout/refresh_import.dart';
+import 'package:nsl_nebular/core/models/column_model.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/models/group_model.dart';
+import 'package:nsl_nebular/core/models/note_model.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/relation_model.dart';
+import 'package:nsl_nebular/core/models/table_model.dart';
+import 'package:nsl_nebular/core/parser/sql_importer.dart';
 
 var _n = 0;
 String nid(String p) => '$p${_n++}';

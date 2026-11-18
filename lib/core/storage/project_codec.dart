@@ -24,7 +24,7 @@ const String kProjectFormatTag = 'nsl-erd';
 /// - v4 ขึ้นไป / ไม่ใช่ไฟล์โปรเจกต์: throw [ProjectFormatException]
 Workspace decodeProjectMap(Map<String, dynamic> j) {
   if (j['format'] != kProjectFormatTag) {
-    throw ProjectFormatException(tr('ไม่ใช่ไฟล์โปรเจกต์ NSL Dev'));
+    throw ProjectFormatException(tr('ไม่ใช่ไฟล์โปรเจกต์ NSL Nebular'));
   }
   final v = j['version'];
   if (v is! int || v > kWorkspaceFormatVersion) {

@@ -1,15 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/clipboard/flowchart_clipboard.dart';
-import 'package:nsl_dev/core/layout/flowchart_geometry.dart';
-import 'package:nsl_dev/core/layout/flowchart_layout.dart';
-import 'package:nsl_dev/core/layout/ortho_route.dart';
-import 'package:nsl_dev/core/models/dfd_model.dart';
-import 'package:nsl_dev/core/models/flowchart_model.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/storage/project_codec.dart';
+import 'package:nsl_nebular/core/clipboard/flowchart_clipboard.dart';
+import 'package:nsl_nebular/core/layout/flowchart_geometry.dart';
+import 'package:nsl_nebular/core/layout/flowchart_layout.dart';
+import 'package:nsl_nebular/core/layout/ortho_route.dart';
+import 'package:nsl_nebular/core/models/dfd_model.dart';
+import 'package:nsl_nebular/core/models/flowchart_model.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/storage/project_codec.dart';
 
 FlowchartDiagram sample() => FlowchartDiagram(nodes: [
       FcNode(id: 's', shape: FcShape.start, text: 'Start', x: 0, y: 0),

@@ -2,17 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/app_info.dart';
-import 'package:nsl_dev/core/changelog.dart';
-import 'package:nsl_dev/core/l10n/l10n.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/main.dart';
-import 'package:nsl_dev/state/app_settings.dart';
-import 'package:nsl_dev/state/project_controller.dart';
-import 'package:nsl_dev/ui/canvas/canvas_controller.dart';
-import 'package:nsl_dev/ui/home_page.dart';
-import 'package:nsl_dev/ui/palette/command_palette.dart';
-import 'package:nsl_dev/ui/whats_new_dialog.dart';
+import 'package:nsl_nebular/core/app_info.dart';
+import 'package:nsl_nebular/core/changelog.dart';
+import 'package:nsl_nebular/core/l10n/l10n.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/main.dart';
+import 'package:nsl_nebular/state/app_settings.dart';
+import 'package:nsl_nebular/state/project_controller.dart';
+import 'package:nsl_nebular/ui/canvas/canvas_controller.dart';
+import 'package:nsl_nebular/ui/home_page.dart';
+import 'package:nsl_nebular/ui/palette/command_palette.dart';
+import 'package:nsl_nebular/ui/whats_new_dialog.dart';
 import 'package:provider/provider.dart';
 
 import 'migration_fixtures.dart';
@@ -143,7 +143,7 @@ void main() {
       await boot(tester);
       await tester.tap(find.text('ช่วยเหลือ'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('เกี่ยวกับ NSL Dev…'));
+      await tester.tap(find.text('เกี่ยวกับ NSL Nebular…'));
       await tester.pumpAndSettle();
       expect(find.byType(AboutAppDialog), findsOneWidget);
       expect(tester.widget<Text>(find.byKey(const ValueKey('about-version'))).data, appVersionLabel);
@@ -196,9 +196,9 @@ void main() {
       expect(cv.dockTab, DockTab.issues);
     });
 
-    testWidgets('ชื่อไฟล์ย้ายมาอยู่ที่แถบสถานะ (ยังไม่บันทึก = ชื่อโปรเจกต์.nsld)', (tester) async {
+    testWidgets('ชื่อไฟล์ย้ายมาอยู่ที่แถบสถานะ (ยังไม่บันทึก = ชื่อโปรเจกต์.nsln)', (tester) async {
       await boot(tester);
-      expect(tester.widget<Text>(find.byKey(const ValueKey('status-summary'))).data, startsWith('${c.project.name}.nsld · '));
+      expect(tester.widget<Text>(find.byKey(const ValueKey('status-summary'))).data, startsWith('${c.project.name}.nsln · '));
     });
 
     testWidgets('หน้าต่างแคบ: แถบสถานะไม่ overflow', (tester) async {

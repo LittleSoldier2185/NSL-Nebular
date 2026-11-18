@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/ddl/ddl_generator.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/parser/sql_importer.dart';
-import 'package:nsl_dev/core/validate/validator.dart';
+import 'package:nsl_nebular/core/ddl/ddl_generator.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/parser/sql_importer.dart';
+import 'package:nsl_nebular/core/validate/validator.dart';
 
 /// ไฟล์ตัวอย่างใน samples/ ต้อง import ได้ครบและ export กลับเป็น SQL ของทุก dialect ได้
 void main() {

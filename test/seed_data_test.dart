@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/ddl/ddl_generator.dart';
-import 'package:nsl_dev/core/export/seed_data.dart';
-import 'package:nsl_dev/core/models/column_model.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/relation_model.dart';
-import 'package:nsl_dev/core/models/table_model.dart';
-import 'package:nsl_dev/state/project_controller.dart';
+import 'package:nsl_nebular/core/ddl/ddl_generator.dart';
+import 'package:nsl_nebular/core/export/seed_data.dart';
+import 'package:nsl_nebular/core/models/column_model.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/relation_model.dart';
+import 'package:nsl_nebular/core/models/table_model.dart';
+import 'package:nsl_nebular/state/project_controller.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'support/project_helpers.dart';
 

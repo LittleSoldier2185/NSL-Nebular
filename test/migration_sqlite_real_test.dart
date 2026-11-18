@@ -1,12 +1,12 @@
 // รัน migration บน SQLite จริง: โครงสร้างหลัง migrate ต้องเหมือนสร้างใหม่จากโครงสร้างใหม่ และข้อมูลเดิมต้องไม่หาย
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/ddl/ddl_generator.dart';
-import 'package:nsl_dev/core/diff/migration.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/models/index_model.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/relation_model.dart';
-import 'package:nsl_dev/core/models/table_model.dart';
+import 'package:nsl_nebular/core/ddl/ddl_generator.dart';
+import 'package:nsl_nebular/core/diff/migration.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/models/index_model.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/relation_model.dart';
+import 'package:nsl_nebular/core/models/table_model.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 import 'migration_fixtures.dart';

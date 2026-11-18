@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>โน้ตและงานค้าง</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid #0F766E;outline-offset:1px}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #EEF1F5; color: #1B2430; font-size: 13px; line-height: 1.45">
+
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 12px; background: #1F2A37; color: #E6EBF2">
+<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="#0F766E"/><circle cx="11" cy="11" r="4" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="17" cy="7" r="1.6" fill="#F4B860"/></svg>
+<span style="font-weight: 700">NSL Nebular</span>
+<span style="color: #AEB9C8">ร้านขายของออนไลน์ / Wireframe · หน้าตะกร้า</span>
+<div style="flex: 1"></div>
+<button style="height: 28px; padding: 0 12px; border: 1px solid #3B4859; border-radius: 8px; background: #19212B; color: #E6EBF2; font-size: 12px">ซ่อนหมุดโน้ต (N)</button>
+</div>
+
+<div style="flex: 1; display: flex; min-height: 0">
+
+<!-- canvas with wireframe -->
+<div style="flex: 1; min-width: 0; position: relative; overflow: hidden; background-color: #F6F8FB; background-image: radial-gradient(#C3CCD8 1px, transparent 1px); background-size: 20px 20px">
+<div style="position: absolute; left: 200px; top: 60px; width: 360px; height: 680px; background: #fff; border: 1px solid #CBD3DE; border-radius: 26px; padding: 22px 18px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px">
+<div style="height: 22px; width: 110px; background: #E6EAF0; border-radius: 4px"></div>
+<div style="display: flex; gap: 10px; padding: 10px; border: 1px solid #E6EAF0; border-radius: 10px"><div style="width: 56px; height: 56px; background: #E6EAF0; border-radius: 8px"></div><div style="flex: 1; display: flex; flex-direction: column; gap: 6px"><div style="height: 12px; width: 70%; background: #E6EAF0; border-radius: 3px"></div><div style="height: 12px; width: 40%; background: #E6EAF0; border-radius: 3px"></div></div></div>
+<div style="display: flex; gap: 10px; padding: 10px; border: 1px solid #E6EAF0; border-radius: 10px"><div style="width: 56px; height: 56px; background: #E6EAF0; border-radius: 8px"></div><div style="flex: 1; display: flex; flex-direction: column; gap: 6px"><div style="height: 12px; width: 60%; background: #E6EAF0; border-radius: 3px"></div><div style="height: 12px; width: 35%; background: #E6EAF0; border-radius: 3px"></div></div></div>
+<div style="height: 36px; border: 1px dashed #CBD3DE; border-radius: 8px"></div>
+<div style="flex: 1"></div>
+<div style="display: flex; justify-content: space-between; padding: 0 2px"><div style="height: 14px; width: 60px; background: #E6EAF0; border-radius: 3px"></div><div style="height: 14px; width: 80px; background: #CBD3DE; border-radius: 3px"></div></div>
+<div style="height: 48px; border-radius: 10px; background: #B7791F; opacity: 0.85"></div>
+</div>
+
+<!-- pin 1 with open sticky -->
+<div style="position: absolute; left: 540px; top: 620px; width: 28px; height: 28px; border-radius: 50% 50% 50% 4px; background: #D97706; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; box-shadow: 0 0 0 4px rgba(217,119,6,0.25)">1</div>
+<div style="position: absolute; left: 584px; top: 560px; width: 260px; padding: 12px 14px; background: #FFF4D6; border: 1px solid #F1D99A; border-radius: 10px; box-shadow: 0 6px 18px rgba(15,23,42,0.12); color: #5C3D00">
+<div style="font-weight: 600; margin-bottom: 4px">ต้องทำ</div>
+ผูกปุ่มนี้กับ <span style="padding: 1px 6px; border-radius: 4px; background: #fff; color: #155E75; font-family: 'JetBrains Mono', monospace; font-size: 12px">POST /orders</span> และเพิ่มหน้ากรณีสต็อกหมด
+</div>
+
+<div style="position: absolute; left: 540px; top: 308px; width: 28px; height: 28px; border-radius: 50% 50% 50% 4px; background: #D97706; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px">2</div>
+<div style="position: absolute; left: 180px; top: 160px; width: 28px; height: 28px; border-radius: 50% 50% 50% 4px; background: #0F766E; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px" aria-label="เสร็จแล้ว">
+<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><path d="M2 6l3 3 5-6"/></svg>
+</div>
+</div>
+
+<!-- notes panel -->
+<div style="width: 380px; flex: none; background: #fff; border-left: 1px solid #D8DEE6; display: flex; flex-direction: column">
+<div style="display: flex; border-bottom: 1px solid #E6EAF0">
+<div style="flex: 1; text-align: center; padding: 11px 0; font-weight: 600; box-shadow: inset 0 -2px 0 #0F766E; color: #0B5A54">หน้านี้ · 3</div>
+<div style="flex: 1; text-align: center; padding: 11px 0; color: #5B6778">ทั้งโปรเจกต์ · 9</div>
+</div>
+
+<div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; gap: 6px">
+<span style="padding: 4px 10px; border-radius: 999px; background: #1F2A37; color: #fff; font-size: 12px">ทั้งหมด</span>
+<span style="padding: 4px 10px; border-radius: 999px; background: #FFF4D6; color: #5C3D00; font-size: 12px">ต้องทำ 2</span>
+<span style="padding: 4px 10px; border-radius: 999px; background: #E2F3F1; color: #0B5A54; font-size: 12px">เสร็จ 1</span>
+<span style="padding: 4px 10px; border-radius: 999px; background: #E8EEF8; color: #1E3A6B; font-size: 12px">คำถาม 0</span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column">
+<div style="display: flex; gap: 12px; padding: 12px 16px; border-top: 1px solid #E6EAF0; background: #FFFBEF">
+<input type="checkbox" aria-label="ทำเสร็จแล้ว" style="margin-top: 3px">
+<div style="flex: 1">
+<div style="display: flex; align-items: center; gap: 8px"><span style="width: 18px; height: 18px; border-radius: 50%; background: #D97706; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700">1</span><span style="font-size: 12px; color: #5B6778">ปุ่ม "สั่งซื้อ" · วันนี้</span></div>
+<div style="margin-top: 4px">ผูกปุ่มนี้กับ <span style="padding: 1px 6px; border-radius: 4px; background: #E0F2F7; color: #155E75; font-family: 'JetBrains Mono', monospace; font-size: 12px">POST /orders</span> และเพิ่มหน้ากรณีสต็อกหมด</div>
+</div>
+</div>
+<div style="display: flex; gap: 12px; padding: 12px 16px; border-top: 1px solid #E6EAF0">
+<input type="checkbox" aria-label="ทำเสร็จแล้ว" style="margin-top: 3px">
+<div style="flex: 1">
+<div style="display: flex; align-items: center; gap: 8px"><span style="width: 18px; height: 18px; border-radius: 50%; background: #D97706; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700">2</span><span style="font-size: 12px; color: #5B6778">ช่องโค้ดส่วนลด · เมื่อวาน</span></div>
+<div style="margin-top: 4px">ตาราง <span style="padding: 1px 6px; border-radius: 4px; background: #FDE8E8; color: #7A1F1F; font-family: 'JetBrains Mono', monospace; font-size: 12px">coupons</span> ถูกลบใน v3 แล้ว เอาช่องนี้ออก</div>
+</div>
+</div>
+<div style="display: flex; gap: 12px; padding: 12px 16px; border-top: 1px solid #E6EAF0; color: #5B6778">
+<input type="checkbox" checked aria-label="ทำเสร็จแล้ว" style="margin-top: 3px">
+<div style="flex: 1">
+<div style="font-size: 12px">หัวข้อหน้า · 3 วันที่แล้ว</div>
+<div style="margin-top: 4px; text-decoration: line-through">เปลี่ยนชื่อหัวข้อเป็น "ตะกร้าของฉัน"</div>
+</div>
+</div>
+</div>
+
+<div style="padding: 14px 16px; border-top: 1px solid #E6EAF0; display: flex; flex-direction: column; gap: 8px">
+<label for="newnote" style="font-size: 12px; color: #5B6778">โน้ตใหม่ (คลิกบนชิ้นงานเพื่อปักหมุด)</label>
+<textarea id="newnote" rows="2" style="font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid #CBD3DE; border-radius: 8px; resize: none">ใช้ # อ้างถึงตาราง เอกสาร หรือ endpoint</textarea>
+<div style="display: flex; gap: 8px; align-items: center">
+<span style="font-size: 12px; color: #5B6778">ชนิด</span>
+<span style="padding: 3px 10px; border-radius: 999px; background: #FFF4D6; color: #5C3D00; font-size: 12px; border: 1px solid #D97706">ต้องทำ</span>
+<span style="padding: 3px 10px; border-radius: 999px; border: 1px solid #D8DEE6; font-size: 12px">คำถาม</span>
+<span style="padding: 3px 10px; border-radius: 999px; border: 1px solid #D8DEE6; font-size: 12px">บันทึก</span>
+<div style="flex: 1"></div>
+<button style="height: 30px; padding: 0 14px; border: 0; border-radius: 8px; background: #0F766E; color: #fff; font-size: 12px; font-weight: 600">เพิ่ม</button>
+</div>
+</div>
+
+<div style="flex: 1"></div>
+<div style="padding: 12px 16px; font-size: 12px; color: #5B6778; border-top: 1px solid #E6EAF0">โน้ตเก็บในไฟล์ .nsln · ใช้งานออฟไลน์ได้ทั้งหมด · ส่งออกรวมกับพจนานุกรมข้อมูลได้</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

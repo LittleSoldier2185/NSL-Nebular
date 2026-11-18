@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/main.dart';
+import 'package:nsl_nebular/main.dart';
 
 void main() {
   testWidgets('เพิ่มตาราง -> เห็นในรายการ + แผงขวา แล้วเพิ่ม/ลบคอลัมน์', (tester) async {

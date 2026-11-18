@@ -1,6 +1,6 @@
-; NSL Dev — สคริปต์ตัวติดตั้ง Inno Setup (https://jrsoftware.org/isinfo.php)
+; NSL Nebular — สคริปต์ตัวติดตั้ง Inno Setup (https://jrsoftware.org/isinfo.php)
 ; สร้างด้วย tool\build_installer.ps1 (ส่ง /DAppVersion=x.y.z มาให้) หรือเปิดไฟล์นี้ใน Inno Setup Compiler แล้วกด Compile
-; ติดตั้งแบบผู้ใช้คนเดียว (ไม่ต้องใช้สิทธิ์ผู้ดูแล) ลงใน %LOCALAPPDATA%\Programs\NSL Dev
+; ติดตั้งแบบผู้ใช้คนเดียว (ไม่ต้องใช้สิทธิ์ผู้ดูแล) ลงใน %LOCALAPPDATA%\Programs\NSL Nebular
 
 #ifndef AppVersion
   #define AppVersion "0.0.0"
@@ -9,9 +9,9 @@
   #define SourceDir "..\build\windows\x64\runner\Release"
 #endif
 
-#define AppName "NSL Dev"
-#define AppExe "nsl_dev.exe"
-#define ProgId "NSLDev.Project"
+#define AppName "NSL Nebular"
+#define AppExe "nsl_nebular.exe"
+#define ProgId "NSLNebular.Project"
 
 [Setup]
 ; GUID ตายตัวของแอปนี้ — อย่าเปลี่ยน ไม่เช่นนั้นการอัปเกรดจะติดตั้งซ้อนกับรุ่นเดิม
@@ -25,7 +25,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=..\build\installer
-OutputBaseFilename=NSL-Dev-Setup-{#AppVersion}
+OutputBaseFilename=NSL-Nebular-Setup-{#AppVersion}
 SetupIconFile=..\windows\runner\resources\app_icon.ico
 UninstallDisplayIcon={app}\{#AppExe}
 Compression=lzma2
@@ -43,7 +43,7 @@ Name: "thai"; MessagesFile: "compiler:Languages\Thai.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "assoc_nsld"; Description: "ผูกไฟล์ .nsld กับ NSL Dev (ดับเบิลคลิกเพื่อเปิด) / Associate .nsld files with NSL Dev"; GroupDescription: "{cm:AssocFileExtension,{#AppName},.nsld}"
+Name: "assoc_nsln"; Description: "ผูกไฟล์ .nsln กับ NSL Nebular (ดับเบิลคลิกเพื่อเปิด) / Associate .nsln files with NSL Nebular"; GroupDescription: "{cm:AssocFileExtension,{#AppName},.nsln}"
 Name: "assoc_erd"; Description: "ผูกไฟล์ .erd รุ่นเก่า / Associate legacy .erd files"; GroupDescription: "{cm:AssocFileExtension,{#AppName},.erd}"; Flags: unchecked
 
 [Files]
@@ -55,10 +55,10 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 
 [Registry]
 ; ลงทะเบียนเฉพาะผู้ใช้ (HKA = HKCU เมื่อติดตั้งแบบผู้ใช้เดียว) ; uninsdeletekey ลบคีย์ของเราออกตอนถอนการติดตั้ง
-Root: HKA; Subkey: "Software\Classes\{#ProgId}"; ValueType: string; ValueData: "NSL Dev Project"; Flags: uninsdeletekey; Tasks: assoc_nsld assoc_erd
-Root: HKA; Subkey: "Software\Classes\{#ProgId}\DefaultIcon"; ValueType: string; ValueData: "{app}\{#AppExe},0"; Tasks: assoc_nsld assoc_erd
-Root: HKA; Subkey: "Software\Classes\{#ProgId}\shell\open\command"; ValueType: string; ValueData: """{app}\{#AppExe}"" ""%1"""; Tasks: assoc_nsld assoc_erd
-Root: HKA; Subkey: "Software\Classes\.nsld"; ValueType: string; ValueData: "{#ProgId}"; Flags: uninsdeletevalue; Tasks: assoc_nsld
+Root: HKA; Subkey: "Software\Classes\{#ProgId}"; ValueType: string; ValueData: "NSL Nebular Project"; Flags: uninsdeletekey; Tasks: assoc_nsln assoc_erd
+Root: HKA; Subkey: "Software\Classes\{#ProgId}\DefaultIcon"; ValueType: string; ValueData: "{app}\{#AppExe},0"; Tasks: assoc_nsln assoc_erd
+Root: HKA; Subkey: "Software\Classes\{#ProgId}\shell\open\command"; ValueType: string; ValueData: """{app}\{#AppExe}"" ""%1"""; Tasks: assoc_nsln assoc_erd
+Root: HKA; Subkey: "Software\Classes\.nsln"; ValueType: string; ValueData: "{#ProgId}"; Flags: uninsdeletevalue; Tasks: assoc_nsln
 Root: HKA; Subkey: "Software\Classes\.erd"; ValueType: string; ValueData: "{#ProgId}"; Flags: uninsdeletevalue; Tasks: assoc_erd
 
 [Run]

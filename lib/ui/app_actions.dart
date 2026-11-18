@@ -191,7 +191,7 @@ class AppActions {
     if (pasted.isEmpty) {
       _pasteCount = 0;
       _lastPasted = null;
-      if (context.mounted) _toast(tr('ไม่มีตารางของ NSL Dev ในคลิปบอร์ด'));
+      if (context.mounted) _toast(tr('ไม่มีตารางของ NSL Nebular ในคลิปบอร์ด'));
       return;
     }
     if (context.mounted) cv.focusTable(pasted.last);

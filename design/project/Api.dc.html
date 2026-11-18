@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>API Designer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid #0F766E;outline-offset:1px}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #EEF1F5; color: #1B2430; font-size: 13px; line-height: 1.4">
+
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 12px; background: #1F2A37; color: #E6EBF2">
+<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="#0F766E"/><circle cx="11" cy="11" r="4" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="17" cy="7" r="1.6" fill="#F4B860"/></svg>
+<span style="font-weight: 700">NSL Nebular</span>
+<span style="color: #AEB9C8">ร้านขายของออนไลน์ / API · Store API v1</span>
+<div style="flex: 1"></div>
+<button style="height: 28px; padding: 0 12px; border: 1px solid #3B4859; border-radius: 8px; background: #19212B; color: #E6EBF2; font-size: 12px">ทดลองยิง (Mock)</button>
+<button style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; background: #0E7490; color: #fff; font-size: 12px; font-weight: 600">ส่งออก OpenAPI</button>
+</div>
+
+<div style="flex: 1; display: flex; min-height: 0">
+
+<!-- endpoint list -->
+<div style="width: 280px; flex: none; background: #fff; border-right: 1px solid #D8DEE6; display: flex; flex-direction: column">
+<div style="padding: 14px; display: flex; align-items: center; gap: 8px">
+<span style="width: 10px; height: 10px; border-radius: 3px; background: #0E7490"></span>
+<span style="font-weight: 700">Endpoints</span>
+<button style="margin-left: auto; height: 26px; padding: 0 10px; border: 1px solid #D8DEE6; border-radius: 7px; background: #fff; font-size: 12px; color: #155E75; font-weight: 600">+ เพิ่ม</button>
+</div>
+<div style="padding: 0 8px; display: flex; flex-direction: column; gap: 2px; font-family: 'JetBrains Mono', monospace; font-size: 12px">
+<div style="padding: 6px 8px; font-family: 'Noto Sans Thai', sans-serif; font-size: 11px; font-weight: 600; color: #5B6778">orders · ผูกกับตาราง orders</div>
+<div style="display: flex; gap: 8px; padding: 7px 8px; border-radius: 7px"><span style="width: 52px; color: #0B5A54; font-weight: 600">GET</span>/orders</div>
+<div style="display: flex; gap: 8px; padding: 7px 8px; border-radius: 7px; background: #E0F2F7; box-shadow: inset 3px 0 0 #0E7490"><span style="width: 52px; color: #1E4F8A; font-weight: 600">POST</span>/orders</div>
+<div style="display: flex; gap: 8px; padding: 7px 8px; border-radius: 7px"><span style="width: 52px; color: #0B5A54; font-weight: 600">GET</span>/orders/{id}</div>
+<div style="display: flex; gap: 8px; padding: 7px 8px; border-radius: 7px"><span style="width: 52px; color: #8A5A12; font-weight: 600">PATCH</span>/orders/{id}</div>
+<div style="display: flex; gap: 8px; padding: 7px 8px; border-radius: 7px"><span style="width: 52px; color: #7A1F1F; font-weight: 600">DELETE</span>/orders/{id}</div>
+<div style="padding: 10px 8px 6px; font-family: 'Noto Sans Thai', sans-serif; font-size: 11px; font-weight: 600; color: #5B6778">products · ผูกกับตาราง products</div>
+<div style="display: flex; gap: 8px; padding: 7px 8px; border-radius: 7px"><span style="width: 52px; color: #0B5A54; font-weight: 600">GET</span>/products</div>
+<div style="display: flex; gap: 8px; padding: 7px 8px; border-radius: 7px"><span style="width: 52px; color: #0B5A54; font-weight: 600">GET</span>/products/{id}</div>
+<div style="padding: 10px 8px 6px; font-family: 'Noto Sans Thai', sans-serif; font-size: 11px; font-weight: 600; color: #5B6778">auth · ไม่ผูกตาราง</div>
+<div style="display: flex; gap: 8px; padding: 7px 8px; border-radius: 7px"><span style="width: 52px; color: #1E4F8A; font-weight: 600">POST</span>/auth/login</div>
+</div>
+<div style="flex: 1"></div>
+<div style="margin: 12px; padding: 10px 12px; border-radius: 10px; background: #FFF4D6; color: #5C3D00; font-size: 12px">
+<b>ตาราง customers</b> ยังไม่มี endpoint · <span style="text-decoration: underline">สร้าง CRUD อัตโนมัติ</span>
+</div>
+</div>
+
+<!-- editor -->
+<div style="flex: 1; min-width: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 6px 0 12px; background: #fff; border: 1px solid #CBD3DE; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 15px">
+<span style="padding: 3px 10px; border-radius: 6px; background: #E8EEF8; color: #1E4F8A; font-weight: 600; font-size: 13px">POST</span>
+<span>/orders</span>
+<div style="flex: 1"></div>
+<span style="font-family: 'Noto Sans Thai', sans-serif; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #E2F3F1; color: #0B5A54; display: flex; align-items: center; gap: 6px"><span style="width: 7px; height: 7px; border-radius: 2px; background: #0F766E"></span>ตาราง orders</span>
+<span style="font-family: 'Noto Sans Thai', sans-serif; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: #F3F5F8; color: #334155">ต้องล็อกอิน</span>
+</div>
+<div style="color: #5B6778">สร้างคำสั่งซื้อใหม่จากตะกร้าของลูกค้า แล้วคืนคำสั่งซื้อที่สร้างพร้อมยอดรวม</div>
+
+<div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 12px; overflow: hidden">
+<div style="display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid #E6EAF0"><span style="font-weight: 700">Request body</span><span style="margin-left: auto; font-size: 12px; color: #5B6778">ดึงฟิลด์จากคอลัมน์ ER อัตโนมัติ</span></div>
+<div style="display: grid; grid-template-columns: 1.3fr 1fr 1.4fr 0.7fr; padding: 8px 14px; background: #F3F5F8; font-size: 11px; font-weight: 600; color: #5B6778"><span>ฟิลด์</span><span>ชนิด</span><span>มาจาก</span><span>บังคับ</span></div>
+<div style="display: grid; grid-template-columns: 1.3fr 1fr 1.4fr 0.7fr; padding: 9px 14px; border-top: 1px solid #F3F5F8; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span>customer_id</span><span style="color: #5B6778">integer</span><span style="color: #0B5A54">orders.customer_id</span><span>ใช่</span></div>
+<div style="display: grid; grid-template-columns: 1.3fr 1fr 1.4fr 0.7fr; padding: 9px 14px; border-top: 1px solid #F3F5F8; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span>items[]</span><span style="color: #5B6778">array</span><span style="color: #0B5A54">order_items</span><span>ใช่</span></div>
+<div style="display: grid; grid-template-columns: 1.3fr 1fr 1.4fr 0.7fr; padding: 9px 14px; border-top: 1px solid #F3F5F8; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="padding-left: 14px">product_id</span><span style="color: #5B6778">integer</span><span style="color: #0B5A54">order_items.product_id</span><span>ใช่</span></div>
+<div style="display: grid; grid-template-columns: 1.3fr 1fr 1.4fr 0.7fr; padding: 9px 14px; border-top: 1px solid #F3F5F8; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="padding-left: 14px">qty</span><span style="color: #5B6778">integer</span><span style="color: #0B5A54">order_items.qty</span><span>ใช่</span></div>
+<div style="display: grid; grid-template-columns: 1.3fr 1fr 1.4fr 0.7fr; padding: 9px 14px; border-top: 1px solid #F3F5F8; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span>note</span><span style="color: #5B6778">string</span><span style="color: #5B6778; font-family: 'Noto Sans Thai', sans-serif">กำหนดเอง</span><span>ไม่</span></div>
+</div>
+
+<div style="background: #fff; border: 1px solid #D8DEE6; border-radius: 12px; overflow: hidden; flex: 1; display: flex; flex-direction: column; min-height: 0">
+<div style="display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-bottom: 1px solid #E6EAF0">
+<span style="font-weight: 700; padding: 0 6px">Responses</span>
+<span style="padding: 4px 10px; border-radius: 6px; background: #E2F3F1; color: #0B5A54; font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 12px">201</span>
+<span style="padding: 4px 10px; border-radius: 6px; color: #5B6778; font-family: 'JetBrains Mono', monospace; font-size: 12px">400</span>
+<span style="padding: 4px 10px; border-radius: 6px; color: #5B6778; font-family: 'JetBrains Mono', monospace; font-size: 12px">401</span>
+<span style="padding: 4px 10px; border-radius: 6px; color: #5B6778; font-family: 'JetBrains Mono', monospace; font-size: 12px">409</span>
+</div>
+<div style="flex: 1; padding: 14px 16px; background: #19212B; color: #E6EBF2; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.7; white-space: pre">{
+  <span style="color: #7DD3FC">"id"</span>: <span style="color: #FCD34D">1042</span>,
+  <span style="color: #7DD3FC">"customer_id"</span>: <span style="color: #FCD34D">17</span>,
+  <span style="color: #7DD3FC">"status"</span>: <span style="color: #86EFAC">"pending"</span>,
+  <span style="color: #7DD3FC">"total"</span>: <span style="color: #FCD34D">1290.00</span>,
+  <span style="color: #7DD3FC">"items"</span>: [ { <span style="color: #7DD3FC">"product_id"</span>: <span style="color: #FCD34D">5</span>, <span style="color: #7DD3FC">"qty"</span>: <span style="color: #FCD34D">2</span> } ],
+  <span style="color: #7DD3FC">"created_at"</span>: <span style="color: #86EFAC">"2026-11-18T10:24:00Z"</span>
+}</div>
+</div>
+</div>
+
+<!-- right -->
+<div style="width: 300px; flex: none; background: #fff; border-left: 1px solid #D8DEE6; padding: 16px; display: flex; flex-direction: column; gap: 16px">
+<div>
+<div style="font-size: 11px; font-weight: 600; color: #5B6778; letter-spacing: 0.04em; margin-bottom: 8px">เรียกใช้จาก</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #E6EAF0; border-radius: 8px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #B83B6B; flex: none"></span><div><div style="font-weight: 500">ตะกร้า → ยืนยันสั่งซื้อ</div><div style="font-size: 11px; color: #5B6778">Screen Flow · แอปลูกค้า</div></div></div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #E6EAF0; border-radius: 8px"><span style="width: 8px; height: 8px; border-radius: 2px; background: #B7791F; flex: none"></span><div><div style="font-weight: 500">ปุ่ม "สั่งซื้อ"</div><div style="font-size: 11px; color: #5B6778">Wireframe · หน้าตะกร้า</div></div></div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #E6EAF0; border-radius: 8px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2F6FB5; flex: none"></span><div><div style="font-weight: 500">P2 รับคำสั่งซื้อ</div><div style="font-size: 11px; color: #5B6778">DFD ระดับ 0</div></div></div>
+</div>
+</div>
+<div>
+<div style="font-size: 11px; font-weight: 600; color: #5B6778; letter-spacing: 0.04em; margin-bottom: 8px">ตรวจสอบ</div>
+<div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px">
+<div style="display: flex; gap: 8px; align-items: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: #0F766E"></span>ทุกฟิลด์บังคับมีคอลัมน์ NOT NULL รองรับ</div>
+<div style="display: flex; gap: 8px; align-items: center"><span style="width: 8px; height: 8px; border-radius: 50%; background: #0F766E"></span>ชนิดข้อมูลตรงกับ ER</div>
+<div style="display: flex; gap: 8px; align-items: center; color: #5C3D00"><span style="width: 8px; height: 8px; border-radius: 50%; background: #D97706"></span>ยังไม่มีตัวอย่าง response 409</div>
+</div>
+</div>
+<div style="flex: 1"></div>
+<div style="padding: 12px; border-radius: 10px; background: #F3F5F8; font-size: 12px; color: #334155">
+แก้คอลัมน์ใน ER แล้ว ฟิลด์ที่ผูกไว้จะอัปเดตตาม และแจ้งเตือนถ้าชนิดไม่ตรง
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

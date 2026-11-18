@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Workspace ER Diagram</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+button:hover{background:#E6EAF0}
+button:focus-visible{outline:2px solid #0F766E;outline-offset:1px}
+</style>
+</helmet>
+<div style="min-height: 900px; display: flex; flex-direction: column; background: #EEF1F5; color: #1B2430; font-size: 13px; line-height: 1.4">
+
+<!-- top bar -->
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 12px; background: #1F2A37; color: #E6EBF2">
+<div style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px">
+<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="#0F766E"/><circle cx="11" cy="11" r="4" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="17" cy="7" r="1.6" fill="#F4B860"/></svg>
+NSL Nebular
+</div>
+<div style="display: flex; gap: 2px; color: #AEB9C8">
+<button style="border: 0; background: none; color: inherit; padding: 6px 10px; border-radius: 6px; font-size: 13px">ไฟล์</button>
+<button style="border: 0; background: none; color: inherit; padding: 6px 10px; border-radius: 6px; font-size: 13px">แก้ไข</button>
+<button style="border: 0; background: none; color: inherit; padding: 6px 10px; border-radius: 6px; font-size: 13px">มุมมอง</button>
+<button style="border: 0; background: none; color: inherit; padding: 6px 10px; border-radius: 6px; font-size: 13px">ส่งออก</button>
+<button style="border: 0; background: none; color: inherit; padding: 6px 10px; border-radius: 6px; font-size: 13px">ช่วยเหลือ</button>
+</div>
+<div style="flex: 1; display: flex; justify-content: center">
+<button style="display: flex; align-items: center; gap: 10px; width: 420px; max-width: 100%; height: 30px; padding: 0 10px; border: 1px solid #3B4859; border-radius: 8px; background: #19212B; color: #AEB9C8; font-size: 13px; text-align: left">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+<span style="flex: 1">ค้นหาตาราง เอกสาร หรือสั่งงาน...</span>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 1px 6px; border: 1px solid #3B4859; border-radius: 4px">Ctrl K</span>
+</button>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; color: #AEB9C8; font-size: 12px">
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #34D399"></span>บันทึกอัตโนมัติแล้ว</span>
+<button style="border: 1px solid #3B4859; background: #19212B; color: #E6EBF2; padding: 5px 12px; border-radius: 8px; font-size: 12px">แชร์</button>
+</div>
+</div>
+
+<div style="flex: 1; display: flex; min-height: 0">
+
+<!-- activity rail -->
+<div style="width: 52px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0; background: #fff; border-right: 1px solid #D8DEE6">
+<button aria-label="ER Diagram" style="width: 36px; height: 36px; border: 0; border-radius: 8px; background: #E2F3F1; color: #0B5A54; display: flex; align-items: center; justify-content: center; box-shadow: inset 3px 0 0 #0F766E">
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="3" width="7" height="6" rx="1"/><rect x="11" y="11" width="7" height="6" rx="1"/><path d="M9 6h3a2 2 0 0 1 2 2v3"/></svg>
+</button>
+<button aria-label="Data Flow" style="width: 36px; height: 36px; border: 0; border-radius: 8px; background: none; color: #1E4F8A; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="6" cy="10" r="3.5"/><path d="M10 10h6M14 7l3 3-3 3"/></svg>
+</button>
+<button aria-label="Flowchart" style="width: 36px; height: 36px; border: 0; border-radius: 8px; background: none; color: #553BA0; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M10 2l6 6-6 6-6-6z"/><path d="M10 14v4"/></svg>
+</button>
+<button aria-label="Wireframe" style="width: 36px; height: 36px; border: 0; border-radius: 8px; background: none; color: #8A5A12; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 7h14M7 7v10"/></svg>
+</button>
+<button aria-label="Screen Flow" style="width: 36px; height: 36px; border: 0; border-radius: 8px; background: none; color: #8F2A52; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="4" width="6" height="10" rx="1"/><rect x="12" y="6" width="6" height="10" rx="1"/><path d="M8 9h4"/></svg>
+</button>
+<div style="flex: 1"></div>
+<button aria-label="ตั้งค่า" style="width: 36px; height: 36px; border: 0; border-radius: 8px; background: none; color: #5B6778; display: flex; align-items: center; justify-content: center">
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="2.5"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3M4.5 4.5l2 2M13.5 13.5l2 2M15.5 4.5l-2 2M6.5 13.5l-2 2"/></svg>
+</button>
+</div>
+
+<!-- explorer -->
+<div style="width: 248px; flex: none; display: flex; flex-direction: column; background: #fff; border-right: 1px solid #D8DEE6">
+<div style="padding: 14px 14px 10px">
+<div style="font-size: 11px; color: #5B6778; letter-spacing: 0.04em">โปรเจกต์</div>
+<div style="font-weight: 600; font-size: 14px">ร้านขายของออนไลน์</div>
+</div>
+<div style="padding: 0 14px 10px">
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-radius: 8px; background: #F3F5F8; color: #5B6778">
+<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+กรองเอกสาร
+</div>
+</div>
+<div style="flex: 1; overflow: hidden; padding: 0 8px; display: flex; flex-direction: column; gap: 10px">
+<div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 11px; font-weight: 600; color: #0B5A54; letter-spacing: 0.04em"><span style="width: 8px; height: 8px; border-radius: 2px; background: #0F766E"></span>ER DIAGRAM <span style="margin-left: auto; color: #5B6778; font-weight: 500">2</span></div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin-top: 2px; border-radius: 8px; background: #E2F3F1; color: #0B5A54; font-weight: 600">ร้านค้า (หลัก)<span style="margin-left: auto; font-size: 11px; font-weight: 500">8 ตาราง</span></div>
+<div style="padding: 6px 10px; border-radius: 8px">รายงาน<span style="float: right; font-size: 11px; color: #5B6778">3 ตาราง</span></div>
+</div>
+<div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 11px; font-weight: 600; color: #1E4F8A; letter-spacing: 0.04em"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2F6FB5"></span>DATA FLOW <span style="margin-left: auto; color: #5B6778; font-weight: 500">2</span></div>
+<div style="padding: 6px 10px; border-radius: 8px">ระดับ 0 - ภาพรวม</div>
+<div style="padding: 6px 10px; border-radius: 8px">ระดับ 1 - สั่งซื้อ</div>
+</div>
+<div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 11px; font-weight: 600; color: #553BA0; letter-spacing: 0.04em"><span style="width: 8px; height: 8px; border-radius: 1px; background: #6D4FC2; transform: rotate(45deg)"></span>FLOWCHART <span style="margin-left: auto; color: #5B6778; font-weight: 500">1</span></div>
+<div style="padding: 6px 10px; border-radius: 8px">ขั้นตอนชำระเงิน</div>
+</div>
+<div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 11px; font-weight: 600; color: #8A5A12; letter-spacing: 0.04em"><span style="width: 8px; height: 8px; border-radius: 2px; background: #B7791F"></span>WIREFRAME <span style="margin-left: auto; color: #5B6778; font-weight: 500">3</span></div>
+<div style="padding: 6px 10px; border-radius: 8px">หน้าสินค้า</div>
+<div style="padding: 6px 10px; border-radius: 8px">หน้าตะกร้า</div>
+<div style="padding: 6px 10px; border-radius: 8px">หน้าชำระเงิน</div>
+</div>
+<div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-size: 11px; font-weight: 600; color: #8F2A52; letter-spacing: 0.04em"><span style="width: 8px; height: 8px; border-radius: 2px; background: #B83B6B"></span>SCREEN FLOW <span style="margin-left: auto; color: #5B6778; font-weight: 500">1</span></div>
+<div style="padding: 6px 10px; border-radius: 8px">แอปลูกค้า</div>
+</div>
+</div>
+<div style="padding: 10px 14px; border-top: 1px solid #E6EAF0">
+<button style="width: 100%; height: 34px; border: 1px dashed #CBD3DE; border-radius: 8px; background: #fff; color: #0B5A54; font-weight: 600; font-size: 13px">+ เอกสารใหม่</button>
+</div>
+</div>
+
+<!-- center -->
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+<div style="height: 38px; flex: none; display: flex; align-items: flex-end; gap: 2px; padding: 0 12px; background: #EEF1F5; border-bottom: 1px solid #D8DEE6; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 14px; background: #F6F8FB; border: 1px solid #D8DEE6; border-bottom: 0; border-radius: 8px 8px 0 0; box-shadow: inset 0 2px 0 #0F766E; font-weight: 600; white-space: nowrap">
+<span style="width: 8px; height: 8px; border-radius: 2px; background: #0F766E"></span>ER · ร้านค้า</div>
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px; color: #5B6778; white-space: nowrap"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2F6FB5"></span>DFD · ระดับ 0</div>
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px; color: #5B6778; white-space: nowrap"><span style="width: 8px; height: 8px; border-radius: 1px; background: #6D4FC2; transform: rotate(45deg)"></span>ขั้นตอนชำระเงิน</div>
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px; color: #5B6778; white-space: nowrap"><span style="width: 8px; height: 8px; border-radius: 2px; background: #B7791F"></span>หน้าตะกร้า</div>
+</div>
+
+<div style="height: 40px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 12px; background: #fff; border-bottom: 1px solid #E6EAF0">
+<button style="height: 28px; padding: 0 12px; border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 500">+ ตาราง</button>
+<button style="height: 28px; padding: 0 12px; border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 500">ความสัมพันธ์</button>
+<button style="height: 28px; padding: 0 12px; border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 500">นำเข้า SQL</button>
+<span style="width: 1px; height: 18px; background: #D8DEE6; margin: 0 4px"></span>
+<button style="height: 28px; padding: 0 12px; border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 500">จัดวางอัตโนมัติ</button>
+<button style="height: 28px; padding: 0 12px; border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 500">เทียบฐานข้อมูล</button>
+<div style="flex: 1"></div>
+<button style="height: 28px; padding: 0 12px; border: 0; border-radius: 8px; background: #0F766E; color: #fff; font-size: 12px; font-weight: 600">สร้าง SQL</button>
+</div>
+
+<!-- canvas -->
+<div style="flex: 1; position: relative; overflow: hidden; background-color: #F6F8FB; background-image: radial-gradient(#C3CCD8 1px, transparent 1px); background-size: 20px 20px">
+<svg width="848" height="460" viewBox="0 0 848 460" style="position: absolute; left: 0; top: 0" aria-hidden="true" fill="none" stroke="#5B6778" stroke-width="1.5">
+<path d="M256 96 H288 V172 H320"/>
+<path d="M540 144 H572 V124 H604"/>
+<path d="M604 340 H588 V152 H604" stroke-dasharray="4 3"/>
+<text x="262" y="90" fill="#5B6778" stroke="none" font-size="11">1</text>
+<text x="300" y="166" fill="#5B6778" stroke="none" font-size="11">N</text>
+<text x="546" y="138" fill="#5B6778" stroke="none" font-size="11">1</text>
+<text x="580" y="118" fill="#5B6778" stroke="none" font-size="11">N</text>
+</svg>
+
+<div style="position: absolute; left: 36px; top: 48px; width: 220px; background: #fff; border: 1px solid #D8DEE6; border-radius: 10px; box-shadow: 0 2px 6px rgba(15,23,42,0.08); overflow: hidden">
+<div style="height: 34px; display: flex; align-items: center; padding: 0 12px; background: #1F2A37; color: #fff; font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 12px">customers</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #FDEBD3; color: #8A4B08; font-weight: 600">PK</span>id</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #E6EAF0; color: #334155; font-weight: 600">NN</span>name</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #EDE9FE; color: #5B21B6; font-weight: 600">UQ</span>email</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5B6778"><span style="width: 24px"></span>created_at</div>
+</div>
+
+<div style="position: absolute; left: 320px; top: 96px; width: 220px; background: #fff; border: 2px solid #0F766E; border-radius: 10px; box-shadow: 0 0 0 4px #E2F3F1, 0 4px 10px rgba(15,23,42,0.12); overflow: hidden">
+<div style="height: 34px; display: flex; align-items: center; padding: 0 12px; background: #0F766E; color: #fff; font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 12px">orders</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #FDEBD3; color: #8A4B08; font-weight: 600">PK</span>id</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; background: #FFE9A8"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #D9F0EC; color: #0B5A54; font-weight: 600">FK</span>customer_id</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #E6EAF0; color: #334155; font-weight: 600">NN</span>status</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #E6EAF0; color: #334155; font-weight: 600">NN</span>total</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5B6778"><span style="width: 24px"></span>created_at</div>
+</div>
+
+<div style="position: absolute; left: 604px; top: 48px; width: 220px; background: #fff; border: 1px solid #D8DEE6; border-radius: 10px; box-shadow: 0 2px 6px rgba(15,23,42,0.08); overflow: hidden">
+<div style="height: 34px; display: flex; align-items: center; padding: 0 12px; background: #1F2A37; color: #fff; font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 12px">order_items</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #FDEBD3; color: #8A4B08; font-weight: 600">PK</span>id</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #D9F0EC; color: #0B5A54; font-weight: 600">FK</span>order_id</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #D9F0EC; color: #0B5A54; font-weight: 600">FK</span>product_id</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #E6EAF0; color: #334155; font-weight: 600">NN</span>qty</div>
+</div>
+
+<div style="position: absolute; left: 604px; top: 292px; width: 220px; background: #fff; border: 1px solid #D8DEE6; border-radius: 10px; box-shadow: 0 2px 6px rgba(15,23,42,0.08); overflow: hidden">
+<div style="height: 34px; display: flex; align-items: center; padding: 0 12px; background: #1F2A37; color: #fff; font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 12px">products</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #FDEBD3; color: #8A4B08; font-weight: 600">PK</span>id</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #E6EAF0; color: #334155; font-weight: 600">NN</span>title</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px"><span style="font-size: 10px; padding: 1px 5px; border-radius: 4px; background: #E6EAF0; color: #334155; font-weight: 600">NN</span>price</div>
+<div style="height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #5B6778"><span style="width: 24px"></span>stock</div>
+</div>
+
+<div style="position: absolute; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 2px; padding: 3px; background: #fff; border: 1px solid #D8DEE6; border-radius: 10px; box-shadow: 0 2px 6px rgba(15,23,42,0.08)">
+<button aria-label="ซูมออก" style="width: 28px; height: 28px; border: 0; border-radius: 7px; background: none; font-size: 16px">−</button>
+<span style="min-width: 48px; text-align: center; font-size: 12px; font-weight: 600">100%</span>
+<button aria-label="ซูมเข้า" style="width: 28px; height: 28px; border: 0; border-radius: 7px; background: none; font-size: 16px">+</button>
+</div>
+</div>
+</div>
+
+<!-- inspector -->
+<div style="width: 292px; flex: none; display: flex; flex-direction: column; background: #fff; border-left: 1px solid #D8DEE6; overflow: hidden">
+<div style="display: flex; border-bottom: 1px solid #E6EAF0">
+<div style="flex: 1; text-align: center; padding: 11px 0; font-weight: 600; box-shadow: inset 0 -2px 0 #0F766E; color: #0B5A54">ตาราง</div>
+<div style="flex: 1; text-align: center; padding: 11px 0; color: #5B6778">สไตล์</div>
+<div style="flex: 1; text-align: center; padding: 11px 0; color: #5B6778">SQL</div>
+</div>
+<div style="padding: 14px; display: flex; flex-direction: column; gap: 14px; overflow: hidden">
+<div>
+<div style="font-size: 11px; color: #5B6778; margin-bottom: 4px">ชื่อตาราง</div>
+<div style="height: 32px; display: flex; align-items: center; padding: 0 10px; border: 1px solid #CBD3DE; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px">orders</div>
+</div>
+<div>
+<div style="display: flex; align-items: center; margin-bottom: 6px"><span style="font-size: 11px; font-weight: 600; color: #5B6778; letter-spacing: 0.04em">คอลัมน์ · 5</span><button style="margin-left: auto; border: 0; background: none; color: #0B5A54; font-weight: 600; font-size: 12px; padding: 2px 6px; border-radius: 6px">+ เพิ่ม</button></div>
+<div style="border: 1px solid #E6EAF0; border-radius: 8px; overflow: hidden; font-family: 'JetBrains Mono', monospace; font-size: 12px">
+<div style="display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid #E6EAF0">id<span style="margin-left: auto; color: #5B6778">bigint</span></div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid #E6EAF0; background: #FFF4D6">customer_id<span style="margin-left: auto; color: #5C3D00">bigint</span></div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid #E6EAF0">status<span style="margin-left: auto; color: #5B6778">varchar(20)</span></div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid #E6EAF0">total<span style="margin-left: auto; color: #5B6778">decimal(10,2)</span></div>
+<div style="display: flex; align-items: center; gap: 8px; padding: 7px 10px">created_at<span style="margin-left: auto; color: #5B6778">timestamp</span></div>
+</div>
+</div>
+<div>
+<div style="font-size: 11px; font-weight: 600; color: #5B6778; letter-spacing: 0.04em; margin-bottom: 6px">ใช้งานที่ · 3 เอกสาร</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #E6EAF0; border-radius: 8px">
+<span style="width: 8px; height: 8px; border-radius: 50%; background: #2F6FB5; flex: none"></span>
+<div style="flex: 1; min-width: 0"><div style="font-weight: 500">DFD ระดับ 0</div><div style="font-size: 11px; color: #5B6778">คลังข้อมูล D2 อ้างถึงตารางนี้</div></div>
+<span style="color: #1E4F8A; font-size: 12px">เปิด</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #E6EAF0; border-radius: 8px">
+<span style="width: 8px; height: 8px; border-radius: 2px; background: #B7791F; flex: none"></span>
+<div style="flex: 1; min-width: 0"><div style="font-weight: 500">หน้าตะกร้า</div><div style="font-size: 11px; color: #5B6778">ฟอร์มผูกกับ 4 คอลัมน์</div></div>
+<span style="color: #8A5A12; font-size: 12px">เปิด</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #E6EAF0; border-radius: 8px">
+<span style="width: 8px; height: 8px; border-radius: 1px; background: #6D4FC2; transform: rotate(45deg); flex: none"></span>
+<div style="flex: 1; min-width: 0"><div style="font-weight: 500">ขั้นตอนชำระเงิน</div><div style="font-size: 11px; color: #5B6778">ขั้นตอน 'บันทึกคำสั่งซื้อ'</div></div>
+<span style="color: #553BA0; font-size: 12px">เปิด</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- status bar -->
+<div style="height: 28px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 14px; background: #fff; border-top: 1px solid #D8DEE6; font-size: 12px; color: #5B6778">
+<span style="display: flex; align-items: center; gap: 6px; color: #7A1F1F; font-weight: 600"><span style="width: 8px; height: 8px; border-radius: 50%; background: #B42318"></span>2 ปัญหา</span>
+<span>เอกสาร 11</span>
+<span>ลิงก์ข้ามเอกสาร 14</span>
+<div style="flex: 1"></div>
+<span>MySQL · ยังไม่เชื่อมต่อ</span>
+<span>v0.7.0</span>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

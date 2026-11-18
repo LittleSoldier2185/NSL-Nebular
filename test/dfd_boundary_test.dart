@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/export/dfd_svg.dart';
-import 'package:nsl_dev/core/models/dfd_model.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/state/dfd_controller.dart';
-import 'package:nsl_dev/state/project_controller.dart';
+import 'package:nsl_nebular/core/export/dfd_svg.dart';
+import 'package:nsl_nebular/core/models/dfd_model.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/state/dfd_controller.dart';
+import 'package:nsl_nebular/state/project_controller.dart';
 import 'support/project_helpers.dart';
 
 import 'migration_fixtures.dart';

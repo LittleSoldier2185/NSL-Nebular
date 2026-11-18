@@ -1,10 +1,10 @@
-import 'package:nsl_dev/core/models/dfd_model.dart';
-import 'package:nsl_dev/core/models/doc_ref.dart';
-import 'package:nsl_dev/state/dfd_controller.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/storage/project_file.dart';
-import 'package:nsl_dev/state/project_controller.dart';
+import 'package:nsl_nebular/core/models/dfd_model.dart';
+import 'package:nsl_nebular/core/models/doc_ref.dart';
+import 'package:nsl_nebular/state/dfd_controller.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/storage/project_file.dart';
+import 'package:nsl_nebular/state/project_controller.dart';
 
 /// เขียน [p] เป็นไฟล์ (v3, ER เอกสารเดียว) แล้วอ่านกลับ — คืนเนื้อหา ER ที่อ่านได้
 Project roundTripEr(Project p) => erOf(ProjectFile.decode(ProjectFile.encode(Workspace.single(p))));

@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/l10n/l10n.dart';
-import 'package:nsl_dev/core/models/flowchart_model.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/validate/flowchart_validator.dart';
-import 'package:nsl_dev/core/validate/issue.dart';
-import 'package:nsl_dev/core/validate/workspace_validator.dart';
+import 'package:nsl_nebular/core/l10n/l10n.dart';
+import 'package:nsl_nebular/core/models/flowchart_model.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/validate/flowchart_validator.dart';
+import 'package:nsl_nebular/core/validate/issue.dart';
+import 'package:nsl_nebular/core/validate/workspace_validator.dart';
 
 FcNode n(String id, FcShape s, [String text = 'x']) => FcNode(id: id, shape: s, text: text);
 FcEdge e(String id, String a, String b, [String label = '']) => FcEdge(id: id, fromId: a, toId: b, label: label);

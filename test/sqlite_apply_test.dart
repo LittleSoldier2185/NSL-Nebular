@@ -2,15 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/ddl/ddl_generator.dart';
-import 'package:nsl_dev/core/db/db_session.dart';
-import 'package:nsl_dev/core/db/sqlite_apply.dart';
-import 'package:nsl_dev/core/db/sqlite_connector.dart';
-import 'package:nsl_dev/core/diff/migration.dart';
-import 'package:nsl_dev/core/l10n/l10n.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/ui/migration_dialog.dart';
+import 'package:nsl_nebular/core/ddl/ddl_generator.dart';
+import 'package:nsl_nebular/core/db/db_session.dart';
+import 'package:nsl_nebular/core/db/sqlite_apply.dart';
+import 'package:nsl_nebular/core/db/sqlite_connector.dart';
+import 'package:nsl_nebular/core/diff/migration.dart';
+import 'package:nsl_nebular/core/l10n/l10n.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/ui/migration_dialog.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 import 'migration_fixtures.dart';

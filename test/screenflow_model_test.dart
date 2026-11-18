@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/clipboard/screenflow_clipboard.dart';
-import 'package:nsl_dev/core/export/screenflow_svg.dart';
-import 'package:nsl_dev/core/layout/screenflow_geometry.dart';
-import 'package:nsl_dev/core/models/doc_ref.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/screenflow_model.dart';
-import 'package:nsl_dev/core/models/wireframe_model.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/storage/project_codec.dart';
-import 'package:nsl_dev/core/validate/screenflow_validator.dart';
+import 'package:nsl_nebular/core/clipboard/screenflow_clipboard.dart';
+import 'package:nsl_nebular/core/export/screenflow_svg.dart';
+import 'package:nsl_nebular/core/layout/screenflow_geometry.dart';
+import 'package:nsl_nebular/core/models/doc_ref.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/screenflow_model.dart';
+import 'package:nsl_nebular/core/models/wireframe_model.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/storage/project_codec.dart';
+import 'package:nsl_nebular/core/validate/screenflow_validator.dart';
 
 ScreenFlowDiagram sample() => ScreenFlowDiagram(nodes: [
       SfNode(id: 's', kind: SfKind.start, title: 'Open app', x: 0, y: 0),

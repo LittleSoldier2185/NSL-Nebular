@@ -136,7 +136,7 @@ String exportHtmlDocument(Workspace w, {bool includeDiagrams = true}) {
   for (final d in sfDocs) {
     _screenflow(b, w, d, [for (final i in issues) if (i.docId == d.id) i], includeDiagrams);
   }
-  b.writeln('<footer>${_esc(tr('สร้างโดย NSL Dev'))}</footer>');
+  b.writeln('<footer>${_esc(tr('สร้างโดย NSL Nebular'))}</footer>');
   b.writeln('</main>');
   b.writeln('</body>');
   b.writeln('</html>');

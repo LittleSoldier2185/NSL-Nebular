@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/diff/schema_diff.dart';
-import 'package:nsl_dev/core/models/enums.dart';
+import 'package:nsl_nebular/core/diff/schema_diff.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
 
 import 'migration_fixtures.dart';
 

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/db/secret_codec.dart';
+import 'package:nsl_nebular/core/db/secret_codec.dart';
 
 void main() {
   test('NoSecretCodec : ไม่เก็บอะไรเลย', () {

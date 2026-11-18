@@ -182,7 +182,7 @@ class FileActions {
     if (read.import.notes.any((n) => n.warning)) cv.showDock(DockTab.issues);
   }
 
-  /// เลือกไฟล์โปรเจกต์เก่า (.nsld / .nslm / .erd) มาเทียบกับโปรเจกต์ปัจจุบัน -> หน้าต่างรายการเปลี่ยนแปลง + สคริปต์ migration
+  /// เลือกไฟล์โปรเจกต์เก่า (.nsln / .nslm / .erd) มาเทียบกับโปรเจกต์ปัจจุบัน -> หน้าต่างรายการเปลี่ยนแปลง + สคริปต์ migration
   static Future<void> compareWithFile(BuildContext context, ProjectController c) async {
     final f = await FilePicker.pickFile(
       dialogTitle: tr('เลือกไฟล์โปรเจกต์เวอร์ชันเก่าเพื่อเปรียบเทียบ'),
@@ -504,7 +504,7 @@ class FileActions {
   /// คืน true ถ้าบันทึกสำเร็จ
   static Future<bool> save(BuildContext context, ProjectController c) async {
     final path = c.workspaceController.filePath;
-    // ไฟล์ .erd/.nslm เก่า: ไม่เขียนทับ ให้บันทึกเป็น .nsld ใหม่ (ไฟล์เดิมคงอยู่)
+    // ไฟล์ .erd/.nslm เก่า: ไม่เขียนทับ ให้บันทึกเป็น .nsln ใหม่ (ไฟล์เดิมคงอยู่)
     if (path == null || isLegacyProjectPath(path)) return saveAs(context, c);
     return _write(context, c, path);
   }

@@ -2,16 +2,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/models/column_model.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/core/models/index_model.dart';
-import 'package:nsl_dev/core/models/note_model.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/relation_model.dart';
-import 'package:nsl_dev/core/models/table_model.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/storage/project_codec.dart';
-import 'package:nsl_dev/core/storage/project_file.dart';
+import 'package:nsl_nebular/core/models/column_model.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/core/models/index_model.dart';
+import 'package:nsl_nebular/core/models/note_model.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/relation_model.dart';
+import 'package:nsl_nebular/core/models/table_model.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/storage/project_codec.dart';
+import 'package:nsl_nebular/core/storage/project_file.dart';
 
 import 'support/project_helpers.dart';
 
@@ -68,7 +68,7 @@ void main() {
 
   test('save/load ผ่านไฟล์จริง', () async {
     final dir = await Directory.systemTemp.createTemp('nsl');
-    final path = '${dir.path}/x.nsld';
+    final path = '${dir.path}/x.nsln';
     await ProjectFile.save(Workspace.single(sample()), path);
     expect(File('$path.tmp').existsSync(), false);
     final p = await ProjectFile.load(path);
@@ -78,25 +78,27 @@ void main() {
 }
 
 void extensionTests() {
-  group('สกุลไฟล์ .nsld', () {
-    test('withProjectExt: ต่อ .nsld , เปลี่ยน .erd เป็น .nsld , ของเดิมคงไว้ , ไม่สนตัวพิมพ์', () {
-      expect(withProjectExt(r'C:\งาน\shop'), r'C:\งาน\shop.nsld');
-      expect(withProjectExt(r'C:\งาน\shop.nsld'), r'C:\งาน\shop.nsld');
-      expect(withProjectExt(r'C:\งาน\shop.NSLD'), r'C:\งาน\shop.NSLD');
-      expect(withProjectExt(r'C:\งาน\shop.erd'), r'C:\งาน\shop.nsld');
-      expect(withProjectExt(r'C:\งาน\shop.nslm'), r'C:\งาน\shop.nsld');
-      expect(withProjectExt(r'C:\งาน\shop.ERD'), r'C:\งาน\shop.nsld');
-      expect(withProjectExt(r'C:\งาน\shop.sql'), r'C:\งาน\shop.sql.nsld');
+  group('สกุลไฟล์ .nsln', () {
+    test('withProjectExt: ต่อ .nsln , เปลี่ยน .erd เป็น .nsln , ของเดิมคงไว้ , ไม่สนตัวพิมพ์', () {
+      expect(withProjectExt(r'C:\งาน\shop'), r'C:\งาน\shop.nsln');
+      expect(withProjectExt(r'C:\งาน\shop.nsln'), r'C:\งาน\shop.nsln');
+      expect(withProjectExt(r'C:\งาน\shop.NSLN'), r'C:\งาน\shop.NSLN');
+      expect(withProjectExt(r'C:\งาน\shop.erd'), r'C:\งาน\shop.nsln');
+      expect(withProjectExt(r'C:\งาน\shop.nslm'), r'C:\งาน\shop.nsln');
+      expect(withProjectExt(r'C:\งาน\shop.nsld'), r'C:\งาน\shop.nsln');
+      expect(withProjectExt(r'C:\งาน\shop.ERD'), r'C:\งาน\shop.nsln');
+      expect(withProjectExt(r'C:\งาน\shop.sql'), r'C:\งาน\shop.sql.nsln');
     });
 
     test('isLegacyProjectPath และสกุลที่เปิดได้', () {
       expect(isLegacyProjectPath('a.erd'), true);
       expect(isLegacyProjectPath('a.nslm'), true);
-      expect(isLegacyProjectPath('a.nsld'), false);
-      expect(kOpenableExts, ['nsld', 'nslm', 'erd']);
+      expect(isLegacyProjectPath('a.nsld'), true);
+      expect(isLegacyProjectPath('a.nsln'), false);
+      expect(kOpenableExts, ['nsln', 'nsld', 'nslm', 'erd']);
     });
 
-    test('ไฟล์ .nslm/.erd เก่า (v1/v2) เปิดได้ แล้ว "บันทึกเป็น" ได้ .nsld v3 (ไฟล์เดิมไม่ถูกแตะ)', () async {
+    test('ไฟล์ .nslm/.erd เก่า (v1/v2) เปิดได้ แล้ว "บันทึกเป็น" ได้ .nsln v3 (ไฟล์เดิมไม่ถูกแตะ)', () async {
       final dir = await Directory.systemTemp.createTemp('nsl');
       addTearDown(() => dir.delete(recursive: true));
       for (final (src, ext) in [('v1_er_only.nslm', 'nslm'), ('v2_er_dfd.nsld', 'erd')]) {
@@ -107,7 +109,7 @@ void extensionTests() {
         final w = await ProjectFile.load(old);
         final out = withProjectExt(old);
         await ProjectFile.save(w, out);
-        expect(out.endsWith('old_$ext.nsld'), true);
+        expect(out.endsWith('old_$ext.nsln'), true);
         expect(File(old).readAsStringSync(), original); // ไฟล์เดิมไม่ถูกแตะ
         final text = File(out).readAsStringSync();
         expect((jsonDecode(text) as Map)['version'], 3);

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/export/flowchart_svg.dart';
-import 'package:nsl_dev/core/layout/flowchart_geometry.dart';
-import 'package:nsl_dev/core/models/flowchart_model.dart';
-import 'package:nsl_dev/core/validate/flowchart_validator.dart';
+import 'package:nsl_nebular/core/export/flowchart_svg.dart';
+import 'package:nsl_nebular/core/layout/flowchart_geometry.dart';
+import 'package:nsl_nebular/core/models/flowchart_model.dart';
+import 'package:nsl_nebular/core/validate/flowchart_validator.dart';
 
 /// รูปทรงเพิ่มเติมของ Flowchart: ข้อความลอย / หกเหลี่ยม / ทรงกระบอก / เอกสาร
 void main() {

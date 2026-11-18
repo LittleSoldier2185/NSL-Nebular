@@ -1,18 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/clipboard/wireframe_clipboard.dart';
-import 'package:nsl_dev/core/export/wireframe_svg.dart';
-import 'package:nsl_dev/core/layout/wireframe_render.dart';
-import 'package:nsl_dev/core/models/column_model.dart';
-import 'package:nsl_dev/core/models/doc_ref.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/table_model.dart';
-import 'package:nsl_dev/core/models/wireframe_model.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/storage/project_codec.dart';
-import 'package:nsl_dev/core/validate/wireframe_validator.dart';
-import 'package:nsl_dev/core/validate/workspace_validator.dart';
+import 'package:nsl_nebular/core/clipboard/wireframe_clipboard.dart';
+import 'package:nsl_nebular/core/export/wireframe_svg.dart';
+import 'package:nsl_nebular/core/layout/wireframe_render.dart';
+import 'package:nsl_nebular/core/models/column_model.dart';
+import 'package:nsl_nebular/core/models/doc_ref.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/table_model.dart';
+import 'package:nsl_nebular/core/models/wireframe_model.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/storage/project_codec.dart';
+import 'package:nsl_nebular/core/validate/wireframe_validator.dart';
+import 'package:nsl_nebular/core/validate/workspace_validator.dart';
 
 WireframeDiagram sample() => WireframeDiagram(device: WfDevice.mobile, style: WfStyle.clean, accent: 0xFF16A34A, components: [
       WfComponent(id: 'box', kind: WfKind.card, text: 'Login', x: 20, y: 100, w: 350, h: 300),

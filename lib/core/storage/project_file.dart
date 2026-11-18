@@ -7,22 +7,22 @@ import 'project_codec.dart';
 
 export 'project_format_exception.dart';
 
-/// สกุลไฟล์โปรเจกต์ของ NSL Dev (ไม่มีจุด)
-const kProjectExt = 'nsld';
+/// สกุลไฟล์โปรเจกต์ของ NSL Nebular (ไม่มีจุด)
+const kProjectExt = 'nsln';
 
-/// สกุลเก่า — `.nslm` (NSL Modeler) และ `.erd` : ยังเปิดอ่านได้ แต่บันทึกเป็น `.nsld` เสมอ
-const kLegacyProjectExts = ['nslm', 'erd'];
+/// สกุลเก่า — `.nsld` (NSL Dev), `.nslm` (NSL Modeler) และ `.erd` : ยังเปิดอ่านได้ แต่บันทึกเป็น `.nsln` เสมอ
+const kLegacyProjectExts = ['nsld', 'nslm', 'erd'];
 
 /// สกุลที่เปิดได้ทั้งหมด (ใช้กับ dialog เลือกไฟล์)
 const kOpenableExts = [kProjectExt, ...kLegacyProjectExts];
 
-/// path เป็นไฟล์สกุลเก่า (`.nslm` / `.erd`) หรือไม่
+/// path เป็นไฟล์สกุลเก่า (`.nsld` / `.nslm` / `.erd`) หรือไม่
 bool isLegacyProjectPath(String path) {
   final lower = path.toLowerCase();
   return kLegacyProjectExts.any((e) => lower.endsWith('.$e'));
 }
 
-/// ทำให้ path ลงท้าย `.nsld` : สกุลเก่าถูกเปลี่ยนเป็น `.nsld` , สกุลอื่น/ไม่มีสกุลต่อท้าย `.nsld`
+/// ทำให้ path ลงท้าย `.nsln` : สกุลเก่าถูกเปลี่ยนเป็น `.nsln` , สกุลอื่น/ไม่มีสกุลต่อท้าย `.nsln`
 String withProjectExt(String path) {
   final lower = path.toLowerCase();
   if (lower.endsWith('.$kProjectExt')) return path;
@@ -32,7 +32,7 @@ String withProjectExt(String path) {
   return '$path.$kProjectExt';
 }
 
-/// อ่าน/เขียนไฟล์โปรเจกต์ `.nsld` (JSON) ผ่าน project_codec : เขียนเป็น v3 เสมอ ; อ่านได้ v1–v3
+/// อ่าน/เขียนไฟล์โปรเจกต์ `.nsln` (JSON) ผ่าน project_codec : เขียนเป็น v3 เสมอ ; อ่านได้ v1–v3
 /// (`.nslm`/`.erd` เดิมเป็น v1/v2 จึงเปิดได้) ; v4 ขึ้นไปถูกปฏิเสธ
 class ProjectFile {
   static String encode(Workspace w) =>
@@ -46,7 +46,7 @@ class ProjectFile {
       throw ProjectFormatException(tr('ไฟล์ไม่ใช่ JSON ที่ถูกต้อง: {0}', [e.message]));
     }
     if (data is! Map<String, dynamic>) {
-      throw ProjectFormatException(tr('ไม่ใช่ไฟล์โปรเจกต์ NSL Dev'));
+      throw ProjectFormatException(tr('ไม่ใช่ไฟล์โปรเจกต์ NSL Nebular'));
     }
     return decodeProjectMap(data);
   }

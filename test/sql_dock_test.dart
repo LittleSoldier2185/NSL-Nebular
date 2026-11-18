@@ -1,12 +1,12 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/ddl/sql_highlight.dart';
-import 'package:nsl_dev/core/models/enums.dart';
-import 'package:nsl_dev/main.dart';
-import 'package:nsl_dev/state/project_controller.dart';
-import 'package:nsl_dev/ui/file_actions.dart';
-import 'package:nsl_dev/ui/home_page.dart';
-import 'package:nsl_dev/ui/sql_dock.dart';
+import 'package:nsl_nebular/core/ddl/sql_highlight.dart';
+import 'package:nsl_nebular/core/models/enums.dart';
+import 'package:nsl_nebular/main.dart';
+import 'package:nsl_nebular/state/project_controller.dart';
+import 'package:nsl_nebular/ui/file_actions.dart';
+import 'package:nsl_nebular/ui/home_page.dart';
+import 'package:nsl_nebular/ui/sql_dock.dart';
 import 'package:provider/provider.dart';
 
 List<String> kinds(String line) =>

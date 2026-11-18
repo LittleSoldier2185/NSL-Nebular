@@ -42,7 +42,7 @@ class StatusBar extends StatelessWidget {
     final cv = context.watch<CanvasController>();
 
     final p = c.project;
-    // ชื่อไฟล์ที่เปิดอยู่ (ยังไม่บันทึก = ชื่อโปรเจกต์ + .nsld)
+    // ชื่อไฟล์ที่เปิดอยู่ (ยังไม่บันทึก = ชื่อโปรเจกต์ + .nsln)
     final fileName = w.filePath == null ? '${p.name}.$kProjectExt' : w.filePath!.split(RegExp(r'[\\/]')).last;
     final String summary;
     final List<Issue> issues;

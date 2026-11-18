@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/icon/app_icon.png" alt="NSL Dev" width="128">
+  <img src="assets/icon/app_icon.png" alt="NSL Nebular" width="128">
 </p>
 
-<h1 align="center">NSL Dev</h1>
+<h1 align="center">NSL Nebular</h1>
 
 <p align="center">
   เครื่องมือออกแบบฐานข้อมูลและแผนภาพแบบลากวาง สำหรับ Windows<br>
@@ -48,13 +48,13 @@
 - **แถบสถานะล่าง:** รุ่นของโปรแกรม จำนวนตาราง ปัญหาที่ตรวจพบ ซูม สถานะบันทึก และปุ่ม **มีอะไรใหม่**
 - Export ภาพ PNG/SVG (ธีมสว่าง/มืด, ทั้งกระดาน/เฉพาะส่วนที่มีตาราง/เฉพาะที่เลือก), Data dictionary (Markdown), Mermaid, DBML
 - ธีมสว่าง/มืด, ภาษาไทย/อังกฤษ, ฟอนต์ Noto Sans Thai ฝังในโปรแกรม
-- Auto-save และกู้คืนงานที่ค้างอยู่ ไฟล์โปรเจกต์ `.nsld` (JSON) — ไฟล์ `.nslm` และ `.erd` รุ่นเก่ายังเปิดได้ และเมื่อบันทึกจะได้ไฟล์ `.nslm` ใหม่ (ไฟล์เดิมไม่ถูกแก้) ; เปิดไฟล์ด้วย `nsl_dev.exe <ไฟล์>` ได้ ; ผูกสกุล `.nslm` กับแอปใน Windows (ดับเบิลคลิกเปิดได้) ด้วย `powershell -ExecutionPolicy Bypass -File tool\register_file_association.ps1` (เฉพาะผู้ใช้ปัจจุบัน ไม่ต้องใช้สิทธิ์ผู้ดูแล ; `-ExePath` ระบุตำแหน่งแอป, `-IncludeLegacyErd` ผูก `.erd` ด้วย, `-Unregister` ถอนออก)
+- Auto-save และกู้คืนงานที่ค้างอยู่ ไฟล์โปรเจกต์ `.nsln` (JSON) — ไฟล์ `.nslm` และ `.erd` รุ่นเก่ายังเปิดได้ และเมื่อบันทึกจะได้ไฟล์ `.nslm` ใหม่ (ไฟล์เดิมไม่ถูกแก้) ; เปิดไฟล์ด้วย `nsl_nebular.exe <ไฟล์>` ได้ ; ผูกสกุล `.nslm` กับแอปใน Windows (ดับเบิลคลิกเปิดได้) ด้วย `powershell -ExecutionPolicy Bypass -File tool\register_file_association.ps1` (เฉพาะผู้ใช้ปัจจุบัน ไม่ต้องใช้สิทธิ์ผู้ดูแล ; `-ExePath` ระบุตำแหน่งแอป, `-IncludeLegacyErd` ผูก `.erd` ด้วย, `-Unregister` ถอนออก)
 - กด `F1` เพื่อดูคีย์ลัดทั้งหมด (Redo = `Ctrl+Shift+Z`, `Ctrl+Y` หรือ `Alt+Z`)
 
 ## ติดตั้ง (ผู้ใช้ทั่วไป)
 
-1. ดาวน์โหลดไฟล์ `NSL_Dev_<รุ่น>_windows_x64.zip` จากหน้า **[Releases](../../releases)**
-2. แตกไฟล์ทั้งโฟลเดอร์ แล้วเปิด `nsl_dev.exe` (เก็บ `flutter_windows.dll` และโฟลเดอร์ `data` ไว้ข้างกัน)
+1. ดาวน์โหลดไฟล์ `NSL_Nebular_<รุ่น>_windows_x64.zip` จากหน้า **[Releases](../../releases)**
+2. แตกไฟล์ทั้งโฟลเดอร์ แล้วเปิด `nsl_nebular.exe` (เก็บ `flutter_windows.dll` และโฟลเดอร์ `data` ไว้ข้างกัน)
 
 **ข้อกำหนด:** Windows 10/11 (64 บิต) และ [Microsoft Visual C++ Redistributable (x64)](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist)
 โปรแกรมยังไม่ได้เซ็นดิจิทัล Windows SmartScreen อาจเตือน ให้เลือก "ข้อมูลเพิ่มเติม" → "เรียกใช้อยู่ดี"
@@ -74,6 +74,21 @@ flutter analyze
 
 เปลี่ยนไอคอน Windows จาก `assets/icon/app_icon.png`: `flutter test tool/gen_app_icon_test.dart`
 
+### พัฒนาคู่กับ NSL-UI-Core
+
+สี รูปทรง และธีมของแอปมาจากแพ็กเกจ [`nsl_ui`](https://github.com/LittleSoldier2185/NSL-UI-Core) (ใช้ร่วมกับแอป NSL อื่น)
+`pubspec.yaml` ชี้ไปที่ git จึง build ได้ทุกเครื่องโดยไม่ต้องมีโฟลเดอร์อื่นอยู่ข้างกัน
+
+ถ้าต้องแก้ Core คู่กับแอปในเครื่อง ให้มีโฟลเดอร์ `NSL-UI-Core` อยู่ข้างโฟลเดอร์นี้ และสร้างไฟล์ `pubspec_overrides.yaml` (อยู่ใน `.gitignore` ไม่เข้า git):
+
+```yaml
+dependency_overrides:
+  nsl_ui:
+    path: ../NSL-UI-Core
+```
+
+แล้วรัน `flutter pub get` — ลบไฟล์นี้เมื่อต้องการกลับไปใช้ git ; **แก้ Core แล้วต้อง push Core ก่อน** แอปบนเครื่องอื่นถึงจะเห็นการเปลี่ยนแปลง
+
 ## โครงสร้างโปรเจกต์
 
 ```
@@ -83,6 +98,7 @@ lib/
   state/       ProjectController, DfdController, AppSettings (ChangeNotifier)
   ui/          หน้าจอทั้งหมด: canvas, dfd, panels, dialogs, ฯลฯ
 windows/runner/  โค้ดฝั่ง Windows (แถบชื่อหน้าต่างแบบกำหนดเอง)
+design/        ดีไซน์หน้าตาโปรแกรม (สำเนา Artifact) — ดู design/README.md
 samples/       ไฟล์ SQL ตัวอย่างสำหรับทดสอบ
 test/          เทสต์ (unit + widget)
 ```
@@ -108,7 +124,7 @@ test/          เทสต์ (unit + widget)
 
 ## English summary
 
-**NSL Dev** is a Windows desktop app for designing databases by drag and drop. It generates SQL for MySQL/MariaDB, PostgreSQL, SQLite and SQL Server, and also draws DFD (Data Flow Diagram) diagrams in browser-style tabs.
+**NSL Nebular** is a Windows desktop app for designing databases by drag and drop. It generates SQL for MySQL/MariaDB, PostgreSQL, SQLite and SQL Server, and also draws DFD (Data Flow Diagram) diagrams in browser-style tabs.
 
 - **ER diagrams:** tables, columns, FK relationships (orthogonal crow's-foot lines), groups, notes, auto-layout, schema validation, seed data
 - **DFD diagrams:** external entities, processes, data stores and labeled data flows with automatic rule checking
@@ -116,6 +132,6 @@ test/          เทสต์ (unit + widget)
 - **Search:** a box in the title bar (`Ctrl+K`) that finds commands, tables, columns, DFD objects, notes, groups and issues across tabs (prefixes `@ # : ! > ~`)
 - Export PNG/SVG (light/dark), Markdown data dictionary, Mermaid, DBML; Thai/English UI; light/dark theme
 
-**Install:** download the zip from [Releases](../../releases), extract the whole folder and run `nsl_dev.exe` (needs the Microsoft Visual C++ Redistributable x64).
+**Install:** download the zip from [Releases](../../releases), extract the whole folder and run `nsl_nebular.exe` (needs the Microsoft Visual C++ Redistributable x64).
 **Build:** `flutter pub get` → `flutter run -d windows` (Windows Developer Mode required). Tests: `flutter test`.
 The Noto Sans Thai font is used under the SIL Open Font License 1.1.

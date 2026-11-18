@@ -124,7 +124,7 @@ class ProjectDocument {
   ScreenFlowDiagram? get screenflow => content is ScreenFlowDiagram ? content as ScreenFlowDiagram : null;
 }
 
-/// ทั้งโปรเจกต์ (ไฟล์ `.nsld` v3): ชื่อ ข้อมูลประกอบ โฟลเดอร์ เอกสาร และลิงก์ระหว่างเอกสาร
+/// ทั้งโปรเจกต์ (ไฟล์ `.nsln` v3): ชื่อ ข้อมูลประกอบ โฟลเดอร์ เอกสาร และลิงก์ระหว่างเอกสาร
 class Workspace {
   Workspace({
     this.name = 'untitled',

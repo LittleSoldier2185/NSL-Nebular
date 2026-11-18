@@ -1,0 +1,35 @@
+# design/ — ดีไซน์หน้าตา NSL Nebular
+
+สำเนาของ Artifact "NSL Nebular - UI ใหม่" (บันทึกเมื่อ 2026-11-18) ใช้เป็นต้นแบบของ UI ตาม `plan.md`
+เก็บไว้ในโปรเจกต์เพื่อไม่ต้องพึ่งลิงก์ Artifact (ซึ่งเป็นส่วนตัว) — **ลิงก์ต้นทาง:** https://claude.ai/artifact/AfFCTth52Bgg8qnkfbmrqU
+
+## ไฟล์
+
+`project/canvas.json` คือผังตำแหน่งของ artboard ทั้งหมด ; แต่ละหน้าอยู่ใน `project/<ชื่อ>.dc.html`
+
+| ไฟล์ | หน้า | ใช้กับ phase |
+|---|---|---|
+| `Main.dc.html` | Workspace — ER Diagram (โครงหน้าต่างหลัก) | 1 |
+| `Start.dc.html`, `NewProject.dc.html` | หน้าเปิดโปรแกรม, สร้างโปรเจกต์ใหม่ | 2 |
+| `Home.dc.html` | Project Home | 3 |
+| `Flowchart.dc.html` | Flowchart Editor (คลังรูปทรง 34 แบบ) | 4 |
+| `Review.dc.html` | โน้ตและงานค้าง | 5 |
+| `Dictionary.dc.html` | พจนานุกรมข้อมูล | 6 |
+| `History.dc.html` | ประวัติเวอร์ชันและ Diff | 7 |
+| `Api.dc.html` | API Designer | 8 |
+| `Trace.dc.html` | Requirements และ Traceability | 9 |
+| `Codegen.dc.html` | Code Generation | 10 |
+| `Mock.dc.html` | Mock Server | 11 |
+
+## วิธีดู
+
+ไฟล์ `.dc.html` เป็นรูปแบบของเครื่องมือออกแบบ (ต้องมี `support.js` ของมัน) จึง **เปิดตรง ๆ ในเบราว์เซอร์ไม่ได้ครบ**
+แต่เป็น HTML + inline style ธรรมดา อ่านค่า สี ขนาด และระยะจากไฟล์ได้เลย — ใช้เป็นข้อมูลอ้างอิงตอนทำ UI จริงใน Flutter
+
+## หมายเหตุ
+
+- ค่าสีทั้งหมดในดีไซน์ต้องมาจาก token ของ NSL-UI-Core (ส่วนขยาย `nebular`) — **ห้ามคัดลอกค่า hex จากไฟล์ดีไซน์ไปฝังในโค้ดแอป**
+  สีประจำชนิดเอกสารใช้ `C.doc(DocType)` (`lib/ui/theme.dart`)
+- ดีไซน์เป็นแบบออฟไลน์ ผู้ใช้คนเดียว (ไม่มีคอมเมนต์หลายคน/อนุมัติ)
+- รายชื่อรูปทรง Flowchart ในดีไซน์เขียนจากความจำ ต้องเทียบกับ draw.io จริงก่อนลงมือ (Phase 4)
+- ถ้าแก้ดีไซน์ใน Artifact ให้บันทึกสำเนาใหม่ทับที่นี่ และบอกเหตุผลใน `progress.md`

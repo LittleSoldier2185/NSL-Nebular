@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>สร้างโปรเจกต์ใหม่</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #0F766E;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; position: relative; overflow: hidden; background: #EEF1F5; color: #1B2430; font-size: 14px; line-height: 1.45">
+
+<!-- dimmed app behind -->
+<div style="position: absolute; inset: 0; background: #1F2A37; opacity: 0.55"></div>
+
+<div style="position: absolute; left: 150px; top: 70px; width: 1140px; height: 760px; display: flex; background: #fff; border-radius: 16px; box-shadow: 0 24px 60px rgba(15,23,42,0.35); overflow: hidden">
+
+<!-- categories -->
+<div style="width: 210px; flex: none; padding: 22px 14px; background: #F3F5F8; border-right: 1px solid #E6EAF0; display: flex; flex-direction: column; gap: 2px">
+<div style="font-weight: 700; font-size: 16px; padding: 0 10px 14px">โปรเจกต์ใหม่</div>
+<div style="padding: 9px 12px; border-radius: 8px; background: #E2F3F1; color: #0B5A54; font-weight: 600">ทั้งหมด</div>
+<div style="padding: 9px 12px; border-radius: 8px; color: #5B6778">เว็บและระบบ</div>
+<div style="padding: 9px 12px; border-radius: 8px; color: #5B6778">แอปมือถือ</div>
+<div style="padding: 9px 12px; border-radius: 8px; color: #5B6778">ฐานข้อมูลอย่างเดียว</div>
+<div style="padding: 9px 12px; border-radius: 8px; color: #5B6778">ของฉัน</div>
+</div>
+
+<!-- presets -->
+<div style="flex: 1; min-width: 0; padding: 22px 24px; display: flex; flex-direction: column; gap: 14px">
+<div style="font-weight: 600">เลือกจุดเริ่มต้น</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px">
+
+<div style="border: 2px solid #0F766E; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 4px #E2F3F1">
+<div style="height: 96px; background: #F6F8FB; display: flex; align-items: center; justify-content: center; color: #5B6778; font-size: 12px">โปรเจกต์ว่าง</div>
+<div style="padding: 10px 12px"><div style="font-weight: 600">โปรเจกต์ว่าง</div><div style="font-size: 12px; color: #5B6778">เลือกเอกสารเอง</div></div>
+</div>
+
+<div style="border: 1px solid #D8DEE6; border-radius: 12px; overflow: hidden">
+<div style="height: 96px; background: #E2F3F1; position: relative"><div style="position: absolute; left: 24px; top: 24px; width: 54px; height: 42px; border-radius: 5px; background: #fff; border: 1px solid #0F766E; border-top: 10px solid #0F766E"></div><div style="position: absolute; left: 110px; top: 40px; width: 54px; height: 42px; border-radius: 5px; background: #fff; border: 1px solid #0F766E; border-top: 10px solid #0F766E"></div></div>
+<div style="padding: 10px 12px"><div style="font-weight: 600">ฐานข้อมูลอย่างเดียว</div><div style="font-size: 12px; color: #5B6778">ER + สร้าง SQL</div></div>
+</div>
+
+<div style="border: 1px solid #D8DEE6; border-radius: 12px; overflow: hidden">
+<div style="height: 96px; background: #E8EEF8; position: relative"><div style="position: absolute; left: 26px; top: 30px; width: 36px; height: 36px; border-radius: 50%; background: #fff; border: 1px solid #2F6FB5"></div><div style="position: absolute; left: 90px; top: 30px; width: 60px; height: 36px; border-radius: 4px; background: #fff; border: 1px solid #2F6FB5"></div></div>
+<div style="padding: 10px 12px"><div style="font-weight: 600">วิเคราะห์ระบบ</div><div style="font-size: 12px; color: #5B6778">DFD + Flowchart + ER</div></div>
+</div>
+
+<div style="border: 1px solid #D8DEE6; border-radius: 12px; overflow: hidden">
+<div style="height: 96px; background: #FFF4D6; position: relative"><div style="position: absolute; left: 24px; top: 14px; width: 40px; height: 68px; border-radius: 6px; background: #fff; border: 1px solid #B7791F"></div><div style="position: absolute; left: 80px; top: 14px; width: 40px; height: 68px; border-radius: 6px; background: #fff; border: 1px solid #B83B6B"></div></div>
+<div style="padding: 10px 12px"><div style="font-weight: 600">ออกแบบแอป</div><div style="font-size: 12px; color: #5B6778">Wireframe + Screen Flow</div></div>
+</div>
+
+<div style="border: 1px solid #D8DEE6; border-radius: 12px; overflow: hidden">
+<div style="height: 96px; background: #F3F0FC; position: relative"><div style="position: absolute; left: 26px; top: 32px; width: 50px; height: 32px; border-radius: 16px; background: #fff; border: 1px solid #6D4FC2"></div><div style="position: absolute; left: 100px; top: 32px; width: 50px; height: 32px; border-radius: 4px; background: #fff; border: 1px solid #6D4FC2"></div></div>
+<div style="padding: 10px 12px"><div style="font-weight: 600">ขั้นตอนงาน</div><div style="font-size: 12px; color: #5B6778">Flowchart อย่างเดียว</div></div>
+</div>
+
+<div style="border: 1px solid #D8DEE6; border-radius: 12px; overflow: hidden">
+<div style="height: 96px; background: #EEF1F5; display: flex; align-items: center; justify-content: center; color: #5B6778; font-size: 12px">ร้านค้าออนไลน์</div>
+<div style="padding: 10px 12px"><div style="font-weight: 600">ร้านค้าออนไลน์</div><div style="font-size: 12px; color: #5B6778">แม่แบบครบทุกชนิด</div></div>
+</div>
+
+</div>
+</div>
+
+<!-- details -->
+<div style="width: 340px; flex: none; padding: 22px 24px; border-left: 1px solid #E6EAF0; display: flex; flex-direction: column; gap: 16px">
+<div style="font-weight: 700; font-size: 16px">รายละเอียด</div>
+
+<div>
+<label for="pname" style="display: block; font-size: 12px; color: #5B6778; margin-bottom: 4px">ชื่อโปรเจกต์</label>
+<input id="pname" value="โปรเจกต์ใหม่" style="box-sizing: border-box; width: 100%; height: 36px; padding: 0 10px; border: 1px solid #CBD3DE; border-radius: 8px; font-family: inherit; font-size: 14px">
+</div>
+
+<div>
+<label for="ploc" style="display: block; font-size: 12px; color: #5B6778; margin-bottom: 4px">บันทึกที่</label>
+<div style="display: flex; gap: 6px">
+<input id="ploc" value="D:\Projects\โปรเจกต์ใหม่.nsln" style="box-sizing: border-box; flex: 1; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid #CBD3DE; border-radius: 8px; font-family: inherit; font-size: 13px">
+<button style="height: 36px; padding: 0 12px; border: 1px solid #CBD3DE; border-radius: 8px; background: #fff; font-size: 13px">เลือก</button>
+</div>
+</div>
+
+<div>
+<div style="font-size: 12px; color: #5B6778; margin-bottom: 6px">เอกสารเริ่มต้น</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #D8DEE6; border-radius: 8px"><input type="checkbox" checked><span style="width: 8px; height: 8px; border-radius: 2px; background: #0F766E"></span>ER Diagram</label>
+<label style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #D8DEE6; border-radius: 8px"><input type="checkbox"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2F6FB5"></span>Data Flow</label>
+<label style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #D8DEE6; border-radius: 8px"><input type="checkbox"><span style="width: 8px; height: 8px; border-radius: 1px; background: #6D4FC2"></span>Flowchart</label>
+<label style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #D8DEE6; border-radius: 8px"><input type="checkbox"><span style="width: 8px; height: 8px; border-radius: 2px; background: #B7791F"></span>Wireframe</label>
+<label style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #D8DEE6; border-radius: 8px"><input type="checkbox"><span style="width: 8px; height: 8px; border-radius: 2px; background: #B83B6B"></span>Screen Flow</label>
+</div>
+</div>
+
+<div>
+<label for="pdb" style="display: block; font-size: 12px; color: #5B6778; margin-bottom: 4px">ฐานข้อมูลเป้าหมาย</label>
+<select id="pdb" style="box-sizing: border-box; width: 100%; height: 36px; padding: 0 8px; border: 1px solid #CBD3DE; border-radius: 8px; font-family: inherit; font-size: 14px; background: #fff"><option>MySQL</option><option>SQLite</option></select>
+</div>
+
+<div style="flex: 1"></div>
+<div style="display: flex; gap: 10px">
+<button style="flex: 1; height: 40px; border: 1px solid #CBD3DE; border-radius: 10px; background: #fff; font-weight: 600; font-size: 14px">ยกเลิก</button>
+<button style="flex: 1; height: 40px; border: 0; border-radius: 10px; background: #0F766E; color: #fff; font-weight: 600; font-size: 14px">สร้างโปรเจกต์</button>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

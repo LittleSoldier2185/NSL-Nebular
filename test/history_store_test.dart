@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nsl_dev/core/models/column_model.dart';
-import 'package:nsl_dev/core/models/dfd_model.dart';
-import 'package:nsl_dev/core/models/project.dart';
-import 'package:nsl_dev/core/models/table_model.dart';
-import 'package:nsl_dev/core/models/workspace.dart';
-import 'package:nsl_dev/core/storage/history_store.dart';
+import 'package:nsl_nebular/core/models/column_model.dart';
+import 'package:nsl_nebular/core/models/dfd_model.dart';
+import 'package:nsl_nebular/core/models/project.dart';
+import 'package:nsl_nebular/core/models/table_model.dart';
+import 'package:nsl_nebular/core/models/workspace.dart';
+import 'package:nsl_nebular/core/storage/history_store.dart';
 
 import 'support/project_helpers.dart';
 
@@ -22,14 +22,14 @@ void main() {
   tearDown(() => dir.deleteSync(recursive: true));
 
   test('keyFor: ไม่สนตัวพิมพ์/ทิศของ slash และต่างไฟล์ต่างคีย์', () {
-    expect(HistoryStore.keyFor(r'C:\A\b.nsld'), HistoryStore.keyFor('c:/a/B.NSLD'));
-    expect(HistoryStore.keyFor(r'C:\A\b.nsld'), isNot(HistoryStore.keyFor(r'C:\A\c.nsld')));
+    expect(HistoryStore.keyFor(r'C:\A\b.nsln'), HistoryStore.keyFor('c:/a/B.NSLN'));
+    expect(HistoryStore.keyFor(r'C:\A\b.nsln'), isNot(HistoryStore.keyFor(r'C:\A\c.nsln')));
     expect(HistoryStore.keyFor(null), 'unsaved');
   });
 
   test('add/list/load: ใหม่สุดก่อน และอ่านกลับได้เท่าเดิม', () async {
     final h = HistoryStore(dir);
-    final k = HistoryStore.keyFor('x.nsld');
+    final k = HistoryStore.keyFor('x.nsln');
     final t0 = DateTime(2026, 1, 1, 10);
     await h.add(k, proj(1), now: t0);
     await h.add(k, proj(2), now: t0.add(const Duration(minutes: 5)), kind: SnapshotKind.manual, label: 'ก่อนรีแฟกเตอร์');
