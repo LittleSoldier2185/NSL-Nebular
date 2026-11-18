@@ -402,7 +402,7 @@ class _NodeProps extends StatelessWidget {
           key: const ValueKey('fc-shape'),
           child: Dropdown<FcShape>(
             value: node.shape,
-            items: kFcToolShapes,
+            items: FcShape.values, // ทุกรูปทรง ไม่ใช่เฉพาะที่อยู่ในคลัง (kFcToolShapes) — เลือกทรงกระบอก/หกเหลี่ยม/เอกสาร/ข้อความแล้วต้องไม่พัง
             labelOf: fcShapeLabel,
             onChanged: (s) => f.setShape([node.id], s),
           ),
