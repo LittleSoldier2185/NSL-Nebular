@@ -9,7 +9,7 @@ import 'canvas/context_menu.dart';
 import 'document_actions.dart';
 import 'theme.dart';
 
-export 'document_actions.dart' show brokenLinkLines, docTypeIcon;
+export 'document_actions.dart' show brokenLinkLines, docTypeIcon, DocTypeDot;
 
 /// แท็บแผนภาพเหนือแคนวาส (แบบแท็บเอกสารของโปรแกรมกราฟิก): คลิกสลับ ลากเรียงลำดับ
 /// คลิกขวา = เปลี่ยนชื่อ/ทำสำเนา/ลบ, ปุ่ม + = สร้างแผนภาพใหม่ (ER หรือ DFD) — ER อันสุดท้ายลบไม่ได้
@@ -228,7 +228,7 @@ class _TabState extends State<_Tab> {
                 right: 0,
                 height: 2,
                 child: ColoredBox(
-                  color: widget.active ? C.primary : Colors.transparent,
+                  color: widget.active ? C.doc(t.type).main : Colors.transparent,
                 ),
               ),
               Padding(
@@ -236,11 +236,7 @@ class _TabState extends State<_Tab> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      docTypeIcon(t.type),
-                      size: 14,
-                      color: widget.active ? C.primary : C.muted,
-                    ),
+                    DocTypeDot(t.type),
                     const SizedBox(width: 7),
                     Flexible(
                       child: Text(

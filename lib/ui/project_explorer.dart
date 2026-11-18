@@ -239,16 +239,12 @@ class _ExplorerRowState extends State<_ExplorerRow> {
             padding: const EdgeInsets.only(left: 22, right: 6),
             decoration: BoxDecoration(
               color: widget.active
-                  ? C.primary.withValues(alpha: 0.14)
+                  ? C.doc(d.type).tint
                   : (_hover ? C.text.withValues(alpha: 0.05) : Colors.transparent),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Row(children: [
-              Icon(
-                docTypeIcon(d.type),
-                size: 14,
-                color: widget.active ? C.primary : C.muted,
-              ),
+              DocTypeDot(d.type),
               const SizedBox(width: 7),
               Expanded(
                 child: Text(
@@ -258,7 +254,7 @@ class _ExplorerRowState extends State<_ExplorerRow> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: widget.active ? FontWeight.w600 : FontWeight.w400,
-                    color: widget.active ? C.text : C.muted,
+                    color: widget.active ? C.doc(d.type).ink : C.muted,
                   ),
                 ),
               ),

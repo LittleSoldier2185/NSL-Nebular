@@ -46,9 +46,9 @@ class PanelLayout extends ChangeNotifier {
   /// เพื่อให้ canvas เหลือพื้นที่ใช้งาน (ไม่เปลี่ยนค่าที่จำไว้)
   (double, double) effectiveWidths(double total) {
     final room = total - kCanvasMinWidth;
-    if (_left + _right <= room || room < kLeftMin + kRightMin) {
-      return (_left, _right);
-    }
+    if (_left + _right <= room) return (_left, _right);
+    // แคบจนเหลือไม่พอแม้ที่ขั้นต่ำของสองแผง (เช่น หน้าต่างแคบ + แถบไอคอนด้านซ้าย): ใช้ขั้นต่ำ ไม่ใช่ค่าที่จำไว้ซึ่งจะล้นจอ
+    if (room < kLeftMin + kRightMin) return (kLeftMin, kRightMin);
     final f = room / (_left + _right);
     var l = (_left * f).clamp(kLeftMin, kLeftMax).toDouble();
     final r = (_right * f).clamp(kRightMin, kRightMax).toDouble();

@@ -53,10 +53,11 @@ void main() {
       expect(a, greaterThanOrEqualTo(PanelLayout.kLeftMin));
       expect(b, greaterThanOrEqualTo(PanelLayout.kRightMin));
       expect((l.left, l.right), (400.0, 500.0)); // ค่าจริงยังอยู่
-      // แคบจนเหลือไม่พอแม้ที่ขั้นต่ำ: ไม่คำนวณจนติดลบ
+      // แคบจนเหลือไม่พอแม้ที่ขั้นต่ำ: ใช้ขั้นต่ำของสองแผง (ไม่ติดลบ และไม่กว้างเกินค่าที่จำไว้)
       final (c, d) = l.effectiveWidths(500);
-      expect(c, 400.0);
-      expect(d, 500.0);
+      expect(c, PanelLayout.kLeftMin);
+      expect(d, PanelLayout.kRightMin);
+      expect((l.left, l.right), (400.0, 500.0)); // ค่าที่จำไว้ยังอยู่
     });
 
     test('ความสูงแผง SQL ถูกจำกัดให้ canvas เหลือพื้นที่', () {

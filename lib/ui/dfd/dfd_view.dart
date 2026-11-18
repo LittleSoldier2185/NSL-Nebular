@@ -332,7 +332,7 @@ class _DfdCanvasState extends State<DfdCanvas> {
               ),
             ),
             // แคนวาสแคบ: แถบเครื่องมือแสดงเฉพาะไอคอน (ชื่ออยู่ในทูลทิป) ไม่ให้ล้น
-            Positioned(top: 12, left: 0, right: 0, child: Center(child: _Toolbar(compact: size.width < 760))),
+            Positioned(top: 12, left: 0, right: 0, child: Center(child: FittedBox(fit: BoxFit.scaleDown, child: _Toolbar(compact: size.width < 760)))),
             Positioned(right: 14, bottom: 14, child: _ZoomBar(size: size)),
             if (d.diagram.nodes.isEmpty)
               IgnorePointer(

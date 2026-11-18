@@ -361,6 +361,10 @@ class WorkspaceController extends ChangeNotifier {
   /// การอ้างอิงจากเอกสารอื่นที่ชี้มาที่ [id] (จะใช้ไม่ได้ถ้าลบเอกสารนี้)
   List<(String fromDoc, String fromElement, DocRef ref)> backlinksOf(String id) => WorkspaceIndex(_workspace).backlinks(id);
 
+  /// การอ้างอิงจากเอกสารอื่นที่ชี้มาที่วัตถุ [elementId] (เช่น ตาราง) ในเอกสาร [docId] — ใช้แสดง "ใช้งานที่" ในแผงขวา
+  List<(String fromDoc, String fromElement, DocRef ref)> usagesOf(String docId, String elementId) =>
+      [for (final e in backlinksOf(docId)) if (e.$3.elementId == elementId) e];
+
   /// ลบเอกสาร [id] ได้หรือไม่ — โปรเจกต์ต้องเหลือเอกสาร ER อย่างน้อยหนึ่งอันเสมอ (ER อันสุดท้ายลบไม่ได้)
   bool canDeleteDocument(String id) {
     final doc = _workspace.documentById(id);

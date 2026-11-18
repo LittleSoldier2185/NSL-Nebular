@@ -6,6 +6,10 @@ import '../core/models/enums.dart';
 import '../core/models/relation_model.dart';
 import '../core/models/table_model.dart';
 import '../state/project_controller.dart';
+import '../state/workspace_controller.dart';
+import '../core/models/doc_ref.dart';
+import '../core/models/workspace.dart' show ProjectDocument;
+import 'document_actions.dart' show DocTypeDot, linkOriginTitle;
 import 'app_actions.dart';
 import 'issue_widgets.dart';
 import 'theme.dart';
@@ -214,6 +218,7 @@ class _TableEditor extends StatelessWidget {
           _ColumnEditor(key: ValueKey(col.id), table: table, column: col),
         ],
         _TableIssues(table: table),
+        _UsedAt(table: table),
       ],
     );
   }
@@ -691,6 +696,90 @@ class _ColorPicker extends StatelessWidget {
                 : Container(width: 18, height: 18, decoration: BoxDecoration(shape: BoxShape.circle, color: Color(custom!))),
           ),
       ]),
+    );
+  }
+}
+
+/// "ใช้งานที่" — เอกสารอื่นที่อ้างถึงตารางนี้ (คลังข้อมูลใน DFD, ชิ้นส่วนใน Wireframe) กดแล้วไปเปิดเอกสารนั้น
+/// ใช้ดูก่อนแก้/ลบตารางว่ามีอะไรได้รับผลกระทบ
+class _UsedAt extends StatelessWidget {
+  const _UsedAt({required this.table});
+  final TableModel table;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = context.watch<WorkspaceController>();
+    final er = context.read<ProjectController>();
+    final usages = w.usagesOf(er.erDocumentId, table.id);
+    return Container(
+      key: const ValueKey('used-at'),
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: C.borderSoft))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(
+          tr('ใช้งานที่ · {0} จุด', [usages.length]),
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: C.muted, letterSpacing: 0.4),
+        ),
+        const SizedBox(height: 8),
+        if (usages.isEmpty)
+          Text(tr('ยังไม่มีเอกสารอื่นอ้างถึงตารางนี้'), key: const ValueKey('used-at-empty'), style: TextStyle(fontSize: 12, color: C.muted))
+        else
+          for (final (fromDoc, fromElement, ref) in usages)
+            _UsageRow(
+              key: ValueKey('used-at-$fromDoc-$fromElement'),
+              doc: w.documentById(fromDoc),
+              what: linkOriginTitle(w.documentById(fromDoc), fromElement),
+              kind: ref.kind,
+              onOpen: () => w.openDocument(fromDoc),
+            ),
+      ]),
+    );
+  }
+}
+
+class _UsageRow extends StatelessWidget {
+  const _UsageRow({super.key, required this.doc, required this.what, required this.kind, required this.onOpen});
+  final ProjectDocument? doc;
+  final String what;
+  final DocRefKind kind;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final dc = C.doc(doc?.type);
+    final role = switch (kind) {
+      DocRefKind.storeTable => tr('คลังข้อมูล'),
+      DocRefKind.wireframeTable => tr('ชิ้นส่วนที่ผูกข้อมูล'),
+      _ => '',
+    };
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Tooltip(
+        message: tr('ไปที่เอกสารนี้'),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onOpen,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: C.borderSoft),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(children: [
+              DocTypeDot(doc?.type),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(doc?.name ?? '?', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                  Text(role.isEmpty ? what : '$role · $what', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: C.muted)),
+                ]),
+              ),
+              Icon(Icons.chevron_right_rounded, size: 18, color: dc.ink),
+            ]),
+          ),
+        ),
+      ),
     );
   }
 }

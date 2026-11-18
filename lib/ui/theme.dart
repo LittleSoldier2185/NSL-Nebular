@@ -194,7 +194,7 @@ class C {
   static Color get dangerText => _p.dangerText;
 
   /// สีประจำชนิดเอกสาร (จุดในแท็บ/Explorer, ขอบการ์ด, ปุ่มหลักของเอกสารนั้น)
-  static DocColor doc(DocType t) => _p.docColor(t);
+  static DocColor doc(DocType? t) => _p.docColor(t ?? DocType.er);
 
   /// แถวที่กำลังเป็นต้นทางของการลากเส้น FK
   static Color get fkSource => _p.fkSource;

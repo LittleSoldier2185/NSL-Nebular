@@ -329,11 +329,13 @@ class _EdgeHint extends StatelessWidget {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(extending ? Icons.open_in_full_rounded : Icons.expand_rounded, size: 16, color: Colors.white),
         const SizedBox(width: 8),
-        Text(
-          extending
-              ? tr('กระดานกำลังขยายตามตารางที่ชนขอบ — ลากกลับเข้ามากระดานจะหดกลับ')
-              : tr('ลากตารางชนขอบกระดานเพื่อขยายกระดาน'),
-          style: const TextStyle(color: Colors.white, fontSize: 12.5),
+        Flexible(
+          child: Text(
+            extending
+                ? tr('กระดานกำลังขยายตามตารางที่ชนขอบ — ลากกลับเข้ามากระดานจะหดกลับ')
+                : tr('ลากตารางชนขอบกระดานเพื่อขยายกระดาน'),
+            style: const TextStyle(color: Colors.white, fontSize: 12.5),
+          ),
         ),
       ]),
     );

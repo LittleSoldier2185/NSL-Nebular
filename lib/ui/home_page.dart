@@ -9,6 +9,7 @@ import '../state/app_settings.dart';
 import '../state/autosave_coordinator.dart';
 import '../state/project_controller.dart';
 import '../state/workspace_controller.dart';
+import 'activity_rail.dart';
 import 'app_actions.dart';
 import 'canvas/canvas_controller.dart';
 import 'canvas/canvas_view.dart';
@@ -282,7 +283,7 @@ class _HomePageState extends State<HomePage> {
           body: Column(children: [
             const TopBar(),
             const DiagramTabBar(),
-            Expanded(child: _body(context)),
+            Expanded(child: Row(children: [const ActivityRail(), Expanded(child: _body(context))])),
             const StatusBar(),
           ]),
         ),

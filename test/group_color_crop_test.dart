@@ -250,7 +250,7 @@ void groupAttachTests() {
       expect(c.attachedGroupIds, isEmpty);
 
       // ครอบทั้งกลุ่ม
-      gs = await tester.startGesture(at(560, 480), kind: PointerDeviceKind.mouse);
+      gs = await tester.startGesture(at(500, 460), kind: PointerDeviceKind.mouse);
       await gs.moveTo(at(60, 60));
       await tester.pump();
       expect(c.selectedTableIds, contains('tu'));

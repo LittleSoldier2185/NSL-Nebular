@@ -19,6 +19,46 @@ IconData docTypeIcon(DocType? t) => switch (t) {
       _ => Icons.account_tree_outlined,
     };
 
+/// ชื่อของวัตถุต้นทางของลิงก์ข้ามเอกสาร ([fromElement] ในเอกสาร [src]) : ชิ้นส่วน Wireframe / หน้าจอ Screen Flow / วัตถุ DFD
+String linkOriginTitle(ProjectDocument? src, String fromElement) {
+  if (src?.wireframe != null) {
+    final comp = src!.wireframe!.componentById(fromElement);
+    return comp == null ? tr('(ไม่มีชื่อ)') : wfComponentTitle(comp);
+  }
+  if (src?.screenflow != null) {
+    final n = src!.screenflow!.nodeById(fromElement);
+    return n == null ? tr('(ไม่มีชื่อ)') : sfNodeTitle(n);
+  }
+  final node = src?.dfd?.nodeById(fromElement);
+  return node == null || node.title.isEmpty ? tr('(ไม่มีชื่อ)') : node.title;
+}
+
+/// จุดสีประจำชนิดเอกสาร (ตามดีไซน์: DFD = วงกลม, Flowchart = ข้าวหลามตัด, ชนิดอื่น = สี่เหลี่ยมมน) — ตกแต่งอย่างเดียว ไม่อ่านออกเสียง
+class DocTypeDot extends StatelessWidget {
+  const DocTypeDot(this.type, {super.key, this.size = 9});
+
+  final DocType? type;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = C.doc(type).main;
+    final dot = switch (type) {
+      DocType.dfd => DecoratedBox(decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      DocType.flowchart => Transform.rotate(
+          angle: 0.7853981633974483,
+          child: DecoratedBox(decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(1))),
+        ),
+      _ => DecoratedBox(decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2.5))),
+    };
+    // ข้าวหลามตัดวาดเล็กลงให้ดูขนาดเท่ากับรูปอื่น
+    final inner = type == DocType.flowchart ? size * 0.78 : size;
+    return ExcludeSemantics(
+      child: SizedBox(width: size, height: size, child: Center(child: SizedBox(width: inner, height: inner, child: dot))),
+    );
+  }
+}
+
 /// กล่องเปลี่ยนชื่อเอกสาร (ใช้ร่วมกันระหว่างแท็บแผนภาพและ Project Explorer): ชื่อว่าง/ซ้ำ = แจ้งเตือนและไม่เปลี่ยน
 Future<void> renameDocumentDialog(BuildContext context, String docId) async {
   final c = context.read<WorkspaceController>();
@@ -105,18 +145,7 @@ List<String> brokenLinkLines(WorkspaceController c, String docId) {
   final out = <String>[];
   for (final (fromDoc, fromElement, ref) in c.backlinksOf(docId)) {
     final src = c.documentById(fromDoc);
-    final String what;
-    if (src?.wireframe != null) {
-      final comp = src!.wireframe!.componentById(fromElement);
-      what = comp == null ? tr('(ไม่มีชื่อ)') : wfComponentTitle(comp);
-    } else if (src?.screenflow != null) {
-      final n = src!.screenflow!.nodeById(fromElement);
-      what = n == null ? tr('(ไม่มีชื่อ)') : sfNodeTitle(n);
-    } else {
-      final node = src?.dfd?.nodeById(fromElement);
-      what = node == null || node.title.isEmpty ? tr('(ไม่มีชื่อ)') : node.title;
-    }
-    final from = '${src?.name ?? fromDoc} · $what';
+    final from = '${src?.name ?? fromDoc} · ${linkOriginTitle(src, fromElement)}';
     final table = target?.er?.tableById(ref.elementId ?? '');
     out.add(switch (ref.kind) {
       DocRefKind.storeTable => tr('{0} → ตาราง {1}', [
