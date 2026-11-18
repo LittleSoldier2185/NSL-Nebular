@@ -52,6 +52,24 @@ class WorkspaceController extends ChangeNotifier {
   /// กำลังแสดงหน้า Project Home แทนแคนวาส (สถานะมุมมองล้วน ไม่ถูกบันทึกในไฟล์ ; เปิดเอกสารใด ๆ = ออกจากหน้านี้)
   bool _homeView = false;
 
+  /// เวลาที่เอกสารถูกเปิดใช้งานครั้งล่าสุดในรอบนี้ (สถานะมุมมองล้วน ไม่บันทึกในไฟล์ ; ล้างเมื่อเปิด/สร้างโปรเจกต์ใหม่)
+  final Map<String, DateTime> _openedAt = {};
+
+  /// ลำดับการเปิด (เลขยิ่งมาก = ยิ่งล่าสุด) — ใช้เรียงแทนเวลา เพราะเปิดติดกันเร็ว ๆ เวลาอาจเท่ากัน
+  final Map<String, int> _openSeq = {};
+  int _seq = 0;
+
+  /// เวลาที่เปิดเอกสาร [id] ล่าสุดในรอบนี้ (null = ยังไม่เคยเปิด)
+  DateTime? openedAt(String id) => _openedAt[id];
+
+  /// เอกสารที่รู้จักชนิด เรียงจากที่เปิดล่าสุดก่อน แล้วต่อด้วยที่ยังไม่เคยเปิดตามลำดับในไฟล์
+  List<ProjectDocument> get recentDocuments {
+    final known = [for (final d in _workspace.documents) if (d.type != null) d];
+    final opened = [for (final d in known) if (_openedAt.containsKey(d.id)) d]
+      ..sort((a, b) => _openSeq[b.id]!.compareTo(_openSeq[a.id]!));
+    return [...opened, for (final d in known) if (!_openedAt.containsKey(d.id)) d];
+  }
+
   Workspace get workspace => _workspace;
 
   bool get homeView => _homeView;
@@ -207,6 +225,8 @@ class WorkspaceController extends ChangeNotifier {
   }
 
   void _resetTabs(String activeId) {
+    _openedAt.clear();
+    _openSeq.clear();
     _open
       ..clear()
       ..addAll([for (final d in _workspace.documents) if (d.type != null) d.id]);
@@ -217,6 +237,8 @@ class WorkspaceController extends ChangeNotifier {
   /// ตั้งแท็บที่ใช้งาน (จำ ER ล่าสุดไว้ให้ [currentEr])
   void _setActive(String id) {
     _activeId = id;
+    _openedAt[id] = DateTime.now();
+    _openSeq[id] = ++_seq;
     _homeView = false;
     if (_workspace.documentById(id)?.type == DocType.er) _lastErId = id;
   }

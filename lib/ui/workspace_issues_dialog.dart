@@ -12,6 +12,44 @@ import 'document_actions.dart' show docTypeIcon;
 import 'palette/command_palette.dart' show gotoDfd, gotoFlowchart, gotoScreenFlow, gotoWireframe;
 import 'theme.dart';
 
+/// ไปยังที่มาของปัญหา [wi]: เปิดเอกสารแล้วเลือก/โฟกัสวัตถุนั้น ; [beforeJump] เรียกก่อนกระโดด (เช่น ปิดกล่องโต้ตอบ)
+/// — ใช้ร่วมกันระหว่างหน้าต่างปัญหาทั้งโปรเจกต์และหน้า Project Home
+void gotoWorkspaceIssue(BuildContext context, WorkspaceIssue wi, {VoidCallback? beforeJump}) {
+  final w = context.read<WorkspaceController>();
+  final cv = context.read<CanvasController>();
+  final i = wi.issue;
+  if (wi.docType == DocType.dfd) {
+    beforeJump?.call();
+    gotoDfd(context, wi.docId, node: i.tableId, flow: i.relationId);
+    return;
+  }
+  if (wi.docType == DocType.wireframe) {
+    beforeJump?.call();
+    gotoWireframe(context, wi.docId, component: i.tableId);
+    return;
+  }
+  if (wi.docType == DocType.screenflow) {
+    beforeJump?.call();
+    gotoScreenFlow(context, wi.docId, node: i.tableId, edge: i.relationId);
+    return;
+  }
+  if (wi.docType == DocType.flowchart) {
+    beforeJump?.call();
+    gotoFlowchart(context, wi.docId, node: i.tableId, edge: i.relationId);
+    return;
+  }
+  final er = w.erController(wi.docId);
+  if (er == null || !w.openDocument(wi.docId)) return;
+  beforeJump?.call();
+  final t = i.tableId == null ? null : er.project.tableById(i.tableId!);
+  if (t == null) {
+    cv.showDock(DockTab.issues);
+    return;
+  }
+  er.selectTable(t.id, columnId: i.columnId);
+  cv.focusTable(t);
+}
+
 /// ปัญหาที่ตรวจพบทั้งโปรเจกต์ — รวมทุกเอกสาร (ER และ DFD ทุกแท็บ) แยกเป็นกลุ่มตามเอกสาร คลิกรายการเพื่อไปที่วัตถุนั้น
 Future<void> showWorkspaceIssues(BuildContext context) =>
     showDialog<void>(context: context, builder: (_) => const WorkspaceIssuesDialog());
@@ -28,39 +66,7 @@ class _WorkspaceIssuesDialogState extends State<WorkspaceIssuesDialog> {
 
   void _goto(WorkspaceIssue wi) {
     final nav = Navigator.of(context);
-    final w = context.read<WorkspaceController>();
-    final cv = context.read<CanvasController>();
-    final i = wi.issue;
-    if (wi.docType == DocType.dfd) {
-      nav.pop();
-      gotoDfd(context, wi.docId, node: i.tableId, flow: i.relationId);
-      return;
-    }
-    if (wi.docType == DocType.wireframe) {
-      nav.pop();
-      gotoWireframe(context, wi.docId, component: i.tableId);
-      return;
-    }
-    if (wi.docType == DocType.screenflow) {
-      nav.pop();
-      gotoScreenFlow(context, wi.docId, node: i.tableId, edge: i.relationId);
-      return;
-    }
-    if (wi.docType == DocType.flowchart) {
-      nav.pop();
-      gotoFlowchart(context, wi.docId, node: i.tableId, edge: i.relationId);
-      return;
-    }
-    final er = w.erController(wi.docId);
-    if (er == null || !w.openDocument(wi.docId)) return;
-    nav.pop();
-    final t = i.tableId == null ? null : er.project.tableById(i.tableId!);
-    if (t == null) {
-      cv.showDock(DockTab.issues);
-      return;
-    }
-    er.selectTable(t.id, columnId: i.columnId);
-    cv.focusTable(t);
+    gotoWorkspaceIssue(context, wi, beforeJump: nav.pop);
   }
 
   @override

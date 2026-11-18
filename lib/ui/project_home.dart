@@ -1,253 +1,483 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/l10n/l10n.dart';
+import '../core/models/dfd_model.dart';
+import '../core/models/flowchart_model.dart';
 import '../core/models/workspace.dart';
 import '../core/validate/issue.dart';
 import '../core/validate/workspace_validator.dart';
 import '../state/workspace_controller.dart';
+import 'activity_rail.dart';
 import 'app_actions.dart';
-import 'document_actions.dart' show docTypeIcon;
-import 'wireframe/wf_panels.dart' show WireframeThumbnail;
-import '../core/export/workspace_summary.dart' show wireframeSummary;
+import 'document_actions.dart' show DocTypeDot;
 import 'shortcuts.dart';
+import 'start_page.dart' show relativeTimeLabel;
 import 'theme.dart';
 import 'workspace_issues_dialog.dart';
 
 typedef _DocIssues = ({int errors, int warnings});
 
-/// หน้า Project Home: ภาพรวมทั้งโปรเจกต์ (ไม่ใช่เอกสารในไฟล์) — แสดงแทนแคนวาสขณะ [WorkspaceController.homeView]
-/// ชื่อ/ไฟล์/สถานะบันทึก, ปุ่มลัด (เพิ่ม ER/DFD · ปัญหา · บันทึก), แถบสรุปทั้งโปรเจกต์,
-/// การ์ดเอกสารแยกตามชนิด (คลิก = เปิดเอกสารและออกจากหน้านี้)
+/// ชื่อชนิดเอกสารบนการ์ดของหน้า Home (ตามดีไซน์ — เป็นชื่อเฉพาะ ไม่แปล)
+String homeTypeLabel(DocType t) => switch (t) {
+      DocType.er => 'ER Diagram',
+      DocType.dfd => 'Data Flow',
+      DocType.flowchart => 'Flowchart',
+      DocType.wireframe => 'Wireframe',
+      DocType.screenflow => 'Screen Flow',
+    };
+
+String _menuLabel(DocType t) => switch (t) {
+      DocType.er => tr('ER Diagram (ตารางฐานข้อมูล)'),
+      DocType.dfd => tr('DFD (Data Flow Diagram)'),
+      DocType.flowchart => tr('Flowchart (ผังงาน)'),
+      DocType.wireframe => tr('Wireframe (หน้าจอ)'),
+      DocType.screenflow => tr('Screen Flow (ลำดับหน้าจอ)'),
+    };
+
+/// บรรทัดสรุปของการ์ดชนิดเอกสาร (รวมทุกเอกสารชนิดนั้น)
+@visibleForTesting
+String homeTypeDetail(DocType t, List<ProjectDocument> docs) {
+  if (docs.isEmpty) return tr('ยังไม่มีเอกสารชนิดนี้');
+  int sum(int Function(ProjectDocument d) f) => docs.fold(0, (a, d) => a + f(d));
+  return switch (t) {
+    DocType.er => tr('{0} ตาราง · {1} ความสัมพันธ์', [sum((d) => d.er!.tables.length), sum((d) => d.er!.relations.length)]),
+    DocType.dfd => tr('{0} กระบวนการ · {1} คลังข้อมูล', [
+        sum((d) => d.dfd!.nodes.where((n) => n.kind == DfdKind.process).length),
+        sum((d) => d.dfd!.nodes.where((n) => n.kind == DfdKind.store).length),
+      ]),
+    DocType.flowchart => tr('{0} สัญลักษณ์ · {1} จุดตัดสินใจ', [
+        sum((d) => d.flowchart!.nodes.length),
+        sum((d) => d.flowchart!.nodes.where((n) => n.shape == FcShape.decision).length),
+      ]),
+    DocType.wireframe => tr('{0} ชิ้นส่วน · ผูกกับ ER {1} จุด', [
+        sum((d) => d.wireframe!.components.length),
+        sum((d) => d.wireframe!.components.where((c) => c.ref != null).length),
+      ]),
+    DocType.screenflow => tr('{0} หน้าจอ · {1} เส้นทาง', [sum((d) => d.screenflow!.nodes.length), sum((d) => d.screenflow!.edges.length)]),
+  };
+}
+
+/// หน้า Project Home (Artboard `Home` ใน design/): ภาพรวมทั้งโปรเจกต์ — แสดงแทนแคนวาสขณะ [WorkspaceController.homeView]
+/// หัว (ชื่อ · จำนวนเอกสาร · บันทึกล่าสุด · ไฟล์ + ส่งออก/เอกสารใหม่) → การ์ดรายชนิด → เอกสารล่าสุด + ปัญหาข้ามเอกสาร
 class ProjectHomeView extends StatelessWidget {
   const ProjectHomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final w = context.watch<WorkspaceController>();
+    final all = validateWorkspace(w.workspace);
     final perDoc = <String, _DocIssues>{};
-    var errors = 0, warnings = 0;
-    for (final i in validateWorkspace(w.workspace)) {
+    for (final i in all) {
       final cur = perDoc[i.docId] ?? (errors: 0, warnings: 0);
       if (i.issue.severity == Severity.error) {
         perDoc[i.docId] = (errors: cur.errors + 1, warnings: cur.warnings);
-        errors++;
       } else if (i.issue.severity == Severity.warning) {
         perDoc[i.docId] = (errors: cur.errors, warnings: cur.warnings + 1);
-        warnings++;
       }
     }
-    final ers = [for (final d in w.documents) if (d.type == DocType.er) d];
-    final dfds = [for (final d in w.documents) if (d.type == DocType.dfd) d];
-    final tables = ers.fold<int>(0, (a, d) => a + d.er!.tables.length);
-    final objects = dfds.fold<int>(0, (a, d) => a + d.dfd!.nodes.length);
-    final fcs = [for (final d in w.documents) if (d.type == DocType.flowchart) d];
-    final symbols = fcs.fold<int>(0, (a, d) => a + d.flowchart!.nodes.length);
-    final wfs = [for (final d in w.documents) if (d.type == DocType.wireframe) d];
-    final sfs = [for (final d in w.documents) if (d.type == DocType.screenflow) d];
-    final components = wfs.fold<int>(0, (a, d) => a + d.wireframe!.components.length);
-    final screens = sfs.fold<int>(0, (a, d) => a + d.screenflow!.nodes.length);
-    final path = w.filePath;
-    final name = w.workspace.name.trim().isEmpty ? tr('(ไม่มีชื่อ)') : w.workspace.name;
+    final cross = crossDocIssues(all);
+    final n = countIssues(all.map((x) => x.issue));
 
     return Container(
       key: const ValueKey('project-home'),
       color: C.bg,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Align(
-          alignment: Alignment.topLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Icon(Icons.home_rounded, color: C.primary, size: 26),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(name,
-                      key: const ValueKey('home-name'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
-                ),
-              ]),
-              const SizedBox(height: 6),
-              Wrap(spacing: 14, runSpacing: 4, crossAxisAlignment: WrapCrossAlignment.center, children: [
-                Text(path ?? tr('ยังไม่ได้บันทึกเป็นไฟล์'),
-                    key: const ValueKey('home-path'), style: TextStyle(fontSize: 12.5, color: C.muted)),
-                if (w.dirty || path != null)
-                  Text(
-                    w.dirty ? tr('● ยังไม่ได้บันทึก') : tr('✓ บันทึกแล้ว'),
-                    key: const ValueKey('home-dirty'),
-                    style: TextStyle(fontSize: 12.5, color: w.dirty ? C.warnText : C.muted),
-                  ),
-              ]),
-              const SizedBox(height: 16),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                _Action(const ValueKey('home-add-er'), Icons.table_chart_outlined, tr('เพิ่ม ER'), () => w.addDocument(DocType.er)),
-                _Action(const ValueKey('home-add-dfd'), Icons.account_tree_outlined, tr('เพิ่ม DFD'), () => w.addDocument(DocType.dfd)),
-                _Action(const ValueKey('home-add-flowchart'), Icons.schema_outlined, tr('เพิ่ม Flowchart'),
-                    () => w.addDocument(DocType.flowchart)),
-                _Action(const ValueKey('home-add-wireframe'), Icons.web_outlined, tr('เพิ่ม Wireframe'),
-                    () => w.addDocument(DocType.wireframe)),
-                _Action(const ValueKey('home-add-screenflow'), Icons.alt_route_rounded, tr('เพิ่ม Screen Flow'),
-                    () => w.addDocument(DocType.screenflow)),
-                _Action(const ValueKey('home-issues'), Icons.rule_rounded, tr('ปัญหาทั้งโปรเจกต์…'), () => showWorkspaceIssues(context)),
-                _Action(const ValueKey('home-export'), Icons.ios_share_rounded, tr('Export เอกสารทั้งโปรเจกต์…'),
-                    () => AppActions(context).run(Cmd.exportText)),
-                _Action(const ValueKey('home-save'), Icons.save_outlined, tr('บันทึก'), () => AppActions(context).run(Cmd.save)),
-              ]),
-              const SizedBox(height: 20),
-              Wrap(spacing: 10, runSpacing: 10, children: [
-                _Stat(const ValueKey('home-stat-docs'), tr('เอกสาร'), '${w.documents.length}'),
-                _Stat(const ValueKey('home-stat-tables'), tr('ตาราง'), '$tables'),
-                _Stat(const ValueKey('home-stat-objects'), tr('วัตถุ DFD'), '$objects'),
-                if (fcs.isNotEmpty) _Stat(const ValueKey('home-stat-symbols'), tr('สัญลักษณ์ Flowchart'), '$symbols'),
-                if (wfs.isNotEmpty) _Stat(const ValueKey('home-stat-components'), tr('ชิ้นส่วน Wireframe'), '$components'),
-                if (sfs.isNotEmpty) _Stat(const ValueKey('home-stat-screens'), tr('หน้าจอใน Screen Flow'), '$screens'),
-                _Stat(const ValueKey('home-stat-errors'), tr('ข้อผิดพลาด'), '$errors', color: errors > 0 ? C.danger : null),
-                _Stat(const ValueKey('home-stat-warnings'), tr('คำเตือน'), '$warnings', color: warnings > 0 ? C.warnText : null),
-              ]),
-              _section(tr('แผนภาพ ER'), ers, perDoc, w),
-              _section(tr('แผนภาพกระแสข้อมูล (DFD)'), dfds, perDoc, w),
-              _section(tr('ผังงาน (Flowchart)'), fcs, perDoc, w),
-              _section(tr('หน้าจอ (Wireframe)'), wfs, perDoc, w),
-              _section(tr('ลำดับหน้าจอ (Screen Flow)'), sfs, perDoc, w),
+            constraints: const BoxConstraints(maxWidth: 1120),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              _Header(w: w),
+              const SizedBox(height: 28),
+              _TypeCards(w: w),
+              const SizedBox(height: 28),
+              LayoutBuilder(builder: (context, c) {
+                final recent = _RecentPanel(w: w, perDoc: perDoc);
+                final issues = _CrossPanel(issues: cross, errors: n.errors, warnings: n.warnings);
+                if (c.maxWidth < 760) {
+                  return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [recent, const SizedBox(height: 20), issues]);
+                }
+                return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Expanded(flex: 64, child: recent),
+                  const SizedBox(width: 20),
+                  Expanded(flex: 36, child: issues),
+                ]);
+              }),
             ]),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _section(String label, List<ProjectDocument> docs, Map<String, _DocIssues> perDoc, WorkspaceController w) {
-    if (docs.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(top: 24),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('$label (${docs.length})', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: C.muted)),
-        const SizedBox(height: 8),
-        Wrap(spacing: 12, runSpacing: 12, children: [
-          for (final d in docs)
-            _DocCard(doc: d, issues: perDoc[d.id] ?? (errors: 0, warnings: 0), onOpen: () => w.openDocument(d.id)),
-        ]),
+/// เวลาแก้ไขไฟล์บนดิสก์ (null = ยังไม่มีไฟล์ หรืออ่านไม่ได้)
+DateTime? _fileTime(String? path) {
+  if (path == null) return null;
+  try {
+    final f = File(path);
+    return f.existsSync() ? f.lastModifiedSync() : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+String _baseName(String path) {
+  final parts = path.split(RegExp(r'[\\/]'));
+  return parts.isEmpty ? path : parts.last;
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.w});
+  final WorkspaceController w;
+
+  @override
+  Widget build(BuildContext context) {
+    final path = w.filePath;
+    final name = w.workspace.name.trim().isEmpty ? tr('(ไม่มีชื่อ)') : w.workspace.name;
+    final known = w.documents.where((d) => d.type != null).length;
+    final saved = _fileTime(path);
+    final meta = TextStyle(fontSize: 13.5, color: C.muted);
+    final title = Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(tr('โปรเจกต์'), style: TextStyle(fontSize: 12, color: C.muted, letterSpacing: 0.5)),
+      const SizedBox(height: 2),
+      Text(name,
+          key: const ValueKey('home-name'),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 30, height: 1.2, fontWeight: FontWeight.w700, color: C.text)),
+      const SizedBox(height: 6),
+      Wrap(spacing: 6, runSpacing: 2, crossAxisAlignment: WrapCrossAlignment.center, children: [
+        Text(tr('{0} เอกสาร', [known]), key: const ValueKey('home-doc-count'), style: meta),
+        if (saved != null) ...[
+          Text('·', style: meta),
+          Text(tr('บันทึกล่าสุด {0}', [relativeTimeLabel(saved, DateTime.now())]), style: meta),
+        ],
+        Text('·', style: meta),
+        Tooltip(
+          message: path ?? '',
+          child: Text(path == null ? tr('ยังไม่ได้บันทึกเป็นไฟล์') : _baseName(path), key: const ValueKey('home-path'), style: meta),
+        ),
+        if (w.dirty) ...[
+          Text('·', style: meta),
+          Text(tr('● ยังไม่ได้บันทึก'),
+              key: const ValueKey('home-dirty'), style: TextStyle(fontSize: 13.5, color: C.warnText, fontWeight: FontWeight.w600)),
+        ],
+      ]),
+    ]);
+    final buttons = Wrap(spacing: 10, runSpacing: 8, children: [
+      OutlinedButton(
+        key: const ValueKey('home-export'),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 38),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          foregroundColor: C.text,
+          backgroundColor: C.surface,
+          side: BorderSide(color: C.inputBorder),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        onPressed: () => AppActions(context).run(Cmd.exportText),
+        child: Text(tr('ส่งออกทั้งโปรเจกต์'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      ),
+      _NewDocButton(w: w),
+    ]);
+    return LayoutBuilder(builder: (context, c) {
+      if (c.maxWidth < 600) {
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 12), buttons]);
+      }
+      return Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        Expanded(child: title),
+        const SizedBox(width: 16),
+        buttons,
+      ]);
+    });
+  }
+}
+
+class _NewDocButton extends StatelessWidget {
+  const _NewDocButton({required this.w});
+  final WorkspaceController w;
+
+  @override
+  Widget build(BuildContext context) {
+    return MenuAnchor(
+      menuChildren: [
+        for (final t in DocType.values)
+          MenuItemButton(
+            key: ValueKey('home-add-${t.name}'),
+            leadingIcon: DocTypeDot(t),
+            onPressed: () => w.addDocument(t),
+            child: Text(_menuLabel(t), style: const TextStyle(fontSize: 13)),
+          ),
+      ],
+      builder: (context, ctl, _) => FilledButton(
+        key: const ValueKey('home-new'),
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(0, 38),
+          padding: const EdgeInsets.symmetric(horizontal: 18),
+          backgroundColor: C.primary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        onPressed: () => ctl.isOpen ? ctl.close() : ctl.open(),
+        child: Text(tr('+ เอกสารใหม่'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
+}
+
+class _TypeCards extends StatelessWidget {
+  const _TypeCards({required this.w});
+  final WorkspaceController w;
+
+  static const _gap = 14.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, c) {
+      const types = DocType.values;
+      final cols = ((c.maxWidth + _gap) / (190 + _gap)).floor().clamp(1, types.length);
+      final cardW = (c.maxWidth - _gap * (cols - 1)) / cols;
+      return Wrap(spacing: _gap, runSpacing: _gap, children: [
+        for (final t in types)
+          SizedBox(width: cardW, child: _TypeCard(type: t, docs: [for (final d in w.documents) if (d.type == t) d], w: w)),
+      ]);
+    });
+  }
+}
+
+class _TypeCard extends StatelessWidget {
+  const _TypeCard({required this.type, required this.docs, required this.w});
+  final DocType type;
+  final List<ProjectDocument> docs;
+  final WorkspaceController w;
+
+  @override
+  Widget build(BuildContext context) {
+    final col = C.doc(type);
+    final empty = docs.isEmpty;
+    return Container(
+      key: ValueKey('home-type-${type.name}'),
+      decoration: BoxDecoration(
+        color: C.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: C.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Container(height: 4, color: col.main),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(children: [
+              DocTypeDot(type),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(homeTypeLabel(type),
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w700, color: col.ink)),
+              ),
+            ]),
+            const SizedBox(height: 10),
+            Text('${docs.length}',
+                key: ValueKey('home-type-count-${type.name}'),
+                style: TextStyle(fontSize: 28, height: 1, fontWeight: FontWeight.w700, color: empty ? C.muted : C.text)),
+            const SizedBox(height: 10),
+            Text(homeTypeDetail(type, docs),
+                key: ValueKey('home-type-detail-${type.name}'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: C.muted)),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              key: ValueKey('home-type-open-${type.name}'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 30),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                foregroundColor: col.ink,
+                backgroundColor: C.surface,
+                side: BorderSide(color: C.border),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () => ActivityRail.go(w, type),
+              child: Text(empty ? tr('สร้าง') : tr('เปิด'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            ),
+          ]),
+        ),
       ]),
     );
   }
 }
 
-class _Action extends StatelessWidget {
-  const _Action(this.k, this.icon, this.label, this.onTap);
-  final Key k;
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
+/// กรอบแผงของหน้า Home (หัว + รายการ)
+class _Panel extends StatelessWidget {
+  const _Panel({super.key, required this.title, this.trailing, required this.children});
+  final String title;
+  final Widget? trailing;
+  final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) => OutlinedButton.icon(
-        key: k,
-        onPressed: onTap,
-        icon: Icon(icon, size: 16),
-        label: Text(label, style: const TextStyle(fontSize: 13)),
-      );
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat(this.k, this.label, this.value, {this.color});
-  final Key k;
-  final String label, value;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        key: k,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: C.surface,
-          border: Border.all(color: C.border),
-          borderRadius: BorderRadius.circular(8),
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var i = 0; i < children.length; i++) {
+      if (i > 0) rows.add(Divider(height: 1, thickness: 1, color: C.borderSoft));
+      rows.add(children[i]);
+    }
+    return Container(
+      decoration: BoxDecoration(
+        color: C.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: C.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(18, 12, 12, 12),
+          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: C.border))),
+          child: Row(children: [
+            Expanded(child: Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: C.text))),
+            ?trailing,
+          ]),
         ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color ?? C.text)),
-          const SizedBox(width: 8),
-          Text(label, style: TextStyle(fontSize: 12.5, color: C.muted)),
-        ]),
-      );
+        ...rows,
+      ]),
+    );
+  }
 }
 
-class _DocCard extends StatelessWidget {
-  const _DocCard({required this.doc, required this.issues, required this.onOpen});
+class _RecentPanel extends StatelessWidget {
+  const _RecentPanel({required this.w, required this.perDoc});
+  final WorkspaceController w;
+  final Map<String, _DocIssues> perDoc;
+
+  @override
+  Widget build(BuildContext context) {
+    final docs = w.recentDocuments;
+    final now = DateTime.now();
+    return _Panel(
+      key: const ValueKey('home-recent'),
+      title: tr('เอกสารล่าสุด'),
+      children: [
+        for (final d in docs) _RecentRow(doc: d, issues: perDoc[d.id], opened: w.openedAt(d.id), now: now, onOpen: () => w.openDocument(d.id)),
+      ],
+    );
+  }
+}
+
+class _RecentRow extends StatelessWidget {
+  const _RecentRow({required this.doc, required this.issues, required this.opened, required this.now, required this.onOpen});
   final ProjectDocument doc;
-  final _DocIssues issues;
+  final _DocIssues? issues;
+  final DateTime? opened;
+  final DateTime now;
   final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
-    final er = doc.er;
-    final dfd = doc.dfd;
-    final fc = doc.flowchart;
-    final String detail;
-    if (er != null) {
-      final cols = er.tables.fold<int>(0, (a, t) => a + t.columns.length);
-      detail = tr('{0} ตาราง · {1} คอลัมน์ · {2} FK', [er.tables.length, cols, er.relations.length]);
-    } else if (fc != null) {
-      detail = tr('{0} สัญลักษณ์ · {1} เส้นเชื่อม', [fc.nodes.length, fc.edges.length]);
-    } else if (doc.wireframe != null) {
-      detail = wireframeSummary(doc.wireframe!);
-    } else if (doc.screenflow != null) {
-      detail = tr('{0} หน้าจอ · {1} การเปลี่ยนหน้า', [doc.screenflow!.nodes.length, doc.screenflow!.edges.length]);
-    } else {
-      detail = tr('{0} วัตถุ · {1} เส้นข้อมูล', [dfd!.nodes.length, dfd.flows.length]);
-    }
-    final total = issues.errors + issues.warnings;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 260),
-      child: Material(
-        color: C.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: C.border)),
-        child: InkWell(
-          key: ValueKey('home-card-${doc.id}'),
-          borderRadius: BorderRadius.circular(10),
-          onTap: onOpen,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Icon(docTypeIcon(doc.type), size: 16, color: C.primary),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(minWidth: 140),
-                    child: Text(doc.name,
-                        maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                  ),
-                ),
-                if (total > 0) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    key: ValueKey('home-issues-${doc.id}'),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: issues.errors > 0 ? C.danger.withValues(alpha: 0.15) : C.palette.warnBg,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text('$total',
-                        style: TextStyle(
-                            fontSize: 11, fontWeight: FontWeight.w600, color: issues.errors > 0 ? C.danger : C.palette.warnText)),
-                  ),
-                ],
+    final iss = issues;
+    final total = iss == null ? 0 : iss.errors + iss.warnings;
+    return InkWell(
+      key: ValueKey('home-card-${doc.id}'),
+      onTap: onOpen,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+        child: Row(children: [
+          DocTypeDot(doc.type),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text.rich(
+              TextSpan(children: [
+                TextSpan(text: '${homeTypeLabel(doc.type!)} · ', style: TextStyle(color: C.muted)),
+                TextSpan(text: doc.name),
               ]),
-              const SizedBox(height: 6),
-              Text(detail, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, color: C.muted)),
-              if (er != null) Text(er.dialect.label, style: TextStyle(fontSize: 12, color: C.muted)),
-              if (doc.wireframe != null) ...[
-                const SizedBox(height: 6),
-                SizedBox(width: 220, child: WireframeThumbnail(diagram: doc.wireframe!, height: 80)),
-              ],
-            ]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: C.text),
+            ),
+          ),
+          if (total > 0) ...[
+            const SizedBox(width: 8),
+            Tooltip(
+              message: tr('{0} ข้อผิดพลาด · {1} คำเตือน', [iss!.errors, iss.warnings]),
+              child: Container(
+                key: ValueKey('home-issues-${doc.id}'),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+                decoration: BoxDecoration(
+                  color: iss.errors > 0 ? C.dangerBg : C.warnBg,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text('$total',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: iss.errors > 0 ? C.dangerText : C.warnText)),
+              ),
+            ),
+          ],
+          const SizedBox(width: 12),
+          Text(opened == null ? tr('ยังไม่ได้เปิด') : relativeTimeLabel(opened!, now),
+              style: TextStyle(fontSize: 12, color: C.muted)),
+        ]),
+      ),
+    );
+  }
+}
+
+class _CrossPanel extends StatelessWidget {
+  const _CrossPanel({required this.issues, required this.errors, required this.warnings});
+  final List<WorkspaceIssue> issues;
+  final int errors, warnings;
+
+  @override
+  Widget build(BuildContext context) {
+    final has = issues.isNotEmpty;
+    return _Panel(
+      key: const ValueKey('home-cross'),
+      title: tr('ปัญหาข้ามเอกสาร'),
+      trailing: Container(
+        key: const ValueKey('home-cross-count'),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(color: has ? C.dangerBg : C.surfaceHi, borderRadius: BorderRadius.circular(999)),
+        child: Text('${issues.length}',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: has ? C.dangerText : C.muted)),
+      ),
+      children: [
+        if (!has)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            child: Text(tr('ลิงก์ระหว่างเอกสารครบถ้วน ไม่มีอะไรชี้ไปของที่ถูกลบ'), style: TextStyle(fontSize: 13, color: C.muted)),
+          ),
+        for (final (i, x) in issues.indexed)
+          InkWell(
+            key: ValueKey('home-cross-$i'),
+            onTap: () => gotoWorkspaceIssue(context, x),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(x.issue.title, style: TextStyle(fontWeight: FontWeight.w500, color: C.text)),
+                const SizedBox(height: 2),
+                Row(children: [
+                  DocTypeDot(x.docType, size: 7),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text('${homeTypeLabel(x.docType)} · ${x.docName}',
+                        maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: C.muted)),
+                  ),
+                ]),
+              ]),
+            ),
+          ),
+        InkWell(
+          key: const ValueKey('home-issues'),
+          onTap: () => showWorkspaceIssues(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            child: Text(
+              tr('ปัญหาทั้งโปรเจกต์: {0} ข้อผิดพลาด · {1} คำเตือน →', [errors, warnings]),
+              key: const ValueKey('home-issue-totals'),
+              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: C.primary),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

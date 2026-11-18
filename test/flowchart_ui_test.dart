@@ -119,20 +119,21 @@ void main() {
       expect(find.byKey(ValueKey('explorer-row-$id')), findsNothing);
     });
 
-    testWidgets('Project Home: ปุ่มเพิ่ม Flowchart, การ์ด, ตัวเลขสัญลักษณ์ ; คลิกการ์ดเปิดเอกสาร', (tester) async {
+    testWidgets('Project Home: เมนูเพิ่ม Flowchart, การ์ดชนิด, ตัวเลขสัญลักษณ์ ; คลิกการ์ดเปิดเอกสาร', (tester) async {
       await boot(tester);
       final f = await addFlow(tester, two());
       w.showHome();
       await tester.pumpAndSettle();
       final home = find.byKey(const ValueKey('project-home'));
-      expect(find.descendant(of: home, matching: find.text('ผังงาน (Flowchart) (1)')), findsOneWidget);
-      expect(find.descendant(of: home, matching: find.text('2 สัญลักษณ์ · 0 เส้นเชื่อม')), findsOneWidget);
-      expect(find.descendant(of: find.byKey(const ValueKey('home-stat-symbols')), matching: find.text('2')), findsOneWidget);
+      expect(tester.widget<Text>(find.byKey(const ValueKey('home-type-count-flowchart'))).data, '1');
+      expect(find.descendant(of: home, matching: find.text('2 สัญลักษณ์ · 0 จุดตัดสินใจ')), findsOneWidget);
       await tester.tap(find.byKey(ValueKey('home-card-${f.docId}')));
       await tester.pumpAndSettle();
       expect(w.homeView, isFalse);
       expect(w.activeId, f.docId);
       w.showHome();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('home-new')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('home-add-flowchart')));
       await tester.pumpAndSettle();

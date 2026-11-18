@@ -58,3 +58,16 @@ List<WorkspaceIssue> validateWorkspace(Workspace w) {
   }
   return (errors: e, warnings: w, infos: i);
 }
+
+/// รหัสปัญหาที่เกิดจากลิงก์ระหว่างเอกสาร (ชี้ไปตาราง/เอกสาร/แผนภาพย่อยที่ไม่มีแล้ว หรือไม่สมดุลกับแผนภาพย่อย)
+const kCrossDocIssueCodes = {
+  'dfd_store_table_missing',
+  'dfd_child_missing',
+  'dfd_unbalanced',
+  'wf_ref_missing',
+  'sf_wireframe_missing',
+};
+
+/// เฉพาะปัญหาข้ามเอกสาร (ดู [kCrossDocIssueCodes]) ตามลำดับเดิม
+List<WorkspaceIssue> crossDocIssues(Iterable<WorkspaceIssue> all) =>
+    [for (final x in all) if (kCrossDocIssueCodes.contains(x.issue.code)) x];
