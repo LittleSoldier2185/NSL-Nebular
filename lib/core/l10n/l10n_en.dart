@@ -1472,4 +1472,8 @@ const Map<String, String> kEn = {
   'เอกสาร API ไม่มีแผนภาพ — ใช้ "ส่งออก OpenAPI" แทน': 'API documents have no diagram — use "Export OpenAPI" instead',
   'ไม่ผูกตาราง': 'not bound to a table',
   'ไม่มี response': 'No responses',
+  '| Method | Path | คำอธิบาย | ตาราง | ล็อกอิน |': '| Method | Path | Description | Table | Login |',
+  'ล็อกอิน': 'Login',
+  'ส่งออก OpenAPI': 'Export OpenAPI',
+  'ส่งออก OpenAPI…': 'Export OpenAPI…',
 };

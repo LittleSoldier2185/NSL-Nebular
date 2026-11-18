@@ -9,6 +9,7 @@ import 'workspace_summary.dart';
 import '../types/type_label.dart';
 import '../l10n/l10n.dart';
 import 'notes_export.dart';
+import '../models/api_model.dart';
 
 /// Data dictionary เป็น Markdown: ตาราง -> คอลัมน์ / FK ขาออก / FK ขาเข้า / INDEX
 /// ใช้ส่งงานหรือแปะใน README — ผลลัพธ์คงที่ ไม่มีวันที่
@@ -46,6 +47,7 @@ String exportWorkspaceDictionary(Workspace w, {bool includeNotes = true}) {
     ...w.documentsOf(DocType.flowchart),
     ...w.documentsOf(DocType.wireframe),
     ...w.documentsOf(DocType.screenflow),
+    ...w.documentsOf(DocType.api),
   ];
   final c = workspaceCounts(w);
   final issues = exportIssues(w);
@@ -74,6 +76,8 @@ String exportWorkspaceDictionary(Workspace w, {bool includeNotes = true}) {
       b.writeln('- Flowchart: ${_inline(d.name)} — ${tr('{0} สัญลักษณ์ · {1} เส้นเชื่อม', [g.nodes.length, g.edges.length])}');
     } else if (d.type == DocType.wireframe) {
       b.writeln('- Wireframe: ${_inline(d.name)} — ${wireframeSummary(d.wireframe!)}');
+    } else if (d.type == DocType.api) {
+      b.writeln('- API: ${_inline(d.name)} — ${tr('{0} endpoint', [d.api!.endpoints.length])}');
     } else if (d.type == DocType.screenflow) {
       final g = d.screenflow!;
       b.writeln('- Screen Flow: ${_inline(d.name)} — ${tr('{0} หน้าจอ · {1} การเปลี่ยนหน้า', [g.nodes.length, g.edges.length])}');
@@ -113,6 +117,8 @@ String exportWorkspaceDictionary(Workspace w, {bool includeNotes = true}) {
       _wireframe(b, w, d, [for (final i in issues) if (i.docId == d.id) i]);
     } else if (d.type == DocType.screenflow) {
       _screenflow(b, w, d, [for (final i in issues) if (i.docId == d.id) i]);
+    } else if (d.type == DocType.api) {
+      _api(b, w, d, [for (final i in issues) if (i.docId == d.id) i]);
     } else {
       _dfd(b, w, d, [for (final i in issues) if (i.docId == d.id) i]);
     }
@@ -228,6 +234,24 @@ void _wireframe(StringBuffer b, Workspace w, ProjectDocument d, List<WorkspaceIs
     b.writeln('|------|---------|----------------|-------|-----------|');
     for (final r in wireframeRows(w, g)) {
       b.writeln('| ${'&nbsp;&nbsp;' * r.depth}${_cell(r.kind)} | ${_cell(r.text)} | ${r.geometry} | ${_cell(r.state)} | ${_cell(r.binding)} |');
+    }
+  }
+  _issues(b, issues);
+}
+
+void _api(StringBuffer b, Workspace w, ProjectDocument d, List<WorkspaceIssue> issues) {
+  final a = d.api!;
+  b.writeln('## API: ${_inline(d.name)}');
+  b.writeln();
+  b.writeln('- ${_inline(a.title.isEmpty ? d.name : a.title)} · v${_inline(a.version)}${a.baseUrl.isEmpty ? '' : ' · ${_inline(a.baseUrl)}'}');
+  b.writeln('- ${tr('{0} endpoint', [a.endpoints.length])}');
+  if (a.endpoints.isNotEmpty) {
+    b.writeln();
+    b.writeln(tr('| Method | Path | คำอธิบาย | ตาราง | ล็อกอิน |'));
+    b.writeln('|--------|------|----------|-------|---------|');
+    for (final e in a.endpoints) {
+      final t = e.table == null ? '' : (w.documentById(e.table!.docId)?.er?.tableById(e.table!.tableId)?.name ?? '?');
+      b.writeln('| ${e.method.label} | `${e.path}` | ${_cell(e.summary)} | ${_cell(t)} | ${e.auth ? tr('ใช่') : ''} |');
     }
   }
   _issues(b, issues);

@@ -15,6 +15,7 @@ import '../validate/screenflow_validator.dart' show sfKindLabel;
 import 'workspace_summary.dart';
 import 'svg_export.dart';
 import 'notes_export.dart';
+import '../models/api_model.dart';
 
 /// เอกสารโครงสร้างฐานข้อมูลเป็นไฟล์ HTML ไฟล์เดียว (CSS ฝังในไฟล์ ไม่มี JavaScript ไม่เรียกของภายนอก)
 /// - มีสารบัญ ภาพแผนภาพ ER (SVG ฝัง) แผนภาพ DFD และรายละเอียดทุกตาราง
@@ -31,6 +32,7 @@ String exportHtmlDocument(Workspace w, {bool includeDiagrams = true, bool includ
   final fcDocs = [for (final d in docs) if (d.type == DocType.flowchart) d];
   final wfDocs = [for (final d in docs) if (d.type == DocType.wireframe) d];
   final sfDocs = [for (final d in docs) if (d.type == DocType.screenflow) d];
+  final apiDocs = [for (final d in docs) if (d.type == DocType.api) d];
   final p0 = erDocs.firstOrNull?.er ?? Project(name: w.name);
   final b = StringBuffer();
   final title = _esc(legacy
@@ -93,11 +95,14 @@ String exportHtmlDocument(Workspace w, {bool includeDiagrams = true, bool includ
     for (final d in sfDocs) {
       b.writeln('<li><a href="#sf-${_safeId(d.id)}">Screen Flow: ${_esc(d.name)}</a></li>');
     }
+    for (final d in apiDocs) {
+      b.writeln('<li><a href="#api-${_safeId(d.id)}">API: ${_esc(d.name)}</a></li>');
+    }
     b.writeln('</ul>');
     b.writeln('</nav>');
   }
 
-  if (!legacy) _overview(b, w, [...erDocs, ...dfdDocs, ...fcDocs, ...wfDocs, ...sfDocs]);
+  if (!legacy) _overview(b, w, [...erDocs, ...dfdDocs, ...fcDocs, ...wfDocs, ...sfDocs, ...apiDocs]);
 
   for (final d in erDocs) {
     final p = d.er!;
@@ -137,6 +142,9 @@ String exportHtmlDocument(Workspace w, {bool includeDiagrams = true, bool includ
   for (final d in sfDocs) {
     _screenflow(b, w, d, [for (final i in issues) if (i.docId == d.id) i], includeDiagrams);
   }
+  for (final d in apiDocs) {
+    _api(b, w, d, [for (final i in issues) if (i.docId == d.id) i]);
+  }
   if (includeNotes) b.write(notesHtml(w, _esc));
   b.writeln('<footer>${_esc(tr('สร้างโดย NSL Nebular'))}</footer>');
   b.writeln('</main>');
@@ -173,6 +181,9 @@ void _overview(StringBuffer b, Workspace w, List<ProjectDocument> docs) {
     } else if (d.type == DocType.wireframe) {
       b.writeln('<li><a href="#wf-${_safeId(d.id)}">Wireframe: ${_esc(d.name)}</a> <span class="muted">— '
           '${_esc(wireframeSummary(d.wireframe!))}</span></li>');
+    } else if (d.type == DocType.api) {
+      b.writeln('<li><a href="#api-${_safeId(d.id)}">API: ${_esc(d.name)}</a> <span class="muted">— '
+          '${_esc(tr('{0} endpoint', [d.api!.endpoints.length]))}</span></li>');
     } else if (d.type == DocType.screenflow) {
       final g = d.screenflow!;
       b.writeln('<li><a href="#sf-${_safeId(d.id)}">Screen Flow: ${_esc(d.name)}</a> <span class="muted">— '
@@ -304,6 +315,27 @@ void _wireframe(StringBuffer b, Workspace w, ProjectDocument d, List<WorkspaceIs
     for (final r in wireframeRows(w, g)) {
       b.writeln('<tr><td style="padding-left:${10 + r.depth * 16}px">${_esc(r.kind)}</td><td>${_esc(r.text).replaceAll('\n', '<br>')}</td>'
           '<td>${_esc(r.geometry)}</td><td>${_esc(r.state)}</td><td>${_esc(r.binding)}</td></tr>');
+    }
+    b.writeln('</tbody></table>');
+  }
+  _issueList(b, issues);
+  b.writeln('</section>');
+}
+
+void _api(StringBuffer b, Workspace w, ProjectDocument d, List<WorkspaceIssue> issues) {
+  final a = d.api!;
+  b.writeln('<section id="api-${_safeId(d.id)}">');
+  b.writeln('<h2>API: ${_esc(d.name)}</h2>');
+  b.writeln('<p class="meta">${_esc([a.title.isEmpty ? d.name : a.title, 'v${a.version}', if (a.baseUrl.isNotEmpty) a.baseUrl].join(' · '))}</p>');
+  if (a.endpoints.isEmpty) {
+    b.writeln('<p class="muted">${_esc(tr('ยังไม่มี endpoint'))}</p>');
+  } else {
+    b.writeln('<table><thead><tr><th>Method</th><th>Path</th><th>${_esc(tr('คำอธิบาย'))}</th><th>${_esc(tr('ตาราง'))}</th>'
+        '<th>${_esc(tr('ล็อกอิน'))}</th></tr></thead><tbody>');
+    for (final e in a.endpoints) {
+      final t = e.table == null ? '' : (w.documentById(e.table!.docId)?.er?.tableById(e.table!.tableId)?.name ?? '?');
+      b.writeln('<tr><td><code>${e.method.label}</code></td><td><code>${_esc(e.path)}</code></td><td>${_esc(e.summary)}</td>'
+          '<td>${_esc(t)}</td><td>${e.auth ? _esc(tr('ใช่')) : ''}</td></tr>');
     }
     b.writeln('</tbody></table>');
   }

@@ -12,6 +12,8 @@ import '../document_actions.dart' show DocTypeDot;
 import '../issue_widgets.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import '../../core/export/openapi_export.dart';
+import '../file_actions.dart';
 
 /// สีของป้าย method (ใช้สีประจำชนิดเอกสารที่มีอยู่ ไม่เพิ่มค่าสีใหม่)
 Color apiMethodColor(ApiMethod m) => switch (m) {
@@ -545,6 +547,13 @@ class _Section extends StatelessWidget {
   );
 }
 
+/// บันทึกเอกสาร OpenAPI 3.1 (JSON) ของ [a] ลงไฟล์ที่ผู้ใช้เลือก
+Future<void> exportOpenApiFile(BuildContext context, ApiController a) {
+  final w = context.read<WorkspaceController>();
+  final text = exportOpenApiJson(a.api, w: w.workspace, fallbackTitle: a.doc.name);
+  return FileActions.saveText(context, text, '${FileActions.safeName(a.doc.name)}.openapi.json', tr('ส่งออก OpenAPI'));
+}
+
 // ======================= แผงขวา =======================
 
 /// แผงขวาของแท็บ API: ข้อมูล API · endpoint ที่เลือก (ลบ/ทำสำเนา) · เรียกใช้จาก · ตรวจสอบ
@@ -598,6 +607,12 @@ class ApiRightPanel extends StatelessWidget {
               mono: true,
               value: a.api.baseUrl,
               onCommit: (v) => a.setInfo(baseUrl: v),
+            ),
+            const SizedBox(height: 10),
+            FilledButton(
+              key: const ValueKey('api-export-openapi'),
+              onPressed: () => exportOpenApiFile(context, a),
+              child: Text(tr('ส่งออก OpenAPI…')),
             ),
           ] else ...[
             Text(

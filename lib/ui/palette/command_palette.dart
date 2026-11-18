@@ -34,6 +34,7 @@ import '../workspace_issues_dialog.dart';
 import '../theme.dart';
 import '../../core/l10n/l10n.dart';
 import '../../core/models/api_model.dart';
+import '../api/api_view.dart' show exportOpenApiFile;
 
 enum PaletteKind { command, table, column, group, note, dfdNode, dfdFlow, fcNode, fcEdge, wfComponent, sfNode, sfEdge, issue }
 
@@ -149,6 +150,8 @@ List<PaletteEntry> buildPaletteEntries(BuildContext context) {
     cmd(tr('เพิ่ม Wireframe'), 'new wireframe screen mockup หน้าจอ', () => w.addDocument(DocType.wireframe)),
     cmd(tr('เพิ่ม Screen Flow'), 'new screen flow navigation map ลำดับหน้าจอ', () => w.addDocument(DocType.screenflow)),
     cmd(tr('เพิ่ม API'), 'new api endpoint rest openapi', () => w.addDocument(DocType.api)),
+    if (w.activeDocument.type == DocType.api)
+      cmd(tr('ส่งออก OpenAPI…'), 'export openapi swagger json', () => exportOpenApiFile(context, w.currentApi)),
     cmd(tr('สลับรูปแบบ Wireframe (ร่าง / เรียบร้อย)'), 'wireframe style sketch clean fidelity รูปแบบ', () {
       final f = context.read<WireframeController>();
       if (w.activeDocument.type == DocType.wireframe) {
