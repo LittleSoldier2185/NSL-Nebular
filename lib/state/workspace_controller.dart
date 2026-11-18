@@ -28,7 +28,7 @@ import '../core/models/requirement.dart';
 /// การเพิ่ม/ลบ/เปลี่ยนชื่อ/ย้ายเอกสารและโฟลเดอร์ไม่เข้าประวัติ undo (undo เป็นของแต่ละเอกสาร)
 /// controller นี้แจ้งผู้ฟังทุกครั้งที่โครงสร้างเปลี่ยน และทุกครั้งที่ controller ของเอกสารใดแจ้ง
 /// หน้าที่แสดงในพื้นที่หลัก
-enum WorkspacePage { document, home, dictionary, history, trace }
+enum WorkspacePage { document, home, dictionary, history, trace, codegen }
 
 class WorkspaceController extends ChangeNotifier {
   WorkspaceController([Workspace? workspace]) : _workspace = workspace ?? Workspace.single(Project()) {
@@ -158,6 +158,26 @@ class WorkspaceController extends ChangeNotifier {
 
   /// แสดง/ซ่อนหน้า Project Home (ไม่แตะเอกสารหรือสถานะ dirty)
   void showHome([bool show = true]) => _showPage(WorkspacePage.home, show);
+
+  /// แสดง/ซ่อนหน้าสร้างโค้ด (ไม่แตะเอกสารหรือสถานะ dirty)
+  void showCodegen([bool show = true]) => _showPage(WorkspacePage.codegen, show);
+
+  /// ชุดตั้งค่าการสร้างโค้ดที่บันทึกในไฟล์ (`meta.codegen`): ชื่อเป้าหมาย + โฟลเดอร์ปลายทาง ; ไม่มี = null
+  ({List<String> targets, String folder})? get codegenPreset {
+    final j = _workspace.meta.extra['codegen'];
+    if (j is! Map) return null;
+    final t = j['targets'];
+    return (
+      targets: [if (t is List) for (final x in t) if (x is String) x],
+      folder: j['folder'] is String ? j['folder'] as String : '',
+    );
+  }
+
+  /// บันทึกชุดตั้งค่าการสร้างโค้ดลงไฟล์โปรเจกต์ (นับเป็นการแก้ ; ต้องบันทึกไฟล์)
+  void setCodegenPreset(List<String> targets, String folder) {
+    _workspace.meta.extra['codegen'] = {'targets': targets, if (folder.trim().isNotEmpty) 'folder': folder.trim()};
+    _structureChanged();
+  }
 
   /// แสดง/ซ่อนหน้าความต้องการและการไล่ตาม (ไม่แตะเอกสารหรือสถานะ dirty)
   void showTrace([bool show = true]) => _showPage(WorkspacePage.trace, show);

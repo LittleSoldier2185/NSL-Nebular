@@ -42,6 +42,7 @@ import 'dictionary_view.dart';
 import 'history_view.dart';
 import 'api/api_view.dart';
 import 'trace_view.dart';
+import 'codegen_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.recovery, this.onRecoveryOffered});
@@ -207,6 +208,8 @@ class _HomePageState extends State<HomePage> {
                       ? const HistoryView()
                       : page == WorkspacePage.trace
                       ? const TraceView()
+                      : page == WorkspacePage.codegen
+                      ? const CodegenView()
                       : isEr
                       ? Column(children: [
                           Expanded(child: KeyedSubtree(key: ValueKey('er-canvas-$docId'), child: _canvas)),

@@ -160,6 +160,7 @@ List<PaletteEntry> buildPaletteEntries(BuildContext context) {
     }),
     cmd(tr('หน้า Project Home'), 'project home overview dashboard ภาพรวม โปรเจกต์ หน้าแรก', () => w.showHome()),
     cmd(tr('พจนานุกรมข้อมูล'), 'data dictionary description comment columns พจนานุกรม คำอธิบาย คอลัมน์', () => w.showDictionary()),
+    cmd(tr('สร้างโค้ด'), 'code generation codegen laravel prisma typescript dart flutter html migration สร้างโค้ด', () => w.showCodegen()),
     cmd(tr('ความต้องการและการไล่ตาม'), 'requirements traceability matrix coverage ความต้องการ ไล่ตาม ครอบคลุม', () => w.showTrace()),
     cmd(tr('ประวัติเวอร์ชันและ Diff'), 'history version diff compare migration restore ประวัติ เวอร์ชัน เปรียบเทียบ ย้อน', () => w.showHistory()),
     cmd(tr('แผงโน้ตและงานค้าง'), 'notes todo review question memo โน้ต งานค้าง ต้องทำ คำถาม', () => w.showNotesPanel(true)),
