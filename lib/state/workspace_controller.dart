@@ -84,6 +84,19 @@ class WorkspaceController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// แผงโน้ตและงานค้างแสดงแทนแผงขวาของเอกสาร (สถานะมุมมองล้วน ไม่บันทึกในไฟล์)
+  bool _notesPanel = false;
+  bool get notesPanel => _notesPanel;
+
+  /// แสดง/ซ่อนแผงโน้ต ([show] = null สลับ) — เปิดจากหน้า Project Home = กลับไปที่เอกสารที่ใช้งานอยู่ก่อน
+  void showNotesPanel([bool? show]) {
+    final v = show ?? !_notesPanel;
+    if (v == _notesPanel && !(v && _homeView)) return;
+    _notesPanel = v;
+    if (v) _homeView = false;
+    notifyListeners();
+  }
+
   /// แสดง/ซ่อนหน้า Project Home (ไม่แตะเอกสารหรือสถานะ dirty)
   void showHome([bool show = true]) {
     if (_homeView == show) return;

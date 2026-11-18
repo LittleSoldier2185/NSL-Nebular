@@ -21,6 +21,7 @@ import '../state/workspace_controller.dart';
 import 'canvas/canvas_controller.dart';
 import 'theme.dart';
 import 'whats_new_dialog.dart';
+import 'notes_panel.dart' show openNoteCount;
 
 /// แถบสถานะล่างสุดของหน้าต่าง (สูง [height] px): รุ่นของโปรแกรม + ปุ่ม patch note ทางซ้าย,
 /// สรุปแผนภาพที่เปิดอยู่ ปัญหาที่ตรวจพบ ซูม และสถานะการบันทึกทางขวา
@@ -135,6 +136,8 @@ class StatusBar extends StatelessWidget {
           ),
         ),
         sep(),
+        _NotesButton(open: openNoteCount(w.workspace), active: w.notesPanel, onTap: () => w.showNotesPanel()),
+        sep(),
         _IssueBadge(errors: errors, warnings: warnings, onTap: isEr ? () => cv.showDock(DockTab.issues) : () => showWorkspaceIssues(context)),
         sep(),
         Text('${(zoom * 100).round()}%', key: const ValueKey('status-zoom'), style: small),
@@ -171,6 +174,35 @@ class _IssueBadge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(text, style: TextStyle(fontSize: 11.5, color: color)),
         ]),
+      ),
+    );
+  }
+}
+
+/// ปุ่มแผงโน้ตในแถบสถานะ: จำนวนงานที่ยังค้างทั้งโปรเจกต์
+class _NotesButton extends StatelessWidget {
+  const _NotesButton({required this.open, required this.active, required this.onTap});
+  final int open;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? C.primary : C.muted;
+    return Tooltip(
+      message: tr('แผงโน้ตและงานค้าง'),
+      child: InkWell(
+        key: const ValueKey('status-notes'),
+        borderRadius: BorderRadius.circular(4),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.sticky_note_2_outlined, size: 12, color: color),
+            const SizedBox(width: 4),
+            Text(open > 0 ? tr('ค้าง {0}', [open]) : tr('โน้ต'), style: TextStyle(fontSize: 11.5, color: color)),
+          ]),
+        ),
       ),
     );
   }

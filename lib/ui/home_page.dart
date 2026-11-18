@@ -37,6 +37,7 @@ import 'file_actions.dart';
 import 'theme.dart';
 import 'window_chrome.dart';
 import 'top_bar.dart';
+import 'notes_panel.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.recovery, this.onRecoveryOffered});
@@ -169,6 +170,7 @@ class _HomePageState extends State<HomePage> {
           final isFc = type == DocType.flowchart;
           // แคนวาสผูกกับเอกสาร: สลับเอกสาร = สร้าง State ใหม่ (ตัวฟัง/ตัวแปรที่จับ controller ของเอกสารเดิมไว้ไม่ค้าง)
           final home = context.select<WorkspaceController, bool>((w) => w.homeView);
+          final notes = context.select<WorkspaceController, bool>((w) => w.notesPanel);
           final docId = context.select<WorkspaceController, String>((w) => isEr ? w.currentEr.docId : w.activeId);
           return Stack(children: [
             Row(children: [
@@ -207,7 +209,9 @@ class _HomePageState extends State<HomePage> {
               if (!home)
                 SizedBox(
                   width: rightW,
-                  child: switch (type) {
+                  child: notes
+                      ? const NotesPanel()
+                      : switch (type) {
                     DocType.flowchart => _fcRight,
                     DocType.wireframe => _wfRight,
                     DocType.screenflow => _sfRight,
