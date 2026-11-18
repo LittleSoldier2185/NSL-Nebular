@@ -155,6 +155,7 @@ List<PaletteEntry> buildPaletteEntries(BuildContext context) {
     }),
     cmd(tr('หน้า Project Home'), 'project home overview dashboard ภาพรวม โปรเจกต์ หน้าแรก', () => w.showHome()),
     cmd(tr('แผงโน้ตและงานค้าง'), 'notes todo review question memo โน้ต งานค้าง ต้องทำ คำถาม', () => w.showNotesPanel(true)),
+    byCmd(tr('ซ่อน/แสดงหมุดโน้ตและงานค้าง'), 'notes pins show hide หมุด โน้ต ซ่อน แสดง', Cmd.toggleNotePins),
     cmd(tr('ปัญหาทั้งโปรเจกต์…'), 'workspace project issues problems all documents ทุกเอกสาร ตรวจสอบ', () => showWorkspaceIssues(context)),
     byCmd(tr('ค้นหาตาราง / คอลัมน์'), 'search find', Cmd.find),
     byCmd(tr('ดูคีย์ลัดทั้งหมด'), 'shortcuts help keyboard', Cmd.help),

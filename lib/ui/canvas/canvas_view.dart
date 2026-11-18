@@ -14,6 +14,7 @@ import 'group_card.dart';
 import 'relation_painter.dart';
 import 'table_card.dart';
 import '../../core/l10n/l10n.dart';
+import '../note_pins.dart';
 
 class CanvasView extends StatelessWidget {
   const CanvasView({super.key, required this.focusNode});
@@ -175,6 +176,7 @@ class CanvasView extends StatelessWidget {
               const Positioned.fill(
                 child: MouseRegion(opaque: false, cursor: SystemMouseCursors.grabbing, child: SizedBox.expand()),
               ),
+            Positioned.fill(child: NotePinsLayer(doc: c, view: cv, scale: () => cv.scale, offset: () => cv.offset)),
             const Positioned(left: 16, top: 16, child: _ToolBar()),
             if (cv.tool != CanvasTool.select)
               Positioned(left: 0, right: 0, top: 18, child: Center(child: _Hint(cv: cv))),

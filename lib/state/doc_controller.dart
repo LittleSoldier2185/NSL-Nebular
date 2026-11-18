@@ -155,7 +155,8 @@ abstract class DocController extends ChangeNotifier {
     return null;
   }
 
-  int _reviewNoteSeq = 0;
+  /// ตัวนับของทั้งโปรแกรม (ไม่ใช่ต่อเอกสาร) — เพิ่มโน้ตหลายเอกสารในไมโครวินาทีเดียวกันต้องได้ id ไม่ซ้ำ
+  static int _reviewNoteSeq = 0;
 
   /// เพิ่มโน้ต (ข้อความว่างหลังตัดช่องว่าง = ไม่เพิ่ม คืน null) ; [x],[y] = ปักหมุดที่ตำแหน่งนั้นบนแคนวาส
   ReviewNote? addReviewNote(String text, {NoteKind kind = NoteKind.todo, double? x, double? y, String? anchorId}) {

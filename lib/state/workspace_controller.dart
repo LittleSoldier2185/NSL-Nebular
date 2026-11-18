@@ -16,6 +16,7 @@ import 'doc_controller.dart';
 import 'project_controller.dart';
 import 'screenflow_controller.dart';
 import 'wireframe_controller.dart';
+import '../core/models/review_note.dart';
 
 /// ถือทั้งโปรเจกต์ ([Workspace]) ที่เปิดอยู่: ไฟล์ สถานะยังไม่บันทึก แท็บที่เปิด/แท็บที่ใช้งาน
 /// และ controller ของแต่ละเอกสาร (สร้างเมื่อใช้ครั้งแรก, ทิ้งเมื่อเอกสารถูกลบหรือเปิดโปรเจกต์ใหม่)
@@ -95,6 +96,52 @@ class WorkspaceController extends ChangeNotifier {
     _notesPanel = v;
     if (v) _homeView = false;
     notifyListeners();
+  }
+
+  /// แสดงหมุดโน้ตบนแคนวาส (Shift+N สลับ ; สถานะมุมมอง ไม่บันทึกในไฟล์)
+  bool _notePinsVisible = true;
+  bool get notePinsVisible => _notePinsVisible;
+
+  void toggleNotePins([bool? show]) {
+    final v = show ?? !_notePinsVisible;
+    if (v == _notePinsVisible) return;
+    _notePinsVisible = v;
+    notifyListeners();
+  }
+
+  /// คำขอปักหมุด: คลิกครั้งถัดไปบนแคนวาสของเอกสาร [docId] = ปักหมุด ([noteId] = ย้ายโน้ตเดิม ; null = สร้างโน้ตใหม่จาก [text]/[kind])
+  ({String docId, String? noteId, String text, NoteKind kind})? _pinRequest;
+  ({String docId, String? noteId, String text, NoteKind kind})? get pinRequest => _pinRequest;
+
+  /// ขอปักหมุดบนแคนวาสของเอกสารที่ใช้งานอยู่ (หมุดถูกซ่อน = แสดงให้เห็นด้วย)
+  void requestPin({String? noteId, String text = '', NoteKind kind = NoteKind.todo}) {
+    if (noteId == null && text.trim().isEmpty) return;
+    _pinRequest = (docId: activeId, noteId: noteId, text: text, kind: kind);
+    _notePinsVisible = true;
+    _homeView = false;
+    notifyListeners();
+  }
+
+  void cancelPinRequest() {
+    if (_pinRequest == null) return;
+    _pinRequest = null;
+    notifyListeners();
+  }
+
+  /// ทำตามคำขอปักหมุดที่ตำแหน่ง ([x],[y]) ของแผนภาพใน controller [c] ; คืนโน้ตที่ปัก (null = ไม่มีคำขอของเอกสารนี้)
+  ReviewNote? completePinRequest(DocController c, double x, double y) {
+    final r = _pinRequest;
+    if (r == null || r.docId != c.docId) return null;
+    _pinRequest = null;
+    final ReviewNote? n;
+    if (r.noteId != null) {
+      c.moveReviewNote(r.noteId!, x, y);
+      n = c.reviewNoteById(r.noteId!);
+    } else {
+      n = c.addReviewNote(r.text, kind: r.kind, x: x, y: y);
+    }
+    notifyListeners();
+    return n;
   }
 
   /// แสดง/ซ่อนหน้า Project Home (ไม่แตะเอกสารหรือสถานะ dirty)
@@ -249,6 +296,7 @@ class WorkspaceController extends ChangeNotifier {
 
   /// ตั้งแท็บที่ใช้งาน (จำ ER ล่าสุดไว้ให้ [currentEr])
   void _setActive(String id) {
+    if (_pinRequest != null && _pinRequest!.docId != id) _pinRequest = null; // สลับเอกสาร = เลิกคำขอปักหมุด
     _activeId = id;
     _openedAt[id] = DateTime.now();
     _openSeq[id] = ++_seq;

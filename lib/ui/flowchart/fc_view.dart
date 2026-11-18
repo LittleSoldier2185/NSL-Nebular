@@ -20,6 +20,7 @@ import '../theme.dart';
 import 'fc_actions.dart';
 import 'fc_minimap.dart';
 import 'fc_painter.dart';
+import '../note_pins.dart';
 
 /// รูปทรงในแถบเครื่องมือ/คลังสัญลักษณ์ ตามลำดับที่แสดง
 const List<FcShape> kFcToolShapes = [
@@ -489,6 +490,7 @@ class _FlowchartCanvasState extends State<FlowchartCanvas> {
                 ),
               if (cand.isNotEmpty)
                 IgnorePointer(child: Container(color: C.primary.withValues(alpha: 0.05))),
+              Positioned.fill(child: NotePinsLayer(doc: f, view: f, scale: () => f.scale, offset: () => f.offset)),
               Positioned(top: 12, left: 0, right: 0, child: Center(child: FittedBox(fit: BoxFit.scaleDown, child: _Toolbar(compact: size.width < 900)))),
               Positioned(
                 right: 14,

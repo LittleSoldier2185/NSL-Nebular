@@ -16,6 +16,7 @@ import '../shortcuts.dart' show Cmd;
 import '../theme.dart';
 import 'dfd_actions.dart';
 import 'dfd_painter.dart';
+import '../note_pins.dart';
 
 /// พื้นที่วาดของแท็บ DFD: เลื่อน/ซูม, วางวัตถุ, ลากย้าย, กรอบเลือก, ต่อเส้นข้อมูล, เมนูคลิกขวา
 class DfdCanvas extends StatefulWidget {
@@ -332,6 +333,7 @@ class _DfdCanvasState extends State<DfdCanvas> {
               ),
             ),
             // แคนวาสแคบ: แถบเครื่องมือแสดงเฉพาะไอคอน (ชื่ออยู่ในทูลทิป) ไม่ให้ล้น
+            Positioned.fill(child: NotePinsLayer(doc: d, view: d, scale: () => d.scale, offset: () => d.offset)),
             Positioned(top: 12, left: 0, right: 0, child: Center(child: FittedBox(fit: BoxFit.scaleDown, child: _Toolbar(compact: size.width < 760)))),
             Positioned(right: 14, bottom: 14, child: _ZoomBar(size: size)),
             if (d.diagram.nodes.isEmpty)

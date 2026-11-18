@@ -177,6 +177,16 @@ void main() {
       expect(f.reviewNotes, hasLength(1));
     });
 
+    test('id โน้ตไม่ซ้ำกันข้ามเอกสาร แม้เพิ่มติด ๆ กัน', () {
+      final other = w.addDocument(DocType.dfd, name: 'D')!.id;
+      final ids = <String>{};
+      for (var i = 0; i < 50; i++) {
+        ids.add(w.controllerOf(id)!.addReviewNote('a$i')!.id);
+        ids.add(w.controllerOf(other)!.addReviewNote('b$i')!.id);
+      }
+      expect(ids, hasLength(100));
+    });
+
     test('ทำสำเนาเอกสาร: โน้ตไม่ติดไปด้วย (เป็นงานของต้นฉบับ)', () {
       w.controllerOf(id)!.addReviewNote('ของต้นฉบับ');
       final copy = w.duplicateDocument(id)!;

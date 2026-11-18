@@ -65,6 +65,7 @@ class AppActions {
         Cmd.groupSelected: groupSelected,
         Cmd.ungroupSelected: () {}, // ใช้เฉพาะแท็บ Flowchart (ดู FlowchartActions) — บนแท็บ ER ไม่ทำอะไร
         Cmd.escape: escape,
+        Cmd.toggleNotePins: () => c.workspaceController.toggleNotePins(), // ทุกชนิดเอกสาร — ดักไว้ใน run ก่อนส่งต่อตามชนิด
         Cmd.fit: () => cv.fit(c.project),
         Cmd.zoom100: cv.resetZoom,
         Cmd.nudgeLeft: () => c.nudgeSelected(-nudgeStep, 0),
@@ -104,6 +105,14 @@ class AppActions {
 
   /// ทำงานตามคำสั่ง: แท็บ DFD ใช้ชุดคำสั่งของ DFD, แท็บ ER ใช้ชุดเดิม (และเมินคำสั่งของ DFD)
   void run(Cmd cmd) {
+    if (cmd == Cmd.escape && c.workspaceController.pinRequest != null) {
+      c.workspaceController.cancelPinRequest(); // Esc ระหว่างรอคลิกปักหมุด = เลิกปักหมุดก่อนอย่างอื่น
+      return;
+    }
+    if (cmd == Cmd.toggleNotePins) {
+      map[cmd]!();
+      return;
+    }
     if (c.workspaceController.activeDocument.type == DocType.dfd) {
       DfdActions(context).run(cmd);
       return;

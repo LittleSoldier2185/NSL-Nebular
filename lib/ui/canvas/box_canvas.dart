@@ -10,6 +10,7 @@ import '../../state/app_settings.dart';
 import '../../state/box_diagram_controller.dart';
 import '../theme.dart';
 import 'dot_grid_painter.dart';
+import '../note_pins.dart';
 
 /// ผลการคลิกบนแคนวาส: กล่อง [box] หรือเส้น [edge] (ไม่โดนอะไร = ทั้งคู่ null)
 typedef BoxHit = ({String? box, String? edge});
@@ -261,6 +262,7 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
                 ),
               ),
               if (cand.isNotEmpty) IgnorePointer(child: Container(color: C.primary.withValues(alpha: 0.05))),
+              Positioned.fill(child: NotePinsLayer(doc: c, view: c, scale: () => c.scale, offset: () => c.offset)),
               ...overlays(c, size),
             ]),
           ),

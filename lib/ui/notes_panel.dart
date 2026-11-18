@@ -227,7 +227,21 @@ class _NotesPanelState extends State<NotesPanel> {
                       onSelectionChanged: (s) => setState(() => _kind = s.first),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
+                  IconButton(
+                    key: const ValueKey('notes-add-pin'),
+                    tooltip: tr('เพิ่มแล้วปักหมุดบนแคนวาส (คลิกตำแหน่งบนแคนวาส)'),
+                    visualDensity: VisualDensity.compact,
+                    onPressed: _text.text.trim().isEmpty
+                        ? null
+                        : () {
+                            w.requestPin(text: _text.text, kind: _kind);
+                            _text.clear();
+                            setState(() {});
+                          },
+                    icon: const Icon(Icons.push_pin_outlined, size: 18),
+                  ),
+                  const SizedBox(width: 4),
                   FilledButton(
                     key: const ValueKey('notes-add'),
                     style: FilledButton.styleFrom(minimumSize: const Size(0, 34), padding: const EdgeInsets.symmetric(horizontal: 14)),
@@ -298,7 +312,7 @@ class _NoteTile extends StatelessWidget {
                 Row(children: [
                   if (pin != null) ...[
                     Container(
-                      key: ValueKey('note-pin-${note.id}'),
+                      key: ValueKey('note-num-${note.id}'),
                       width: 18,
                       height: 18,
                       alignment: Alignment.center,
@@ -332,6 +346,8 @@ class _NoteTile extends StatelessWidget {
                   if (t != null) c.updateReviewNote(note.id, text: t);
                 case 'unpin':
                   c.moveReviewNote(note.id, null, null);
+                case 'pin':
+                  w.requestPin(noteId: note.id);
                 case 'delete':
                   c.deleteReviewNote(note.id);
                 default:
@@ -348,6 +364,8 @@ class _NoteTile extends StatelessWidget {
                     height: 34,
                     child: Text(tr('เปลี่ยนเป็น "{0}"', [noteKindLabel(k)]), style: const TextStyle(fontSize: 13)),
                   ),
+              if (!note.pinned && w.activeId == doc.id)
+                PopupMenuItem(value: 'pin', height: 34, child: Text(tr('ปักหมุดบนแคนวาส…'), style: const TextStyle(fontSize: 13))),
               if (note.pinned)
                 PopupMenuItem(value: 'unpin', height: 34, child: Text(tr('ถอดหมุดออกจากแคนวาส'), style: const TextStyle(fontSize: 13))),
               PopupMenuItem(

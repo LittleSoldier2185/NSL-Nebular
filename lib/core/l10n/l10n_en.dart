@@ -1341,4 +1341,11 @@ const Map<String, String> kEn = {
   'ไม่มีโน้ตตามตัวกรองนี้': 'No notes match this filter',
   'ค้าง {0}': '{0} open',
   'แผงโน้ตและงานค้าง': 'Notes & to-dos panel',
+  'คลิกบนแคนวาสเพื่อปักหมุดโน้ต · Esc ยกเลิก': 'Click on the canvas to pin the note · Esc to cancel',
+  'ซ่อน/แสดงหมุดโน้ตและงานค้าง': 'Show/hide note pins',
+  'ถอดหมุด': 'Unpin',
+  'ทำเสร็จแล้ว': 'Done',
+  'ปักหมุดบนแคนวาส…': 'Pin on canvas…',
+  'เปิดแผงโน้ต': 'Open notes panel',
+  'เพิ่มแล้วปักหมุดบนแคนวาส (คลิกตำแหน่งบนแคนวาส)': 'Add and pin on the canvas (click a spot on the canvas)',
 };
