@@ -27,7 +27,10 @@ import 'whats_new_dialog.dart';
 class StatusBar extends StatelessWidget {
   const StatusBar({super.key});
 
-  static const height = 24.0;
+  static const height = 28.0;
+
+  /// ความกว้างขั้นต่ำของหน้าต่างที่จะแสดง "เอกสาร N · ลิงก์ข้ามเอกสาร M"
+  static const kStatusDocsMinWidth = 1300.0;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +81,7 @@ class StatusBar extends StatelessWidget {
     Widget sep() => Container(width: 1, height: 12, margin: const EdgeInsets.symmetric(horizontal: 10), color: C.border);
     final small = TextStyle(fontSize: 11.5, color: C.muted);
 
-    return Container(
+    return LayoutBuilder(builder: (context, box) => Container(
       height: height,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(color: C.surface, border: Border(top: BorderSide(color: C.border))),
@@ -108,6 +111,15 @@ class StatusBar extends StatelessWidget {
             ]),
           ),
         ),
+        // หน้าต่างแคบ: ตัดส่วนนี้ออกก่อน ไม่บีบรายการอื่น (ปัญหา/ซูม/สถานะบันทึก)
+        if (box.maxWidth >= kStatusDocsMinWidth) ...[
+        sep(),
+        Text(
+          tr('เอกสาร {0} · ลิงก์ข้ามเอกสาร {1}', [w.documents.length, w.linkCount]),
+          key: const ValueKey('status-docs'),
+          style: small,
+        ),
+        ],
         const Spacer(),
         // ---- ขวา ----
         Flexible(
@@ -131,7 +143,7 @@ class StatusBar extends StatelessWidget {
           Text(tr('✓ บันทึกแล้ว'), key: const ValueKey('status-saved'), style: small),
         ],
       ]),
-    );
+    ));
   }
 }
 

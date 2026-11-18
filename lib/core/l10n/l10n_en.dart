@@ -694,6 +694,7 @@ const Map<String, String> kEn = {
   'Export ภาพเฉพาะกลุ่มนี้…': 'Export image of this group only…',
   'สร้างแผนภาพใหม่': 'New diagram',
   'สร้างใหม่': 'Create new',
+  'เอกสาร {0} · ลิงก์ข้ามเอกสาร {1}': 'Documents {0} · cross-document links {1}',
   'ใช้งานที่ · {0} จุด': 'Used in · {0}',
   'ยังไม่มีเอกสารอื่นอ้างถึงตารางนี้': 'No other document refers to this table',
   'คลังข้อมูล': 'Data store',

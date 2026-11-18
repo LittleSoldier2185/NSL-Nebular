@@ -80,4 +80,7 @@ class WorkspaceIndex {
       [for (final e in _incoming[docId] ?? const <(String, String, DocRef)>[]) if (e.$1 != docId) e];
 
   int backlinkCount(String docId) => backlinks(docId).length;
+
+  /// จำนวนลิงก์ข้ามเอกสารทั้งโปรเจกต์ (ไม่นับลิงก์ที่ชี้เข้าเอกสารตัวเอง) — ใช้แสดงในแถบสถานะ
+  int get totalLinks => [for (final e in _incoming.entries) ...backlinks(e.key)].length;
 }

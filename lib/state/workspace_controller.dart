@@ -361,6 +361,9 @@ class WorkspaceController extends ChangeNotifier {
   /// การอ้างอิงจากเอกสารอื่นที่ชี้มาที่ [id] (จะใช้ไม่ได้ถ้าลบเอกสารนี้)
   List<(String fromDoc, String fromElement, DocRef ref)> backlinksOf(String id) => WorkspaceIndex(_workspace).backlinks(id);
 
+  /// จำนวนลิงก์ข้ามเอกสารทั้งโปรเจกต์
+  int get linkCount => WorkspaceIndex(_workspace).totalLinks;
+
   /// การอ้างอิงจากเอกสารอื่นที่ชี้มาที่วัตถุ [elementId] (เช่น ตาราง) ในเอกสาร [docId] — ใช้แสดง "ใช้งานที่" ในแผงขวา
   List<(String fromDoc, String fromElement, DocRef ref)> usagesOf(String docId, String elementId) =>
       [for (final e in backlinksOf(docId)) if (e.$3.elementId == elementId) e];
