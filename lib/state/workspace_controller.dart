@@ -23,6 +23,9 @@ import '../core/models/review_note.dart';
 ///
 /// การเพิ่ม/ลบ/เปลี่ยนชื่อ/ย้ายเอกสารและโฟลเดอร์ไม่เข้าประวัติ undo (undo เป็นของแต่ละเอกสาร)
 /// controller นี้แจ้งผู้ฟังทุกครั้งที่โครงสร้างเปลี่ยน และทุกครั้งที่ controller ของเอกสารใดแจ้ง
+/// หน้าที่แสดงในพื้นที่หลัก
+enum WorkspacePage { document, home, dictionary }
+
 class WorkspaceController extends ChangeNotifier {
   WorkspaceController([Workspace? workspace]) : _workspace = workspace ?? Workspace.single(Project()) {
     final er = _ensureEr(_workspace);
@@ -50,8 +53,8 @@ class WorkspaceController extends ChangeNotifier {
   final Set<String> _open = {};
   String _activeId = kErDiagramId;
 
-  /// กำลังแสดงหน้า Project Home แทนแคนวาส (สถานะมุมมองล้วน ไม่ถูกบันทึกในไฟล์ ; เปิดเอกสารใด ๆ = ออกจากหน้านี้)
-  bool _homeView = false;
+  /// หน้าที่แสดงแทนแคนวาส (Project Home / พจนานุกรมข้อมูล) — สถานะมุมมองล้วน ไม่ถูกบันทึกในไฟล์ ; เปิดเอกสารใด ๆ = ออกจากหน้านี้
+  WorkspacePage _page = WorkspacePage.document;
 
   /// เวลาที่เอกสารถูกเปิดใช้งานครั้งล่าสุดในรอบนี้ (สถานะมุมมองล้วน ไม่บันทึกในไฟล์ ; ล้างเมื่อเปิด/สร้างโปรเจกต์ใหม่)
   final Map<String, DateTime> _openedAt = {};
@@ -73,7 +76,12 @@ class WorkspaceController extends ChangeNotifier {
 
   Workspace get workspace => _workspace;
 
-  bool get homeView => _homeView;
+  WorkspacePage get page => _page;
+  bool get homeView => _page == WorkspacePage.home;
+  bool get dictionaryView => _page == WorkspacePage.dictionary;
+
+  /// กำลังแสดงหน้าระดับโปรเจกต์แทนแคนวาสของเอกสาร (ไม่มีแผงขวา ; คำสั่งแก้เอกสารใช้ไม่ได้)
+  bool get pageView => _page != WorkspacePage.document;
 
   /// หน้า Start (เปิดโปรแกรมแล้วยังไม่มีโปรเจกต์ที่เลือก) — มุมมองชั่วคราว ไม่บันทึก ไม่ทำให้ dirty ; เปิด/สร้าง/กู้คืนโปรเจกต์ใดก็ปิดเอง
   bool _startView = false;
@@ -92,9 +100,9 @@ class WorkspaceController extends ChangeNotifier {
   /// แสดง/ซ่อนแผงโน้ต ([show] = null สลับ) — เปิดจากหน้า Project Home = กลับไปที่เอกสารที่ใช้งานอยู่ก่อน
   void showNotesPanel([bool? show]) {
     final v = show ?? !_notesPanel;
-    if (v == _notesPanel && !(v && _homeView)) return;
+    if (v == _notesPanel && !(v && pageView)) return;
     _notesPanel = v;
-    if (v) _homeView = false;
+    if (v) _page = WorkspacePage.document;
     notifyListeners();
   }
 
@@ -118,7 +126,7 @@ class WorkspaceController extends ChangeNotifier {
     if (noteId == null && text.trim().isEmpty) return;
     _pinRequest = (docId: activeId, noteId: noteId, text: text, kind: kind);
     _notePinsVisible = true;
-    _homeView = false;
+    _page = WorkspacePage.document;
     notifyListeners();
   }
 
@@ -145,9 +153,16 @@ class WorkspaceController extends ChangeNotifier {
   }
 
   /// แสดง/ซ่อนหน้า Project Home (ไม่แตะเอกสารหรือสถานะ dirty)
-  void showHome([bool show = true]) {
-    if (_homeView == show) return;
-    _homeView = show;
+  void showHome([bool show = true]) => _showPage(WorkspacePage.home, show);
+
+  /// แสดง/ซ่อนหน้าพจนานุกรมข้อมูล (ไม่แตะเอกสารหรือสถานะ dirty)
+  void showDictionary([bool show = true]) => _showPage(WorkspacePage.dictionary, show);
+
+  /// [show] = เปิดหน้า [p] ; ไม่ show = ปิดหน้า [p] ถ้ากำลังแสดงอยู่ (กลับไปที่เอกสาร)
+  void _showPage(WorkspacePage p, bool show) {
+    final next = show ? p : (_page == p ? WorkspacePage.document : _page);
+    if (next == _page) return;
+    _page = next;
     notifyListeners();
   }
   String? get filePath => _filePath;
@@ -300,7 +315,7 @@ class WorkspaceController extends ChangeNotifier {
     _activeId = id;
     _openedAt[id] = DateTime.now();
     _openSeq[id] = ++_seq;
-    _homeView = false;
+    _page = WorkspacePage.document;
     if (_workspace.documentById(id)?.type == DocType.er) _lastErId = id;
   }
 
@@ -579,7 +594,7 @@ class WorkspaceController extends ChangeNotifier {
     final d = _workspace.documentById(id);
     if (d == null || d.type == null) return false;
     if (_open.contains(id) && activeId == id) {
-      showHome(false); // คลิกเอกสารที่ใช้งานอยู่แล้ว = กลับจากหน้า Project Home
+      _showPage(_page, false); // คลิกเอกสารที่ใช้งานอยู่แล้ว = กลับจากหน้า Project Home / พจนานุกรม
       return true;
     }
     _open.add(id);

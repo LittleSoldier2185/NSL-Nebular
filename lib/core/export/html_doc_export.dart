@@ -23,7 +23,7 @@ import 'notes_export.dart';
 /// - โปรเจกต์ที่มี ER ชิ้นเดียวและไม่มีเอกสารอื่น (หรือไม่มีเอกสารเลย) = รูปแบบเดิม
 /// - นอกนั้น = ภาพรวมโปรเจกต์ (เอกสาร ตัวเลขสรุป ปัญหาทั้งโปรเจกต์) -> ER ทุกอัน (ตามลำดับเอกสาร มี dialect ของตัวเอง)
 ///   -> DFD ทุกอัน (ภาพ + ตารางวัตถุ/เส้นข้อมูล + ปัญหาของ DFD นั้น) ; anchor ของตารางมี id เอกสารนำหน้ากันชนข้าม ER
-String exportHtmlDocument(Workspace w, {bool includeDiagrams = true}) {
+String exportHtmlDocument(Workspace w, {bool includeDiagrams = true, bool includeNotes = true}) {
   final docs = knownDocs(w);
   final legacy = docs.isEmpty || isSingleErWorkspace(w);
   final erDocs = [for (final d in docs) if (d.type == DocType.er) d];
@@ -137,7 +137,7 @@ String exportHtmlDocument(Workspace w, {bool includeDiagrams = true}) {
   for (final d in sfDocs) {
     _screenflow(b, w, d, [for (final i in issues) if (i.docId == d.id) i], includeDiagrams);
   }
-  b.write(notesHtml(w, _esc));
+  if (includeNotes) b.write(notesHtml(w, _esc));
   b.writeln('<footer>${_esc(tr('สร้างโดย NSL Nebular'))}</footer>');
   b.writeln('</main>');
   b.writeln('</body>');

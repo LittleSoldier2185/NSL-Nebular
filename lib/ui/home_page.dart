@@ -38,6 +38,7 @@ import 'theme.dart';
 import 'window_chrome.dart';
 import 'top_bar.dart';
 import 'notes_panel.dart';
+import 'dictionary_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.recovery, this.onRecoveryOffered});
@@ -124,7 +125,7 @@ class _HomePageState extends State<HomePage> {
     if (s == null || s.cmd == null) return KeyEventResult.ignored;
     if (_typing && !s.global) return KeyEventResult.ignored;
     // หน้า Project Home ไม่มีแคนวาส: คำสั่งแก้ไขเอกสาร (ลบ/วาง/เครื่องมือ) ต้องไม่ไปแตะเอกสารที่ซ่อนอยู่
-    if (!s.global && context.read<WorkspaceController>().homeView) return KeyEventResult.ignored;
+    if (!s.global && context.read<WorkspaceController>().pageView) return KeyEventResult.ignored;
     // คำสั่งถูกส่งต่อให้ AppActions: แท็บ DFD ใช้ชุดคำสั่งของ DFD (คำสั่งแก้ตารางไม่แตะ ER ที่ซ่อนอยู่)
     AppActions(context).run(s.cmd!);
     return KeyEventResult.handled;
@@ -169,7 +170,8 @@ class _HomePageState extends State<HomePage> {
           final isEr = type == DocType.er;
           final isFc = type == DocType.flowchart;
           // แคนวาสผูกกับเอกสาร: สลับเอกสาร = สร้าง State ใหม่ (ตัวฟัง/ตัวแปรที่จับ controller ของเอกสารเดิมไว้ไม่ค้าง)
-          final home = context.select<WorkspaceController, bool>((w) => w.homeView);
+          final page = context.select<WorkspaceController, WorkspacePage>((w) => w.page);
+          final home = page != WorkspacePage.document; // หน้าระดับโปรเจกต์: ไม่มีแผงขวา
           final notes = context.select<WorkspaceController, bool>((w) => w.notesPanel);
           final docId = context.select<WorkspaceController, String>((w) => isEr ? w.currentEr.docId : w.activeId);
           return Stack(children: [
@@ -190,8 +192,10 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: CustomPaint(
                   foregroundPainter: const _EdgeShadow(),
-                  child: home
+                  child: page == WorkspacePage.home
                       ? const ProjectHomeView()
+                      : page == WorkspacePage.dictionary
+                      ? const DictionaryView()
                       : isEr
                       ? Column(children: [
                           Expanded(child: KeyedSubtree(key: ValueKey('er-canvas-$docId'), child: _canvas)),

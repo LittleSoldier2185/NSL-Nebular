@@ -51,7 +51,7 @@ class ActivityRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = context.watch<WorkspaceController>();
-    final active = w.homeView ? null : w.activeDocument.type;
+    final active = w.pageView ? null : w.activeDocument.type;
     return Container(
       key: const ValueKey('activity-rail'),
       width: kActivityRailWidth,
