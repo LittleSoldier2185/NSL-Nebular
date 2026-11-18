@@ -15,6 +15,7 @@ String _typeName(DocType t) => switch (t) {
       DocType.flowchart => 'Flowchart',
       DocType.wireframe => 'Wireframe',
       DocType.screenflow => 'Screen Flow',
+      DocType.api => 'API',
     };
 
 /// รายละเอียดท้ายโน้ต: (ชนิด · หมุด n · วัตถุ)

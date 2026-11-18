@@ -26,11 +26,11 @@ void main() {
     expect(w.activeId, open.id);
   });
 
-  test('appDesign: ER + Wireframe + Screen Flow ; full: ครบ 5 ชนิด ลำดับคงที่', () {
+  test('appDesign: ER + Wireframe + Screen Flow ; full: ครบทุกชนิด (รวม API) ลำดับคงที่', () {
     createProjectFromTemplate(w, ProjectTemplate.appDesign);
     expect(types(), [DocType.er, DocType.wireframe, DocType.screenflow]);
     createProjectFromTemplate(w, ProjectTemplate.full);
-    expect(types(), [DocType.er, DocType.dfd, DocType.flowchart, DocType.wireframe, DocType.screenflow]);
+    expect(types(), [DocType.er, DocType.dfd, DocType.flowchart, DocType.wireframe, DocType.screenflow, DocType.api]);
   });
 
   test('createProject: ลำดับ docs ที่ส่งมาไม่มีผล ; ER ใน docs ถูกเมิน ; ชื่อโปรเจกต์ตั้งได้ ; ชื่อว่างไม่เปลี่ยน', () {

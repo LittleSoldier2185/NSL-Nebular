@@ -87,6 +87,7 @@ List<ChangeLine> documentChanges(Workspace old, Workspace cur) {
         DocType.flowchart => 'Flowchart',
         DocType.wireframe => 'Wireframe',
         DocType.screenflow => 'Screen Flow',
+        DocType.api => 'API',
         DocType.er => 'ER',
         null => d.typeName,
       };

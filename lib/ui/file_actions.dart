@@ -304,6 +304,10 @@ class FileActions {
     if (c.workspaceController.activeDocument.type == DocType.flowchart) return _exportFlowchartImage(context, c);
     if (c.workspaceController.activeDocument.type == DocType.wireframe) return _exportWireframeImage(context, c);
     if (c.workspaceController.activeDocument.type == DocType.screenflow) return _exportScreenFlowImage(context, c);
+    if (c.workspaceController.activeDocument.type == DocType.api) {
+      _toast(context, tr('เอกสาร API ไม่มีแผนภาพ — ใช้ "ส่งออก OpenAPI" แทน'));
+      return;
+    }
     final p = c.project;
     if (p.tables.isEmpty && p.notes.isEmpty) {
       _toast(context, tr('ยังไม่มีตารางให้ Export เป็นภาพ'));

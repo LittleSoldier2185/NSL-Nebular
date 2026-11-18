@@ -40,6 +40,7 @@ import 'top_bar.dart';
 import 'notes_panel.dart';
 import 'dictionary_view.dart';
 import 'history_view.dart';
+import 'api/api_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.recovery, this.onRecoveryOffered});
@@ -147,6 +148,9 @@ class _HomePageState extends State<HomePage> {
   static const _wfLeft = WireframeLeftPanel();
   static const _wfRight = WireframeRightPanel();
   late final Widget _wfCanvas = WireframeCanvas(focusNode: _focus);
+  late final Widget _apiLeft = ApiLeftPanel(focusNode: _focus);
+  static const _apiRight = ApiRightPanel();
+  late final Widget _apiEditor = ApiEditor(focusNode: _focus);
   static const _sfLeft = ScreenFlowLeftPanel();
   static const _sfRight = ScreenFlowRightPanel();
   late final Widget _sfCanvas = ScreenFlowCanvas(focusNode: _focus);
@@ -182,6 +186,7 @@ class _HomePageState extends State<HomePage> {
                 child: Column(children: [
                   if (showExplorer) ProjectExplorer(maxHeight: box.maxHeight * 0.4),
                   Expanded(child: switch (type) {
+                    DocType.api => _apiLeft,
                     DocType.flowchart => _fcLeft,
                     DocType.wireframe => _wfLeft,
                     DocType.screenflow => _sfLeft,
@@ -204,6 +209,8 @@ class _HomePageState extends State<HomePage> {
                           Expanded(child: KeyedSubtree(key: ValueKey('er-canvas-$docId'), child: _canvas)),
                           SizedBox(height: collapsed ? 44 : dockH, child: _sqlDock),
                         ])
+                      : type == DocType.api
+                      ? KeyedSubtree(key: ValueKey('api-editor-$docId'), child: _apiEditor)
                       : isFc
                       ? KeyedSubtree(key: ValueKey('fc-canvas-$docId'), child: _fcCanvas)
                       : type == DocType.wireframe
@@ -219,6 +226,7 @@ class _HomePageState extends State<HomePage> {
                   child: notes
                       ? const NotesPanel()
                       : switch (type) {
+                    DocType.api => _apiRight,
                     DocType.flowchart => _fcRight,
                     DocType.wireframe => _wfRight,
                     DocType.screenflow => _sfRight,

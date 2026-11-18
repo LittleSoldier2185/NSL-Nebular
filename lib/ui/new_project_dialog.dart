@@ -22,6 +22,7 @@ String _typeLabel(DocType t) => switch (t) {
       DocType.flowchart => 'Flowchart',
       DocType.wireframe => 'Wireframe',
       DocType.screenflow => 'Screen Flow',
+      DocType.api => 'API',
     };
 
 /// กล่องสร้างโปรเจกต์ใหม่: เลือกจุดเริ่มต้น + ตั้งชื่อ + ติ๊กเอกสารที่จะมีตั้งแต่แรก — คืน null เมื่อยกเลิก

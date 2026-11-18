@@ -87,6 +87,11 @@ class _DiagramTabBarState extends State<DiagramTabBar> {
             height: 36,
             child: Text(tr('Screen Flow (ลำดับหน้าจอ)'), style: const TextStyle(fontSize: 13)),
           ),
+          PopupMenuItem(
+            value: DocType.api,
+            height: 36,
+            child: Text(tr('API (Endpoint)'), style: const TextStyle(fontSize: 13)),
+          ),
         ],
       ),
     );

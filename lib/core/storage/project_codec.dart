@@ -10,6 +10,7 @@ import '../models/wireframe_model.dart';
 import '../models/workspace.dart';
 import 'project_format_exception.dart';
 import '../models/review_note.dart';
+import '../models/api_model.dart';
 
 export 'project_format_exception.dart';
 
@@ -184,6 +185,7 @@ Workspace _decodeV3(Map<String, dynamic> j) {
       DocType.flowchart => FlowchartDiagram.fromJson(raw),
       DocType.wireframe => WireframeDiagram.fromJson(raw),
       DocType.screenflow => ScreenFlowDiagram.fromJson(raw),
+      DocType.api => ApiDocument.fromJson(raw),
       null => RawDocContent(raw),
     };
     final folder = e['folder'];
@@ -224,6 +226,7 @@ void _uniqueNames(List<ProjectDocument> docs) {
         DocType.dfd => 'DFD',
         DocType.flowchart => 'Flowchart',
         DocType.wireframe => 'Wireframe',
+        DocType.api => 'API',
         DocType.screenflow => 'Screen Flow',
         null => 'Document',
       };

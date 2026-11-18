@@ -26,6 +26,7 @@ import 'ui/window_chrome.dart';
 import 'ui/theme.dart';
 import 'core/storage/history_store.dart';
 import 'state/version_history.dart';
+import 'state/api_controller.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -189,6 +190,7 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
             ChangeNotifierProvider<DfdController>.value(value: _workspace.currentDfd),
             ChangeNotifierProvider<FlowchartController>.value(value: _workspace.currentFlowchart),
             ChangeNotifierProvider<WireframeController>.value(value: _workspace.currentWireframe),
+            ChangeNotifierProvider<ApiController>.value(value: _workspace.currentApi),
             ChangeNotifierProvider<ScreenFlowController>.value(value: _workspace.currentScreenflow),
           ],
           child: child,

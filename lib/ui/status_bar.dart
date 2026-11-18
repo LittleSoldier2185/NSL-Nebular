@@ -22,6 +22,7 @@ import 'canvas/canvas_controller.dart';
 import 'theme.dart';
 import 'whats_new_dialog.dart';
 import 'notes_panel.dart' show openNoteCount;
+import '../core/validate/api_validator.dart';
 
 /// แถบสถานะล่างสุดของหน้าต่าง (สูง [height] px): รุ่นของโปรแกรม + ปุ่ม patch note ทางซ้าย,
 /// สรุปแผนภาพที่เปิดอยู่ ปัญหาที่ตรวจพบ ซูม และสถานะการบันทึกทางขวา
@@ -60,6 +61,11 @@ class StatusBar extends StatelessWidget {
       summary = tr('{0} ชิ้นส่วน · {1}', [d.components.length, wfStyleLabel(d.style)]);
       issues = validateWireframe(d, workspace: w.workspace);
       zoom = wf.scale;
+    } else if (w.activeDocument.type == DocType.api) {
+      final d = w.workspace.documentById(w.activeId)!.api!;
+      summary = tr('{0} endpoint', [d.endpoints.length]);
+      issues = validateApi(d, workspace: w.workspace, docId: w.activeId);
+      zoom = 1;
     } else if (w.activeDocument.type == DocType.screenflow) {
       final d = w.screenflowOf(w.activeId);
       summary = tr('{0} หน้าจอ · {1} การเปลี่ยนหน้า', [d.nodes.length, d.edges.length]);

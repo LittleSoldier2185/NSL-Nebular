@@ -32,7 +32,8 @@ void main() {
     return w.controllerOf(id)!;
   }
 
-  for (final t in DocType.values) {
+  // API เป็นหน้าฟอร์ม ไม่มีแคนวาส จึงไม่มีหมุด (โน้ตของ API อยู่ในแผงโน้ตอย่างเดียว)
+  for (final t in DocType.values.where((t) => t != DocType.api)) {
     testWidgets('${t.name}: หมุดแสดงบนแคนวาส ; คลิกเปิดการ์ด ติ๊กเสร็จได้ ; Shift+N ซ่อน/แสดง', (tester) async {
       await boot(tester);
       final c = await open(tester, t);

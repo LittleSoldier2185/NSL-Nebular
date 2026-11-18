@@ -1,3 +1,4 @@
+import 'api_model.dart';
 import 'dfd_model.dart';
 import 'diagram.dart';
 import 'flowchart_model.dart';
@@ -22,6 +23,9 @@ enum DocType {
 
   /// Screen Flow — แผนผังการเปลี่ยนหน้าจอ เนื้อหาคือ [ScreenFlowDiagram] (ชนิดในไฟล์ `screenflow`)
   screenflow,
+
+  /// API — endpoint ของระบบ เนื้อหาคือ [ApiDocument] (ชนิดในไฟล์ `api` ; รุ่นก่อน Phase 8 เก็บเป็นชนิดที่ไม่รู้จักและเขียนกลับครบ)
+  api,
 }
 
 /// เนื้อหาของเอกสารหนึ่งชิ้น — เขียนเป็นค่า `content` ของเอกสารในไฟล์ v3
@@ -96,6 +100,9 @@ class ProjectDocument {
   ProjectDocument.screenflow({required String id, required String name, required ScreenFlowDiagram content, String? folderId})
       : this(id: id, typeName: DocType.screenflow.name, name: name, content: content, folderId: folderId);
 
+  ProjectDocument.api({required String id, required String name, required ApiDocument content, String? folderId})
+      : this(id: id, typeName: DocType.api.name, name: name, content: content, folderId: folderId);
+
   final String id;
 
   /// ชื่อชนิดตามที่เขียนในไฟล์ (คงไว้แม้ไม่รู้จัก)
@@ -125,6 +132,9 @@ class ProjectDocument {
 
   /// เนื้อหา Wireframe (null ถ้าไม่ใช่เอกสาร Wireframe)
   WireframeDiagram? get wireframe => content is WireframeDiagram ? content as WireframeDiagram : null;
+
+  /// เนื้อหา API (null ถ้าไม่ใช่เอกสาร API)
+  ApiDocument? get api => content is ApiDocument ? content as ApiDocument : null;
 
   /// เนื้อหา Screen Flow (null ถ้าไม่ใช่เอกสาร Screen Flow)
   ScreenFlowDiagram? get screenflow => content is ScreenFlowDiagram ? content as ScreenFlowDiagram : null;

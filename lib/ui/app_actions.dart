@@ -129,12 +129,38 @@ class AppActions {
       ScreenFlowActions(context).run(cmd);
       return;
     }
+    if (c.workspaceController.activeDocument.type == DocType.api) {
+      _runApi(cmd);
+      return;
+    }
     if (DfdActions.dfdOnly.contains(cmd) ||
         FlowchartActions.flowchartOnly.contains(cmd) ||
         WireframeActions.wireframeOnly.contains(cmd)) {
       return;
     }
     map[cmd]!();
+  }
+
+  /// แท็บ API (หน้าฟอร์ม ไม่มีแคนวาส): undo/redo/ลบ/ทำสำเนา endpoint ที่เลือก + คำสั่งระดับไฟล์ ; คำสั่งแก้แผนภาพอื่นไม่ทำอะไร
+  /// (กันไม่ให้ไปแตะ ER ที่ซ่อนอยู่)
+  void _runApi(Cmd cmd) {
+    final a = c.workspaceController.currentApi;
+    switch (cmd) {
+      case Cmd.undo:
+        a.undo();
+      case Cmd.redo:
+        a.redo();
+      case Cmd.delete:
+        if (a.selectedId != null) a.deleteEndpoint(a.selectedId!);
+      case Cmd.duplicate:
+        if (a.selectedId != null) a.duplicateEndpoint(a.selectedId!);
+      case Cmd.escape:
+        a.select(null);
+      case Cmd.newProject || Cmd.open || Cmd.save || Cmd.saveAs || Cmd.exportText || Cmd.exportSql || Cmd.help || Cmd.find || Cmd.connectDb || Cmd.importSql || Cmd.compare:
+        map[cmd]!();
+      default:
+        break;
+    }
   }
 
   void _toast(String msg) => ScaffoldMessenger.of(context)

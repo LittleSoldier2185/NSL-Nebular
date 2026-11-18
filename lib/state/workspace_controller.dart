@@ -17,6 +17,8 @@ import 'project_controller.dart';
 import 'screenflow_controller.dart';
 import 'wireframe_controller.dart';
 import '../core/models/review_note.dart';
+import '../core/models/api_model.dart';
+import 'api_controller.dart';
 
 /// ถือทั้งโปรเจกต์ ([Workspace]) ที่เปิดอยู่: ไฟล์ สถานะยังไม่บันทึก แท็บที่เปิด/แท็บที่ใช้งาน
 /// และ controller ของแต่ละเอกสาร (สร้างเมื่อใช้ครั้งแรก, ทิ้งเมื่อเอกสารถูกลบหรือเปิดโปรเจกต์ใหม่)
@@ -196,6 +198,7 @@ class WorkspaceController extends ChangeNotifier {
       DocType.flowchart => FlowchartController.forDoc(doc, this),
       DocType.wireframe => WireframeController.forDoc(doc, this),
       DocType.screenflow => ScreenFlowController.forDoc(doc, this),
+      DocType.api => ApiController.forDoc(doc, this),
       null => null,
     };
     if (c != null) _register(c);
@@ -221,6 +224,12 @@ class WorkspaceController extends ChangeNotifier {
   }
 
   /// controller ของเอกสาร Screen Flow [id] (null = ไม่ใช่เอกสาร Screen Flow)
+  /// controller ของเอกสาร API [id] (null = ไม่ใช่เอกสาร API)
+  ApiController? apiController(String id) {
+    final c = controllerOf(id);
+    return c is ApiController ? c : null;
+  }
+
   ScreenFlowController? screenflowController(String id) {
     final c = controllerOf(id);
     return c is ScreenFlowController ? c : null;
@@ -397,6 +406,13 @@ class WorkspaceController extends ChangeNotifier {
           content: ScreenFlowDiagram(),
           folderId: folder,
         );
+      case DocType.api:
+        doc = ProjectDocument.api(
+          id: newId('a'),
+          name: _workspace.uniqueDocumentName(base.isEmpty ? 'API' : base),
+          content: ApiDocument(title: _workspace.name),
+          folderId: folder,
+        );
     }
     _workspace.documents.add(doc);
     _open.add(doc.id);
@@ -458,6 +474,13 @@ class WorkspaceController extends ChangeNotifier {
           id: newId('s'),
           name: _workspace.uniqueDocumentName(src.name),
           content: ScreenFlowDiagram.fromJson(jsonDecode(jsonEncode(src.screenflow!.toJson()))),
+          folderId: src.folderId,
+        );
+      case DocType.api:
+        copy = ProjectDocument.api(
+          id: newId('a'),
+          name: _workspace.uniqueDocumentName(src.name),
+          content: ApiDocument.fromJson(jsonDecode(jsonEncode(src.api!.toJson()))),
           folderId: src.folderId,
         );
       case null:
@@ -693,6 +716,15 @@ class WorkspaceController extends ChangeNotifier {
   ScreenFlowController get currentScreenflow {
     final d = activeDocument;
     return (d.type == DocType.screenflow ? screenflowController(d.id) : null) ?? _noScreenflow;
+  }
+
+  /// ตัวแทนตอนเอกสารที่ใช้งานไม่ใช่ API
+  late final ApiController _noApi = ApiController.detached(this);
+
+  /// controller ของ API ที่ใช้งานอยู่ (แท็บที่เปิดไม่ใช่ API = ตัวแทนที่ว่างและแก้ไขไม่ได้)
+  ApiController get currentApi {
+    final d = activeDocument;
+    return (d.type == DocType.api ? apiController(d.id) : null) ?? _noApi;
   }
 
   /// controller ของเอกสารที่ใช้งานอยู่

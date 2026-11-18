@@ -27,6 +27,7 @@ String homeTypeLabel(DocType t) => switch (t) {
       DocType.flowchart => 'Flowchart',
       DocType.wireframe => 'Wireframe',
       DocType.screenflow => 'Screen Flow',
+      DocType.api => 'API',
     };
 
 String _menuLabel(DocType t) => switch (t) {
@@ -35,6 +36,7 @@ String _menuLabel(DocType t) => switch (t) {
       DocType.flowchart => tr('Flowchart (ผังงาน)'),
       DocType.wireframe => tr('Wireframe (หน้าจอ)'),
       DocType.screenflow => tr('Screen Flow (ลำดับหน้าจอ)'),
+      DocType.api => tr('API (Endpoint)'),
     };
 
 /// บรรทัดสรุปของการ์ดชนิดเอกสาร (รวมทุกเอกสารชนิดนั้น)
@@ -57,6 +59,10 @@ String homeTypeDetail(DocType t, List<ProjectDocument> docs) {
         sum((d) => d.wireframe!.components.where((c) => c.ref != null).length),
       ]),
     DocType.screenflow => tr('{0} หน้าจอ · {1} เส้นทาง', [sum((d) => d.screenflow!.nodes.length), sum((d) => d.screenflow!.edges.length)]),
+    DocType.api => tr('{0} endpoint · ผูกกับตาราง {1}', [
+        sum((d) => d.api!.endpoints.length),
+        sum((d) => d.api!.endpoints.where((e) => e.table != null).length),
+      ]),
   };
 }
 
@@ -264,7 +270,8 @@ class _TypeCards extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, c) {
       const types = DocType.values;
-      final cols = ((c.maxWidth + _gap) / (190 + _gap)).floor().clamp(1, types.length);
+      // ขั้นต่ำ 160 (ดีไซน์ 190 สำหรับ 5 ชนิด — มี API เพิ่มเป็น 6 ชนิดแล้วยังอยู่แถวเดียวบนจอกว้าง)
+      final cols = ((c.maxWidth + _gap) / (160 + _gap)).floor().clamp(1, types.length);
       final cardW = (c.maxWidth - _gap * (cols - 1)) / cols;
       return Wrap(spacing: _gap, runSpacing: _gap, children: [
         for (final t in types)

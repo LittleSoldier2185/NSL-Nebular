@@ -30,7 +30,7 @@ extension ProjectTemplateDocs on ProjectTemplate {
         ProjectTemplate.analysis => const [DocType.dfd, DocType.flowchart],
         ProjectTemplate.appDesign => const [DocType.wireframe, DocType.screenflow],
         ProjectTemplate.flow => const [DocType.flowchart],
-        ProjectTemplate.full => const [DocType.dfd, DocType.flowchart, DocType.wireframe, DocType.screenflow],
+        ProjectTemplate.full => const [DocType.dfd, DocType.flowchart, DocType.wireframe, DocType.screenflow, DocType.api],
       };
 }
 
@@ -58,7 +58,7 @@ ProjectDocument createProject(
     w.workspace.name = trimmed;
   }
   // เพิ่มตามลำดับคงที่ (ไม่ขึ้นกับลำดับที่ส่งมา) เพื่อให้ผลเหมือนกันทุกครั้ง
-  for (final t in [DocType.dfd, DocType.flowchart, DocType.wireframe, DocType.screenflow]) {
+  for (final t in [DocType.dfd, DocType.flowchart, DocType.wireframe, DocType.screenflow, DocType.api]) {
     if (wanted.contains(t)) w.addDocument(t);
   }
   final first = _openOrder.where(wanted.contains).firstOrNull;

@@ -18,6 +18,7 @@ const kDocColorKeys = <DocType, String>{
   DocType.flowchart: 'Flow',
   DocType.wireframe: 'Wire',
   DocType.screenflow: 'Screen',
+  DocType.api: 'Api',
 };
 
 /// ชุดสีของหนึ่งธีม

@@ -52,6 +52,9 @@ void gotoNoteTarget(BuildContext context, String docId, {String? elementId}) {
       gotoWireframe(context, docId, component: elementId);
     case DocType.screenflow:
       gotoScreenFlow(context, docId, node: elementId);
+    case DocType.api:
+      if (!w.openDocument(docId)) return;
+      if (elementId != null) w.apiController(docId)?.select(elementId);
     case DocType.er:
       if (!w.openDocument(docId)) return;
       final er = w.erController(docId);

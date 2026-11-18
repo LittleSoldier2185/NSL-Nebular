@@ -33,6 +33,7 @@ import '../whats_new_dialog.dart';
 import '../workspace_issues_dialog.dart';
 import '../theme.dart';
 import '../../core/l10n/l10n.dart';
+import '../../core/models/api_model.dart';
 
 enum PaletteKind { command, table, column, group, note, dfdNode, dfdFlow, fcNode, fcEdge, wfComponent, sfNode, sfEdge, issue }
 
@@ -147,6 +148,7 @@ List<PaletteEntry> buildPaletteEntries(BuildContext context) {
     }),
     cmd(tr('เพิ่ม Wireframe'), 'new wireframe screen mockup หน้าจอ', () => w.addDocument(DocType.wireframe)),
     cmd(tr('เพิ่ม Screen Flow'), 'new screen flow navigation map ลำดับหน้าจอ', () => w.addDocument(DocType.screenflow)),
+    cmd(tr('เพิ่ม API'), 'new api endpoint rest openapi', () => w.addDocument(DocType.api)),
     cmd(tr('สลับรูปแบบ Wireframe (ร่าง / เรียบร้อย)'), 'wireframe style sketch clean fidelity รูปแบบ', () {
       final f = context.read<WireframeController>();
       if (w.activeDocument.type == DocType.wireframe) {
@@ -264,6 +266,18 @@ List<PaletteEntry> buildPaletteEntries(BuildContext context) {
           subtitle: '${tab.name} · ${wfKindLabel(c.kind)}',
           search: '${c.text} ${wfKindLabel(c.kind)} ${c.kind.name} ${tab.name}',
           run: () => gotoWireframe(context, tab.id, component: c.id),
+        ),
+    // ---- API ทุกแท็บ: endpoint ----
+    for (final tab in w.documents.where((t) => t.type == DocType.api))
+      for (final e in tab.api!.endpoints)
+        PaletteEntry(
+          kind: PaletteKind.command,
+          title: e.title,
+          subtitle: '${tab.name}${e.summary.isEmpty ? '' : ' · ${e.summary}'}',
+          search: '${e.method.label} ${e.path} ${e.summary} ${tab.name}',
+          run: () {
+            if (w.openDocument(tab.id)) w.apiController(tab.id)?.select(e.id);
+          },
         ),
     // ---- Screen Flow ทุกแท็บ: หน้าจอ และการเปลี่ยนหน้า ----
     for (final tab in w.documents.where((t) => t.type == DocType.screenflow)) ...[

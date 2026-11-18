@@ -16,6 +16,7 @@ IconData docTypeIcon(DocType? t) => switch (t) {
       DocType.flowchart => Icons.schema_outlined,
       DocType.wireframe => Icons.web_outlined,
       DocType.screenflow => Icons.alt_route_rounded,
+      DocType.api => Icons.api_rounded,
       _ => Icons.account_tree_outlined,
     };
 
@@ -49,6 +50,8 @@ class DocTypeDot extends StatelessWidget {
           angle: 0.7853981633974483,
           child: DecoratedBox(decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(1))),
         ),
+      // API = สี่เหลี่ยมมนมาก (ตามดีไซน์)
+      DocType.api => DecoratedBox(decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(size * 0.38))),
       _ => DecoratedBox(decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2.5))),
     };
     // ข้าวหลามตัดวาดเล็กลงให้ดูขนาดเท่ากับรูปอื่น

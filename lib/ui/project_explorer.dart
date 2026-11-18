@@ -45,6 +45,7 @@ class _ProjectExplorerState extends State<ProjectExplorer> {
       (DocType.flowchart, tr('ผังงาน (Flowchart)')),
       (DocType.wireframe, tr('หน้าจอ (Wireframe)')),
       (DocType.screenflow, tr('ลำดับหน้าจอ (Screen Flow)')),
+      (DocType.api, tr('API (Endpoint)')),
     ];
     return Container(
       key: const ValueKey('project-explorer'),
@@ -112,6 +113,11 @@ class _ProjectExplorerState extends State<ProjectExplorer> {
                   value: DocType.screenflow,
                   height: 36,
                   child: Text(tr('Screen Flow (ลำดับหน้าจอ)'), style: const TextStyle(fontSize: 13)),
+                ),
+                PopupMenuItem(
+                  value: DocType.api,
+                  height: 36,
+                  child: Text(tr('API (Endpoint)'), style: const TextStyle(fontSize: 13)),
                 ),
               ],
             ),

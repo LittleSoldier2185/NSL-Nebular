@@ -28,6 +28,22 @@ void gotoWorkspaceIssue(BuildContext context, WorkspaceIssue wi, {VoidCallback? 
     gotoWireframe(context, wi.docId, component: i.tableId);
     return;
   }
+  if (wi.docType == DocType.api) {
+    beforeJump?.call();
+    if (i.code == 'api_table_uncovered' && i.relationId != null) {
+      // ตารางที่ยังไม่มี endpoint: ไปที่ตารางใน ER (relationId = id เอกสาร ER)
+      if (!w.openDocument(i.relationId!)) return;
+      final er = w.erController(i.relationId!);
+      final t = i.tableId == null ? null : er?.project.tableById(i.tableId!);
+      if (er != null && t != null) {
+        er.selectTable(t.id);
+        cv.focusTable(t);
+      }
+      return;
+    }
+    if (w.openDocument(wi.docId) && i.tableId != null) w.apiController(wi.docId)?.select(i.tableId);
+    return;
+  }
   if (wi.docType == DocType.screenflow) {
     beforeJump?.call();
     gotoScreenFlow(context, wi.docId, node: i.tableId, edge: i.relationId);

@@ -5,6 +5,7 @@ import 'issue.dart';
 import 'screenflow_validator.dart';
 import 'wireframe_validator.dart';
 import 'validator.dart';
+import 'api_validator.dart';
 
 /// ปัญหาหนึ่งรายการที่รู้ว่าอยู่ในเอกสารไหน
 class WorkspaceIssue {
@@ -33,6 +34,8 @@ List<WorkspaceIssue> validateWorkspace(Workspace w) {
         issues = validateWireframe(doc.wireframe!, workspace: w);
       case DocType.screenflow:
         issues = validateScreenFlow(doc.screenflow!, workspace: w);
+      case DocType.api:
+        issues = validateApi(doc.api!, workspace: w, docId: doc.id);
       case null:
         continue;
     }
@@ -66,6 +69,8 @@ const kCrossDocIssueCodes = {
   'dfd_unbalanced',
   'wf_ref_missing',
   'sf_wireframe_missing',
+  'api_table_missing',
+  'api_column_missing',
 };
 
 /// เฉพาะปัญหาข้ามเอกสาร (ดู [kCrossDocIssueCodes]) ตามลำดับเดิม

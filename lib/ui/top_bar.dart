@@ -261,7 +261,7 @@ class TopBar extends StatelessWidget {
           _item(
             tr('จัดวางอัตโนมัติ'),
             '',
-            w.activeDocument.type == DocType.wireframe
+            w.activeDocument.type == DocType.wireframe || w.activeDocument.type == DocType.api
                 ? null
                 : w.activeDocument.type == DocType.screenflow
                 ? (w.screenflowOf(w.activeId).nodes.length < 2

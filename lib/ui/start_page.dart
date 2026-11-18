@@ -36,6 +36,7 @@ String _docLabel(DocType t) => switch (t) {
       DocType.flowchart => 'Flowchart',
       DocType.wireframe => 'Wireframe',
       DocType.screenflow => 'Screen Flow',
+      DocType.api => 'API',
     };
 
 /// หน้าเปิดโปรแกรม (แสดงเมื่อเปิดแอปโดยไม่มีไฟล์ให้เปิด): สร้างใหม่ด่วน / ไฟล์ล่าสุด / เริ่มจากจุดเริ่มต้นสำเร็จรูป

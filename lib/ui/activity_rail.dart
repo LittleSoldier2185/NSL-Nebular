@@ -11,7 +11,7 @@ import 'theme.dart';
 const double kActivityRailWidth = 52;
 
 /// ชนิดเอกสารที่มีปุ่มในแถบ เรียงตามดีไซน์
-const _railTypes = [DocType.er, DocType.dfd, DocType.flowchart, DocType.wireframe, DocType.screenflow];
+const _railTypes = [DocType.er, DocType.dfd, DocType.flowchart, DocType.wireframe, DocType.screenflow, DocType.api];
 
 String _typeLabel(DocType t) => switch (t) {
       DocType.er => tr('ER Diagram (ตารางฐานข้อมูล)'),
@@ -19,6 +19,7 @@ String _typeLabel(DocType t) => switch (t) {
       DocType.flowchart => tr('Flowchart (ผังงาน)'),
       DocType.wireframe => tr('Wireframe (หน้าจอ)'),
       DocType.screenflow => tr('Screen Flow (ลำดับหน้าจอ)'),
+      DocType.api => tr('API (Endpoint)'),
     };
 
 /// แถบไอคอนชนิดเอกสารด้านซ้ายสุด: กด = ไปที่เอกสารชนิดนั้น (เอกสารที่เปิดอยู่ล่าสุดของชนิดนั้น ไม่มี = เอกสารแรกของชนิดนั้น
