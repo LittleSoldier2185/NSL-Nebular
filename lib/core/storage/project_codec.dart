@@ -9,6 +9,7 @@ import '../models/screenflow_model.dart';
 import '../models/wireframe_model.dart';
 import '../models/workspace.dart';
 import 'project_format_exception.dart';
+import '../models/review_note.dart';
 
 export 'project_format_exception.dart';
 
@@ -58,6 +59,7 @@ Map<String, dynamic> encodeProjectMap(Workspace w) => {
             if (d.folderId != null) 'folder': d.folderId,
             'typeVersion': d.typeVersion,
             ...d.extra,
+            if (d.reviewNotes.isNotEmpty) 'notes': encodeNotes(d.reviewNotes),
             'content': d.content.toContentJson(),
           },
       ],
@@ -68,7 +70,7 @@ Map<String, dynamic> encodeProjectMap(Workspace w) => {
 Workspace copyWorkspace(Workspace w) =>
     decodeProjectMap(jsonDecode(jsonEncode(encodeProjectMap(w))) as Map<String, dynamic>);
 
-const _docKeys = {'id', 'type', 'name', 'folder', 'typeVersion', 'content'};
+const _docKeys = {'id', 'type', 'name', 'folder', 'typeVersion', 'content', 'notes'};
 
 /// แท็บหนึ่งแท็บของไฟล์ v1/v2 (`diagrams`)
 class _LegacyTab {
@@ -193,6 +195,7 @@ Workspace _decodeV3(Map<String, dynamic> j) {
       folderId: folder is String && byId.containsKey(folder) ? folder : null,
       typeVersion: tv is int && tv > 0 ? tv : 1,
       content: content,
+      reviewNotes: decodeNotes(e['notes']),
       extra: {
         for (final x in e.entries)
           if (x.key is String && !_docKeys.contains(x.key)) x.key as String: x.value,

@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
+import '../core/models/review_note.dart';
 import '../core/models/workspace.dart';
 import 'snapshot_history.dart';
 
@@ -45,6 +48,27 @@ abstract class DocController extends ChangeNotifier {
   @protected
   void restoreSnapshot(String snap);
 
+  /// สิ่งที่เก็บในประวัติ undo: เนื้อหา + โน้ตของเอกสาร
+  /// (ไม่มีโน้ต = เท่ากับ [snapshot] ทุกตัวอักษร ; มีโน้ต = `\u0001<โน้ต JSON>\u0001<เนื้อหา>`)
+  String historySnapshot() {
+    final c = snapshot();
+    if (_doc.reviewNotes.isEmpty) return c;
+    return '$_notesMark${jsonEncode(encodeNotes(_doc.reviewNotes))}$_notesMark$c';
+  }
+
+  static const _notesMark = '\u0001';
+
+  void _restoreHistory(String snap) {
+    if (snap.startsWith(_notesMark)) {
+      final end = snap.indexOf(_notesMark, 1);
+      _doc.reviewNotes = decodeNotes(jsonDecode(snap.substring(1, end)));
+      restoreSnapshot(snap.substring(end + 1));
+    } else {
+      _doc.reviewNotes = [];
+      restoreSnapshot(snap);
+    }
+  }
+
   /// เรียกหลัง undo/redo ใส่เนื้อหากลับแล้ว (เช่น ล้างการเลือกที่หายไป)
   @protected
   void afterRestore() {}
@@ -75,7 +99,7 @@ abstract class DocController extends ChangeNotifier {
   /// แก้เนื้อหาแบบมีประวัติ (undo ขั้นเดียว)
   @protected
   void editWithHistory(void Function() change) {
-    history.push(snapshot());
+    history.push(historySnapshot());
     change();
     markEdited();
     notifyListeners();
@@ -86,16 +110,16 @@ abstract class DocController extends ChangeNotifier {
 
   void undo() {
     if (!history.canUndo) return;
-    _apply(history.undo(snapshot())!);
+    _apply(history.undo(historySnapshot())!);
   }
 
   void redo() {
     if (!history.canRedo) return;
-    _apply(history.redo(snapshot())!);
+    _apply(history.redo(historySnapshot())!);
   }
 
   void _apply(String snap) {
-    restoreSnapshot(snap);
+    _restoreHistory(snap);
     markEdited();
     afterRestore();
     notifyListeners();
@@ -107,16 +131,90 @@ abstract class DocController extends ChangeNotifier {
   /// เริ่มลาก: การแก้สดจนถึง [endGesture] นับเป็น undo ขั้นเดียว
   void beginGesture() {
     if (history.gestureActive) return;
-    history.beginGesture(snapshot());
+    history.beginGesture(historySnapshot());
   }
 
   /// จบการลาก — คืน true ถ้าเนื้อหาเปลี่ยน (เก็บเข้าประวัติแล้ว)
   bool endGesture() {
     if (!history.gestureActive) return false;
-    final changed = history.endGesture(snapshot());
+    final changed = history.endGesture(historySnapshot());
     if (changed) markEdited();
     notifyListeners();
     return changed;
+  }
+
+  // ---------- โน้ตและงานค้าง (Phase 5) — แก้แบบมี undo ร่วมกับเนื้อหาเอกสาร ----------
+
+  /// โน้ตของเอกสารนี้ (ตามลำดับที่เพิ่ม)
+  List<ReviewNote> get reviewNotes => _doc.reviewNotes;
+
+  ReviewNote? reviewNoteById(String id) {
+    for (final n in _doc.reviewNotes) {
+      if (n.id == id) return n;
+    }
+    return null;
+  }
+
+  int _reviewNoteSeq = 0;
+
+  /// เพิ่มโน้ต (ข้อความว่างหลังตัดช่องว่าง = ไม่เพิ่ม คืน null) ; [x],[y] = ปักหมุดที่ตำแหน่งนั้นบนแคนวาส
+  ReviewNote? addReviewNote(String text, {NoteKind kind = NoteKind.todo, double? x, double? y, String? anchorId}) {
+    final t = text.trim();
+    if (t.isEmpty) return null;
+    final n = ReviewNote(
+      id: 'note${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}${_reviewNoteSeq++}',
+      kind: kind,
+      text: t,
+      x: x,
+      y: y,
+      anchorId: anchorId,
+    );
+    editWithHistory(() => _doc.reviewNotes = [..._doc.reviewNotes, n]);
+    return n;
+  }
+
+  /// แก้โน้ต [id] (ส่งเฉพาะค่าที่จะเปลี่ยน) ; ไม่มีอะไรเปลี่ยน = ไม่เข้าประวัติ ; คืน true ถ้าเปลี่ยน
+  bool updateReviewNote(String id, {String? text, NoteKind? kind, bool? done}) {
+    final n = reviewNoteById(id);
+    if (n == null) return false;
+    final t = text?.trim();
+    if (t != null && t.isEmpty) return false;
+    if ((t == null || t == n.text) && (kind == null || kind == n.kind) && (done == null || done == n.done)) return false;
+    editWithHistory(() {
+      if (t != null) n.text = t;
+      if (kind != null) n.kind = kind;
+      if (done != null) n.done = done;
+    });
+    return true;
+  }
+
+  /// สลับสถานะเสร็จ/ยังไม่เสร็จ
+  bool toggleReviewNoteDone(String id) {
+    final n = reviewNoteById(id);
+    return n != null && updateReviewNote(id, done: !n.done);
+  }
+
+  /// ย้ายหมุดของโน้ต (ระหว่างลาก — ครอบด้วย [beginGesture]/[endGesture] เพื่อให้ undo ขั้นเดียว) ; null = ถอดหมุด
+  void moveReviewNote(String id, double? x, double? y) {
+    final n = reviewNoteById(id);
+    if (n == null) return;
+    if (gestureActive) {
+      n
+        ..x = x
+        ..y = y;
+      markLive();
+      notifyListeners();
+    } else {
+      editWithHistory(() => n
+        ..x = x
+        ..y = y);
+    }
+  }
+
+  bool deleteReviewNote(String id) {
+    if (reviewNoteById(id) == null) return false;
+    editWithHistory(() => _doc.reviewNotes = [for (final n in _doc.reviewNotes) if (n.id != id) n]);
+    return true;
   }
 
   @override

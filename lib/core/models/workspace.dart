@@ -4,6 +4,7 @@ import 'flowchart_model.dart';
 import 'project.dart';
 import 'screenflow_model.dart';
 import 'wireframe_model.dart';
+import 'review_note.dart';
 
 /// ชนิดเอกสารที่โปรแกรมรู้จัก (ชนิดอื่นจากไฟล์รุ่นใหม่กว่าเก็บเป็น [RawDocContent] และเขียนกลับไม่เปลี่ยน)
 enum DocType {
@@ -76,7 +77,9 @@ class ProjectDocument {
     this.folderId,
     this.typeVersion = 1,
     Map<String, dynamic>? extra,
-  }) : extra = extra ?? {};
+    List<ReviewNote>? reviewNotes,
+  })  : extra = extra ?? {},
+        reviewNotes = reviewNotes ?? [];
 
   ProjectDocument.er({required String id, required String name, required Project content, String? folderId})
       : this(id: id, typeName: DocType.er.name, name: name, content: content, folderId: folderId);
@@ -104,6 +107,9 @@ class ProjectDocument {
 
   /// คีย์อื่นของเอกสารที่ไม่รู้จัก (เขียนกลับเหมือนเดิม)
   final Map<String, dynamic> extra;
+
+  /// โน้ตและงานค้างของเอกสารนี้ (Phase 5 ; คีย์ `notes` ในไฟล์ — ไม่มีโน้ต = ไม่เขียนคีย์)
+  List<ReviewNote> reviewNotes;
 
   /// ชนิดที่รู้จัก — null = ชนิดที่โปรแกรมรุ่นนี้ไม่รู้จัก
   DocType? get type => content is RawDocContent ? null : DocType.values.asNameMap()[typeName];

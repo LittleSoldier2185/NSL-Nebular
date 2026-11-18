@@ -225,7 +225,7 @@ class ProjectController extends DocController {
     _groupOrigin = null;
     _resizeOrigin = null;
     if (!had) return false;
-    final changed = history.endGesture(snapshot());
+    final changed = history.endGesture(historySnapshot());
     if (changed) {
       markEdited();
       _issues = null;
