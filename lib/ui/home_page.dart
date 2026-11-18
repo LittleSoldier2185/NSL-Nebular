@@ -30,6 +30,7 @@ import 'panel_splitter.dart';
 import 'left_panel.dart';
 import 'recovery_dialog.dart';
 import 'right_panel.dart';
+import 'start_page.dart';
 import 'shortcuts.dart';
 import 'sql_dock.dart';
 import 'file_actions.dart';
@@ -280,12 +281,15 @@ class _HomePageState extends State<HomePage> {
         autofocus: true,
         onKeyEvent: _onKey,
         child: Scaffold(
-          body: Column(children: [
-            const TopBar(),
-            const DiagramTabBar(),
-            Expanded(child: Row(children: [const ActivityRail(), Expanded(child: _body(context))])),
-            const StatusBar(),
-          ]),
+          body: context.select<WorkspaceController, bool>((w) => w.startView)
+              // หน้า Start: ยังมีแถบบน (ลากหน้าต่าง/ปุ่มปิด) แต่ไม่มีแท็บ แผง และแถบสถานะ
+              ? const Column(children: [TopBar(), Expanded(child: StartPage())])
+              : Column(children: [
+                  const TopBar(),
+                  const DiagramTabBar(),
+                  Expanded(child: Row(children: [const ActivityRail(), Expanded(child: _body(context))])),
+                  const StatusBar(),
+                ]),
         ),
       );
 }

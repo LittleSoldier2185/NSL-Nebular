@@ -56,6 +56,16 @@ class WorkspaceController extends ChangeNotifier {
 
   bool get homeView => _homeView;
 
+  /// หน้า Start (เปิดโปรแกรมแล้วยังไม่มีโปรเจกต์ที่เลือก) — มุมมองชั่วคราว ไม่บันทึก ไม่ทำให้ dirty ; เปิด/สร้าง/กู้คืนโปรเจกต์ใดก็ปิดเอง
+  bool _startView = false;
+  bool get startView => _startView;
+
+  void showStart([bool show = true]) {
+    if (_startView == show) return;
+    _startView = show;
+    notifyListeners();
+  }
+
   /// แสดง/ซ่อนหน้า Project Home (ไม่แตะเอกสารหรือสถานะ dirty)
   void showHome([bool show = true]) {
     if (_homeView == show) return;
@@ -189,6 +199,7 @@ class WorkspaceController extends ChangeNotifier {
     final er = _ensureEr(w);
     _mainEr.attach(er);
     _register(_mainEr);
+    _startView = false;
     _filePath = path;
     _structureDirty = dirty;
     _resetTabs(er.id);

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clock/clock.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -101,13 +102,41 @@ class FileActions {
     );
     final path = f?.path;
     if (path == null) return;
+    if (!context.mounted) return;
+    await openPath(context, c, path);
+  }
+
+  /// เปิดไฟล์โปรเจกต์ที่ [path] (ไม่ถามบันทึกของงานเดิม — ผู้เรียกถามมาแล้ว) แล้วจดเป็นไฟล์ล่าสุด
+  /// คืน true เมื่อเปิดสำเร็จ ; เปิดไม่ได้ = แจ้งเตือนและคืน false
+  static Future<bool> openPath(BuildContext context, ProjectController c, String path) async {
     try {
-      c.workspaceController.loadWorkspace(await ProjectFile.load(path), path);
+      final w = await ProjectFile.load(path);
+      c.workspaceController.loadWorkspace(w, path);
+      if (context.mounted) noteRecent(context, w, path);
+      return true;
     } on ProjectFormatException catch (e) {
       if (context.mounted) _toast(context, e.message);
     } catch (e) {
       if (context.mounted) _toast(context, tr('เปิดไฟล์ไม่ได้: {0}', [e]));
     }
+    return false;
+  }
+
+  /// จด [path] เป็นไฟล์ล่าสุด (หน้า Start) พร้อมชื่อ จำนวนเอกสาร และชนิดเอกสาร
+  static void noteRecent(BuildContext context, Workspace w, String path) {
+    final types = <String>[];
+    for (final d in w.documents) {
+      final t = d.type?.name;
+      if (t != null && !types.contains(t)) types.add(t);
+    }
+    final base = path.split(RegExp(r'[\/]')).last.replaceFirst(RegExp(r'.[^.]*$'), '');
+    context.read<AppSettings>().addRecent(
+      path,
+      name: w.name.isEmpty || w.name == 'untitled' ? base : w.name,
+      now: clock.now(),
+      docCount: w.documents.length,
+      docTypes: types,
+    );
   }
 
   /// นำเข้าจากไฟล์ .sql (CREATE TABLE ฯลฯ) -> แทนที่โปรเจกต์ หลังพรีวิวและยืนยัน
@@ -624,6 +653,7 @@ class FileActions {
     try {
       await ProjectFile.save(c.workspaceController.workspace, path);
       c.workspaceController.markSaved(path);
+      if (context.mounted) noteRecent(context, c.workspaceController.workspace, path);
       return true;
     } catch (e) {
       if (context.mounted) _toast(context, tr('บันทึกไม่ได้: {0}', [e]));

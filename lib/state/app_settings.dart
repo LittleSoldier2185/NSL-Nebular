@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../core/l10n/l10n.dart';
+import '../core/storage/recent_files.dart';
 
 /// ขนาดแผงที่ผู้ใช้ลากปรับได้ (แผงซ้าย/ขวา กว้างกี่ px, แผง SQL ด้านล่างสูงกี่ px)
 /// แจ้งเตือนเฉพาะ widget ที่ฟังอยู่ (ไม่ทำให้ทั้งแอปสร้างใหม่ระหว่างลาก)
@@ -97,8 +98,10 @@ class AppSettings extends ChangeNotifier {
     FlowSpeed flowSpeed = FlowSpeed.normal,
     String? lastSeenVersion,
     PanelLayout? layout,
+    RecentFiles? recent,
     this.file,
   })  : layout = layout ?? PanelLayout(),
+        _recent = recent ?? RecentFiles(),
         _lastSeen = lastSeenVersion,
         // ignore: prefer_initializing_formals
         _showFlow = showFlow,
@@ -133,6 +136,7 @@ class AppSettings extends ChangeNotifier {
   bool _showExplorer;
   FlowSpeed _flowSpeed;
   String? _lastSeen;
+  RecentFiles _recent;
 
   Lang get lang => _lang;
   bool get dark => _dark;
@@ -154,6 +158,36 @@ class AppSettings extends ChangeNotifier {
 
   /// แสดงแผง Project Explorer (รายการเอกสารทั้งโปรเจกต์) เหนือแผงซ้าย
   bool get showExplorer => _showExplorer;
+
+  /// ไฟล์โปรเจกต์ที่เปิด/บันทึกล่าสุดของเครื่องนี้ (หน้า Start) — ปักหมุดอยู่บน ที่เหลือเรียงล่าสุดก่อน
+  List<RecentFile> get recentFiles => _recent.items;
+
+  void addRecent(String path, {required String name, required DateTime now, int docCount = 0, List<String> docTypes = const []}) {
+    _recent = _recent.touch(path, name: name, now: now, docCount: docCount, docTypes: docTypes);
+    _save();
+    notifyListeners();
+  }
+
+  void toggleRecentPin(String path) {
+    _recent = _recent.togglePin(path);
+    _save();
+    notifyListeners();
+  }
+
+  void removeRecent(String path) {
+    _recent = _recent.remove(path);
+    _save();
+    notifyListeners();
+  }
+
+  /// ตัดไฟล์ที่ไม่มีอยู่แล้วออก (เรียกตอนเปิดหน้า Start) — ไม่เขียนไฟล์ถ้าไม่มีอะไรเปลี่ยน
+  void pruneRecent(bool Function(String path) exists) {
+    final next = _recent.pruneMissing(exists);
+    if (next.items.length == _recent.items.length) return;
+    _recent = next;
+    _save();
+    notifyListeners();
+  }
 
   /// รุ่นของโปรแกรมที่ผู้ใช้เปิดดู patch note ไปแล้วล่าสุด (null = ยังไม่เคย)
   String? get lastSeenVersion => _lastSeen;
@@ -187,6 +221,7 @@ class AppSettings extends ChangeNotifier {
           flowSpeed: FlowSpeed.fromName(m['flowSpeed']),
           lastSeenVersion: m['seen'] as String?,
           layout: PanelLayout.fromJson(m['layout']),
+          recent: RecentFiles.fromJson(m['recent']),
           file: file,
         );
       }
@@ -272,6 +307,7 @@ class AppSettings extends ChangeNotifier {
         'flowSpeed': _flowSpeed.name,
         if (_lastSeen != null) 'seen': _lastSeen,
         'layout': layout.toJson(),
+        if (!_recent.isEmpty) 'recent': _recent.toJson(),
       }));
     } catch (_) {
       // เก็บการตั้งค่าไม่ได้ก็ใช้งานต่อได้ แค่ครั้งหน้าจะถามใหม่

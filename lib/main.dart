@@ -59,7 +59,7 @@ Future<void> main(List<String> args) async {
     break;
   }
   // หาที่เก็บไม่ได้ = ใช้ค่าเริ่มต้น (ไทย/สว่าง) โดยไม่ถามภาษา เพราะบันทึกคำตอบไม่ได้อยู่ดี
-  runApp(NslDevApp(autosave: store, recovery: recovery, settings: settings ?? AppSettings(lang: Lang.th), initialProject: initial, initialPath: initialPath, themes: await _openThemes(args)));
+  runApp(NslDevApp(autosave: store, recovery: recovery, settings: settings ?? AppSettings(lang: Lang.th), initialProject: initial, initialPath: initialPath, themes: await _openThemes(args), showStart: true));
 }
 
 /// ที่เก็บธีมกลางของ NSL (ธีมที่ทำจาก NSL Palette แชร์กับแอปอื่น) — ล้มเหลวทุกกรณี = null = ใช้ธีมในตัว ไม่ให้แอปเปิดไม่ขึ้น
@@ -78,7 +78,7 @@ Future<NslThemeController?> _openThemes(List<String> args) async {
 }
 
 class NslDevApp extends StatefulWidget {
-  const NslDevApp({super.key, this.autosave, this.recovery, this.settings, this.initialProject, this.initialPath, this.themes});
+  const NslDevApp({super.key, this.autosave, this.recovery, this.settings, this.initialProject, this.initialPath, this.themes, this.showStart = false});
 
   /// ที่เก็บ/ตัวเลือกธีมกลางของ NSL (null = ใช้ธีมในตัว) — ธีมเปลี่ยนสดตามไฟล์ที่ NSL Palette หรือแอปอื่นเขียน
   final NslThemeController? themes;
@@ -86,6 +86,9 @@ class NslDevApp extends StatefulWidget {
   /// โปรเจกต์ที่เปิดตั้งแต่เริ่ม (จากไฟล์ที่ส่งมาทางบรรทัดคำสั่ง) — null = เริ่มว่าง
   final Workspace? initialProject;
   final String? initialPath;
+
+  /// เปิดหน้า Start ตอนเริ่ม (แอปจริงส่ง true เมื่อไม่มีไฟล์ให้เปิดและไม่มีงานค้างให้กู้คืน ; เทสต์ส่วนใหญ่ไม่ส่ง = เข้าหน้าหลักเลย)
+  final bool showStart;
 
   /// การตั้งค่าแอป (null = ค่าเริ่มต้น ไทย/สว่าง ไม่ถามภาษา)
   final AppSettings? settings;
@@ -116,6 +119,11 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
     widget.themes?.addListener(_onThemes);
     final p = widget.initialProject;
     if (p != null) _workspace.loadWorkspace(p, widget.initialPath);
+    // ไฟล์ที่เปิดตั้งแต่เริ่มก็นับเป็นไฟล์ล่าสุด
+    if (p != null && widget.initialPath != null) {
+      _settings.addRecent(widget.initialPath!, name: p.name.isEmpty || p.name == 'untitled' ? widget.initialPath!.split(RegExp(r'[\/]')).last.replaceFirst(RegExp(r'.[^.]*$'), '') : p.name, now: DateTime.now(), docCount: p.documents.length, docTypes: [for (final t in {for (final d in p.documents) d.type?.name}) ?t]);
+    }
+    if (widget.showStart && p == null && widget.recovery == null) _workspace.showStart();
     _workspace.addListener(_onWorkspace);
     _onWorkspace();
   }
