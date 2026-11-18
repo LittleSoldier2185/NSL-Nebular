@@ -12,6 +12,7 @@ import '../issue_widgets.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'fc_actions.dart';
+import 'fc_library.dart';
 import 'fc_painter.dart';
 import 'fc_view.dart';
 
@@ -39,10 +40,6 @@ class _FlowchartLeftPanelState extends State<FlowchartLeftPanel> {
     final d = f.diagram;
     final q = _q.trim().toLowerCase();
     bool match(String s) => q.isEmpty || s.toLowerCase().contains(q);
-    final shapes = [
-      for (final s in kFcToolShapes)
-        if (match('${fcShapeLabel(s)} ${s.name}')) s,
-    ];
     final nodes = [for (final n in d.nodes) if (match('${n.text} ${fcShapeLabel(n.shape)}')) n];
     String nodeName(String id) {
       final n = d.nodeById(id);
@@ -77,18 +74,14 @@ class _FlowchartLeftPanelState extends State<FlowchartLeftPanel> {
                 key: const ValueKey('fc-search'),
                 decoration: InputDecoration(
                   isDense: true,
-                  hintText: tr('ค้นหาสัญลักษณ์ / ข้อความ'),
+                  hintText: tr('ค้นหารูปทรง / ข้อความ ({0} รูปทรง)', [FcShape.values.length]),
                   prefixIcon: const Icon(Icons.search_rounded, size: 16),
                 ),
                 onChanged: (v) => setState(() => _q = v),
               ),
             ),
           ),
-          section(tr('คลังสัญลักษณ์'), shapes.length),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 2, 10, 4),
-            child: Wrap(spacing: 6, runSpacing: 6, children: [for (final s in shapes) _ShapeTile(shape: s)]),
-          ),
+          FcShapeLibrary(query: q),
           section(tr('สัญลักษณ์'), nodes.length),
           for (final n in nodes)
             ListTile(
@@ -122,62 +115,6 @@ class _FlowchartLeftPanelState extends State<FlowchartLeftPanel> {
       ),
     );
   }
-}
-
-/// ช่องหนึ่งในคลังสัญลักษณ์: ภาพย่อของรูปทรงจริง — คลิก = เลือกเครื่องมือ, ลากไปวางบนแคนวาสได้
-class _ShapeTile extends StatelessWidget {
-  const _ShapeTile({required this.shape});
-  final FcShape shape;
-
-  @override
-  Widget build(BuildContext context) {
-    final f = context.watch<FlowchartController>();
-    final on = f.tool == FcTool.shape && f.toolShape == shape;
-    final k = fcShapeShortcut(shape);
-    final tile = Container(
-      width: 56,
-      height: 46,
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: on ? C.primaryTint : C.bg,
-        border: Border.all(color: on ? C.primary : C.border),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: CustomPaint(painter: _ShapePreview(shape)),
-    );
-    return Tooltip(
-      message: k.isEmpty ? fcShapeLabel(shape) : '${fcShapeLabel(shape)} ($k)',
-      child: Draggable<FcShape>(
-        data: shape,
-        feedback: Material(color: Colors.transparent, child: Opacity(opacity: 0.8, child: tile)),
-        child: InkWell(
-          key: ValueKey('fc-shape-${shape.name}'),
-          borderRadius: BorderRadius.circular(6),
-          onTap: () => f.setShapeTool(shape),
-          child: tile,
-        ),
-      ),
-    );
-  }
-}
-
-class _ShapePreview extends CustomPainter {
-  _ShapePreview(this.shape);
-  final FcShape shape;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final (w, h) = fcDefaultSize(shape);
-    final s = (size.width / w) < (size.height / h) ? size.width / w : size.height / h;
-    canvas.save();
-    canvas.translate((size.width - w * s) / 2, (size.height - h * s) / 2);
-    canvas.scale(s);
-    paintFlowchart(canvas, FlowchartDiagram(nodes: [FcNode(id: 'p', shape: shape)]), shadows: false);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(_ShapePreview old) => old.shape != shape;
 }
 
 /// แผงขวาของแท็บ Flowchart: รูปแบบของสัญลักษณ์/เส้นที่เลือก หรือภาพรวม + ปัญหาของแผนภาพเมื่อไม่ได้เลือกอะไร

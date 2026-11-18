@@ -46,10 +46,85 @@ enum FcShape {
 
   /// เอกสาร (ขอบล่างเป็นคลื่น)
   document,
+
+  // ---- Phase 4: รูปทรงเพิ่มให้ครบชุด Flowchart ของ draw.io (เพิ่มท้าย enum เท่านั้น — ไฟล์เก็บเป็นชื่อ) ----
+
+  /// จุดต่อข้ามหน้า (off-page reference: ห้าเหลี่ยมชี้ลง)
+  offPage,
+
+  /// คำอธิบายประกอบ (annotation: วงเล็บเปิดด้านซ้าย ไม่มีกรอบ) — เป็นคำอธิบาย ไม่นับในกฎการไหล
+  annotation,
+
+  /// หลายเอกสาร (เอกสารซ้อนกันสามแผ่น)
+  multiDocument,
+
+  /// ข้อมูลเข้าถึงตรง (direct data: ทรงกระบอกนอน)
+  directData,
+
+  /// ข้อมูลที่จัดเก็บ (stored data: ซ้ายโค้งออก ขวาโค้งเข้า)
+  storedData,
+
+  /// หน่วยความจำภายใน (internal storage: สี่เหลี่ยมมีเส้นมุมซ้ายบน)
+  internalStorage,
+
+  /// ข้อมูลแบบลำดับ (sequential data / เทปแม่เหล็ก: วงกลมมีหาง)
+  sequentialData,
+
+  /// เทปกระดาษ (paper tape: ขอบบนล่างเป็นคลื่น)
+  paperTape,
+
+  /// บัตร (card: สี่เหลี่ยมตัดมุมซ้ายบน)
+  card,
+
+  /// ป้อนข้อมูลด้วยมือ (manual input: ขอบบนเอียง)
+  manualInput,
+
+  /// ทำงานด้วยมือ (manual operation: สี่เหลี่ยมคางหมูกลับหัว)
+  manualOperation,
+
+  /// รอ/หน่วงเวลา (delay: รูปตัว D)
+  delay,
+
+  /// แสดงผลบนจอ (display)
+  display,
+
+  /// ขอบเขตลูป (loop limit: ตัดมุมบนสองข้าง)
+  loopLimit,
+
+  /// ทำงานขนาน (parallel mode: เส้นขนานสองเส้น)
+  parallelMode,
+
+  /// รวบรวม (collate: สามเหลี่ยมสองอันชนยอด)
+  collate,
+
+  /// เรียงลำดับ (sort: ข้าวหลามตัดมีเส้นกลาง)
+  sort,
+
+  /// แยกออก (extract: สามเหลี่ยมชี้ขึ้น)
+  extract,
+
+  /// รวม (merge: สามเหลี่ยมชี้ลง)
+  merge,
+
+  /// จุดรวมผล (summing junction: วงกลมมีกากบาท)
+  summingJunction,
+
+  /// หรือ (or: วงกลมมีเครื่องหมายบวก)
+  or,
+
+  /// ส่งต่อ (transfer: ลูกศรใหญ่)
+  transfer,
 }
 
 /// สัญลักษณ์ที่เป็นคำอธิบาย ไม่ใช่ขั้นตอน (ข้ามในกฎการไหลและการจัดวางอัตโนมัติ)
-bool fcIsAnnotation(FcShape s) => s == FcShape.note || s == FcShape.text;
+bool fcIsAnnotation(FcShape s) => s == FcShape.note || s == FcShape.text || s == FcShape.annotation;
+
+/// รูปทรงที่ไม่มีพื้น/กรอบรอบรูป (วาดเฉพาะเส้นตกแต่ง เว้นแต่ผู้ใช้กำหนดสีพื้น/สีเส้นเอง)
+bool fcIsBare(FcShape s) => s == FcShape.text || s == FcShape.annotation || s == FcShape.parallelMode;
+
+/// รูปทรงที่เป็นสัญลักษณ์ล้วน ไม่ต้องมีข้อความก็ได้ (ไม่เตือน "ไม่มีข้อความ" และวางใหม่ด้วยข้อความว่าง)
+bool fcTextOptional(FcShape s) =>
+    s == FcShape.connector || s == FcShape.summingJunction || s == FcShape.or || s == FcShape.collate || s == FcShape.parallelMode;
 
 /// ขนาดเริ่มต้นของแต่ละรูปทรง
 (double, double) fcDefaultSize(FcShape s) => switch (s) {
@@ -63,6 +138,23 @@ bool fcIsAnnotation(FcShape s) => s == FcShape.note || s == FcShape.text;
       FcShape.hexagon => (160, 64),
       FcShape.cylinder => (110, 90),
       FcShape.document => (160, 70),
+      FcShape.offPage => (64, 70),
+      FcShape.annotation => (110, 70),
+      FcShape.multiDocument => (170, 84),
+      FcShape.directData || FcShape.storedData || FcShape.display || FcShape.loopLimit => (160, 64),
+      FcShape.internalStorage => (110, 90),
+      FcShape.sequentialData => (90, 90),
+      FcShape.paperTape => (160, 70),
+      FcShape.card => (130, 76),
+      FcShape.manualInput => (160, 70),
+      FcShape.manualOperation => (160, 64),
+      FcShape.delay => (140, 64),
+      FcShape.parallelMode => (160, 40),
+      FcShape.collate => (70, 84),
+      FcShape.sort => (90, 90),
+      FcShape.extract || FcShape.merge => (96, 72),
+      FcShape.summingJunction || FcShape.or => (52, 52),
+      FcShape.transfer => (140, 80),
     };
 
 /// สีประจำรูปทรง (ใช้เมื่อไม่ได้กำหนดสีเส้นเอง) — ใช้ร่วมกันทั้งบนจอ PNG และ SVG
@@ -81,6 +173,29 @@ const Map<FcShape, int> kFcShapeColors = {
   FcShape.hexagon: 0xFF0891B2,
   FcShape.cylinder: 0xFF65A30D,
   FcShape.document: 0xFFEA580C,
+  // รูปทรงใหม่ใช้สีเดิมตามหมวด (ไม่เพิ่มค่าสีใหม่): ข้อมูล = ส้มเอกสาร / เขียวทรงกระบอก, การทำงาน = ฟ้า/น้ำเงิน, ตัวดำเนินการ = ฟ้าหกเหลี่ยม
+  FcShape.offPage: 0xFF475569,
+  FcShape.annotation: 0xFF64748B,
+  FcShape.multiDocument: 0xFFEA580C,
+  FcShape.directData: 0xFF65A30D,
+  FcShape.storedData: 0xFF65A30D,
+  FcShape.internalStorage: 0xFF65A30D,
+  FcShape.sequentialData: 0xFF65A30D,
+  FcShape.paperTape: 0xFFEA580C,
+  FcShape.card: 0xFFEA580C,
+  FcShape.manualInput: 0xFF0D9488,
+  FcShape.manualOperation: 0xFF2563EB,
+  FcShape.delay: 0xFFD97706,
+  FcShape.display: 0xFF0D9488,
+  FcShape.loopLimit: 0xFF2563EB,
+  FcShape.parallelMode: 0xFF2563EB,
+  FcShape.collate: 0xFF0891B2,
+  FcShape.sort: 0xFF0891B2,
+  FcShape.extract: 0xFF0891B2,
+  FcShape.merge: 0xFF0891B2,
+  FcShape.summingJunction: 0xFF0891B2,
+  FcShape.or: 0xFF0891B2,
+  FcShape.transfer: 0xFF7C3AED,
 };
 
 const double kFcMinSide = 24;

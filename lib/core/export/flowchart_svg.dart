@@ -84,8 +84,8 @@ String? exportFlowchartSvg(FlowchartDiagram d, {bool dark = false, String title 
     final g = fcShapeGeom(n);
     final stroke = hexRgb(n.stroke ?? kFcShapeColors[n.shape]!);
     final path = _d(g.outline);
-    if (n.shape == FcShape.text) {
-      // ข้อความลอย: วาดพื้น/กรอบเฉพาะที่ผู้ใช้กำหนดเอง
+    if (fcIsBare(n.shape)) {
+      // ข้อความลอย / คำอธิบายประกอบ / ทำงานขนาน: วาดพื้น/กรอบเฉพาะที่ผู้ใช้กำหนดเอง (เส้นตกแต่งวาดด้านล่างเสมอ)
       if (n.fill != null) out.writeln('<path d="$path" fill="${hexRgb(n.fill!)}"/>');
       if (n.stroke != null) {
         out.writeln('<path d="$path" fill="none" stroke="$stroke" stroke-width="1.7" stroke-linejoin="round"${_dash(n.dash, 1.7)}/>');

@@ -376,7 +376,7 @@ void main() {
     }
 
     noThai();
-    expect(find.text('Shape library (10)'), findsOneWidget);
+    expect(find.text('Shape library (${FcShape.values.length})', findRichText: true), findsOneWidget);
     f.selectNode('b');
     await tester.pump();
     noThai();

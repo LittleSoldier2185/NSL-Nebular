@@ -217,16 +217,16 @@ void _paintNode(Canvas canvas, FcNode n, {required bool shadows, required bool h
   final g = fcShapeGeom(n);
   final outline = fcPath(g.outline);
   final accent = Color(fcStrokeColor(n));
-  if (n.shape == FcShape.text) {
-    // ข้อความลอย: ไม่มีพื้น/กรอบ เว้นแต่ผู้ใช้กำหนดสีพื้นหรือสีเส้นเอง
+  if (fcIsBare(n.shape)) {
+    // ข้อความลอย / คำอธิบายประกอบ / ทำงานขนาน: ไม่มีพื้น/กรอบ เว้นแต่ผู้ใช้กำหนดสีพื้นหรือสีเส้นเอง ; เส้นตกแต่งวาดเสมอ
     if (n.fill != null) canvas.drawPath(outline, Paint()..color = Color(n.fill!));
-    if (n.stroke != null) {
-      _strokePath(canvas, outline, Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.7
-        ..strokeJoin = StrokeJoin.round
-        ..color = accent, n.dash);
-    }
+    final line = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.7
+      ..strokeJoin = StrokeJoin.round
+      ..color = accent;
+    if (n.stroke != null) _strokePath(canvas, outline, line, n.dash);
+    if (g.details.isNotEmpty) _strokePath(canvas, fcPath(g.details), line, n.dash);
     _paintNodeText(canvas, n, hideText);
     return;
   }

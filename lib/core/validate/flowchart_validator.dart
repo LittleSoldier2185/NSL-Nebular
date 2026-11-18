@@ -97,7 +97,7 @@ List<Issue> validateFlowchart(FlowchartDiagram d) {
 
   for (final n in flowNodes) {
     final o = outs[n.id] ?? const <FcEdge>[];
-    if (n.text.trim().isEmpty && n.shape != FcShape.connector) {
+    if (n.text.trim().isEmpty && !fcTextOptional(n.shape)) {
       out.add(Issue(
         severity: Severity.warning,
         code: 'fc_empty_text',
@@ -139,8 +139,8 @@ List<Issue> validateFlowchart(FlowchartDiagram d) {
             ));
           }
         }
-      case FcShape.connector:
-        break; // จุดต่อ (ไปหน้าอื่น) เป็นทางตันได้
+      case FcShape.connector || FcShape.offPage:
+        break; // จุดต่อ (ในหน้า/ข้ามหน้า) เป็นทางตันได้
       default:
         if (o.isEmpty) {
           out.add(Issue(
@@ -173,4 +173,65 @@ String fcShapeLabel(FcShape s) => switch (s) {
       FcShape.hexagon => tr('หกเหลี่ยม'),
       FcShape.cylinder => tr('ทรงกระบอก (ฐานข้อมูล)'),
       FcShape.document => tr('เอกสาร@@fcshape'),
+      FcShape.offPage => tr('จุดต่อข้ามหน้า'),
+      FcShape.annotation => tr('คำอธิบายประกอบ'),
+      FcShape.multiDocument => tr('หลายเอกสาร'),
+      FcShape.directData => tr('ข้อมูลเข้าถึงตรง'),
+      FcShape.storedData => tr('ข้อมูลที่จัดเก็บ'),
+      FcShape.internalStorage => tr('หน่วยความจำภายใน'),
+      FcShape.sequentialData => tr('ข้อมูลแบบลำดับ (เทป)'),
+      FcShape.paperTape => tr('เทปกระดาษ'),
+      FcShape.card => tr('บัตร@@fcshape'),
+      FcShape.manualInput => tr('ป้อนข้อมูลด้วยมือ'),
+      FcShape.manualOperation => tr('ทำงานด้วยมือ'),
+      FcShape.delay => tr('รอ/หน่วงเวลา'),
+      FcShape.display => tr('แสดงผลบนจอ'),
+      FcShape.loopLimit => tr('ขอบเขตลูป'),
+      FcShape.parallelMode => tr('ทำงานขนาน'),
+      FcShape.collate => tr('รวบรวม@@fcshape'),
+      FcShape.sort => tr('เรียงลำดับ@@fcshape'),
+      FcShape.extract => tr('แยกออก@@fcshape'),
+      FcShape.merge => tr('รวม@@fcshape'),
+      FcShape.summingJunction => tr('จุดรวมผล'),
+      FcShape.or => tr('หรือ@@fcshape'),
+      FcShape.transfer => tr('ส่งต่อ@@fcshape'),
+    };
+
+/// ชื่อมาตรฐานภาษาอังกฤษของรูปทรง (ตามแถบ Flowchart ของ draw.io / ISO 5807) — ไม่แปล ใช้ค้นหาและแสดงในคลัง
+String fcShapeStdName(FcShape s) => switch (s) {
+      FcShape.start || FcShape.end => 'Terminator',
+      FcShape.process => 'Process',
+      FcShape.decision => 'Decision',
+      FcShape.io => 'Data',
+      FcShape.subroutine => 'Predefined Process',
+      FcShape.connector => 'On-page Reference',
+      FcShape.note => 'Note',
+      FcShape.rounded => 'Rounded',
+      FcShape.ellipse => 'Ellipse',
+      FcShape.text => 'Text',
+      FcShape.hexagon => 'Preparation',
+      FcShape.cylinder => 'Database',
+      FcShape.document => 'Document',
+      FcShape.offPage => 'Off-page Reference',
+      FcShape.annotation => 'Annotation',
+      FcShape.multiDocument => 'Multi-Document',
+      FcShape.directData => 'Direct Data',
+      FcShape.storedData => 'Stored Data',
+      FcShape.internalStorage => 'Internal Storage',
+      FcShape.sequentialData => 'Sequential Data',
+      FcShape.paperTape => 'Paper Tape',
+      FcShape.card => 'Card',
+      FcShape.manualInput => 'Manual Input',
+      FcShape.manualOperation => 'Manual Operation',
+      FcShape.delay => 'Delay',
+      FcShape.display => 'Display',
+      FcShape.loopLimit => 'Loop Limit',
+      FcShape.parallelMode => 'Parallel Mode',
+      FcShape.collate => 'Collate',
+      FcShape.sort => 'Sort',
+      FcShape.extract => 'Extract',
+      FcShape.merge => 'Merge',
+      FcShape.summingJunction => 'Summing Junction',
+      FcShape.or => 'Or',
+      FcShape.transfer => 'Transfer',
     };

@@ -32,6 +32,53 @@ double fcDocWave(FcNode n) => math.min(10, n.h * 0.15);
 /// ขนาดมุมพับของโน้ต
 double fcNoteFold(FcNode n) => math.min(16, math.min(n.w, n.h) * 0.3);
 
+/// ความสูงส่วนปลายแหลมของจุดต่อข้ามหน้า
+double fcOffPageTip(FcNode n) => math.min(n.h * 0.375, n.w * 0.5);
+
+/// ระยะเหลื่อมของแผ่นหลังในหลายเอกสาร
+double fcMultiDocStep(FcNode n) => math.min(8, math.min(n.w * 0.08, n.h * 0.1));
+
+/// รัศมีแนวนอนของปลายโค้ง (ทรงกระบอกนอน / ข้อมูลที่จัดเก็บ / แสดงผล)
+double fcSideCurve(FcNode n) => math.min(n.w * 0.15, n.h / 2);
+
+/// ระยะเส้นแบ่งของหน่วยความจำภายใน
+double fcStorageInset(FcNode n) => math.min(14, math.min(n.w * 0.15, n.h * 0.2));
+
+/// ขนาดมุมที่ตัด (บัตร / ขอบเขตลูป)
+double fcCornerCut(FcNode n) => math.min(18, math.min(n.w, n.h) * 0.25);
+
+/// ความเอียงขอบบนของการป้อนข้อมูลด้วยมือ
+double fcManualSlope(FcNode n) => n.h * 0.3;
+
+/// ความกว้างวงเล็บของคำอธิบายประกอบ
+double fcBracket(FcNode n) => math.min(16, n.w * 0.2);
+
+/// ส่วนโค้งด้านขวาแบบครึ่งวงรี (กว้าง [rx]) : ปกติจาก (r - rx, y) โค้งออกขวาถึง (r - rx, b) ;
+/// [inward] = จาก (r, y) โค้งเข้าทางซ้ายถึง (r, b)
+List<FcCmd> _rightCap(double r, double y, double b, double rx, {bool inward = false}) {
+  final cy = (y + b) / 2, ry = (b - y) / 2;
+  if (inward) {
+    return [
+      ('C', [(r - rx * _k, y), (r - rx, cy - ry * _k), (r - rx, cy)]),
+      ('C', [(r - rx, cy + ry * _k), (r - rx * _k, b), (r, b)]),
+    ];
+  }
+  final x0 = r - rx;
+  return [
+    ('C', [(x0 + rx * _k, y), (r, cy - ry * _k), (r, cy)]),
+    ('C', [(r, cy + ry * _k), (x0 + rx * _k, b), (x0, b)]),
+  ];
+}
+
+/// ส่วนโค้งด้านซ้ายแบบครึ่งวงรี จาก (x + rx, b) โค้งออกซ้ายขึ้นไปถึง (x + rx, y)
+List<FcCmd> _leftCap(double x, double y, double b, double rx) {
+  final cy = (y + b) / 2, ry = (b - y) / 2, x0 = x + rx;
+  return [
+    ('C', [(x0 - rx * _k, b), (x, cy + ry * _k), (x, cy)]),
+    ('C', [(x, cy - ry * _k), (x0 - rx * _k, y), (x0, y)]),
+  ];
+}
+
 List<FcCmd> _ellipse(double x, double y, double w, double h) {
   final rx = w / 2, ry = h / 2, cx = x + rx, cy = y + ry;
   return [
@@ -128,6 +175,158 @@ FcShapeGeom fcShapeGeom(FcNode n) {
         ('L', [(r - f, y + f)]),
         ('L', [(r, y + f)]),
       ]);
+    case FcShape.offPage:
+      final t = fcOffPageTip(n);
+      return FcShapeGeom(_poly([(x, y), (r, y), (r, b - t), (n.cx, b), (x, b - t)]), const []);
+    case FcShape.annotation:
+      final k = fcBracket(n);
+      return FcShapeGeom(_poly([(x, y), (r, y), (r, b), (x, b)]), [
+        ('M', [(x + k, y)]),
+        ('L', [(x, y)]),
+        ('L', [(x, b)]),
+        ('L', [(x + k, b)]),
+      ]);
+    case FcShape.multiDocument:
+      final o = fcMultiDocStep(n), a = math.min(fcDocWave(n), (h - 2 * o) * 0.15), fw = w - 2 * o;
+      return FcShapeGeom([
+        ('M', [(x + 2 * o, y)]),
+        ('L', [(r, y)]),
+        ('L', [(r, b - 2 * o)]),
+        ('L', [(r - o, b - 2 * o)]),
+        ('L', [(r - o, b - o)]),
+        ('L', [(r - 2 * o, b - o)]),
+        ('L', [(r - 2 * o, b - a)]),
+        ('C', [(r - 2 * o - fw * 0.33, b - a * 3), (x + fw * 0.33, b + a), (x, b - a)]),
+        ('L', [(x, y + 2 * o)]),
+        ('L', [(x + o, y + 2 * o)]),
+        ('L', [(x + o, y + o)]),
+        ('L', [(x + 2 * o, y + o)]),
+        ('Z', const []),
+      ], [
+        ('M', [(x, y + 2 * o)]),
+        ('L', [(r - 2 * o, y + 2 * o)]),
+        ('L', [(r - 2 * o, b - o)]),
+        ('M', [(x + o, y + o)]),
+        ('L', [(r - o, y + o)]),
+        ('L', [(r - o, b - 2 * o)]),
+      ]);
+    case FcShape.directData:
+      final c = fcSideCurve(n);
+      return FcShapeGeom([
+        ('M', [(x + c, y)]),
+        ('L', [(r - c, y)]),
+        ..._rightCap(r, y, b, c),
+        ('L', [(x + c, b)]),
+        ..._leftCap(x, y, b, c),
+        ('Z', const []),
+      ], [
+        ('M', [(r - c, y)]),
+        ..._rightCap(r - c, y, b, c, inward: true),
+      ]);
+    case FcShape.storedData:
+      final c = fcSideCurve(n);
+      return FcShapeGeom([
+        ('M', [(x + c, y)]),
+        ('L', [(r, y)]),
+        ..._rightCap(r, y, b, c, inward: true),
+        ('L', [(x + c, b)]),
+        ..._leftCap(x, y, b, c),
+        ('Z', const []),
+      ], const []);
+    case FcShape.internalStorage:
+      final i = fcStorageInset(n);
+      return FcShapeGeom(_poly([(x, y), (r, y), (r, b), (x, b)]), [
+        ('M', [(x + i, y)]),
+        ('L', [(x + i, b)]),
+        ('M', [(x, y + i)]),
+        ('L', [(r, y + i)]),
+      ]);
+    case FcShape.sequentialData:
+      final d = math.min(w, h);
+      return FcShapeGeom(_ellipse(n.cx - d / 2, n.cy - d / 2, d, d), [
+        ('M', [(n.cx, n.cy + d / 2)]),
+        ('L', [(r, n.cy + d / 2)]),
+      ]);
+    case FcShape.paperTape:
+      final a = fcDocWave(n);
+      return FcShapeGeom([
+        ('M', [(x, y + a)]),
+        ('C', [(x + w * 0.33, y + a * 3), (x + w * 0.67, y - a), (r, y + a)]),
+        ('L', [(r, b - a)]),
+        ('C', [(r - w * 0.33, b - a * 3), (x + w * 0.33, b + a), (x, b - a)]),
+        ('Z', const []),
+      ], const []);
+    case FcShape.card:
+      final c = fcCornerCut(n);
+      return FcShapeGeom(_poly([(x + c, y), (r, y), (r, b), (x, b), (x, y + c)]), const []);
+    case FcShape.manualInput:
+      return FcShapeGeom(_poly([(x, y + fcManualSlope(n)), (r, y), (r, b), (x, b)]), const []);
+    case FcShape.manualOperation:
+      final s = fcIoSkew(n);
+      return FcShapeGeom(_poly([(x, y), (r, y), (r - s, b), (x + s, b)]), const []);
+    case FcShape.delay:
+      final c = math.min(w / 2, h / 2);
+      return FcShapeGeom([
+        ('M', [(x, y)]),
+        ('L', [(r - c, y)]),
+        ..._rightCap(r, y, b, c),
+        ('L', [(x, b)]),
+        ('Z', const []),
+      ], const []);
+    case FcShape.display:
+      final c = fcSideCurve(n), p = math.min(w * 0.15, h * 0.5);
+      return FcShapeGeom([
+        ('M', [(x, n.cy)]),
+        ('L', [(x + p, y)]),
+        ('L', [(r - c, y)]),
+        ..._rightCap(r, y, b, c),
+        ('L', [(x + p, b)]),
+        ('Z', const []),
+      ], const []);
+    case FcShape.loopLimit:
+      final c = fcCornerCut(n);
+      return FcShapeGeom(_poly([(x + c, y), (r - c, y), (r, y + c), (r, b), (x, b), (x, y + c)]), const []);
+    case FcShape.parallelMode:
+      return FcShapeGeom(_poly([(x, y), (r, y), (r, b), (x, b)]), [
+        ('M', [(x, y)]),
+        ('L', [(r, y)]),
+        ('M', [(x, b)]),
+        ('L', [(r, b)]),
+      ]);
+    case FcShape.collate:
+      return FcShapeGeom([
+        ..._poly([(x, y), (r, y), (n.cx, n.cy)]),
+        ..._poly([(n.cx, n.cy), (r, b), (x, b)]),
+      ], const []);
+    case FcShape.sort:
+      return FcShapeGeom(_poly([(n.cx, y), (r, n.cy), (n.cx, b), (x, n.cy)]), [
+        ('M', [(x, n.cy)]),
+        ('L', [(r, n.cy)]),
+      ]);
+    case FcShape.extract:
+      return FcShapeGeom(_poly([(n.cx, y), (r, b), (x, b)]), const []);
+    case FcShape.merge:
+      return FcShapeGeom(_poly([(x, y), (r, y), (n.cx, b)]), const []);
+    case FcShape.summingJunction:
+      final dx = w / 2 * 0.7071, dy = h / 2 * 0.7071;
+      return FcShapeGeom(_ellipse(x, y, w, h), [
+        ('M', [(n.cx - dx, n.cy - dy)]),
+        ('L', [(n.cx + dx, n.cy + dy)]),
+        ('M', [(n.cx + dx, n.cy - dy)]),
+        ('L', [(n.cx - dx, n.cy + dy)]),
+      ]);
+    case FcShape.or:
+      return FcShapeGeom(_ellipse(x, y, w, h), [
+        ('M', [(n.cx, y)]),
+        ('L', [(n.cx, b)]),
+        ('M', [(x, n.cy)]),
+        ('L', [(r, n.cy)]),
+      ]);
+    case FcShape.transfer:
+      final head = math.min(w * 0.4, h * 0.6), band = h * 0.2;
+      return FcShapeGeom(
+          _poly([(x, y + band), (r - head, y + band), (r - head, y), (r, n.cy), (r - head, b), (r - head, b - band), (x, b - band)]),
+          const []);
   }
 }
 
@@ -144,6 +343,22 @@ FcShapeGeom fcShapeGeom(FcNode n) {
     FcShape.cylinder => (8.0, fcCylinderCap(n) * 2 + 2, 8.0, fcCylinderCap(n) + 4),
     FcShape.document => (10.0, 6.0, 10.0, fcDocWave(n) * 2 + 4),
     FcShape.text => (4.0, 2.0, 4.0, 2.0),
+    FcShape.offPage => (6.0, 4.0, 6.0, fcOffPageTip(n) * 0.7),
+    FcShape.annotation => (fcBracket(n) * 0.5 + 6, 4.0, 4.0, 4.0),
+    FcShape.multiDocument => (8.0, fcMultiDocStep(n) * 2 + 4, fcMultiDocStep(n) * 2 + 8, fcDocWave(n) * 2 + 4),
+    FcShape.directData => (fcSideCurve(n) + 4, 4.0, fcSideCurve(n) * 1.6 + 4, 4.0),
+    FcShape.storedData || FcShape.display => (fcSideCurve(n) + 4, 4.0, fcSideCurve(n) + 4, 4.0),
+    FcShape.delay => (8.0, 4.0, math.min(n.w, n.h) / 4 + 4, 4.0),
+    FcShape.internalStorage => (fcStorageInset(n) + 6, fcStorageInset(n) + 4, 6.0, 4.0),
+    FcShape.sequentialData => (n.w * 0.18, n.h * 0.18, n.w * 0.18, n.h * 0.18),
+    FcShape.paperTape => (8.0, fcDocWave(n) * 2 + 2, 8.0, fcDocWave(n) * 2 + 2),
+    FcShape.manualInput => (8.0, fcManualSlope(n) * 0.6 + 2, 8.0, 4.0),
+    FcShape.manualOperation => (fcIoSkew(n) * 0.75 + 4, 4.0, fcIoSkew(n) * 0.75 + 4, 4.0),
+    FcShape.sort => (n.w * 0.2, n.h * 0.18, n.w * 0.2, n.h * 0.18),
+    FcShape.extract => (n.w * 0.25, n.h * 0.4, n.w * 0.25, 4.0),
+    FcShape.merge => (n.w * 0.25, 4.0, n.w * 0.25, n.h * 0.4),
+    FcShape.summingJunction || FcShape.or => (n.w * 0.14, n.h * 0.14, n.w * 0.14, n.h * 0.14),
+    FcShape.transfer => (8.0, n.h * 0.2 + 2, math.min(n.w * 0.4, n.h * 0.6) * 0.5 + 4, n.h * 0.2 + 2),
     _ => (10.0, 6.0, 10.0, 6.0),
   };
   return (left: n.x + l, top: n.y + t, width: math.max(4, n.w - l - rr), height: math.max(4, n.h - t - bb));
@@ -156,9 +371,12 @@ bool fcNodeContains(FcNode n, double x, double y, {double tol = 0}) {
     case FcShape.decision:
       final dx = (x - n.cx).abs() / (n.w / 2 + tol), dy = (y - n.cy).abs() / (n.h / 2 + tol);
       return dx + dy <= 1;
-    case FcShape.ellipse || FcShape.connector:
+    case FcShape.ellipse || FcShape.connector || FcShape.summingJunction || FcShape.or:
       final dx = (x - n.cx) / (n.w / 2 + tol), dy = (y - n.cy) / (n.h / 2 + tol);
       return dx * dx + dy * dy <= 1;
+    case FcShape.sort:
+      final dx = (x - n.cx).abs() / (n.w / 2 + tol), dy = (y - n.cy).abs() / (n.h / 2 + tol);
+      return dx + dy <= 1;
     default:
       return true;
   }
@@ -170,10 +388,10 @@ RoutePoint fcSnapToOutline(FcNode n, RouteSide side, RoutePoint p) {
   final sign = (side == RouteSide.left || side == RouteSide.top) ? 1.0 : -1.0;
   double inset; // ระยะจากขอบกรอบเข้าไปถึงเส้นรอบรูป
   switch (n.shape) {
-    case FcShape.decision:
+    case FcShape.decision || FcShape.sort:
       final f = horizontal ? ((p.$2 - n.cy).abs() / (n.h / 2)) : ((p.$1 - n.cx).abs() / (n.w / 2));
       inset = (horizontal ? n.w / 2 : n.h / 2) * f.clamp(0.0, 1.0);
-    case FcShape.ellipse || FcShape.connector:
+    case FcShape.ellipse || FcShape.connector || FcShape.summingJunction || FcShape.or:
       final a = horizontal ? n.w / 2 : n.h / 2, bb = horizontal ? n.h / 2 : n.w / 2;
       final d = horizontal ? (p.$2 - n.cy) : (p.$1 - n.cx);
       final q = (d / bb).clamp(-1.0, 1.0);

@@ -233,7 +233,8 @@ class FlowchartController extends DocController with DiagramViewport {
   // ---------- สัญลักษณ์ ----------
 
   String _defaultText(FcShape s) => switch (s) {
-        FcShape.connector => '',
+        _ when fcTextOptional(s) => '',
+        FcShape.offPage => 'A',
         FcShape.decision => tr('เงื่อนไข?'),
         FcShape.io => tr('ข้อมูล'),
         _ => fcShapeLabel(s),
