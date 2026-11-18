@@ -91,14 +91,17 @@ class StatusBar extends StatelessWidget {
         const SizedBox(width: 5),
         Text(appVersionLabel, key: const ValueKey('status-version'), style: small.copyWith(fontWeight: FontWeight.w600, color: C.text)),
         sep(),
-        InkWell(
+        // หน้าต่างแคบ: ลิงก์นี้หดตัว (ตัดเป็น …) ก่อนรายการอื่น แทนที่แถบจะล้น
+        Flexible(child: InkWell(
           key: const ValueKey('status-whats-new'),
           borderRadius: BorderRadius.circular(4),
           onTap: () => showWhatsNew(context),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Text(tr('มีอะไรใหม่'), style: small.copyWith(color: C.primaryDark)),
+              Flexible(
+                child: Text(tr('มีอะไรใหม่'), maxLines: 1, overflow: TextOverflow.ellipsis, style: small.copyWith(color: C.primaryDark)),
+              ),
               if (settings.hasUnseenNotes(kAppVersion)) ...[
                 const SizedBox(width: 5),
                 Container(
@@ -110,7 +113,7 @@ class StatusBar extends StatelessWidget {
               ],
             ]),
           ),
-        ),
+        )),
         // หน้าต่างแคบ: ตัดส่วนนี้ออกก่อน ไม่บีบรายการอื่น (ปัญหา/ซูม/สถานะบันทึก)
         if (box.maxWidth >= kStatusDocsMinWidth) ...[
         sep(),

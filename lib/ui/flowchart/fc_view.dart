@@ -18,6 +18,7 @@ import '../canvas/dot_grid_painter.dart';
 import '../shortcuts.dart' show Cmd, shortcutText;
 import '../theme.dart';
 import 'fc_actions.dart';
+import 'fc_minimap.dart';
 import 'fc_painter.dart';
 
 /// รูปทรงในแถบเครื่องมือ/คลังสัญลักษณ์ ตามลำดับที่แสดง
@@ -488,8 +489,18 @@ class _FlowchartCanvasState extends State<FlowchartCanvas> {
                 ),
               if (cand.isNotEmpty)
                 IgnorePointer(child: Container(color: C.primary.withValues(alpha: 0.05))),
-              Positioned(top: 12, left: 0, right: 0, child: Center(child: _Toolbar(compact: size.width < 900))),
-              Positioned(right: 14, bottom: 14, child: _ZoomBar(size: size)),
+              Positioned(top: 12, left: 0, right: 0, child: Center(child: FittedBox(fit: BoxFit.scaleDown, child: _Toolbar(compact: size.width < 900)))),
+              Positioned(
+                right: 14,
+                bottom: 14,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                  if (size.width >= kFcMinimapMinCanvasWidth && size.height >= 360 && f.diagram.nodes.isNotEmpty) ...[
+                    FcMinimap(canvas: size),
+                    const SizedBox(height: 8),
+                  ],
+                  _ZoomBar(size: size),
+                ]),
+              ),
               if (f.diagram.nodes.isEmpty)
                 IgnorePointer(
                   child: Center(
