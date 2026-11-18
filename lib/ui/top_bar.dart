@@ -307,6 +307,7 @@ class TopBar extends StatelessWidget {
           ),
           _item(tr('หน้า Project Home'), '', () => context.read<WorkspaceController>().showHome()),
           _item(tr('พจนานุกรมข้อมูล'), '', () => context.read<WorkspaceController>().showDictionary()),
+          _item(tr('ประวัติเวอร์ชันและ Diff'), '', () => context.read<WorkspaceController>().showHistory()),
           _item(tr('แผงโน้ตและงานค้าง'), '', () => context.read<WorkspaceController>().showNotesPanel()),
           _item(tr('ซ่อน/แสดงหมุดโน้ตและงานค้าง'), 'Shift+N', () => context.read<WorkspaceController>().toggleNotePins()),
           _item(tr('ปัญหาทั้งโปรเจกต์…'), '', () => showWorkspaceIssues(context)),

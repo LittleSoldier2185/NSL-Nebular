@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -42,6 +43,7 @@ import '../core/validate/issue.dart';
 import 'canvas/canvas_controller.dart';
 import '../state/project_controller.dart';
 import '../core/l10n/l10n.dart';
+import '../state/version_history.dart';
 
 /// เปิด/บันทึก/โปรเจกต์ใหม่ พร้อมถามก่อนทิ้งงานที่ยังไม่บันทึก
 class FileActions {
@@ -651,9 +653,14 @@ class FileActions {
 
   static Future<bool> _write(BuildContext context, ProjectController c, String path) async {
     try {
+      final previous = c.workspaceController.filePath;
       await ProjectFile.save(c.workspaceController.workspace, path);
       c.workspaceController.markSaved(path);
-      if (context.mounted) noteRecent(context, c.workspaceController.workspace, path);
+      if (context.mounted) {
+        noteRecent(context, c.workspaceController.workspace, path);
+        // สำเนาอัตโนมัติในประวัติเวอร์ชัน — ล้มเหลวไม่ทำให้การบันทึกไฟล์ล้มเหลว
+        unawaited(context.read<VersionHistory>().onSaved(previous).catchError((_) {}));
+      }
       return true;
     } catch (e) {
       if (context.mounted) _toast(context, tr('บันทึกไม่ได้: {0}', [e]));

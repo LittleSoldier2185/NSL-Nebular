@@ -93,6 +93,15 @@ class ProjectController extends DocController {
   @protected
   void afterRestore() => _fixSelection();
 
+  /// แทนเนื้อหา ER ทั้งชุดด้วย [p] (สำเนาแยกขาด) — undo ขั้นเดียว ; ใช้ย้อน ER กลับไปเวอร์ชันเก่า
+  /// ชื่อ ER ในเนื้อหา (`Project.name`) คงชื่อปัจจุบันไว้ ไม่ให้ชื่อโปรเจกต์เปลี่ยนตามเวอร์ชันเก่า
+  void replaceContent(Project p) {
+    final copy = Project.fromContentJson(jsonDecode(jsonEncode(p.toContentJson())) as Map<String, dynamic>)..name = _project.name;
+    if (jsonEncode(copy.toContentJson()) == jsonEncode(_project.toContentJson())) return;
+    _edit(() => doc.content = copy);
+    _fixSelection();
+  }
+
   /// แก้ข้อมูลแบบมีประวัติ
   void _edit(void Function() change) {
     editWithHistory(() {

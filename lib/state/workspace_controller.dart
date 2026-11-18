@@ -24,7 +24,7 @@ import '../core/models/review_note.dart';
 /// การเพิ่ม/ลบ/เปลี่ยนชื่อ/ย้ายเอกสารและโฟลเดอร์ไม่เข้าประวัติ undo (undo เป็นของแต่ละเอกสาร)
 /// controller นี้แจ้งผู้ฟังทุกครั้งที่โครงสร้างเปลี่ยน และทุกครั้งที่ controller ของเอกสารใดแจ้ง
 /// หน้าที่แสดงในพื้นที่หลัก
-enum WorkspacePage { document, home, dictionary }
+enum WorkspacePage { document, home, dictionary, history }
 
 class WorkspaceController extends ChangeNotifier {
   WorkspaceController([Workspace? workspace]) : _workspace = workspace ?? Workspace.single(Project()) {
@@ -154,6 +154,9 @@ class WorkspaceController extends ChangeNotifier {
 
   /// แสดง/ซ่อนหน้า Project Home (ไม่แตะเอกสารหรือสถานะ dirty)
   void showHome([bool show = true]) => _showPage(WorkspacePage.home, show);
+
+  /// แสดง/ซ่อนหน้าประวัติเวอร์ชันและ Diff (ไม่แตะเอกสารหรือสถานะ dirty)
+  void showHistory([bool show = true]) => _showPage(WorkspacePage.history, show);
 
   /// แสดง/ซ่อนหน้าพจนานุกรมข้อมูล (ไม่แตะเอกสารหรือสถานะ dirty)
   void showDictionary([bool show = true]) => _showPage(WorkspacePage.dictionary, show);

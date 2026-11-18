@@ -39,6 +39,7 @@ import 'window_chrome.dart';
 import 'top_bar.dart';
 import 'notes_panel.dart';
 import 'dictionary_view.dart';
+import 'history_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, this.recovery, this.onRecoveryOffered});
@@ -196,6 +197,8 @@ class _HomePageState extends State<HomePage> {
                       ? const ProjectHomeView()
                       : page == WorkspacePage.dictionary
                       ? const DictionaryView()
+                      : page == WorkspacePage.history
+                      ? const HistoryView()
                       : isEr
                       ? Column(children: [
                           Expanded(child: KeyedSubtree(key: ValueKey('er-canvas-$docId'), child: _canvas)),

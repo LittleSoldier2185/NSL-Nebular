@@ -24,6 +24,8 @@ import 'ui/db_connect_dialog.dart';
 import 'ui/home_page.dart';
 import 'ui/window_chrome.dart';
 import 'ui/theme.dart';
+import 'core/storage/history_store.dart';
+import 'state/version_history.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,12 +33,14 @@ Future<void> main(List<String> args) async {
 
   // auto-save: ถ้าหาที่เก็บไม่ได้ก็ทำงานต่อโดยไม่มี auto-save (ไม่ให้แอปเปิดไม่ขึ้น)
   AutosaveStore? store;
+  HistoryStore? history;
   AutosaveInfo? recovery;
   AppSettings? settings;
   try {
     final dir = await getApplicationSupportDirectory();
     settings = AppSettings.load(File('${dir.path}${Platform.pathSeparator}settings.json'));
     store = FileAutosaveStore(Directory('${dir.path}${Platform.pathSeparator}autosave'));
+    history = HistoryStore(Directory('${dir.path}${Platform.pathSeparator}history'));
     DbConnectDialog.store = SavedConnectionStore(
       File('${dir.path}${Platform.pathSeparator}connections.json'),
       WindowsDpapiCodec.forPlatform(),
@@ -59,7 +63,7 @@ Future<void> main(List<String> args) async {
     break;
   }
   // หาที่เก็บไม่ได้ = ใช้ค่าเริ่มต้น (ไทย/สว่าง) โดยไม่ถามภาษา เพราะบันทึกคำตอบไม่ได้อยู่ดี
-  runApp(NslDevApp(autosave: store, recovery: recovery, settings: settings ?? AppSettings(lang: Lang.th), initialProject: initial, initialPath: initialPath, themes: await _openThemes(args), showStart: true));
+  runApp(NslDevApp(autosave: store, history: history, recovery: recovery, settings: settings ?? AppSettings(lang: Lang.th), initialProject: initial, initialPath: initialPath, themes: await _openThemes(args), showStart: true));
 }
 
 /// ที่เก็บธีมกลางของ NSL (ธีมที่ทำจาก NSL Palette แชร์กับแอปอื่น) — ล้มเหลวทุกกรณี = null = ใช้ธีมในตัว ไม่ให้แอปเปิดไม่ขึ้น
@@ -78,7 +82,7 @@ Future<NslThemeController?> _openThemes(List<String> args) async {
 }
 
 class NslDevApp extends StatefulWidget {
-  const NslDevApp({super.key, this.autosave, this.recovery, this.settings, this.initialProject, this.initialPath, this.themes, this.showStart = false});
+  const NslDevApp({super.key, this.autosave, this.history, this.recovery, this.settings, this.initialProject, this.initialPath, this.themes, this.showStart = false});
 
   /// ที่เก็บ/ตัวเลือกธีมกลางของ NSL (null = ใช้ธีมในตัว) — ธีมเปลี่ยนสดตามไฟล์ที่ NSL Palette หรือแอปอื่นเขียน
   final NslThemeController? themes;
@@ -96,6 +100,9 @@ class NslDevApp extends StatefulWidget {
   /// ที่เก็บ auto-save (null = ปิด auto-save)
   final AutosaveStore? autosave;
 
+  /// ที่เก็บประวัติเวอร์ชัน (null = ปิดประวัติเวอร์ชัน — เทสต์ส่วนใหญ่ไม่ส่ง)
+  final HistoryStore? history;
+
   /// งานค้างจากครั้งก่อนที่จะถามผู้ใช้ว่าจะกู้คืนไหม
   final AutosaveInfo? recovery;
 
@@ -107,6 +114,7 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
   late final AppSettings _settings = widget.settings ?? AppSettings(lang: Lang.th);
   bool _recoveryPending = true;
   late final WorkspaceController _workspace = WorkspaceController();
+  late final VersionHistory _versions = VersionHistory(widget.history, _workspace);
   late final CanvasController _canvas = CanvasController();
   late final AutosaveCoordinator? _autosave =
       widget.autosave == null ? null : AutosaveCoordinator(_workspace, widget.autosave!);
@@ -151,6 +159,7 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
     widget.themes?.removeListener(_onThemes);
     _workspace.removeListener(_onWorkspace);
     _autosave?.dispose();
+    _versions.dispose();
     _workspace.dispose();
     _canvas.dispose();
     super.dispose();
@@ -166,6 +175,7 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
       providers: [
         ChangeNotifierProvider.value(value: _settings),
         ChangeNotifierProvider.value(value: _workspace),
+        ChangeNotifierProvider.value(value: _versions),
         ChangeNotifierProvider.value(value: _canvas),
         Provider<AutosaveCoordinator?>.value(value: _autosave),
         ChangeNotifierProvider<NslThemeController?>.value(value: widget.themes),
