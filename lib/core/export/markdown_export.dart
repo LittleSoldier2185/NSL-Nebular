@@ -8,6 +8,7 @@ import '../validate/workspace_validator.dart';
 import 'workspace_summary.dart';
 import '../types/type_label.dart';
 import '../l10n/l10n.dart';
+import 'notes_export.dart';
 
 /// Data dictionary เป็น Markdown: ตาราง -> คอลัมน์ / FK ขาออก / FK ขาเข้า / INDEX
 /// ใช้ส่งงานหรือแปะใน README — ผลลัพธ์คงที่ ไม่มีวันที่
@@ -37,7 +38,7 @@ String exportDataDictionary(Project p) {
 /// Data dictionary ของทั้งโปรเจกต์: ภาพรวม (เอกสาร ตัวเลขสรุป ปัญหา) -> ER ทุกอัน -> DFD ทุกอัน
 /// โปรเจกต์ที่มี ER ชิ้นเดียวและไม่มีเอกสารอื่น = ผลลัพธ์เดียวกับ [exportDataDictionary] ทุกตัวอักษร
 String exportWorkspaceDictionary(Workspace w) {
-  if (isSingleErWorkspace(w)) return exportDataDictionary(knownDocs(w).first.er!);
+  if (isSingleErWorkspace(w)) return exportDataDictionary(knownDocs(w).first.er!) + notesMarkdown(w);
   // ER ทุกอันก่อน แล้ว DFD ทุกอัน (ตามลำดับเอกสารในแต่ละชนิด)
   final docs = [
     ...w.documentsOf(DocType.er),
@@ -116,6 +117,7 @@ String exportWorkspaceDictionary(Workspace w) {
       _dfd(b, w, d, [for (final i in issues) if (i.docId == d.id) i]);
     }
   }
+  b.write(notesMarkdown(w));
   return b.toString();
 }
 

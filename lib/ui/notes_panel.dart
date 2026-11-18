@@ -24,12 +24,6 @@ bool noteMatches(ReviewNote n, NoteFilter f) => switch (f) {
       NoteFilter.question => n.kind == NoteKind.question && !n.done,
     };
 
-String noteKindLabel(NoteKind k) => switch (k) {
-      NoteKind.todo => tr('ต้องทำ'),
-      NoteKind.question => tr('คำถาม'),
-      NoteKind.memo => tr('บันทึก@@note'),
-    };
-
 /// เลขหมุดของโน้ต [id] ในเอกสาร [doc] (นับเฉพาะที่ปักหมุด ตามลำดับที่เพิ่ม เริ่ม 1) ; ไม่ได้ปัก = null
 int? notePinNumber(ProjectDocument doc, String id) {
   var i = 0;

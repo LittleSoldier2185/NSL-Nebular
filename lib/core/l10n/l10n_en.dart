@@ -1348,4 +1348,7 @@ const Map<String, String> kEn = {
   'ปักหมุดบนแคนวาส…': 'Pin on canvas…',
   'เปิดแผงโน้ต': 'Open notes panel',
   'เพิ่มแล้วปักหมุดบนแคนวาส (คลิกตำแหน่งบนแคนวาส)': 'Add and pin on the canvas (click a spot on the canvas)',
+  'หมุด {0}': 'pin {0}',
+  '## โน้ตและงานค้าง': '## Notes & to-dos',
+  'ค้างอยู่ {0} รายการ': 'Open items: {0}',
 };

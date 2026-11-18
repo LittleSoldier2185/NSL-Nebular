@@ -14,6 +14,7 @@ import 'wireframe_svg.dart';
 import '../validate/screenflow_validator.dart' show sfKindLabel;
 import 'workspace_summary.dart';
 import 'svg_export.dart';
+import 'notes_export.dart';
 
 /// เอกสารโครงสร้างฐานข้อมูลเป็นไฟล์ HTML ไฟล์เดียว (CSS ฝังในไฟล์ ไม่มี JavaScript ไม่เรียกของภายนอก)
 /// - มีสารบัญ ภาพแผนภาพ ER (SVG ฝัง) แผนภาพ DFD และรายละเอียดทุกตาราง
@@ -136,6 +137,7 @@ String exportHtmlDocument(Workspace w, {bool includeDiagrams = true}) {
   for (final d in sfDocs) {
     _screenflow(b, w, d, [for (final i in issues) if (i.docId == d.id) i], includeDiagrams);
   }
+  b.write(notesHtml(w, _esc));
   b.writeln('<footer>${_esc(tr('สร้างโดย NSL Nebular'))}</footer>');
   b.writeln('</main>');
   b.writeln('</body>');

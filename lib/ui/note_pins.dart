@@ -5,7 +5,7 @@ import '../core/l10n/l10n.dart';
 import '../core/models/review_note.dart';
 import '../state/doc_controller.dart';
 import '../state/workspace_controller.dart';
-import 'notes_panel.dart' show NoteText, noteKindLabel, notePinNumber;
+import 'notes_panel.dart' show NoteText, notePinNumber;
 import 'theme.dart';
 
 /// เส้นผ่านศูนย์กลางของหมุดโน้ต (พิกเซลจอ — ไม่ย่อ/ขยายตามซูม)

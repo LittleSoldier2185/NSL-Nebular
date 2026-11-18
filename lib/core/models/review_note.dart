@@ -2,6 +2,8 @@
 /// (แยกจากโน้ตบนแคนวาส ER และรูปทรง "โน้ต" ของ Flowchart ซึ่งเป็นเนื้อหาของแผนภาพ)
 library;
 
+import '../l10n/l10n.dart';
+
 /// ชนิดของโน้ต
 enum NoteKind {
   /// ต้องทำ (มีสถานะเสร็จ/ยังไม่เสร็จ)
@@ -13,6 +15,13 @@ enum NoteKind {
   /// บันทึกทั่วไป
   memo,
 }
+
+/// ชื่อชนิดโน้ต (ตามภาษาที่เลือก)
+String noteKindLabel(NoteKind k) => switch (k) {
+      NoteKind.todo => tr('ต้องทำ'),
+      NoteKind.question => tr('คำถาม'),
+      NoteKind.memo => tr('บันทึก@@note'),
+    };
 
 class ReviewNote {
   ReviewNote({
