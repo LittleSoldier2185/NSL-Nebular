@@ -320,7 +320,7 @@ List<PaletteEntry> buildPaletteEntries(BuildContext context) {
           run: () => gotoScreenFlow(context, w.activeId, node: i.tableId, edge: i.relationId),
         ),
     if (w.activeDocument.type == DocType.flowchart)
-      for (final i in validateFlowchart(w.flowchartOf(w.activeId)))
+      for (final i in validateFlowchart(w.flowchartOf(w.activeId), workspace: w.workspace))
         PaletteEntry(
           kind: PaletteKind.issue,
           title: i.title,

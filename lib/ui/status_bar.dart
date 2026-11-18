@@ -74,7 +74,7 @@ class StatusBar extends StatelessWidget {
     } else if (w.activeDocument.type == DocType.flowchart) {
       final d = w.flowchartOf(w.activeId);
       summary = tr('{0} สัญลักษณ์ · {1} เส้นเชื่อม', [d.nodes.length, d.edges.length]);
-      issues = validateFlowchart(d);
+      issues = validateFlowchart(d, workspace: w.workspace);
       zoom = fc.scale;
     } else {
       final d = w.dfdOf(w.activeId);

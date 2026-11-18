@@ -3,12 +3,13 @@ import 'package:provider/provider.dart';
 
 import '../../core/l10n/l10n.dart';
 import '../../core/models/api_model.dart';
-import '../../core/models/review_note_refs.dart';
 import '../../core/models/workspace.dart';
 import '../../core/validate/api_validator.dart';
 import '../../state/api_controller.dart';
 import '../../state/workspace_controller.dart';
-import '../document_actions.dart' show DocTypeDot;
+import '../document_actions.dart' show DocTypeDot, linkOriginTitle;
+import '../notes_panel.dart' show gotoNoteTarget;
+import '../palette/command_palette.dart' show gotoScreenFlow;
 import '../issue_widgets.dart';
 import '../theme.dart';
 import '../widgets.dart';
@@ -547,6 +548,15 @@ class _Section extends StatelessWidget {
   );
 }
 
+/// ไปที่วัตถุต้นทางที่เรียก endpoint (เส้น Screen Flow ไปที่เส้น ; อื่น ๆ ไปที่วัตถุ)
+void _gotoCaller(BuildContext context, ProjectDocument src, String el) {
+  if (src.screenflow?.edgeById(el) != null) {
+    gotoScreenFlow(context, src.id, edge: el);
+  } else {
+    gotoNoteTarget(context, src.id, elementId: el);
+  }
+}
+
 /// บันทึกเอกสาร OpenAPI 3.1 (JSON) ของ [a] ลงไฟล์ที่ผู้ใช้เลือก
 Future<void> exportOpenApiFile(BuildContext context, ApiController a) {
   final w = context.read<WorkspaceController>();
@@ -640,21 +650,25 @@ class ApiRightPanel extends StatelessWidget {
             else
               for (final (fromDoc, fromEl) in callers)
                 if (w.workspace.documentById(fromDoc) case final src?)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      children: [
-                        DocTypeDot(src.type, size: 7),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            [src.name, ?noteAnchorLabel(src, fromEl)].join(' · '),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 12.5, color: C.text),
+                  InkWell(
+                    key: ValueKey('api-caller-$fromDoc-$fromEl'),
+                    onTap: () => _gotoCaller(context, src, fromEl),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          DocTypeDot(src.type, size: 7),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              [src.name, linkOriginTitle(src, fromEl)].join(' · '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 12.5, color: C.text),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
           ],

@@ -1476,4 +1476,13 @@ const Map<String, String> kEn = {
   'ล็อกอิน': 'Login',
   'ส่งออก OpenAPI': 'Export OpenAPI',
   'ส่งออก OpenAPI…': 'Export OpenAPI…',
+  'endpoint ที่ผูกไว้ถูกลบไปแล้ว': 'the linked endpoint was deleted',
+  '{0} → endpoint {1}': '{0} → endpoint {1}',
+  '{0}: {1} — เลือก endpoint ใหม่หรือเลิกผูก': '{0}: {1} — pick another endpoint or unlink',
+  'ยังไม่มีเอกสาร API — เพิ่มเอกสาร API ก่อนจึงผูก endpoint ได้': 'No API document yet — add one to link an endpoint',
+  'เรียก API': 'Calls API',
+  'เรียก endpoint ที่ไม่มีแล้ว': 'Calls a missing endpoint',
+  'เอกสาร API ที่ผูกไว้ถูกลบไปแล้ว': 'the linked API document was deleted',
+  'ไปที่ endpoint': 'Go to endpoint',
+  'ไม่เรียก API': 'No API call',
 };

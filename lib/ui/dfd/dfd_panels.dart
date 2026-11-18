@@ -14,6 +14,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'dfd_actions.dart';
 import 'dfd_painter.dart';
+import '../api/api_ref_picker.dart';
 
 IconData dfdKindIcon(DfdKind k) => switch (k) {
   DfdKind.entity => Icons.crop_square_rounded,
@@ -376,6 +377,10 @@ class _NodeProps extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         _Connections(node: node),
+        if (node.kind == DfdKind.process) ...[
+          const SizedBox(height: 14),
+          ApiRefPicker(value: node.api, onChanged: (r) => d.updateNode(node.id, (n) => n.api = r)),
+        ],
       ],
     );
   }

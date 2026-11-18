@@ -29,7 +29,7 @@ List<WorkspaceIssue> validateWorkspace(Workspace w) {
       case DocType.dfd:
         issues = validateDfd(doc.dfd!, workspace: w, diagramId: doc.id);
       case DocType.flowchart:
-        issues = validateFlowchart(doc.flowchart!);
+        issues = validateFlowchart(doc.flowchart!, workspace: w);
       case DocType.wireframe:
         issues = validateWireframe(doc.wireframe!, workspace: w);
       case DocType.screenflow:
@@ -71,6 +71,7 @@ const kCrossDocIssueCodes = {
   'sf_wireframe_missing',
   'api_table_missing',
   'api_column_missing',
+  'api_ref_missing',
 };
 
 /// เฉพาะปัญหาข้ามเอกสาร (ดู [kCrossDocIssueCodes]) ตามลำดับเดิม

@@ -28,7 +28,17 @@ String linkOriginTitle(ProjectDocument? src, String fromElement) {
   }
   if (src?.screenflow != null) {
     final n = src!.screenflow!.nodeById(fromElement);
-    return n == null ? tr('(ไม่มีชื่อ)') : sfNodeTitle(n);
+    if (n != null) return sfNodeTitle(n);
+    // เส้นการเปลี่ยนหน้า (อ้าง endpoint ได้): "จาก → ถึง"
+    final e = src.screenflow!.edgeById(fromElement);
+    if (e == null) return tr('(ไม่มีชื่อ)');
+    String t(String id) => src.screenflow!.nodeById(id) == null ? '?' : sfNodeTitle(src.screenflow!.nodeById(id)!);
+    return e.caption.isEmpty ? '${t(e.fromId)} → ${t(e.toId)}' : e.caption;
+  }
+  if (src?.flowchart != null) {
+    final n = src!.flowchart!.nodeById(fromElement);
+    final text = n?.text.trim().replaceAll(RegExp(r'\s+'), ' ') ?? '';
+    return text.isEmpty ? tr('(ไม่มีชื่อ)') : text;
   }
   final node = src?.dfd?.nodeById(fromElement);
   return node == null || node.title.isEmpty ? tr('(ไม่มีชื่อ)') : node.title;
@@ -162,6 +172,7 @@ List<String> brokenLinkLines(WorkspaceController c, String docId) {
               '${ref.subElementId == null ? '' : '.${table?.columnById(ref.subElementId!)?.name ?? ref.subElementId}'}',
         ]),
       DocRefKind.screenWireframe => tr('{0} → หน้าจอ Wireframe', [from]),
+      DocRefKind.apiEndpoint => tr('{0} → endpoint {1}', [from, target?.api?.endpointById(ref.elementId ?? '')?.title ?? '?']),
     });
   }
   return out;

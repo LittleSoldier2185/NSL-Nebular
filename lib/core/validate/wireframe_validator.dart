@@ -3,6 +3,7 @@ import '../layout/box_ops.dart';
 import '../models/wireframe_model.dart';
 import '../models/workspace.dart';
 import 'issue.dart';
+import 'api_ref_check.dart';
 
 /// ตรวจ Wireframe ([Issue.tableId] = id ชิ้นส่วน)
 ///
@@ -70,6 +71,10 @@ List<Issue> validateWireframe(WireframeDiagram d, {Workspace? workspace}) {
         tableId: c.id,
       ));
     }
+  }
+  for (final c in d.components) {
+    final i = apiRefIssue(workspace, c.api, wfComponentTitle(c), elementId: c.id);
+    if (i != null) out.add(i);
   }
   out.sort((a, b) => a.severity.index.compareTo(b.severity.index));
   return out;

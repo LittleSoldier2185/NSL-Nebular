@@ -1,3 +1,4 @@
+import 'api_ref.dart';
 import 'dfd_model.dart';
 import 'workspace.dart';
 
@@ -14,6 +15,9 @@ enum DocRefKind {
 
   /// หน้าจอใน Screen Flow ผูกกับเอกสาร Wireframe
   screenWireframe,
+
+  /// วัตถุในเอกสารอื่น (ชิ้นส่วน Wireframe / เส้น Screen Flow / วัตถุ DFD / สัญลักษณ์ Flowchart) เรียก endpoint ในเอกสาร API
+  apiEndpoint,
 }
 
 /// การอ้างอิงไปยังเอกสาร [docId] (และวัตถุ [elementId] ในเอกสารนั้น ถ้ามี)
@@ -65,6 +69,23 @@ class WorkspaceIndex {
       for (final n in d.screenflow?.nodes ?? const []) {
         final wf = n.wireframeId;
         if (wf != null) _add(d.id, n.id, DocRef(docId: wf, kind: DocRefKind.screenWireframe));
+      }
+      // ---- เรียก endpoint ของเอกสาร API ----
+      void api(String el, ApiRef? r) {
+        if (r != null) _add(d.id, el, DocRef(docId: r.docId, elementId: r.endpointId, kind: DocRefKind.apiEndpoint));
+      }
+
+      for (final c in d.wireframe?.components ?? const []) {
+        api(c.id, c.api);
+      }
+      for (final e in d.screenflow?.edges ?? const []) {
+        api(e.id, e.api);
+      }
+      for (final n in d.dfd?.nodes ?? const <DfdNode>[]) {
+        api(n.id, n.api);
+      }
+      for (final n in d.flowchart?.nodes ?? const []) {
+        api(n.id, n.api);
       }
     }
   }

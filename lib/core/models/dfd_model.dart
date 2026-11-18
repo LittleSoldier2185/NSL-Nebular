@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../layout/ortho_route.dart';
 import 'color_utils.dart';
 import 'workspace.dart';
+import 'api_ref.dart';
 
 /// ชนิดของวัตถุใน DFD
 enum DfdKind {
@@ -72,6 +73,9 @@ class DfdNode {
   /// ข้อความที่แสดง: "1.0 ชื่อ" / "D1 ชื่อ" / "ชื่อ"
   String get title => number.isEmpty ? name : (name.isEmpty ? number : '$number $name');
 
+  /// endpoint ในเอกสาร API ที่วัตถุนี้เรียกใช้ (null = ไม่ผูก)
+  ApiRef? api;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'kind': kind.name,
@@ -85,6 +89,7 @@ class DfdNode {
         if (tableId != null) 'table': tableId,
         if (tableId != null && tableDocId != null) 'tableDoc': tableDocId,
         if (childId != null) 'child': childId,
+        if (api != null) 'api': api!.toJson(),
       };
 
   /// ค่าผิดปกติ = null (ข้ามวัตถุนั้น) หรือใช้ค่าปลอดภัย (ขนาด/ตำแหน่ง)
@@ -115,7 +120,7 @@ class DfdNode {
           ? j['tableDoc'] as String
           : null,
       childId: kind == DfdKind.process && j['child'] is String && (j['child'] as String).isNotEmpty ? j['child'] as String : null,
-    );
+    )..api = ApiRef.tryFromJson(j['api']);
   }
 }
 

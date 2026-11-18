@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../layout/box_ops.dart';
 import 'color_utils.dart';
 import 'workspace.dart';
+import 'api_ref.dart';
 
 /// ชนิดของโหนดใน Screen Flow
 enum SfKind {
@@ -123,12 +124,16 @@ class SfEdge {
     return l.isEmpty ? '[$c]' : '$l [$c]';
   }
 
+  /// endpoint ในเอกสาร API ที่วัตถุนี้เรียกใช้ (null = ไม่ผูก)
+  ApiRef? api;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'from': fromId,
         'to': toId,
         'label': label,
         if (condition.isNotEmpty) 'condition': condition,
+        if (api != null) 'api': api!.toJson(),
       };
 
   static SfEdge? tryFromJson(Object? j) {
@@ -141,7 +146,7 @@ class SfEdge {
       toId: to,
       label: j['label'] is String ? j['label'] as String : '',
       condition: j['condition'] is String ? j['condition'] as String : '',
-    );
+    )..api = ApiRef.tryFromJson(j['api']);
   }
 }
 

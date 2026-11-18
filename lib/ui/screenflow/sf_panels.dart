@@ -18,6 +18,7 @@ import '../wireframe/wf_painter.dart' show kWfPalette;
 import '../wireframe/wf_panels.dart' show WireframeThumbnail;
 import 'sf_actions.dart';
 import 'sf_view.dart';
+import '../api/api_ref_picker.dart';
 
 /// แผงซ้ายของแท็บ Screen Flow: ชนิดโหนด (คลิก = เครื่องมือ / ลากไปวาง) + รายการหน้าจอและการเปลี่ยนหน้า
 class ScreenFlowLeftPanel extends StatefulWidget {
@@ -350,6 +351,8 @@ class _EdgeProps extends StatelessWidget {
         icon: const Icon(Icons.swap_horiz_rounded, size: 16),
         label: Text(tr('สลับทิศทาง')),
       ),
+      const SizedBox(height: 14),
+      ApiRefPicker(value: edge.api, onChanged: (r) => f.updateEdge(edge.id, (e) => e.api = r)),
     ]);
   }
 }

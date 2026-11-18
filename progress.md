@@ -141,7 +141,7 @@
 แผนเต็ม/ข้อจำกัด/ระบบสี/ข้อตัดสินใจที่ยังเปิดอยู่: `plan.md` · ดีไซน์: Artifact https://claude.ai/artifact/AfFCTth52Bgg8qnkfbmrqU
 ชื่อโปรแกรมคือ **NSL Nebular** (NSL Dev / NSL Modeler เป็นชื่อเก่า) · แอปออฟไลน์ ผู้ใช้คนเดียว (ไม่มี host)
 
-สถานะรวม: **Phase 0 เสร็จ · Phase 1 เสร็จเป็นส่วนใหญ่ (เหลือแถบบนพื้นเข้ม + แท็บแผงขวา) · Phase 2–3 เสร็จตามขอบเขตหลัก · Phase 4–7 เสร็จตามขอบเขต** — ยังไม่ได้ลองมือดูด้วยตาเลยสักหน้า ; ถัดไป Phase 8 (API Designer)
+สถานะรวม: **Phase 0 เสร็จ · Phase 1 เสร็จเป็นส่วนใหญ่ (เหลือแถบบนพื้นเข้ม + แท็บแผงขวา) · Phase 2–3 เสร็จตามขอบเขตหลัก · Phase 4–8 เสร็จตามขอบเขต** — ยังไม่ได้ลองมือดูด้วยตาเลยสักหน้า ; ถัดไป Phase 9 (Requirements และ Traceability)
 
 ### ฟีเจอร์
 | ฟีเจอร์ | ความสำคัญ | Phase |
@@ -274,7 +274,7 @@
 - [x] **บั๊กที่เจอจากเทสต์และแก้แล้ว:** แถว "ปัจจุบัน (ยังไม่บันทึก)" ล้นในเส้นเวลา
 - [x] ตรวจ: เทสต์ `version_history_test.dart` 10 ข้อ (ภาพ diff ตรงกับ `schema_diff`, เลขเวอร์ชัน, ย้ายประวัติตอนบันทึกครั้งแรก, ปิดได้เมื่อไม่มีที่เก็บ, ย้อน ER + undo, หน้าจอ: diff/รายการ/migration/ย้อน) ; เทสต์ทั้งชุด 1,736 ผ่าน
 - [ ] ยังไม่ทำ: diff แบบเห็นภาพของ DFD/Flowchart ฯลฯ (ตอนนี้บอกแค่ว่าเอกสารไหนเพิ่ม/แก้/ลบ) ; ลบ/เปลี่ยนชื่อเวอร์ชัน ; ย้อนทั้งโปรเจกต์
-#### Phase 8: API Designer — [~] กำลังทำ (เริ่ม 2026-11-18) ; แบ่ง 8a–c เอกสาร API + ผูก ER + ตัวตรวจ → 8d OpenAPI + export → 8e ลิงก์ย้อนจากเอกสารอื่น
+#### Phase 8: API Designer — [x] เสร็จตามขอบเขต (2026-11-18 ; 8a–c `0caa2e8` · 8d `2f3d540`) ; ยังไม่ได้ลองมือ/ดูด้วยตา
 - [x] **8a โมเดล + ไฟล์ + workspace:** `DocType.api` (ชนิดในไฟล์ `api` ; รุ่นก่อน Phase 8 เก็บเป็นชนิดที่ไม่รู้จักแล้วเขียนกลับครบ — มีเทสต์จำลอง) ; `lib/core/models/api_model.dart`: `ApiDocument` (ชื่อ/รุ่น/baseUrl/endpoints) → `ApiEndpoint` (method, path, summary, กลุ่ม — ว่าง = ส่วนแรกของ path, ต้องล็อกอิน, ตาราง ER ที่ผูก) → `ApiField` (ชื่อ/ชนิด JSON/บังคับ/คอลัมน์ ER ที่มา) + `ApiResponse` (รหัส/คำอธิบาย/ตัวอย่าง JSON)
   - ต่อทุกจุดที่ใช้ชนิดเอกสาร: codec, `ApiController` (`lib/state/api_controller.dart` — undo/redo, เลือก endpoint, เพิ่ม/แก้/ทำสำเนา/ลบ, ฟิลด์, response ; path จัดรูปแบบอัตโนมัติ ; แก้ที่ไม่เปลี่ยนอะไรไม่เข้าประวัติ), `currentApi` + Provider, แท็บ/Explorer (เมนูเพิ่ม + กลุ่ม), แถบไอคอน, Project Home (การ์ด API ; ลดความกว้างขั้นต่ำการ์ด 190 → 160 ให้ 6 ใบอยู่แถวเดียว), palette (เพิ่ม API + ค้น endpoint), แถบสถานะ, ทำสำเนาเอกสาร, แม่แบบ "ครบ" มี API, สี/จุด/ไอคอนประจำชนิด (token `docApi` มีใน Core ตั้งแต่ phase 0), หน้าต่างปัญหา (กดไป endpoint ; ตารางที่ยังไม่มี endpoint → ไปตารางใน ER)
   - หน้า API เป็นฟอร์ม ไม่มีแคนวาส: คีย์ลัดในแท็บ API ทำแค่ undo/redo/ลบ/ทำสำเนา endpoint + คำสั่งระดับไฟล์ (`AppActions._runApi`) — กันไม่ให้ไปแตะ ER ที่ซ่อนอยู่ ; "ส่งออกภาพ" บอกให้ใช้ OpenAPI ; จัดวางอัตโนมัติปิด ; ไม่มีหมุดโน้ต (โน้ตอยู่ในแผงโน้ต)
@@ -284,7 +284,11 @@
 - [x] **8d ส่งออก** (`lib/core/export/openapi_export.dart`): OpenAPI **3.1.0 แบบ JSON** — info/servers, paths (method ตัวเล็ก), operationId ไม่ซ้ำ (`getOrdersById`), tags จากกลุ่ม, path parameter, requestBody (properties ชนิดตามฟิลด์, required, คำอธิบายจากฟิลด์หรือคอมเมนต์คอลัมน์ ER), responses (คำอธิบายมาตรฐานเมื่อว่าง ; ตัวอย่าง JSON → ค่า, ไม่ใช่ JSON → ข้อความ ; ไม่มี response = `default`), security bearer เมื่อมี endpoint ที่ต้องล็อกอิน ; ปุ่ม "ส่งออก OpenAPI…" ในแผงขวา (ข้อมูล API) + command palette ; เอกสาร Markdown/HTML มีส่วน API (ตาราง endpoint) และอยู่ในภาพรวม/สารบัญ
   - YAML ยังไม่ทำ (ไม่มีไลบรารี YAML ในโปรเจกต์ ; JSON เป็น OpenAPI ที่ถูกต้องเท่ากัน)
   - เทสต์ `openapi_export_test.dart` 4 ข้อ ; เทสต์ทั้งชุด 1,754 ผ่าน
-- [ ] 8e ลิงก์ย้อน: Wireframe/Screen Flow/DFD/Flowchart อ้างถึง endpoint ได้ → "เรียกใช้จาก" ; ตรวจลิงก์ที่ขาด
+- [x] **8e ลิงก์ย้อน:** `ApiRef` (`lib/core/models/api_ref.dart` ; คีย์ `api` ในไฟล์) บน ชิ้นส่วน Wireframe / **เส้น** Screen Flow (ตามดีไซน์ "ตะกร้า → ยืนยันสั่งซื้อ") / วัตถุ DFD (เลือกได้ที่กระบวนการ) / สัญลักษณ์ Flowchart ; เลือกได้ในแผงขวาของแต่ละชนิดด้วย `ApiRefPicker` (+ ปุ่มไปที่ endpoint) ; ดัชนีลิงก์ `DocRefKind.apiEndpoint` → แผงขวา API "เรียกใช้จาก" (กดไปที่ต้นทาง ; เส้น Screen Flow ไปที่เส้น) และกล่องยืนยันลบเอกสาร API บอกลิงก์ที่จะขาด ; ตัวตรวจทั้ง 4 ชนิด `api_ref_missing` (endpoint/เอกสาร API ถูกลบ) = **ปัญหาข้ามเอกสาร** (`validateFlowchart` รับ `workspace` เพิ่ม)
+  - `linkOriginTitle` รู้จักเส้น Screen Flow และสัญลักษณ์ Flowchart แล้ว
+  - **ข้อจำกัด:** องค์ประกอบในเอกสารเหล่านี้ไม่เก็บคีย์ที่ไม่รู้จัก → **รุ่นก่อน Phase 8 เปิดแล้วบันทึกซ้ำ ลิงก์ `api` จะหาย** (ตัวเอกสาร API เองเก็บกลับครบ) ; ถ้าต้องการให้ครบ ต้องเพิ่ม `extra` ในทุกองค์ประกอบ (งานแยก)
+  - เทสต์ `api_links_test.dart` 5 ข้อ ; เทสต์ทั้งชุด 1,759 ผ่าน
+- [ ] ยังไม่ทำ/ต่างจากดีไซน์: ปุ่ม "ทดลองยิง (Mock)" (Phase 11) ; ส่งออก OpenAPI เป็น YAML ; ฟิลด์ซ้อน (items[] ของ array) แสดงแบบแบน ; parameter ชนิด query
 #### Phase 9: Requirements และ Traceability — [ ] ยังไม่เริ่ม
 - [ ] โมเดลความต้องการ · [ ] เมทริกซ์ + สรุป · [ ] สร้างเอกสารที่ผูกจากช่องว่าง
 #### Phase 10: Code Generation หลายเป้าหมาย — [ ] ยังไม่เริ่ม

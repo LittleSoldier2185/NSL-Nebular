@@ -3,6 +3,7 @@ import '../models/dfd_model.dart';
 import '../models/workspace.dart';
 import 'dfd_balance.dart';
 import 'issue.dart';
+import 'api_ref_check.dart';
 
 /// ตรวจแผนภาพ DFD ตามกฎพื้นฐาน (ใช้ [Issue] ตัวเดียวกับ ER: [Issue.tableId] เก็บ id ของวัตถุ, [Issue.relationId] เก็บ id ของ flow)
 ///
@@ -148,6 +149,10 @@ List<Issue> validateDfd(DfdDiagram d, {Workspace? workspace, String? diagramId})
           ));
         }
     }
+  }
+  for (final n in d.nodes) {
+    final x = apiRefIssue(workspace, n.api, n.title.isEmpty ? tr('(ไม่มีชื่อ)') : n.title, elementId: n.id);
+    if (x != null) out.add(x);
   }
   out.sort((a, b) => a.severity.index.compareTo(b.severity.index));
   return out;

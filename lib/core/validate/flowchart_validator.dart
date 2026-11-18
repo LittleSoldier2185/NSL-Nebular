@@ -1,6 +1,8 @@
 import '../l10n/l10n.dart';
 import '../models/flowchart_model.dart';
 import 'issue.dart';
+import 'api_ref_check.dart';
+import '../models/workspace.dart';
 
 /// ตรวจ Flowchart ตามกฎพื้นฐาน (ใช้ [Issue] ตัวเดียวกับ ER/DFD: [Issue.tableId] = id สัญลักษณ์, [Issue.relationId] = id เส้น)
 ///
@@ -8,7 +10,7 @@ import 'issue.dart';
 /// - warning: จุดเริ่มต้นมากกว่าหนึ่ง, สัญลักษณ์ที่ไปไม่ถึงจากจุดเริ่มต้น, การตัดสินใจที่มีทางออกน้อยกว่า 2 ทาง
 ///   หรือทางออกไม่มีป้าย, สัญลักษณ์ทางตัน (ไม่ใช่จุดสิ้นสุดแต่ไม่มีทางออก), จุดสิ้นสุดที่มีทางออก, เส้นวนเข้าตัวเอง, สัญลักษณ์ไม่มีข้อความ
 /// - โน้ตเป็นคำอธิบาย ไม่นับในกฎการไหล ; แผนภาพที่ไม่มีสัญลักษณ์ขั้นตอนเลย = ไม่มีปัญหา
-List<Issue> validateFlowchart(FlowchartDiagram d) {
+List<Issue> validateFlowchart(FlowchartDiagram d, {Workspace? workspace}) {
   final out = <Issue>[];
   final flowNodes = [for (final n in d.nodes) if (!fcIsAnnotation(n.shape)) n];
   if (flowNodes.isEmpty) return out;
@@ -152,6 +154,10 @@ List<Issue> validateFlowchart(FlowchartDiagram d) {
           ));
         }
     }
+  }
+  for (final n in d.nodes) {
+    final x = apiRefIssue(workspace, n.api, n.text.trim().isEmpty ? fcShapeLabel(n.shape) : n.text.trim(), elementId: n.id);
+    if (x != null) out.add(x);
   }
   out.sort((a, b) => a.severity.index.compareTo(b.severity.index));
   return out;

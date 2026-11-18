@@ -16,6 +16,7 @@ import '../widgets.dart';
 import 'wf_actions.dart';
 import 'wf_painter.dart';
 import 'wf_view.dart';
+import '../api/api_ref_picker.dart';
 
 /// แผงซ้ายของแท็บ Wireframe: คลังชิ้นส่วน (ค้นได้ คลิก = เลือกเครื่องมือ / ลากไปวาง) + รายการชิ้นส่วนบนหน้าจอ (ลูกในภาชนะเยื้องเข้า)
 class WireframeLeftPanel extends StatefulWidget {
@@ -421,6 +422,8 @@ class _ComponentProps extends StatelessWidget {
         _toggle('wf-front', Icons.flip_to_front_rounded, tr('นำขึ้นบนสุด'), false, () => f.reorder(front: true)),
         _toggle('wf-back', Icons.flip_to_back_rounded, tr('นำลงล่างสุด'), false, () => f.reorder(front: false)),
       ]),
+      const SizedBox(height: 14),
+      ApiRefPicker(value: c.api, onChanged: (r) => f.updateComponents([c.id], (x) => x.api = r)),
     ]);
   }
 }

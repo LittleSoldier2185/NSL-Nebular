@@ -15,6 +15,7 @@ import 'fc_actions.dart';
 import 'fc_library.dart';
 import 'fc_painter.dart';
 import 'fc_view.dart';
+import '../api/api_ref_picker.dart';
 
 /// ข้อความแสดงของสัญลักษณ์ในรายการ (บรรทัดเดียว)
 String fcNodeTitle(FcNode n) {
@@ -371,6 +372,8 @@ class _NodeProps extends StatelessWidget {
             ),
           ),
         ),
+      const SizedBox(height: 14),
+      ApiRefPicker(value: node.api, onChanged: (r) => f.updateNode(node.id, (n) => n.api = r)),
     ]);
   }
 }
@@ -562,7 +565,7 @@ class _Overview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final f = context.read<FlowchartController>();
-    final issues = validateFlowchart(diagram);
+    final issues = validateFlowchart(diagram, workspace: f.workspace.workspace);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('Flowchart', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       const SizedBox(height: 4),

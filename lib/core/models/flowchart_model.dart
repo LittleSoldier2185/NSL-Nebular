@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'color_utils.dart';
 import 'workspace.dart';
+import 'api_ref.dart';
 
 /// รูปทรงของสัญลักษณ์ใน Flowchart
 enum FcShape {
@@ -255,6 +256,9 @@ class FcNode {
   double get right => x + w;
   double get bottom => y + h;
 
+  /// endpoint ในเอกสาร API ที่ขั้นตอนนี้เรียกใช้ (null = ไม่ผูก)
+  ApiRef? api;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'shape': shape.name,
@@ -272,6 +276,7 @@ class FcNode {
         if (align != FcAlign.center) 'align': align.name,
         if (dash != FcDash.solid) 'dash': dash.name,
         if (group != null) 'group': group,
+        if (api != null) 'api': api!.toJson(),
       };
 
   /// ค่าผิดปกติ = null (ข้ามสัญลักษณ์นั้น) หรือใช้ค่าปลอดภัย
@@ -305,7 +310,7 @@ class FcNode {
       align: FcAlign.values.asNameMap()[j['align']] ?? FcAlign.center,
       dash: FcDash.values.asNameMap()[j['dash']] ?? FcDash.solid,
       group: j['group'] is String && (j['group'] as String).isNotEmpty ? j['group'] as String : null,
-    );
+    )..api = ApiRef.tryFromJson(j['api']);
   }
 }
 

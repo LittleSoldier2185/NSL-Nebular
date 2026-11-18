@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import '../layout/box_ops.dart';
 import 'color_utils.dart';
 import 'workspace.dart';
+import 'api_ref.dart';
 
 /// ชนิดของชิ้นส่วนบนหน้าจอ Wireframe (ลำดับ = ลำดับในคลังชิ้นส่วน)
 enum WfKind {
@@ -218,6 +219,9 @@ class WfComponent implements EditableBox {
   /// รายการ (บรรทัดที่ไม่ว่าง) ของข้อความ
   List<String> get items => [for (final l in text.split('\n')) if (l.trim().isNotEmpty) l.trim()];
 
+  /// endpoint ในเอกสาร API ที่วัตถุนี้เรียกใช้ (null = ไม่ผูก)
+  ApiRef? api;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'kind': kind.name,
@@ -238,6 +242,7 @@ class WfComponent implements EditableBox {
         if (checked) 'checked': true,
         if (secondary) 'secondary': true,
         if (ref != null) 'ref': ref!.toJson(),
+        if (api != null) 'api': api!.toJson(),
       };
 
   /// ค่าผิดปกติ = null (ข้ามชิ้นนั้น) หรือใช้ค่าปลอดภัย
@@ -279,7 +284,7 @@ class WfComponent implements EditableBox {
       checked: j['checked'] == true,
       secondary: j['secondary'] == true,
       ref: WfDataRef.tryFromJson(j['ref']),
-    );
+    )..api = ApiRef.tryFromJson(j['api']);
   }
 }
 

@@ -2,6 +2,7 @@ import '../l10n/l10n.dart';
 import '../models/screenflow_model.dart';
 import '../models/workspace.dart';
 import 'issue.dart';
+import 'api_ref_check.dart';
 
 /// ตรวจ Screen Flow ([Issue.tableId] = id โหนด, [Issue.relationId] = id เส้น)
 ///
@@ -90,6 +91,10 @@ List<Issue> validateScreenFlow(ScreenFlowDiagram d, {Workspace? workspace}) {
         tableId: n.id,
       ));
     }
+  }
+  for (final e in d.edges) {
+    final i = apiRefIssue(workspace, e.api, e.caption.isEmpty ? tr('เส้นการเปลี่ยนหน้า') : e.caption, edgeId: e.id);
+    if (i != null) out.add(i);
   }
   out.sort((a, b) => a.severity.index.compareTo(b.severity.index));
   return out;
