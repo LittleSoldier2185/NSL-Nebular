@@ -19,6 +19,8 @@ import 'wireframe_controller.dart';
 import '../core/models/review_note.dart';
 import '../core/models/api_model.dart';
 import 'api_controller.dart';
+import '../core/models/traceability.dart';
+import '../core/models/requirement.dart';
 
 /// ถือทั้งโปรเจกต์ ([Workspace]) ที่เปิดอยู่: ไฟล์ สถานะยังไม่บันทึก แท็บที่เปิด/แท็บที่ใช้งาน
 /// และ controller ของแต่ละเอกสาร (สร้างเมื่อใช้ครั้งแรก, ทิ้งเมื่อเอกสารถูกลบหรือเปิดโปรเจกต์ใหม่)
@@ -26,7 +28,7 @@ import 'api_controller.dart';
 /// การเพิ่ม/ลบ/เปลี่ยนชื่อ/ย้ายเอกสารและโฟลเดอร์ไม่เข้าประวัติ undo (undo เป็นของแต่ละเอกสาร)
 /// controller นี้แจ้งผู้ฟังทุกครั้งที่โครงสร้างเปลี่ยน และทุกครั้งที่ controller ของเอกสารใดแจ้ง
 /// หน้าที่แสดงในพื้นที่หลัก
-enum WorkspacePage { document, home, dictionary, history }
+enum WorkspacePage { document, home, dictionary, history, trace }
 
 class WorkspaceController extends ChangeNotifier {
   WorkspaceController([Workspace? workspace]) : _workspace = workspace ?? Workspace.single(Project()) {
@@ -156,6 +158,71 @@ class WorkspaceController extends ChangeNotifier {
 
   /// แสดง/ซ่อนหน้า Project Home (ไม่แตะเอกสารหรือสถานะ dirty)
   void showHome([bool show = true]) => _showPage(WorkspacePage.home, show);
+
+  /// แสดง/ซ่อนหน้าความต้องการและการไล่ตาม (ไม่แตะเอกสารหรือสถานะ dirty)
+  void showTrace([bool show = true]) => _showPage(WorkspacePage.trace, show);
+
+  // ---------- ความต้องการและการไล่ตาม (Phase 9) — ข้อมูลระดับโปรเจกต์ แก้แล้วนับเป็นการแก้โครงสร้าง (dirty ; ไม่มี undo) ----------
+
+  List<Requirement> get requirements => _workspace.requirements;
+
+  Requirement? requirementById(String id) {
+    for (final r in _workspace.requirements) {
+      if (r.id == id) return r;
+    }
+    return null;
+  }
+
+  /// เพิ่มความต้องการ (รหัสถัดไปอัตโนมัติ)
+  Requirement addRequirement({String text = '', ReqPriority priority = ReqPriority.medium}) {
+    final r = Requirement(id: newId('r'), code: nextRequirementCode(_workspace), text: text.trim(), priority: priority);
+    _workspace.requirements.add(r);
+    _structureChanged();
+    return r;
+  }
+
+  /// แก้ความต้องการ [id] ; คืน true ถ้ามีอยู่
+  bool updateRequirement(String id, void Function(Requirement r) change) {
+    final r = requirementById(id);
+    if (r == null) return false;
+    change(r);
+    _structureChanged();
+    return true;
+  }
+
+  bool deleteRequirement(String id) {
+    final before = _workspace.requirements.length;
+    _workspace.requirements.removeWhere((r) => r.id == id);
+    if (_workspace.requirements.length == before) return false;
+    _structureChanged();
+    return true;
+  }
+
+  /// สลับลิงก์ [link] ในช่อง [t] ของความต้องการ [reqId] (มี = เอาออก ; ไม่มี = เพิ่ม และยกเลิก "ไม่จำเป็น")
+  void toggleTraceLink(String reqId, DocType t, TraceLink link) => updateRequirement(reqId, (r) {
+        final c = r.cell(t);
+        if (!c.links.remove(link)) {
+          c.links.add(link);
+          c.notNeeded = false;
+        }
+      });
+
+  /// ตั้งช่อง [t] เป็น "ไม่จำเป็น" (ล้างลิงก์) หรือยกเลิก
+  void setTraceNotNeeded(String reqId, DocType t, bool v) => updateRequirement(reqId, (r) {
+        final c = r.cell(t);
+        c.notNeeded = v;
+        if (v) c.links.clear();
+      });
+
+  /// สร้างเอกสารชนิด [t] ใหม่ (ชื่อตามความต้องการ) ผูกกับความต้องการ [reqId] แล้วเปิด ; null = ไม่มีความต้องการนี้
+  ProjectDocument? createTracedDocument(String reqId, DocType t) {
+    final r = requirementById(reqId);
+    if (r == null) return null;
+    final base = r.text.trim().isEmpty ? r.code : r.text.trim();
+    final doc = addDocument(t, name: base.length > 40 ? base.substring(0, 40) : base);
+    if (doc != null) toggleTraceLink(reqId, t, TraceLink(doc.id));
+    return doc;
+  }
 
   /// แสดง/ซ่อนหน้าประวัติเวอร์ชันและ Diff (ไม่แตะเอกสารหรือสถานะ dirty)
   void showHistory([bool show = true]) => _showPage(WorkspacePage.history, show);

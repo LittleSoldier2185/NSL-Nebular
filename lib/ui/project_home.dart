@@ -174,7 +174,7 @@ class _Header extends StatelessWidget {
         ],
       ]),
     ]);
-    final buttons = Wrap(spacing: 10, runSpacing: 8, children: [
+    final buttons = Wrap(spacing: 10, runSpacing: 8, alignment: WrapAlignment.end, children: [
       OutlinedButton(
         key: const ValueKey('home-dictionary'),
         style: OutlinedButton.styleFrom(
@@ -202,6 +202,19 @@ class _Header extends StatelessWidget {
         child: Text(tr('ประวัติเวอร์ชัน'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
       ),
       OutlinedButton(
+        key: const ValueKey('home-trace'),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 38),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          foregroundColor: C.text,
+          backgroundColor: C.surface,
+          side: BorderSide(color: C.inputBorder),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        onPressed: w.showTrace,
+        child: Text(tr('ความต้องการ'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      ),
+      OutlinedButton(
         key: const ValueKey('home-export'),
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(0, 38),
@@ -217,13 +230,14 @@ class _Header extends StatelessWidget {
       _NewDocButton(w: w),
     ]);
     return LayoutBuilder(builder: (context, c) {
-      if (c.maxWidth < 600) {
+      // ปุ่มหลายปุ่ม (พจนานุกรม/ประวัติ/ความต้องการ/ส่งออก/เอกสารใหม่): แคบ = ใต้ชื่อ ; กว้าง = ทางขวาและขึ้นบรรทัดใหม่ได้
+      if (c.maxWidth < 900) {
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 12), buttons]);
       }
       return Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Expanded(child: title),
+        Expanded(flex: 5, child: title),
         const SizedBox(width: 16),
-        buttons,
+        Flexible(flex: 6, child: Align(alignment: Alignment.bottomRight, child: buttons)),
       ]);
     });
   }

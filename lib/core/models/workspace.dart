@@ -5,6 +5,7 @@ import 'flowchart_model.dart';
 import 'project.dart';
 import 'screenflow_model.dart';
 import 'wireframe_model.dart';
+import 'requirement.dart';
 import 'review_note.dart';
 
 /// ชนิดเอกสารที่โปรแกรมรู้จัก (ชนิดอื่นจากไฟล์รุ่นใหม่กว่าเก็บเป็น [RawDocContent] และเขียนกลับไม่เปลี่ยน)
@@ -148,10 +149,15 @@ class Workspace {
     List<DocFolder>? folders,
     List<ProjectDocument>? documents,
     List<Object?>? links,
+    List<Requirement>? requirements,
   })  : meta = meta ?? WorkspaceMeta(),
         folders = folders ?? [],
         documents = documents ?? [],
-        links = links ?? [];
+        links = links ?? [],
+        requirements = requirements ?? [];
+
+  /// ความต้องการและการไล่ตาม (Phase 9) — เก็บในไฟล์ที่ `meta.requirements` (รุ่นเก่าเก็บ meta ที่ไม่รู้จักกลับครบ)
+  final List<Requirement> requirements;
 
   String name;
   final WorkspaceMeta meta;
