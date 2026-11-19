@@ -1,20 +1,157 @@
 <!DOCTYPE html>
-<!-- สร้างโดย NSL Nebular จาก Wireframe "Cart Page" — โครงหน้า แก้ต่อได้ตามต้องการ -->
+<!-- สร้างโดย NSL Nebular จาก Wireframe "Cart Page" (1440×900 ร่าง) — วางตามแบบทุกชิ้น ; data-bind = ผูกข้อมูล ER, data-api = endpoint -->
 <html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cart Page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Itim&display=swap">
 <script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root {
+  --wf-surface: #FFFFFF; --wf-subtle: #F0F0F0; --wf-border: #3A3A3A;
+  --wf-text: #2B2B2B; --wf-muted: #8A8A8A; --wf-accent: #4A4A4A;
+  --wf-on-accent: #FFFFFF; --wf-tint: #E2E2E2; --wf-bw: 1.4px;
+  --wf-bar: #C8C8C8; --wf-line: #BDBDBD;
+}
+* { box-sizing: border-box; }
+body { margin: 0; padding: 16px; background: #F4F4F2; color: var(--wf-text); font-family: 'Itim', system-ui, sans-serif; }
+.wf-stage { margin: 0 auto; }
+.wf-page { position: relative; overflow: hidden; transform-origin: 0 0; background: var(--wf-surface); outline: var(--wf-bw) solid var(--wf-border); }
+.wf { position: absolute; margin: 0; padding: 0; line-height: 1.3; font: inherit; font-size: 14px; color: inherit; }
+.wf[hidden] { display: none; }
+.wf-off { opacity: .45; }
+.wf-para { white-space: pre-line; overflow: hidden; }
+.wf-t { display: flex; align-items: center; min-width: 0; }
+.wf-1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.wf-bar { display: inline-block; height: 6px; border-radius: 3px; background: var(--wf-bar); vertical-align: middle; }
+.wf-box { border: var(--wf-bw) solid var(--wf-border); border-radius: 4px; background: var(--wf-surface); }
+.wf-r6, .wf-acc { border-radius: 6px; }
+.wf-dashed { border-style: dashed; background: transparent; }
+.wf-cap { position: absolute; left: 8px; top: 4px; right: 8px; font-size: .85em; color: var(--wf-muted); }
+.wf-card { border: var(--wf-bw) solid var(--wf-border); border-radius: 8px; background: var(--wf-surface); }
+.wf-card > .wf-card-h { position: absolute; left: 12px; top: 8px; right: 12px; margin: 0; font-size: 1em; font-weight: 700; }
+.wf-btn { justify-content: center; padding: 0 6px; border: var(--wf-bw) solid var(--wf-accent); border-radius: 6px; background: #DADADA; color: var(--wf-on-accent); font-weight: 700; cursor: pointer; }
+.wf-btn-2 { background: var(--wf-surface); color: var(--wf-accent); }
+.wf-sketch .wf-btn { border: 2px solid var(--wf-border); color: var(--wf-text); }
+.wf-sketch .wf-btn-2 { border-width: var(--wf-bw); background: #FFFFFF; }
+.wf-field { border: var(--wf-bw) solid var(--wf-border); border-radius: 4px; background: var(--wf-surface); padding: 0 10px; color: var(--wf-text); }
+.wf-field::placeholder, .wf-field input::placeholder { color: var(--wf-muted); }
+textarea.wf-field { padding: 8px 10px; resize: none; }
+select.wf-field { appearance: none; padding-right: 28px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M.5.5l4.5 4.5L9.5.5' fill='none' stroke='%232B2B2B' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 11px center; }
+.wf-search { display: flex; align-items: center; gap: 8px; }
+.wf-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; color: inherit; }
+.wf-check { gap: 8px; cursor: pointer; }
+.wf-check input { width: 16px; height: 16px; margin: 0; flex: none; accent-color: var(--wf-accent); }
+.wf-check input[type=checkbox]:not(.wf-switch) { appearance: none; border: var(--wf-bw) solid var(--wf-border); border-radius: 3px; background: var(--wf-surface); display: grid; place-content: center; }
+.wf-check input[type=checkbox]:not(.wf-switch):checked { background: var(--wf-surface); border-color: var(--wf-border); }
+.wf-check input[type=checkbox]:not(.wf-switch):checked::after { content: ""; width: 8px; height: 4px; border: solid var(--wf-text); border-width: 0 0 2px 2px; transform: translateY(-1px) rotate(-45deg); }
+.wf-date { color: var(--wf-text); }
+.wf-date input { order: 0; }
+.wf-switch { appearance: none; width: 36px !important; height: 20px !important; border-radius: 10px; background: var(--wf-subtle); border: var(--wf-bw) solid var(--wf-border); position: relative; }
+.wf-switch::after { content: ""; position: absolute; left: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #FFFFFF; transition: left .15s; }
+.wf-switch:checked { background: #9A9A9A; border-color: var(--wf-border); }
+.wf-switch:checked::after { left: 18px; }
+.wf-range { accent-color: var(--wf-accent); }
+.wf-img { border: var(--wf-bw) solid var(--wf-border); background: #FFFFFF; overflow: hidden; }
+.wf-img svg, .wf-avatar svg, .wf-icon svg, .wf-video svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.wf-avatar { border: var(--wf-bw) solid var(--wf-border); border-radius: 50%; background: var(--wf-subtle); overflow: hidden; }
+.wf-icon { border-radius: 20%; background: var(--wf-subtle); }
+.wf-table-box { border: var(--wf-bw) solid var(--wf-border); border-radius: 4px; background: var(--wf-surface); overflow: hidden; }
+.wf-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.wf-table th { background: #EDEDED; text-align: left; font-weight: 700; padding: 0 8px; border-bottom: 1px solid var(--wf-border); }
+.wf-table td { padding: 0 8px; border-top: .8px solid var(--wf-line); }
+.wf-table tr > :not(:first-child) { border-left: .8px solid var(--wf-line); }
+.wf-table th, .wf-table td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wf-list { list-style: none; margin: 0; padding: 0; }
+.wf-list li { display: flex; align-items: center; gap: 10px; padding: 0 8px 0 11px; border-top: .8px solid var(--wf-line); }
+.wf-list li:first-child { border-top: 0; }
+.wf-list li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--wf-muted); flex: none; }
+.wf-tabs { display: flex; border-bottom: 1px solid var(--wf-border); }
+.wf-tabs a { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--wf-muted); text-decoration: none; border-bottom: 2.5px solid transparent; }
+.wf-tabs a.on { color: var(--wf-text); font-weight: 700; border-bottom-color: var(--wf-text); }
+.wf-nav, .wf-foot { border: var(--wf-bw) solid var(--wf-border); background: var(--wf-surface); }
+.wf-foot { background: var(--wf-subtle); color: var(--wf-muted); }
+.wf-brand { position: absolute; left: 16px; top: 0; bottom: 0; display: flex; align-items: center; font-weight: 700; max-width: 50%; }
+.wf-foot .wf-brand { font-weight: 400; }
+.wf-fake { position: absolute; top: 0; bottom: 0; right: 24px; display: flex; align-items: center; gap: 16px; }
+.wf-side { border: var(--wf-bw) solid var(--wf-border); background: var(--wf-subtle); padding: 12px 8px; }
+.wf-side a { display: flex; align-items: center; height: 30px; margin-bottom: 6px; padding: 0 10px; border-radius: 6px; color: inherit; text-decoration: none; }
+.wf-side a.on { background: #E0E0E0; color: inherit; font-weight: 700; }
+.wf-modal { border: 1.8px solid var(--wf-border); border-radius: 10px; background: var(--wf-surface); box-shadow: 3px 4px 0 rgba(0,0,0,.08); }
+.wf-modal-h { display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 16px; border-bottom: .8px solid var(--wf-border); font-weight: 700; }
+.wf-modal-h button { border: 0; background: none; color: var(--wf-muted); font-size: 18px; cursor: pointer; }
+.wf-badge { justify-content: center; padding: 0 4px; border-radius: 999px; background: #FFFFFF; color: var(--wf-text); font-weight: 700; border: var(--wf-bw) solid var(--wf-border); }
+.wf-pages { display: flex; align-items: center; gap: 4px; }
+.wf-pages a { display: flex; align-items: center; justify-content: center; border: var(--wf-bw) solid var(--wf-border); border-radius: 4px; color: inherit; text-decoration: none; background: var(--wf-surface); }
+.wf-pages a.on { background: #DADADA; border-color: var(--wf-border); color: inherit; }
+.wf-muted { color: var(--wf-muted); }
+.wf-link { color: var(--wf-text); text-decoration: underline; text-underline-offset: 3px; }
+.wf-chip { justify-content: space-between; gap: 4px; padding: 0 6px 0 10px; border: var(--wf-bw) solid var(--wf-border); border-radius: 999px; background: #FFFFFF; }
+.wf-chip button { border: 0; background: none; color: var(--wf-muted); cursor: pointer; padding: 0 4px; font-size: 1.1em; line-height: 1; }
+.wf-progress { display: flex; align-items: center; gap: 8px; }
+.wf-progress .track { flex: 1; height: 10px; border-radius: 5px; background: var(--wf-subtle); overflow: hidden; border: var(--wf-bw) solid var(--wf-border); background: #FFFFFF; }
+.wf-progress .fill { height: 100%; border-radius: 5px; background: #9A9A9A; }
+.wf-alert { gap: 10px; padding: 0 12px 0 14px; border: var(--wf-bw) solid var(--wf-border); border-left: 5px solid var(--wf-border); border-radius: 6px; background: #FFFFFF; }
+.wf-alert-i { flex: none; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; background: transparent; color: var(--wf-text); border: 1.4px solid var(--wf-border); }
+.wf-upload { flex-direction: column; justify-content: center; gap: 8px; border: var(--wf-bw) dashed var(--wf-border); border-radius: 8px; background: transparent; color: var(--wf-muted); text-align: center; cursor: pointer; padding: 0 12px; }
+.wf-steps { display: flex; list-style: none; margin: 0; padding: 0; }
+.wf-steps li { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; color: var(--wf-muted); font-size: .93em; }
+.wf-steps li span { width: 22px; height: 22px; border-radius: 50%; border: var(--wf-bw) solid var(--wf-border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; background: var(--wf-surface); }
+.wf-steps li.on { color: inherit; font-weight: 700; }
+.wf-steps li.on span { background: #9A9A9A; border-color: var(--wf-border); color: inherit; }
+.wf-stars { justify-content: space-around; color: #BDBDBD; }
+.wf-stars .off { color: transparent; -webkit-text-stroke: 1px var(--wf-border); }
+.wf-video { border: var(--wf-bw) solid var(--wf-border); border-radius: 4px; background: #FFFFFF; overflow: hidden; }
+.wf-acc details { border-top: .8px solid var(--wf-border); }
+.wf-acc details:first-child { border-top: 0; }
+.wf-acc summary { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; cursor: pointer; list-style: none; }
+.wf-acc details[open] summary { font-weight: 700; }
+.wf-acc summary::after { content: ""; width: 6px; height: 6px; border: solid var(--wf-text); border-width: 0 1.5px 1.5px 0; transform: rotate(-45deg); margin-right: 4px; }
+.wf-acc details[open] summary::after { transform: translateY(-2px) rotate(45deg); }
+.wf-acc .body { padding: 6px 14px 10px; display: flex; flex-direction: column; gap: 8px; }
+.wf-tip { justify-content: center; text-align: center; padding: 0 8px; border-radius: 6px; background: #FFFFFF; color: var(--wf-text); border: var(--wf-bw) solid var(--wf-border); }
+.wf-tip::after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -6px; border: 6px solid transparent; border-top-color: var(--wf-border); border-bottom: 0; }
+.wf-skel { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-content: start; }
+.wf-skel .c { border-radius: 50%; background: var(--wf-bar); grid-row: span 2; }
+.wf-skel .full { grid-column: 1 / -1; }
+.wf-cal { border: var(--wf-bw) solid var(--wf-border); border-radius: 8px; background: var(--wf-surface); padding: 0 8px; }
+.wf-cal-h { display: flex; align-items: center; justify-content: space-between; padding: 0 8px; font-weight: 700; }
+.wf-cal-g { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); text-align: center; }
+.wf-cal-g .d { color: var(--wf-muted); font-size: .85em; }
+.wf-cal-g .today { font-weight: 700; color: inherit; background: #DADADA; border-radius: 50%; }
+.wf-stat .l { position: absolute; left: 14px; top: 10px; right: 14px; color: var(--wf-muted); font-size: .85em; }
+.wf-stat .v { position: absolute; left: 14px; right: 14px; bottom: 8px; font-size: 2.1em; font-weight: 700; }
+.wf-tree { list-style: none; margin: 0; padding: 0; }
+.wf-tree li { display: flex; align-items: center; gap: 6px; }
+</style>
 </head>
-<body class="bg-slate-50 text-slate-900">
-<main class="mx-auto flex max-w-3xl flex-col gap-3 p-4">
-  <h1 class="text-2xl font-bold">ตะกร้าของฉัน</h1>
-  <ul class="divide-y rounded-lg border"><li class="p-3">สินค้า A</li><li class="p-3">สินค้า B</li></ul>
-  <input class="w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="โค้ดส่วนลด">
-  <label class="flex items-center gap-2"><input type="checkbox" checked> รับใบกำกับภาษี</label>
-  <button class="rounded-lg border border-slate-300 px-4 py-2 font-semibold">กลับ</button>
-  <button class="rounded-lg bg-teal-700 px-4 py-2 font-semibold text-white">สั่งซื้อ</button>
+<body class="wf-sketch">
+<div id="wf-stage" class="wf-stage" style="width:1440px;height:900px">
+<main id="wf-page" class="wf-page" style="width:1440px;height:900px">
+  <h1 class="wf wf-t" style="left:20px;top:20px;width:280px;height:40px;font-size:22px;font-weight:700;text-align:left;justify-content:flex-start;" data-wf="h"><span class="wf-1">ตะกร้าของฉัน</span></h1>
+  <div class="wf wf-box" style="left:20px;top:80px;width:260px;height:180px;" data-wf="l"><ul class="wf-list"><li style="height:44px"><span class="wf-1">สินค้า A</span></li><li style="height:44px"><span class="wf-1">สินค้า B</span></li><li style="height:44px"><span class="wf-bar" style="width:130px"></span></li></ul></div>
+  <input class="wf wf-field" style="left:20px;top:200px;width:240px;height:40px;text-align:left;" data-wf="q" type="text" placeholder="โค้ดส่วนลด">
+  <label class="wf wf-t wf-check" style="left:20px;top:260px;width:160px;height:24px;" data-wf="c"><input type="checkbox" checked><span class="wf-1">รับใบกำกับภาษี</span></label>
+  <button class="wf wf-t wf-btn" style="left:300px;top:320px;width:120px;height:40px;text-align:left;justify-content:flex-start;" data-wf="s" type="button"><span class="wf-1">สั่งซื้อ</span></button>
+  <button class="wf wf-t wf-btn wf-btn-2" style="left:20px;top:322px;width:120px;height:40px;text-align:left;justify-content:flex-start;" data-wf="b" type="button"><span class="wf-1">กลับ</span></button>
 </main>
+</div>
+<script>
+// หน้าต่างแคบกว่าแบบ = ย่อทั้งหน้าให้พอดีความกว้าง (คงสัดส่วนตามแบบ)
+(function () {
+  var stage = document.getElementById("wf-stage"), page = document.getElementById("wf-page");
+  var W = 1440, H = 900;
+  function fit() {
+    var k = Math.min(1, (document.documentElement.clientWidth - 32) / W);
+    page.style.transform = k < 1 ? "scale(" + k + ")" : "";
+    stage.style.width = W * k + "px";
+    stage.style.height = H * k + "px";
+  }
+  window.addEventListener("resize", fit);
+  fit();
+})();
+</script>
 </body>
 </html>

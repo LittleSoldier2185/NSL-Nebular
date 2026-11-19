@@ -194,18 +194,18 @@ void main() {
       String fl(WfKind k, {String? text}) => flutterScreen('Home', WireframeDiagram(components: [make(k, text: text)]));
       String ht(WfKind k, {String? text}) => htmlTailwindScreen('Home', WireframeDiagram(components: [make(k, text: text)]));
       expect(fl(WfKind.progress, text: '25%'), contains('LinearProgressIndicator(value: 0.25)'));
-      expect(ht(WfKind.progress, text: '25%'), contains('value="25"'));
+      expect(ht(WfKind.progress, text: '25%'), contains('aria-valuenow="25"'));
       expect(fl(WfKind.link), contains('TextButton'));
-      expect(ht(WfKind.link), contains('<a class="text-teal-700 underline"'));
+      expect(ht(WfKind.link), contains('<a class="wf wf-t wf-link"'));
       expect(fl(WfKind.stepper, text: 'a\nb'), contains('Stepper('));
       expect(ht(WfKind.stepper, text: 'a\nb'), contains('<ol'));
       expect(fl(WfKind.accordion, text: 'a\nb'), contains('ExpansionTile'));
       expect(ht(WfKind.accordion, text: 'a\nb'), contains('<details'));
       expect(fl(WfKind.calendar), contains('CalendarDatePicker'));
-      expect(ht(WfKind.datepicker), contains('type="date"'));
+      expect(ht(WfKind.datepicker), contains("this.type='date'"));
       expect(ht(WfKind.upload), contains('type="file"'));
       expect(fl(WfKind.tree, text: 'r\n  k'), contains('left: 16.0'));
-      expect(ht(WfKind.tree, text: 'r\n  k'), contains('margin-left:16px'));
+      expect(ht(WfKind.tree, text: 'r\n  k'), contains('padding-left:24px'));
       expect(fl(WfKind.stat, text: 'L\n5'), contains('headlineMedium'));
       // ข้อความที่มี $ ต้องไม่ทำให้โค้ดพัง
       expect(balanced(fl(WfKind.alert, text: r'ราคา $5 และ ${x}')), isTrue);

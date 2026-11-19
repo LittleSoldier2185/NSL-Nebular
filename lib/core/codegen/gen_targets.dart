@@ -125,7 +125,7 @@ GenResult generateFiles(Workspace w, Set<GenTarget> targets) {
       add(GenTarget.flutterScreen, d, 'lib/screens/${wfSlug[d.id]}_screen.dart', flutterScreen(d.name, d.wireframe!));
     }
     if (targets.contains(GenTarget.htmlTailwind)) {
-      add(GenTarget.htmlTailwind, d, 'web/${wfSlug[d.id]}.html', htmlTailwindScreen(d.name, d.wireframe!, lang: currentLang.code));
+      add(GenTarget.htmlTailwind, d, 'web/${wfSlug[d.id]}.html', htmlTailwindScreen(d.name, d.wireframe!, lang: currentLang.code, workspace: w));
     }
   }
   // controller ชื่อเดียวกันจากหลายเอกสาร API: ใช้ตัวแรก แจ้งเตือน
