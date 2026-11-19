@@ -18,7 +18,7 @@ import 'wf_painter.dart';
 import 'wf_view.dart';
 import '../api/api_ref_picker.dart';
 
-/// แผงซ้ายของแท็บ Wireframe: คลังชิ้นส่วน (ค้นได้ คลิก = เลือกเครื่องมือ / ลากไปวาง) + รายการชิ้นส่วนบนหน้าจอ (ลูกในภาชนะเยื้องเข้า)
+/// แผงซ้ายของแท็บ Wireframe: คลังชิ้นส่วน (ค้นได้ คลิก = เลือกเครื่องมือ / ลากไปวาง) ; รายการชิ้นส่วนบนหน้าจอ (เลเยอร์) อยู่ล่างสุดของแผงขวา
 class WireframeLeftPanel extends StatefulWidget {
   const WireframeLeftPanel({super.key});
 
@@ -31,22 +31,11 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
+    context.watch<WireframeController>(); // วาดใหม่เมื่อคลังเปลี่ยน
     final w = context.watch<WorkspaceController>();
     final q = _q.trim().toLowerCase();
     bool match(String s) => q.isEmpty || s.toLowerCase().contains(q);
     final kinds = [for (final k in kWfLibraryKinds) if (match('${wfKindLabel(k)} ${k.name}')) k];
-    final parents = wfParentMap(f.diagram);
-    int depth(String id) {
-      var d = 0;
-      for (var p = parents[id]; p != null && d < 20; p = parents[p]) {
-        d++;
-      }
-      return d;
-    }
-
-    final comps = [for (final c in f.diagram.components) if (match('${c.text} ${wfKindLabel(c.kind)}')) c];
-
     Widget section(String title, int n) => Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
           child: Text.rich(TextSpan(children: [
@@ -73,7 +62,7 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
                 key: const ValueKey('wf-search'),
                 decoration: InputDecoration(
                   isDense: true,
-                  hintText: tr('ค้นหาชิ้นส่วน / ข้อความ'),
+                  hintText: tr('ค้นหาชิ้นส่วน'),
                   prefixIcon: const Icon(Icons.search_rounded, size: 16),
                 ),
                 onChanged: (v) => setState(() => _q = v),
@@ -85,23 +74,6 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
             padding: const EdgeInsets.fromLTRB(10, 2, 10, 4),
             child: Wrap(spacing: 6, runSpacing: 6, children: [for (final k in kinds) _KindTile(kind: k)]),
           ),
-          section(tr('ชิ้นส่วนบนหน้าจอ'), comps.length),
-          for (final c in comps)
-            ListTile(
-              key: ValueKey('wf-item-${c.id}'),
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              contentPadding: EdgeInsets.only(left: 16.0 + depth(c.id) * 14, right: 12),
-              selected: f.selectedIds.contains(c.id),
-              leading: Icon(wfKindIcon(c.kind), size: 16, color: C.muted),
-              title: Text(c.text.trim().isEmpty ? wfKindLabel(c.kind) : c.text.trim().replaceAll(RegExp(r'\s+'), ' '),
-                  maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
-              trailing: c.ref == null ? null : Icon(Icons.storage_rounded, size: 14, color: C.muted),
-              onTap: () {
-                f.selectBox(c.id);
-                f.reveal(c.id, f.viewport);
-              },
-            ),
           const SizedBox(height: 16),
         ]),
       ),
@@ -162,15 +134,27 @@ class WireframeRightPanel extends StatelessWidget {
     final sel = f.selectedBox;
     final Widget body;
     if (sel != null) {
-      body = _ComponentProps(c: sel);
+      body = Padding(padding: const EdgeInsets.all(16), child: _ComponentProps(c: sel));
     } else if (f.selectedIds.length > 1) {
-      body = _MultiProps(ids: f.selectedIds);
+      body = Padding(padding: const EdgeInsets.all(16), child: _MultiProps(ids: f.selectedIds));
     } else {
       body = const _PageProps();
     }
-    return Container(
-      decoration: BoxDecoration(border: Border(left: BorderSide(color: C.border))),
-      child: Material(color: C.surface, child: SingleChildScrollView(padding: const EdgeInsets.all(16), child: body)),
+    // สูงเต็มคอลัมน์เสมอ (ไม่ใช่แค่ความสูงเนื้อหา) ; เลเยอร์อยู่ล่างสุดทุกสถานะ
+    return SizedBox.expand(
+      child: Container(
+        decoration: BoxDecoration(border: Border(left: BorderSide(color: C.border))),
+        child: Material(
+          color: C.surface,
+          child: SingleChildScrollView(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              body,
+              if (sel != null || f.selectedIds.length > 1) Divider(height: 1, color: C.border),
+              const _LayersFold(),
+            ]),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -482,7 +466,116 @@ class _MultiProps extends StatelessWidget {
   }
 }
 
-/// ตั้งค่าหน้าจอ (ขนาด/อุปกรณ์, รูปแบบการแสดงผล, สีเน้น) + ผลตรวจ
+/// ส่วนที่พับได้ของแผงขวา: หัว (ลูกศร + ชื่อ + สรุปค่าปัจจุบัน) คลิกแล้วกาง/พับ ; สถานะกาง/พับจำไว้ตลอดรอบที่เปิดโปรแกรม (สถานะมุมมอง ไม่บันทึกในไฟล์)
+class _Fold extends StatefulWidget {
+  const _Fold({
+    required this.id,
+    required this.title,
+    required this.child,
+    this.summary,
+    this.summaryColor,
+    this.initiallyOpen = false,
+  });
+  final String id;
+  final String title;
+  final String? summary;
+  final Color? summaryColor;
+  final bool initiallyOpen;
+  final Widget child;
+
+  static final Map<String, bool> _open = {};
+
+  @override
+  State<_Fold> createState() => _FoldState();
+}
+
+class _FoldState extends State<_Fold> {
+  bool get _isOpen => _Fold._open[widget.id] ?? widget.initiallyOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final open = _isOpen;
+    return Container(
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: C.border))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        InkWell(
+          key: ValueKey('${widget.id}-head'),
+          onTap: () => setState(() => _Fold._open[widget.id] = !open),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+            child: Row(children: [
+              Icon(open ? Icons.expand_more_rounded : Icons.chevron_right_rounded, size: 18, color: C.muted),
+              const SizedBox(width: 8),
+              Text(widget.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+              const SizedBox(width: 10),
+              if (widget.summary != null)
+                Expanded(
+                  child: Text(widget.summary!,
+                      textAlign: TextAlign.right,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: widget.summaryColor ?? C.muted)),
+                )
+              else
+                const Spacer(),
+            ]),
+          ),
+        ),
+        if (open) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: widget.child),
+      ]),
+    );
+  }
+}
+
+String _styleShort(WfStyle s) => s == WfStyle.sketch ? tr('ร่าง') : tr('เรียบร้อย');
+
+/// เลเยอร์: ชิ้นส่วนบนหน้าจอทั้งหมด (บนสุดก่อน ; ลูกในภาชนะเยื้องเข้า) — คลิก = เลือกและเลื่อนไปที่ชิ้นนั้น
+class _LayersFold extends StatelessWidget {
+  const _LayersFold();
+
+  @override
+  Widget build(BuildContext context) {
+    final f = context.watch<WireframeController>();
+    final parents = wfParentMap(f.diagram);
+    int depth(String id) {
+      var d = 0;
+      for (var p = parents[id]; p != null && d < 20; p = parents[p]) {
+        d++;
+      }
+      return d;
+    }
+
+    final comps = f.diagram.components.reversed.toList();
+    return _Fold(
+      id: 'wf-fold-layers',
+      title: tr('เลเยอร์'),
+      summary: '${comps.length}',
+      initiallyOpen: true,
+      child: comps.isEmpty
+          ? Text(tr('ยังไม่มีชิ้นส่วนบนหน้าจอ'), key: const ValueKey('wf-layers-empty'), style: TextStyle(fontSize: 12.5, color: C.muted))
+          : Column(children: [
+              for (final c in comps)
+                ListTile(
+                  key: ValueKey('wf-item-${c.id}'),
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  contentPadding: EdgeInsets.only(left: depth(c.id) * 14.0, right: 4),
+                  selected: f.selectedIds.contains(c.id),
+                  leading: Icon(wfKindIcon(c.kind), size: 16, color: C.muted),
+                  title: Text(c.text.trim().isEmpty ? wfKindLabel(c.kind) : c.text.trim().replaceAll(RegExp(r'\s+'), ' '),
+                      maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
+                  trailing: c.ref == null ? null : Icon(Icons.storage_rounded, size: 14, color: C.muted),
+                  onTap: () {
+                    f.selectBox(c.id);
+                    f.reveal(c.id, f.viewport);
+                  },
+                ),
+            ]),
+    );
+  }
+}
+
+/// ตั้งค่าหน้าจอ (ไม่ได้เลือกชิ้นส่วน): ภาพย่อ + ส่วนที่พับได้ (การแสดงผล / ขนาด / ตรวจสอบ / Screen Flow)
 class _PageProps extends StatelessWidget {
   const _PageProps();
 
@@ -494,82 +587,123 @@ class _PageProps extends StatelessWidget {
     final d = f.diagram;
     final issues = validateWireframe(d, workspace: w.workspace);
     final linked = screensLinkingTo(w.workspace, f.docId);
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(tr('หน้าจอ Wireframe'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-      const SizedBox(height: 4),
-      Text(tr('{0} ชิ้นส่วน', [d.components.length]), style: TextStyle(fontSize: 12.5, color: C.muted)),
-      const SizedBox(height: 12),
-      LabeledField(
-        label: tr('รูปแบบการแสดงผล'),
-        child: SegmentedButton<WfStyle>(
-          key: const ValueKey('wf-panel-style'),
-          showSelectedIcon: false,
-          segments: [
-            for (final s in WfStyle.values)
-              ButtonSegment(value: s, label: Text(wfStyleLabel(s), style: const TextStyle(fontSize: 12))),
-          ],
-          selected: {d.style},
-          onSelectionChanged: (s) => f.setStyle(s.first),
-        ),
+    final size = '${d.width.round()} × ${d.height.round()}';
+    final device = d.device == WfDevice.custom ? size : wfDeviceLabel(d.device);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      // หัว + ภาพย่อหน้าจอ
+      Container(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: C.border))),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            Expanded(
+              child: Text(w.activeDocument.name,
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+            ),
+            Text(tr('{0} ชิ้นส่วน', [d.components.length]), style: TextStyle(fontSize: 12.5, color: C.muted)),
+          ]),
+          const SizedBox(height: 10),
+          Container(
+            key: const ValueKey('wf-page-thumb'),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: C.bg, borderRadius: BorderRadius.circular(10), border: Border.all(color: C.border)),
+            child: WireframeThumbnail(diagram: d, height: 130),
+          ),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(child: Text('$size · $device', style: TextStyle(fontSize: 11.5, color: C.muted), overflow: TextOverflow.ellipsis)),
+            Text(_styleShort(d.style), style: TextStyle(fontSize: 11.5, color: C.primaryDark)),
+          ]),
+        ]),
       ),
-      const SizedBox(height: 12),
-      LabeledField(
-        label: tr('สีเน้น (accent)'),
-        child: ColorSwatchRow(
-          keyPrefix: 'wf-accent',
-          palette: kWfPalette.take(8).toList(),
-          current: d.accent,
-          allowDefault: false,
-          onPick: (v) {
-            if (v != null) f.setAccent(v);
-          },
-          onCustom: a.pickAccent,
-        ),
-      ),
-      if (d.style == WfStyle.sketch) ...[
-        const SizedBox(height: 4),
-        Text(tr('สีเน้นใช้เมื่อแสดงแบบเรียบร้อย'), style: TextStyle(fontSize: 11.5, color: C.muted)),
-      ],
-      const SizedBox(height: 12),
-      LabeledField(
-        label: tr('ขนาดหน้าจอ'),
-        child: KeyedSubtree(
-          key: const ValueKey('wf-device'),
-          child: Dropdown<WfDevice>(value: d.device, items: WfDevice.values, labelOf: wfDeviceLabel, onChanged: f.setDevice),
-        ),
-      ),
-      const SizedBox(height: 8),
-      Row(children: [
-        _numField('wf-frame-w', tr('กว้าง'), d.width, (v) => f.setFrameSize(v, d.height)),
-        const SizedBox(width: 8),
-        _numField('wf-frame-h', tr('สูง'), d.height, (v) => f.setFrameSize(d.width, v)),
-      ]),
-      if (linked.isNotEmpty) ...[
-        const SizedBox(height: 12),
-        Text(tr('ใช้ใน Screen Flow: {0}', [linked.join(', ')]), style: TextStyle(fontSize: 12, color: C.muted)),
-      ],
-      const SizedBox(height: 14),
-      Text.rich(TextSpan(children: [
-        TextSpan(text: tr('ตรวจสอบหน้าจอ'), style: const TextStyle(fontWeight: FontWeight.w600)),
-        TextSpan(text: ' (${issues.length})', style: TextStyle(color: C.muted)),
-      ])),
-      const SizedBox(height: 8),
-      if (issues.isEmpty)
-        Text(tr('✓ ไม่พบปัญหา'), key: const ValueKey('wf-no-issues'), style: TextStyle(fontSize: 12.5, color: C.primaryDark))
-      else
-        for (final i in issues)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: IssueCard(
-              key: ValueKey('wf-issue-${i.code}-${i.tableId}'),
-              issue: i,
-              onTap: () {
-                if (i.tableId == null) return;
-                f.selectBox(i.tableId!);
-                f.reveal(i.tableId!, f.viewport);
-              },
+      _Fold(
+        id: 'wf-fold-look',
+        title: tr('การแสดงผล'),
+        summary: _styleShort(d.style),
+        initiallyOpen: true,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<WfStyle>(
+              key: const ValueKey('wf-panel-style'),
+              showSelectedIcon: false,
+              segments: [
+                for (final s in WfStyle.values) ButtonSegment(value: s, label: Text(_styleShort(s), style: const TextStyle(fontSize: 12.5))),
+              ],
+              selected: {d.style},
+              onSelectionChanged: (s) => f.setStyle(s.first),
             ),
           ),
+          const SizedBox(height: 6),
+          Text(d.style == WfStyle.sketch ? tr('ขาวดำ เส้นวาดมือ') : tr('UI สีสว่าง ใช้สีเน้น'), style: TextStyle(fontSize: 11.5, color: C.muted)),
+          const SizedBox(height: 12),
+          LabeledField(
+            label: tr('สีเน้น (accent)'),
+            child: ColorSwatchRow(
+              keyPrefix: 'wf-accent',
+              palette: kWfPalette.take(8).toList(),
+              current: d.accent,
+              allowDefault: false,
+              onPick: (v) {
+                if (v != null) f.setAccent(v);
+              },
+              onCustom: a.pickAccent,
+            ),
+          ),
+          if (d.style == WfStyle.sketch) ...[
+            const SizedBox(height: 4),
+            Text(tr('สีเน้นใช้เมื่อแสดงแบบเรียบร้อย'), style: TextStyle(fontSize: 11.5, color: C.muted)),
+          ],
+        ]),
+      ),
+      _Fold(
+        id: 'wf-fold-size',
+        title: tr('ขนาดหน้าจอ'),
+        summary: device,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          KeyedSubtree(
+            key: const ValueKey('wf-device'),
+            child: Dropdown<WfDevice>(value: d.device, items: WfDevice.values, labelOf: wfDeviceLabel, onChanged: f.setDevice),
+          ),
+          const SizedBox(height: 8),
+          Row(children: [
+            _numField('wf-frame-w', tr('กว้าง'), d.width, (v) => f.setFrameSize(v, d.height)),
+            const SizedBox(width: 8),
+            _numField('wf-frame-h', tr('สูง'), d.height, (v) => f.setFrameSize(d.width, v)),
+          ]),
+        ]),
+      ),
+      _Fold(
+        id: 'wf-fold-checks',
+        title: tr('ตรวจสอบ'),
+        summary: issues.isEmpty ? tr('✓ ไม่พบปัญหา') : '${issues.length}',
+        summaryColor: issues.isEmpty ? C.primaryDark : C.warnText,
+        initiallyOpen: issues.isNotEmpty,
+        child: issues.isEmpty
+            ? Text(tr('✓ ไม่พบปัญหา'), key: const ValueKey('wf-no-issues'), style: TextStyle(fontSize: 12.5, color: C.primaryDark))
+            : Column(children: [
+                for (final i in issues)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: IssueCard(
+                      key: ValueKey('wf-issue-${i.code}-${i.tableId}'),
+                      issue: i,
+                      onTap: () {
+                        if (i.tableId == null) return;
+                        f.selectBox(i.tableId!);
+                        f.reveal(i.tableId!, f.viewport);
+                      },
+                    ),
+                  ),
+              ]),
+      ),
+      if (linked.isNotEmpty)
+        _Fold(
+          id: 'wf-fold-flow',
+          title: tr('ใช้ใน Screen Flow'),
+          summary: tr('{0} หน้าจอ', [linked.length]),
+          child: Align(alignment: Alignment.centerLeft, child: Text(linked.join(', '), style: TextStyle(fontSize: 12.5, color: C.muted))),
+        ),
     ]);
   }
 }

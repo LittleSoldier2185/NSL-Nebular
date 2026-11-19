@@ -1574,4 +1574,15 @@ const Map<String, String> kEn = {
   'หน่วง ms': 'Delay ms',
   'ไม่มี endpoint นี้ใน API': 'This endpoint is not in the API',
   'เพิ่มเข้า API': 'Add to API',
+  // Wireframe แผงขวา (เลเยอร์ + ส่วนพับได้)
+  'ค้นหาชิ้นส่วน': 'Search components',
+  'ร่าง': 'Sketch',
+  'เรียบร้อย': 'Clean',
+  'เลเยอร์': 'Layers',
+  'ยังไม่มีชิ้นส่วนบนหน้าจอ': 'No components on the screen yet',
+  'การแสดงผล': 'Appearance',
+  'ใช้ใน Screen Flow': 'Used in Screen Flow',
+  '{0} หน้าจอ': '{0} screens',
+  'ขาวดำ เส้นวาดมือ': 'Monochrome, hand-drawn lines',
+  'UI สีสว่าง ใช้สีเน้น': 'Light UI with accent color',
 };
