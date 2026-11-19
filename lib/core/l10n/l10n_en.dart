@@ -1600,4 +1600,5 @@ const Map<String, String> kEn = {
   'ว่าง — ลากชิ้นส่วนมาวางใต้แถวนี้': 'empty — drag components just below this row',
   'ลบกลุ่ม (ชิ้นส่วนยังอยู่)': 'Remove group (components stay)',
   'กลุ่มใหม่ (ว่าง)': 'New empty group',
+  'มี {0} ชิ้นข้างใน': '{0} inside',
 };

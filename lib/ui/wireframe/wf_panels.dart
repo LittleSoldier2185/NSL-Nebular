@@ -632,6 +632,10 @@ class _LayersFoldState extends State<_LayersFold> {
 
     // แถว (บนสุดก่อน) — ลากแถวเพื่อเปลี่ยนลำดับการซ้อน ; ลากหัวกลุ่ม = ย้ายทั้งกลุ่ม ; ลากชิ้นเข้า/ออกจากกลุ่มได้
     final layerRows = f.layerRows(_collapsedGroups);
+    final kidCount = <String, int>{};
+    for (final p in parents.values) {
+      kidCount[p] = (kidCount[p] ?? 0) + 1;
+    }
     final rows = <Widget>[
       for (final (i, r) in layerRows.indexed)
         ReorderableDragStartListener(
@@ -639,7 +643,7 @@ class _LayersFoldState extends State<_LayersFold> {
           index: i,
           child: r.header
               ? _groupRow(f, r.group!, wfGroupMembers(d, r.group!).reversed.toList(), r.open, sel)
-              : _layerRow(f, d.componentById(r.id!)!, depth(r.id!) + (r.group == null ? 0 : 1), hidden, sel),
+              : _layerRow(f, d.componentById(r.id!)!, depth(r.id!), r.group != null, kidCount[r.id!] ?? 0, hidden, sel),
         ),
     ];
 
@@ -743,6 +747,26 @@ class _LayersFoldState extends State<_LayersFold> {
     if (r != null) f.renameGroup(g, r.text);
   }
 
+  /// ที่จับลาก (บอกว่าแถวนี้ลากเรียงได้) — เมาส์ชี้แล้วเป็นรูปมือจับ
+  Widget _grip() => const MouseRegion(
+        cursor: SystemMouseCursors.grab,
+        child: Padding(padding: EdgeInsets.only(left: 2), child: Icon(Icons.drag_indicator_rounded, size: 16, color: Color(0x998A94A6))),
+      );
+
+  /// ช่องติ๊กเลือกของแถว: ติ๊ก = เพิ่มเข้า/เอาออกจากที่เลือก (เลือกหลายชิ้นได้โดยไม่ต้องกด Ctrl) ; [value] null = เลือกบางส่วน (กลุ่ม)
+  Widget _pick(String key, bool? value, VoidCallback onTap) => SizedBox(
+        width: 24,
+        height: 24,
+        child: Checkbox(
+          key: ValueKey(key),
+          value: value,
+          tristate: true,
+          visualDensity: VisualDensity.compact,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          onChanged: (_) => onTap(),
+        ),
+      );
+
   DateTime _lastHeaderTap = DateTime.fromMillisecondsSinceEpoch(0);
   String? _lastHeaderId;
 
@@ -773,6 +797,7 @@ class _LayersFoldState extends State<_LayersFold> {
         child: SizedBox(
           height: 32,
           child: Row(children: [
+            _grip(),
             InkWell(
               key: ValueKey('wf-group-toggle-$g'),
               onTap: () => setState(() => open ? _collapsedGroups.add(g) : _collapsedGroups.remove(g)),
@@ -781,6 +806,10 @@ class _LayersFoldState extends State<_LayersFold> {
                 child: Icon(open ? Icons.expand_more_rounded : Icons.chevron_right_rounded, size: 18, color: C.muted),
               ),
             ),
+            _pick('wf-pick-group-$g', empty ? false : (allSel ? true : (members.any((m) => sel.contains(m.id)) ? null : false)), () {
+              if (empty) return;
+              f.setSelection(allSel ? {for (final s in sel) if (!ids.contains(s)) s} : {...sel, ...ids}, exact: true);
+            }),
             Icon(open ? Icons.folder_open_outlined : Icons.folder_outlined, size: 16, color: C.muted),
             const SizedBox(width: 8),
             Expanded(
@@ -810,7 +839,23 @@ class _LayersFoldState extends State<_LayersFold> {
     );
   }
 
-  Widget _layerRow(WireframeController f, WfComponent c, int depth, Set<String> hidden, Set<String> sel) {
+  /// เส้นนำทางแนวตั้งของลำดับชั้น: ระดับ "กลุ่ม" เป็นสีเน้น ระดับ "อยู่ในกล่อง" เป็นสีเทา (ต่อ 1 ระดับ = 1 ช่องกว้าง 16)
+  Widget _guides(bool inGroup, int boxDepth) => Row(mainAxisSize: MainAxisSize.min, children: [
+        if (inGroup)
+          SizedBox(
+            width: 16,
+            height: 32,
+            child: Center(child: Container(width: 2, color: C.primary.withValues(alpha: 0.55))),
+          ),
+        for (var i = 0; i < boxDepth; i++)
+          SizedBox(
+            width: 16,
+            height: 32,
+            child: Center(child: Container(width: 1.5, color: C.muted.withValues(alpha: 0.45))),
+          ),
+      ]);
+
+  Widget _layerRow(WireframeController f, WfComponent c, int depth, bool inGroup, int kids, Set<String> hidden, Set<String> sel) {
     final selected = sel.contains(c.id);
     final invisible = hidden.contains(c.id);
     final name = c.text.trim().isEmpty ? wfKindLabel(c.kind) : c.text.trim().replaceAll(RegExp(r'\s+'), ' ');
@@ -827,7 +872,10 @@ class _LayersFoldState extends State<_LayersFold> {
         child: SizedBox(
           height: 32,
           child: Row(children: [
-            SizedBox(width: 6 + depth * 14.0),
+            _grip(),
+            _guides(inGroup, depth),
+            _pick('wf-pick-${c.id}', selected, () => f.selectBox(c.id, add: true, exact: true)),
+            const SizedBox(width: 4),
             Icon(wfKindIcon(c.kind), size: 16, color: invisible ? C.muted.withValues(alpha: 0.5) : C.muted),
             const SizedBox(width: 8),
             Expanded(
@@ -836,6 +884,20 @@ class _LayersFoldState extends State<_LayersFold> {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 13, color: invisible ? C.muted : C.text, fontStyle: invisible ? FontStyle.italic : null)),
             ),
+            if (kids > 0)
+              Tooltip(
+                message: tr('มี {0} ชิ้นข้างใน', [kids]),
+                child: Container(
+                  key: ValueKey('wf-kids-${c.id}'),
+                  margin: const EdgeInsets.only(right: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(color: C.muted.withValues(alpha: 0.16), borderRadius: BorderRadius.circular(8)),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.subdirectory_arrow_right_rounded, size: 11, color: C.muted),
+                    Text('$kids', style: TextStyle(fontSize: 10.5, color: C.muted)),
+                  ]),
+                ),
+              ),
             if (c.rotation != 0)
               Padding(
                 padding: const EdgeInsets.only(right: 2),

@@ -477,6 +477,48 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('ช่องติ๊กหน้าแถว: ติ๊กหลายชิ้นโดยไม่ต้องกด Ctrl ; ติ๊กกลุ่ม = ทั้งกลุ่ม (ติ๊กบางส่วน = ขีด) ; ทุกแถวมีที่จับลาก', (tester) async {
+      await boot(tester);
+      final a = f.addComponent(WfKind.button, 300, 200)!;
+      final b = f.addComponent(WfKind.label, 600, 200)!;
+      final c = f.addComponent(WfKind.input, 900, 200)!;
+      f.cancelEditing();
+      f.clearSelection();
+      await tester.pumpAndSettle();
+
+      Future<void> tapKey(String k) async {
+        await tester.ensureVisible(find.byKey(ValueKey(k)));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(ValueKey(k)));
+        await tester.pumpAndSettle();
+      }
+
+      bool? checked(String k) => tester.widget<Checkbox>(find.byKey(ValueKey(k))).value;
+
+      expect(find.byIcon(Icons.drag_indicator_rounded), findsNWidgets(3), reason: 'ทุกแถวมีที่จับลาก');
+      await tapKey('wf-pick-${a.id}');
+      await tapKey('wf-pick-${c.id}');
+      expect(f.selectedIds, {a.id, c.id});
+      expect(checked('wf-pick-${a.id}'), isTrue);
+      expect(checked('wf-pick-${b.id}'), isFalse);
+      await tapKey('wf-pick-${a.id}');
+      expect(f.selectedIds, {c.id});
+
+      f.setSelection([a.id, b.id], exact: true);
+      final g = f.groupSelection()!;
+      f.clearSelection();
+      await tester.pumpAndSettle();
+      expect(checked('wf-pick-group-$g'), isFalse);
+      await tapKey('wf-pick-${a.id}');
+      expect(checked('wf-pick-group-$g'), isNull, reason: 'เลือกบางส่วน');
+      await tapKey('wf-pick-group-$g');
+      expect(f.selectedIds, {a.id, b.id}, reason: 'ติ๊กกลุ่มตอนติ๊กบางส่วน = เลือกครบ');
+      expect(checked('wf-pick-group-$g'), isTrue);
+      await tapKey('wf-pick-group-$g');
+      expect(f.selectedIds, isEmpty);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('ปุ่มกลุ่มใหม่ → กลุ่มเปล่า ; ลากชิ้นเข้าด้วยเมาส์ ; ดับเบิลคลิกเปลี่ยนชื่อ ; ปุ่มลบกลุ่ม', (tester) async {
       await boot(tester);
       final a = f.addComponent(WfKind.button, 300, 200)!;

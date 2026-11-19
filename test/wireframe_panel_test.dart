@@ -76,9 +76,15 @@ void main() {
     final top = tester.getTopLeft(find.byKey(ValueKey('wf-item-${btn.id}'))).dy;
     final bottom = tester.getTopLeft(find.byKey(ValueKey('wf-item-${box.id}'))).dy;
     expect(top, lessThan(bottom), reason: 'ชิ้นที่วางทีหลัง (บนสุด) อยู่บนสุดของรายการ');
-    double iconX(String id) => tester.getTopLeft(find.descendant(of: find.byKey(ValueKey('wf-item-$id')), matching: find.byType(Icon)).first).dx;
-    expect(iconX(btn.id), greaterThan(iconX(box.id)),
+    double iconX(String id, IconData i) => tester.getTopLeft(find.descendant(of: find.byKey(ValueKey('wf-item-$id')), matching: find.byIcon(i))).dx;
+    expect(iconX(btn.id, Icons.smart_button_outlined), greaterThan(iconX(box.id, Icons.crop_square_rounded)),
         reason: 'ปุ่มอยู่ในกล่อง = เยื้องเข้า');
+    // ทั้งแถวเยื้อง (ช่องติ๊กก็ขยับ ไม่ใช่แค่ไอคอน) และกล่องบอกจำนวนชิ้นข้างใน
+    double pickX(String id) => tester.getTopLeft(find.byKey(ValueKey('wf-pick-$id'))).dx;
+    expect(pickX(btn.id), greaterThan(pickX(box.id)));
+    expect(find.byKey(ValueKey('wf-kids-${box.id}')), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is Tooltip && w.message == 'มี 1 ชิ้นข้างใน'), findsOneWidget);
+    expect(find.byKey(ValueKey('wf-kids-${btn.id}')), findsNothing);
 
     await tester.ensureVisible(find.byKey(ValueKey('wf-item-${box.id}')));
     await tester.pumpAndSettle();
