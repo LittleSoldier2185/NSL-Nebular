@@ -17,6 +17,7 @@ import 'project_controller.dart';
 import 'screenflow_controller.dart';
 import 'wireframe_controller.dart';
 import '../core/models/review_note.dart';
+import '../core/mock/mock_settings.dart';
 import '../core/models/api_model.dart';
 import 'api_controller.dart';
 import '../core/models/traceability.dart';
@@ -28,7 +29,7 @@ import '../core/models/requirement.dart';
 /// การเพิ่ม/ลบ/เปลี่ยนชื่อ/ย้ายเอกสารและโฟลเดอร์ไม่เข้าประวัติ undo (undo เป็นของแต่ละเอกสาร)
 /// controller นี้แจ้งผู้ฟังทุกครั้งที่โครงสร้างเปลี่ยน และทุกครั้งที่ controller ของเอกสารใดแจ้ง
 /// หน้าที่แสดงในพื้นที่หลัก
-enum WorkspacePage { document, home, dictionary, history, trace, codegen }
+enum WorkspacePage { document, home, dictionary, history, trace, codegen, mock }
 
 class WorkspaceController extends ChangeNotifier {
   WorkspaceController([Workspace? workspace]) : _workspace = workspace ?? Workspace.single(Project()) {
@@ -177,6 +178,32 @@ class WorkspaceController extends ChangeNotifier {
   void setCodegenPreset(List<String> targets, String folder) {
     _workspace.meta.extra['codegen'] = {'targets': targets, if (folder.trim().isNotEmpty) 'folder': folder.trim()};
     _structureChanged();
+  }
+
+  /// แสดง/ซ่อนหน้า Mock Server (ไม่แตะเอกสารหรือสถานะ dirty)
+  void showMock([bool show = true]) => _showPage(WorkspacePage.mock, show);
+
+  /// ค่าตั้ง Mock Server ที่เก็บในไฟล์ (`meta.mock`): เอกสาร API ที่ใช้ · พอร์ต · สถานการณ์ต่อ endpoint
+  MockSettings get mockSettings => MockSettings.fromJson(_workspace.meta.extra['mock']);
+
+  /// บันทึกค่าตั้ง Mock Server ลงไฟล์โปรเจกต์ (นับเป็นการแก้ ; ต้องบันทึกไฟล์) — ค่าเท่าเดิมไม่ทำให้ dirty
+  void setMockSettings(MockSettings s) {
+    final j = s.toJson();
+    final old = _workspace.meta.extra['mock'];
+    if (old != null && jsonEncode(old) == jsonEncode(j)) return;
+    _workspace.meta.extra['mock'] = j;
+    _structureChanged();
+  }
+
+  /// เอกสาร API ที่ Mock Server ใช้: ตาม [MockSettings.apiDocId] ถ้ายังอยู่ ไม่งั้นเอกสาร API แรก ; ไม่มี = null
+  ProjectDocument? get mockApiDocument {
+    final id = mockSettings.apiDocId;
+    final byId = id == null ? null : _workspace.documentById(id);
+    if (byId?.api != null) return byId;
+    for (final d in _workspace.documents) {
+      if (d.api != null) return d;
+    }
+    return null;
   }
 
   /// แสดง/ซ่อนหน้าความต้องการและการไล่ตาม (ไม่แตะเอกสารหรือสถานะ dirty)

@@ -228,6 +228,19 @@ class _Header extends StatelessWidget {
         child: Text(tr('สร้างโค้ด'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
       ),
       OutlinedButton(
+        key: const ValueKey('home-mock'),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 38),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          foregroundColor: C.text,
+          backgroundColor: C.surface,
+          side: BorderSide(color: C.inputBorder),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        onPressed: w.showMock,
+        child: Text(tr('Mock Server'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      ),
+      OutlinedButton(
         key: const ValueKey('home-export'),
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(0, 38),

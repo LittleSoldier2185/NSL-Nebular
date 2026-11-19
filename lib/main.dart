@@ -27,6 +27,7 @@ import 'ui/theme.dart';
 import 'core/storage/history_store.dart';
 import 'state/version_history.dart';
 import 'state/api_controller.dart';
+import 'state/mock_controller.dart';
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -117,6 +118,7 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
   late final WorkspaceController _workspace = WorkspaceController();
   late final VersionHistory _versions = VersionHistory(widget.history, _workspace);
   late final CanvasController _canvas = CanvasController();
+  late final MockController _mock = MockController(_workspace);
   late final AutosaveCoordinator? _autosave =
       widget.autosave == null ? null : AutosaveCoordinator(_workspace, widget.autosave!);
 
@@ -162,6 +164,7 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
     _autosave?.dispose();
     _versions.dispose();
     _workspace.dispose();
+    _mock.dispose();
     _canvas.dispose();
     super.dispose();
   }
@@ -178,6 +181,7 @@ class _NslDevAppState extends State<NslDevApp> with WidgetsBindingObserver {
         ChangeNotifierProvider.value(value: _workspace),
         ChangeNotifierProvider.value(value: _versions),
         ChangeNotifierProvider.value(value: _canvas),
+        ChangeNotifierProvider.value(value: _mock),
         Provider<AutosaveCoordinator?>.value(value: _autosave),
         ChangeNotifierProvider<NslThemeController?>.value(value: widget.themes),
       ],
