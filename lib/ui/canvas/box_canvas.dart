@@ -242,7 +242,7 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
             cursor: isSelectTool(c)
                 ? (_drag == _Drag.pan ? SystemMouseCursors.grabbing : SystemMouseCursors.basic)
                 : toolCursor(c),
-            child: Stack(key: _stackKey, children: [
+            child: ClipRect(child: Stack(key: _stackKey, children: [
               Positioned.fill(
                 child: GestureDetector(
                   key: ValueKey(canvasKey),
@@ -264,7 +264,7 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
               if (cand.isNotEmpty) IgnorePointer(child: Container(color: C.primary.withValues(alpha: 0.05))),
               Positioned.fill(child: NotePinsLayer(doc: c, view: c, scale: () => c.scale, offset: () => c.offset)),
               ...overlays(c, size),
-            ]),
+            ])),
           ),
         ),
       );

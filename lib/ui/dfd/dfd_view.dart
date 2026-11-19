@@ -299,7 +299,7 @@ class _DfdCanvasState extends State<DfdCanvas> {
             DfdTool.flow => SystemMouseCursors.precise,
             _ => SystemMouseCursors.precise,
           },
-          child: Stack(children: [
+          child: ClipRect(child: Stack(children: [
             Positioned.fill(
               child: GestureDetector(
                 key: const ValueKey('dfd-canvas'),
@@ -348,7 +348,7 @@ class _DfdCanvasState extends State<DfdCanvas> {
                   ]),
                 ),
               ),
-          ]),
+          ])),
         ),
       );
     });

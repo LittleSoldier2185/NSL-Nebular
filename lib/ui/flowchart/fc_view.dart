@@ -446,7 +446,7 @@ class _FlowchartCanvasState extends State<FlowchartCanvas> {
                     ? SystemMouseCursors.grabbing
                     : (_drag == _Drag.link || _hoverId.value != null ? SystemMouseCursors.precise : SystemMouseCursors.basic))
                 : SystemMouseCursors.precise,
-            child: Stack(key: _canvasKey, children: [
+            child: ClipRect(child: Stack(key: _canvasKey, children: [
               Positioned.fill(
                 child: GestureDetector(
                   key: const ValueKey('fc-canvas'),
@@ -516,7 +516,7 @@ class _FlowchartCanvasState extends State<FlowchartCanvas> {
                     ]),
                   ),
                 ),
-            ]),
+            ])),
           ),
         ),
       );
