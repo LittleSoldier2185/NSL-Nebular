@@ -109,19 +109,20 @@ void main() {
       expect(f.diagram.componentById('c')!.hidden, isFalse, reason: 'undo ได้');
     });
 
-    test('กลุ่ม: Ctrl+G รวมสมาชิกให้ติดกันในลำดับการซ้อน ; คลิกชิ้นเดียวได้ทั้งกลุ่ม ; exact เลือกชิ้นเดียว ; เลิกกลุ่ม ; undo', () {
+    test('กลุ่ม: Ctrl+G รวมสมาชิกให้ติดกันในลำดับการซ้อน ; คลิก/กรอบเลือกชิ้นเดียวได้ชิ้นเดียว (ไม่ลามทั้งกลุ่ม) ; เลือกทั้งกลุ่มผ่าน groupIds ; เลิกกลุ่ม ; undo', () {
       f.setSelection(['a', 'c']);
       final g = f.groupSelection()!;
       expect([for (final x in f.diagram.components) x.id], ['b', 'a', 'c']);
       expect(f.diagram.componentById('a')!.group, g);
       f.clearSelection();
       f.selectBox('a');
-      expect(f.selectedIds, {'a', 'c'});
-      f.selectBox('a', exact: true);
-      expect(f.selectedIds, {'a'});
+      expect(f.selectedIds, {'a'}, reason: 'คลิกที่ชิ้นในกลุ่ม = ชิ้นนั้นเท่านั้น');
       f.setSelection(['c']);
-      expect(f.selectedIds, {'a', 'c'});
-      // ย้ายทั้งกลุ่ม
+      expect(f.selectedIds, {'c'});
+      expect(f.marqueeHits(const Rect.fromLTWH(-10, -10, 120, 100)), {'a'}, reason: 'กรอบลากแตะชิ้นเดียว = ชิ้นเดียว');
+      // เลือกทั้งกลุ่ม (แถวกลุ่มในแผงเลเยอร์) แล้วย้ายทั้งกลุ่ม
+      expect(f.groupIds(g), {'a', 'c'});
+      f.setSelection(f.groupIds(g));
       f.nudge(5, 0);
       expect(f.diagram.componentById('a')!.x, 5);
       expect(f.diagram.componentById('c')!.x, 405);
@@ -135,7 +136,7 @@ void main() {
       f.setSelection(['a', 'b']);
       final g = f.groupSelection()!;
       f.setLocked(['a'], true);
-      f.selectBox('b');
+      f.setSelection(f.groupIds(g));
       expect(f.duplicateSelection(), 2);
       final copies = f.diagram.components.where((x) => !{'a', 'b', 'c'}.contains(x.id)).toList();
       expect(copies.map((x) => x.group).toSet().single, isNot(g));
@@ -287,6 +288,25 @@ void main() {
       expect(f.layerRows(collapsed).any((r) => r.header), isFalse);
       expect(f.diagram.components.length, 5);
       expect(f.diagram.components.every((c) => c.group == null), isTrue);
+    });
+
+    test('วางแบบระบุกลุ่มชัดเจน (explicit): ใต้หัวกลุ่มแต่ระบุนอกกลุ่ม = ไม่เข้า ; ระบุกลุ่ม = เข้าแม้วางที่ช่องเดียวกับแถวถัดไป ; กลุ่มพับอยู่ก็วางเข้าได้', () {
+      final g = groupOf(['c', 'd']);
+      expect(rows(), 'e G($g) d@$g c@$g b a');
+      // e ลงมาใต้หัวกลุ่ม (ช่อง 2) แต่ระบุว่านอกกลุ่ม
+      expect(f.moveLayerRow(collapsed, 0, 1, explicit: true, group: null), isFalse, reason: 'ที่เดิม ไม่เปลี่ยน');
+      expect(f.moveLayerRow(collapsed, 4, 1, explicit: true, group: null), isTrue);
+      expect(f.diagram.componentById('b')!.group, isNull, reason: 'วางที่ช่องใต้หัวกลุ่มแต่ระบุนอกกลุ่ม');
+      // ระบุกลุ่ม = เข้ากลุ่ม
+      expect(f.moveLayerRow(collapsed, 1, 2, explicit: true, group: g), isTrue);
+      expect(f.diagram.componentById('b')!.group, g);
+      // กลุ่มพับอยู่: วางเข้ากลุ่มได้ (ลากไปวางบนหัวกลุ่มที่พับ)
+      collapsed.add(g);
+      final r = f.layerRows(collapsed);
+      final hi = r.indexWhere((x) => x.header);
+      final ai = r.indexWhere((x) => x.id == 'a');
+      expect(f.moveLayerRow(collapsed, ai, hi + (ai > hi ? 1 : 0), explicit: true, group: g), isTrue);
+      expect(f.diagram.componentById('a')!.group, g);
     });
 
     test('กลุ่มเปล่า: สร้างบนสุด/เหนือชิ้นที่เลือก ; ลากเข้าได้ ; ลากหัวกลุ่มเปล่าย้ายตำแหน่งได้ ; บันทึกลงไฟล์ ; undo', () {
@@ -519,6 +539,75 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('ลากเลเยอร์: มีเส้นบอกตำแหน่ง ; วางบนหัวกลุ่ม = กลุ่มเรืองแสง ; วางนอกกลุ่ม = ไม่เรืองแสง ; ปล่อยแล้วตัวบอกหาย ; คลิกชิ้นบนแคนวาส = ชิ้นเดียว', (tester) async {
+      await boot(tester);
+      final a = f.addComponent(WfKind.button, 300, 200)!;
+      final b = f.addComponent(WfKind.label, 600, 200)!;
+      final c = f.addComponent(WfKind.input, 900, 200)!;
+      f.cancelEditing();
+      f.setSelection([b.id, c.id], exact: true);
+      final g = f.groupSelection()!; // b,c ในกลุ่ม ; a นอกกลุ่ม
+      f.clearSelection();
+      await tester.pumpAndSettle();
+
+      // คลิกที่ b บนแคนวาส = เลือก b ตัวเดียว ไม่ลามไป c
+      final canvas = find.byKey(const ValueKey('wf-canvas'));
+      await tester.tapAt(tester.getTopLeft(canvas) + f.toScreen(Offset(b.x + b.w / 2, b.y + b.h / 2)));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(f.selectedIds, {b.id});
+      f.clearSelection();
+      await tester.pumpAndSettle();
+
+      final rowA = find.byKey(ValueKey('wf-layer-row-${a.id}'));
+      final header = find.byKey(ValueKey('wf-layer-row-g-$g'));
+      await tester.ensureVisible(rowA);
+      await tester.pumpAndSettle();
+      final g1 = await tester.startGesture(tester.getCenter(rowA), kind: PointerDeviceKind.mouse);
+      Future<void> moveTo(Offset p) async {
+        await g1.moveTo(p);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+
+      final start = tester.getCenter(rowA);
+      final overHeader = tester.getTopLeft(header) + const Offset(30, 24);
+      for (var i = 1; i <= 8; i++) {
+        await moveTo(Offset.lerp(start, overHeader, i / 8)!);
+      }
+      expect(find.byKey(const ValueKey('wf-drop-line')), findsOneWidget, reason: 'มีเส้นบอกตำแหน่งที่จะวาง');
+      expect(find.byKey(ValueKey('wf-drop-glow-g-$g')), findsOneWidget, reason: 'หัวกลุ่มปลายทางเรืองแสง');
+      expect(find.byKey(ValueKey('wf-drop-glow-${b.id}')), findsOneWidget, reason: 'สมาชิกของกลุ่มปลายทางถูกไฮไลต์');
+
+      // ย้ายไปที่ขอบบนของหัวกลุ่ม = วางเหนือกลุ่ม (นอกกลุ่ม) → ไม่เรืองแสง
+      await moveTo(tester.getTopLeft(header) + const Offset(30, 3));
+      expect(find.byKey(ValueKey('wf-drop-glow-g-$g')), findsNothing);
+      expect(find.byKey(const ValueKey('wf-drop-line')), findsOneWidget);
+
+      await moveTo(overHeader);
+      await g1.up();
+      await tester.pumpAndSettle();
+      expect(f.diagram.componentById(a.id)!.group, g);
+      expect(find.byKey(const ValueKey('wf-drop-line')), findsNothing, reason: 'ปล่อยแล้วตัวบอกหาย');
+      expect(find.byKey(ValueKey('wf-drop-glow-g-$g')), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('คลิกแถวกลุ่มในแผงเลเยอร์ = เลือกทั้งกลุ่ม (ต่างจากคลิกชิ้นที่เลือกแค่ชิ้นเดียว)', (tester) async {
+      await boot(tester);
+      final a = f.addComponent(WfKind.button, 300, 200)!;
+      final b = f.addComponent(WfKind.label, 600, 200)!;
+      f.cancelEditing();
+      f.setSelection([a.id, b.id], exact: true);
+      final g = f.groupSelection()!;
+      f.clearSelection();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('wf-group-label-$g')));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(f.selectedIds, {a.id, b.id});
+      await tester.tap(find.byKey(ValueKey('wf-item-${a.id}')));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(f.selectedIds, {a.id});
+    });
+
     testWidgets('ปุ่มกลุ่มใหม่ → กลุ่มเปล่า ; ลากชิ้นเข้าด้วยเมาส์ ; ดับเบิลคลิกเปลี่ยนชื่อ ; ปุ่มลบกลุ่ม', (tester) async {
       await boot(tester);
       final a = f.addComponent(WfKind.button, 300, 200)!;
@@ -535,13 +624,13 @@ void main() {
       expect(find.byKey(ValueKey('wf-layer-row-g-$g')), findsOneWidget);
       expect(find.textContaining('ลากชิ้นส่วนมาวางใต้แถวนี้'), findsOneWidget);
 
-      // ลาก a (แถวล่างสุด) ขึ้นไปวางใต้หัวกลุ่ม (เหนือ b)
+      // ลาก a (แถวล่างสุด) ไปวางบนหัวกลุ่มเปล่า (ส่วนล่างของแถว = วางเข้ากลุ่ม)
       final rowA = find.byKey(ValueKey('wf-layer-row-${a.id}'));
-      final rowB = find.byKey(ValueKey('wf-layer-row-${b.id}'));
+      final headerRow = find.byKey(ValueKey('wf-layer-row-g-$g'));
       await tester.ensureVisible(rowA);
       await tester.pumpAndSettle();
       final from = tester.getCenter(rowA);
-      final to = tester.getTopLeft(rowB) + const Offset(20, 2);
+      final to = tester.getTopLeft(headerRow) + const Offset(20, 24);
       final gesture = await tester.startGesture(from, kind: PointerDeviceKind.mouse);
       for (var i = 1; i <= 10; i++) {
         await gesture.moveTo(Offset.lerp(from, to, i / 10)!);

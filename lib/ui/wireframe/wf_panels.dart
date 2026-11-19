@@ -615,6 +615,171 @@ class _LayersFold extends StatefulWidget {
 class _LayersFoldState extends State<_LayersFold> {
   bool get _additive => HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isShiftPressed;
 
+  final ScrollController _scroll = ScrollController();
+  final GlobalKey _listKey = GlobalKey();
+
+  // สถานะการลากแถว (สถานะมุมมองล้วน)
+  int? _dragFrom; // ดัชนีแถวที่กำลังลาก
+  int? _hoverRow; // ดัชนีแถวที่ตัวชี้อยู่
+  double _hoverFrac = 0; // ตำแหน่งตัวชี้ในแถวนั้น (0 บน ถึง 1 ล่าง)
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _clearDrag() {
+    if (!mounted) return;
+    setState(() {
+      _dragFrom = null;
+      _hoverRow = null;
+    });
+  }
+
+  /// ผลของการวางตอนนี้: ช่องที่จะแทรก [slot] (ก่อนแถวที่ slot) + กลุ่มปลายทาง ; null = วางไม่ได้/ไม่เปลี่ยนอะไร
+  ({int slot, bool explicit, String? group})? _drop(List<WfLayerRow> rows) {
+    final from = _dragFrom, i = _hoverRow;
+    if (from == null || i == null || from >= rows.length || i >= rows.length) return null;
+    final moving = rows[from], r = rows[i];
+    final int slot;
+    var explicit = false;
+    String? group;
+    if (moving.header) {
+      slot = _hoverFrac < 0.5 ? i : i + 1; // ลากทั้งกลุ่ม: ไม่มีเรื่องเข้า/ออกกลุ่ม
+    } else if (r.header) {
+      // แถวกลุ่ม: ขอบบน = วางเหนือกลุ่ม (นอกกลุ่ม) ; ส่วนที่เหลือ = วางเข้ากลุ่มนี้ (บนสุดของกลุ่ม)
+      explicit = true;
+      if (_hoverFrac < 0.3) {
+        slot = i;
+      } else {
+        slot = i + 1;
+        group = r.group;
+      }
+    } else {
+      // แถวชิ้นส่วน: ครึ่งบน/ล่างของแถว ; อยู่กลุ่มเดียวกับแถวที่วางทับ (ไม่อยู่กลุ่ม = นอกกลุ่ม)
+      explicit = true;
+      slot = _hoverFrac < 0.5 ? i : i + 1;
+      group = r.group;
+    }
+    final unchanged = (slot == from || slot == from + 1) && (moving.header || group == moving.group);
+    return unchanged ? null : (slot: slot, explicit: explicit, group: group);
+  }
+
+  void _onDragMove(BuildContext rowContext, int i, Offset global) {
+    final box = rowContext.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    final local = box.globalToLocal(global);
+    final frac = (local.dy / box.size.height).clamp(0.0, 1.0);
+    if (_hoverRow != i || (_hoverFrac < 0.3) != (frac < 0.3) || (_hoverFrac < 0.5) != (frac < 0.5)) {
+      setState(() {
+        _hoverRow = i;
+        _hoverFrac = frac;
+      });
+    } else {
+      _hoverFrac = frac;
+    }
+    // เลื่อนรายการเองเมื่อลากไปชิดขอบบน/ล่างของแผง
+    final list = _listKey.currentContext?.findRenderObject();
+    if (list is RenderBox && list.hasSize && _scroll.hasClients) {
+      final y = list.globalToLocal(global).dy;
+      if (y < 28) {
+        _scroll.jumpTo((_scroll.offset - 12).clamp(0.0, _scroll.position.maxScrollExtent));
+      } else if (y > list.size.height - 28) {
+        _scroll.jumpTo((_scroll.offset + 12).clamp(0.0, _scroll.position.maxScrollExtent));
+      }
+    }
+  }
+
+  void _commitDrop(WireframeController f, List<WfLayerRow> rows) {
+    final from = _dragFrom;
+    final drop = _drop(rows);
+    _clearDrag();
+    if (from == null || drop == null) return;
+    final to = drop.slot > from ? drop.slot - 1 : drop.slot;
+    f.moveLayerRow(_collapsedGroups, from, to, explicit: drop.explicit, group: drop.group);
+  }
+
+  static String _nameOf(WfComponent c) => c.text.trim().isEmpty ? wfKindLabel(c.kind) : c.text.trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  /// แถวหนึ่งในรายการ: ลากได้ + เป็นเป้าวางได้ + ตัวบอกตำแหน่ง (เส้นสีเน้น) + กลุ่มปลายทางเรืองแสง
+  Widget _dndRow(WireframeController f, List<WfLayerRow> rows, int i, WfLayerRow r, String name, Widget child,
+      ({int slot, bool explicit, String? group})? drop) {
+    final inTargetGroup = drop?.group != null && r.group == drop!.group;
+    final line = drop != null && _hoverRow == i;
+    final lineTop = line && drop.slot == i;
+    final lineBottom = line && drop.slot == i + 1;
+    Widget row = child;
+    if (inTargetGroup) {
+      row = DecoratedBox(
+        key: ValueKey('wf-drop-glow-${r.header ? 'g-${r.group}' : r.id}'),
+        position: DecorationPosition.background,
+        decoration: r.header
+            ? BoxDecoration(
+                color: C.primary.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: C.primary, width: 1.5),
+                boxShadow: [BoxShadow(color: C.primary.withValues(alpha: 0.55), blurRadius: 10)],
+              )
+            : BoxDecoration(color: C.primary.withValues(alpha: 0.10), border: Border(left: BorderSide(color: C.primary, width: 2))),
+        child: child,
+      );
+    }
+    final indent = drop?.group != null ? 22.0 : 0.0;
+    Widget bar() => Container(
+          key: const ValueKey('wf-drop-line'),
+          height: 2,
+          margin: EdgeInsets.only(left: indent),
+          decoration: BoxDecoration(
+            color: C.primary,
+            borderRadius: BorderRadius.circular(1),
+            boxShadow: [BoxShadow(color: C.primary.withValues(alpha: 0.6), blurRadius: 6)],
+          ),
+        );
+    final stacked = Stack(clipBehavior: Clip.none, children: [
+      row,
+      if (lineTop) Positioned(left: 0, right: 0, top: -1, child: IgnorePointer(child: bar())),
+      if (lineBottom) Positioned(left: 0, right: 0, bottom: -1, child: IgnorePointer(child: bar())),
+    ]);
+    return Builder(
+      key: ValueKey(r.header ? 'wf-layer-row-g-${r.group}' : 'wf-layer-row-${r.id}'),
+      builder: (rowContext) => DragTarget<int>(
+        onWillAcceptWithDetails: (_) => true,
+        onMove: (d) => _onDragMove(rowContext, i, d.offset),
+        onLeave: (_) {
+          if (_hoverRow == i && mounted) setState(() => _hoverRow = null);
+        },
+        onAcceptWithDetails: (_) => _commitDrop(f, rows),
+        builder: (context, candidate, rejected) => Draggable<int>(
+          data: i,
+          maxSimultaneousDrags: 1,
+          dragAnchorStrategy: pointerDragAnchorStrategy,
+          onDragStarted: () => setState(() => _dragFrom = i),
+          onDragEnd: (_) => _clearDrag(),
+          feedback: Material(
+            elevation: 6,
+            color: C.surface,
+            borderRadius: BorderRadius.circular(6),
+            child: SizedBox(
+              width: 220,
+              height: 32,
+              child: Row(children: [
+                const SizedBox(width: 8),
+                Icon(r.header ? Icons.folder_outlined : Icons.drag_indicator_rounded, size: 16, color: C.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: C.text, decoration: TextDecoration.none)),
+                ),
+              ]),
+            ),
+          ),
+          childWhenDragging: Opacity(opacity: 0.35, child: stacked),
+          child: stacked,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final f = context.watch<WireframeController>();
@@ -636,14 +801,19 @@ class _LayersFoldState extends State<_LayersFold> {
     for (final p in parents.values) {
       kidCount[p] = (kidCount[p] ?? 0) + 1;
     }
+    final drop = _drop(layerRows);
     final rows = <Widget>[
       for (final (i, r) in layerRows.indexed)
-        ReorderableDragStartListener(
-          key: ValueKey(r.header ? 'wf-layer-row-g-${r.group}' : 'wf-layer-row-${r.id}'),
-          index: i,
-          child: r.header
+        _dndRow(
+          f,
+          layerRows,
+          i,
+          r,
+          r.header ? f.groupLabel(r.group!) : _nameOf(d.componentById(r.id!)!),
+          r.header
               ? _groupRow(f, r.group!, wfGroupMembers(d, r.group!).reversed.toList(), r.open, sel)
               : _layerRow(f, d.componentById(r.id!)!, depth(r.id!), r.group != null, kidCount[r.id!] ?? 0, hidden, sel),
+          drop,
         ),
     ];
 
@@ -698,12 +868,10 @@ class _LayersFoldState extends State<_LayersFold> {
                   padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
                   child: Text(tr('ยังไม่มีชิ้นส่วนบนหน้าจอ'), key: const ValueKey('wf-layers-empty'), style: TextStyle(fontSize: 12.5, color: C.muted)),
                 )
-              : ReorderableListView(
-                  key: const ValueKey('wf-layers-list'),
-                  padding: const EdgeInsets.fromLTRB(10, 2, 10, 12),
-                  buildDefaultDragHandles: false,
-                  proxyDecorator: (child, _, _) => Material(elevation: 4, color: C.surface, borderRadius: BorderRadius.circular(6), child: child),
-                  onReorderItem: (from, to) => f.moveLayerRow(_collapsedGroups, from, to),
+              : ListView(
+                  key: _listKey,
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(10, 4, 10, 12),
                   children: rows,
                 ),
         ),

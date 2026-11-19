@@ -118,12 +118,12 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
   @override
   bool selectableOnCanvas(WfComponent b) => !b.locked && !hiddenIds.contains(b.id);
 
+  /// การคลิก/ลากกรอบบนแคนวาสเลือกเฉพาะชิ้นที่โดน ไม่ลามไปทั้งกลุ่ม — จะเลือกทั้งกลุ่มต้องกดที่แถวกลุ่มในแผงเลเยอร์ (หรือติ๊กช่องของกลุ่ม)
   @override
-  Set<String> withGroup(String id) {
-    final g = diagram.componentById(id)?.group;
-    if (g == null) return {id};
-    return {for (final c in diagram.components) if (c.group == g) c.id};
-  }
+  Set<String> withGroup(String id) => {id};
+
+  /// สมาชิกทั้งกลุ่ม [group] (ใช้ตอนกดแถวกลุ่ม)
+  Set<String> groupIds(String group) => {for (final c in diagram.components) if (c.group == group) c.id};
 
   @override
   double rotationOf(WfComponent b) => b.rotation;
@@ -275,9 +275,10 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
   /// - ลากชิ้นไปวางใต้หัวกลุ่มที่กางอยู่ (รวมกลุ่มเปล่า) หรือเหนือสมาชิกของกลุ่ม = เข้ากลุ่มนั้น ; วางนอกกลุ่ม = ออกจากกลุ่ม
   /// - กลุ่มที่สมาชิกถูกลากออกหมดยังอยู่เป็นกลุ่มเปล่า (ลบได้จากปุ่มบนหัวกลุ่ม)
   /// คืน true ถ้าลำดับ/กลุ่มเปลี่ยน
-  bool moveLayerRow(Set<String> collapsed, int oldIndex, int newIndex) {
+  /// [explicit] = ผู้ใช้ระบุกลุ่มปลายทางเอง ([group] ; null = นอกกลุ่ม) — ใช้เมื่อวางด้วยการลากบนแถว ไม่เดาจากแถวข้างเคียง
+  bool moveLayerRow(Set<String> collapsed, int oldIndex, int newIndex, {bool explicit = false, String? group}) {
     final rows = layerRows(collapsed);
-    if (oldIndex < 0 || oldIndex >= rows.length || oldIndex == newIndex) return false;
+    if (oldIndex < 0 || oldIndex >= rows.length || (oldIndex == newIndex && !explicit)) return false;
     final moving = rows[oldIndex];
     final withoutMoved = [...rows]..removeAt(oldIndex);
     final below = newIndex < withoutMoved.length ? withoutMoved[newIndex] : null;
@@ -299,6 +300,8 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
       while (pos < rest.length && !rest[pos].header && rest[pos].group != null && pos > 0 && (rest[pos - 1].group == rest[pos].group)) {
         pos++;
       }
+    } else if (explicit) {
+      newGroup = group;
     } else {
       final above = pos > 0 ? rest[pos - 1] : null;
       final under = pos < rest.length ? rest[pos] : null;
@@ -343,9 +346,10 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
         c.group = groupOf[c.id];
       }
       d.syncGroups();
+      final used = {for (final c in d.components) ?c.group};
       for (final g in d.groups) {
         final above = headerSeen[g.id];
-        if (above != null) g.at = total - above;
+        if (above != null && !used.contains(g.id)) g.at = total - above; // ตำแหน่งเก็บเฉพาะกลุ่มเปล่า (มีสมาชิกแล้วตามสมาชิก)
       }
     });
   }
