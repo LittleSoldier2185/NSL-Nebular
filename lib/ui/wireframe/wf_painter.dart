@@ -1,4 +1,7 @@
+import 'dart:collection';
+import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -22,6 +25,9 @@ const List<int> kWfPalette = [
   0xFF000000,
 ];
 
+/// ระยะจุดจับหมุนเหนือขอบบนของชิ้น (พิกเซลจอ)
+const double kWfRotateHandleGap = 26;
+
 void _strokeDashed(Canvas canvas, Path path, Paint paint) {
   for (final m in path.computeMetrics()) {
     var dist = 0.0;
@@ -35,10 +41,17 @@ void _strokeDashed(Canvas canvas, Path path, Paint paint) {
   }
 }
 
-/// วาดชิ้นวาดกลางของ Wireframe ลงใน [canvas] (พิกัดหน้าจอ ผู้เรียกจัดการ translate/scale เอง) — ใช้ทั้งบนจอ PNG และภาพย่อ
+/// วาดชิ้นวาดกลางของ Wireframe ลงใน [canvas] (พิกัดหน้าจอ ผู้เรียกจัดการ translate/scale เอง)
 void paintWfPrims(Canvas canvas, List<WfPrim> prims) {
   for (final p in prims) {
     switch (p) {
+      case WfGroupPrim():
+        canvas.save();
+        canvas.translate(p.cx, p.cy);
+        canvas.rotate(p.degrees * math.pi / 180);
+        canvas.translate(-p.cx, -p.cy);
+        paintWfPrims(canvas, p.children);
+        canvas.restore();
       case WfPathPrim():
         final path = fcPath(p.cmds);
         if (p.fill != null) canvas.drawPath(path, Paint()..color = Color(p.fill!));
@@ -78,22 +91,91 @@ void paintWfPrims(Canvas canvas, List<WfPrim> prims) {
         final dx = switch (p.align) { 1 => p.x + (p.w - tp.width) / 2, 2 => p.x + p.w - tp.width, _ => p.x };
         final dy = p.top ? p.y : p.y + (p.h - tp.height) / 2;
         tp.paint(canvas, Offset(dx, dy));
+        tp.dispose();
     }
   }
 }
 
-/// วาดหน้าจอ Wireframe ทั้งกรอบ ([hideTextOf] = ชิ้นที่กำลังพิมพ์บนแคนวาส ไม่วาดข้อความซ้อน)
-void paintWireframe(Canvas canvas, WireframeDiagram d, {String? hideTextOf}) {
-  var src = d;
-  if (hideTextOf != null && d.componentById(hideTextOf) != null) {
-    src = WireframeDiagram(device: d.device, width: d.width, height: d.height, style: d.style, accent: d.accent, components: [
-      for (final c in d.components) c.id == hideTextOf ? WfComponent.tryFromJson({...c.toJson(), 'text': ''})! : c,
-    ]);
+/// ที่เก็บภาพที่วาดแล้วของแต่ละชิ้น (วาดที่มุม 0,0 ของชิ้น) — กุญแจ = รูปแบบการแสดงผล + ค่าทุกอย่างของชิ้นยกเว้นตำแหน่ง/การหมุน
+/// ลาก/ย้าย/หมุน/เลื่อน/ซูม จึงไม่ต้องสร้างชิ้นวาดและวัดข้อความใหม่ ; เก็บสูงสุด [_max] ภาพ (ใช้ล่าสุดอยู่ท้าย)
+class WfPictureCache {
+  WfPictureCache._();
+
+  static const _max = 4000;
+  static final LinkedHashMap<String, ui.Picture> _pics = LinkedHashMap();
+
+  static int get length => _pics.length;
+  static void clear() => _pics.clear();
+
+  static ui.Picture _get(String key, void Function(Canvas c) draw) {
+    final hit = _pics.remove(key);
+    if (hit != null) {
+      _pics[key] = hit;
+      return hit;
+    }
+    final rec = ui.PictureRecorder();
+    draw(Canvas(rec));
+    final pic = rec.endRecording();
+    _pics[key] = pic;
+    // ภาพเก่าที่ถูกตัดออกปล่อยให้ระบบเก็บกวาดเอง (อาจยังถูกอ้างในเฟรมที่กำลังวาด)
+    if (_pics.length > _max) _pics.remove(_pics.keys.first);
+    return pic;
   }
-  paintWfPrims(canvas, wireframePrims(src));
+
+  static String _styleKey(WireframeDiagram d) => '${d.style.name}|${d.accent}';
+
+  static ui.Picture frame(WireframeDiagram d) =>
+      _get('F|${_styleKey(d)}|${d.width}|${d.height}', (c) => paintWfPrims(c, wfFramePrims(d)));
+
+  static ui.Picture component(WireframeDiagram d, WfComponent comp, {bool noText = false}) {
+    final j = comp.toJson()
+      ..remove('x')
+      ..remove('y')
+      ..remove('rotation')
+      ..remove('hidden')
+      ..remove('locked')
+      ..remove('group')
+      ..remove('ref')
+      ..remove('api');
+    if (noText) j['text'] = '';
+    return _get('C|${_styleKey(d)}|${jsonEncode(j)}', (c) {
+      final local = WfComponent.tryFromJson({...j, 'x': 0, 'y': 0})!;
+      paintWfPrims(c, wfComponentPrims(d, local));
+    });
+  }
 }
 
-/// ตัวพิมพ์บนจอ: เลื่อน/ซูม แล้ววาดหน้าจอ + ป้ายขนาดหน้าจอ + ชิปข้อมูล ER + กรอบเลือก/จุดจับ + กรอบลากเลือก
+/// วาดหน้าจอ Wireframe ทั้งกรอบจากภาพที่เก็บไว้ ([hideTextOf] = ชิ้นที่กำลังพิมพ์บนแคนวาส ไม่วาดข้อความซ้อน) ; ชิ้นที่ซ่อนไม่ถูกวาด
+void paintWireframe(Canvas canvas, WireframeDiagram d, {String? hideTextOf, Set<String>? hidden}) {
+  canvas.drawPicture(WfPictureCache.frame(d));
+  final hide = hidden ?? wfHiddenIds(d);
+  for (final c in d.components) {
+    if (hide.contains(c.id)) continue;
+    final pic = WfPictureCache.component(d, c, noText: c.id == hideTextOf);
+    canvas.save();
+    if (c.rotation == 0) {
+      canvas.translate(c.x, c.y);
+    } else {
+      canvas.translate(c.x + c.w / 2, c.y + c.h / 2);
+      canvas.rotate(c.rotation * math.pi / 180);
+      canvas.translate(-c.w / 2, -c.h / 2);
+    }
+    canvas.drawPicture(pic);
+    canvas.restore();
+  }
+}
+
+/// ทำงานในพิกัดของชิ้น [c] (มุมบนซ้าย 0,0 ก่อนหมุน)
+void _inLocal(Canvas canvas, WfComponent c, void Function() draw) {
+  canvas.save();
+  canvas.translate(c.x + c.w / 2, c.y + c.h / 2);
+  canvas.rotate(c.rotation * math.pi / 180);
+  canvas.translate(-c.w / 2, -c.h / 2);
+  draw();
+  canvas.restore();
+}
+
+/// ตัวพิมพ์บนจอ: เลื่อน/ซูม แล้ววาดหน้าจอ + ป้ายขนาดหน้าจอ + ชิปข้อมูล ER + กรอบเลือก/จุดจับ/จุดหมุน + กรอบลากเลือก
 class WireframeScreenPainter extends CustomPainter {
   WireframeScreenPainter({
     required this.diagram,
@@ -103,6 +185,7 @@ class WireframeScreenPainter extends CustomPainter {
     this.selected = const {},
     this.children = const {},
     this.chips = const {},
+    this.hidden = const {},
     this.marquee,
     this.hideTextOf,
   });
@@ -118,6 +201,9 @@ class WireframeScreenPainter extends CustomPainter {
 
   /// ชิปข้อมูล ER: id ชิ้น -> (ข้อความ, ผูกขาด?)
   final Map<String, (String, bool)> chips;
+
+  /// ชิ้นที่มองไม่เห็น (ซ่อนเอง/อยู่ในภาชนะที่ซ่อน)
+  final Set<String> hidden;
   final Rect? marquee;
   final String? hideTextOf;
 
@@ -133,7 +219,7 @@ class WireframeScreenPainter extends CustomPainter {
         ..color = Colors.black.withValues(alpha: C.isDark ? 0.35 : 0.10)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
     );
-    paintWireframe(canvas, diagram, hideTextOf: hideTextOf);
+    paintWireframe(canvas, diagram, hideTextOf: hideTextOf, hidden: hidden);
 
     final label = TextPainter(
       text: TextSpan(text: frameLabel, style: TextStyle(fontFamily: kThai, fontSize: 12 / scale, color: C.muted)),
@@ -144,7 +230,7 @@ class WireframeScreenPainter extends CustomPainter {
 
     for (final c in diagram.components) {
       final chip = chips[c.id];
-      if (chip == null) continue;
+      if (chip == null || hidden.contains(c.id)) continue;
       final (text, broken) = chip;
       final color = broken ? C.danger : const Color(0xFF0D9488);
       final tp = TextPainter(
@@ -153,33 +239,64 @@ class WireframeScreenPainter extends CustomPainter {
         maxLines: 1,
         ellipsis: '…',
       )..layout(maxWidth: math.max(40 / scale, c.w));
-      final r = Rect.fromLTWH(c.right - tp.width - 8 / scale, c.y - tp.height - 2 / scale, tp.width + 8 / scale, tp.height + 2 / scale);
+      final bb = wfBounds(c);
+      final r = Rect.fromLTWH(bb.right - tp.width - 8 / scale, bb.top - tp.height - 2 / scale, tp.width + 8 / scale, tp.height + 2 / scale);
       canvas.drawRRect(RRect.fromRectAndRadius(r, Radius.circular(4 / scale)), Paint()..color = color);
       tp.paint(canvas, Offset(r.left + 4 / scale, r.top + 1 / scale));
     }
 
     for (final c in diagram.components) {
-      if (children.contains(c.id)) {
-        canvas.drawRect(
-          Rect.fromLTWH(c.x, c.y, c.w, c.h).inflate(2 / scale),
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1 / scale
-            ..color = C.primary.withValues(alpha: 0.45),
-        );
-      }
-      if (!selected.contains(c.id)) continue;
-      canvas.drawRect(
-        Rect.fromLTWH(c.x, c.y, c.w, c.h).inflate(3 / scale),
-        Paint()
+      final isSel = selected.contains(c.id);
+      if (!isSel && !children.contains(c.id)) continue;
+      _inLocal(canvas, c, () {
+        final rect = Rect.fromLTWH(0, 0, c.w, c.h);
+        if (!isSel) {
+          canvas.drawRect(
+            rect.inflate(2 / scale),
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1 / scale
+              ..color = C.primary.withValues(alpha: 0.45),
+          );
+          return;
+        }
+        final paint = Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.6 / scale
-          ..color = C.primary,
-      );
+          ..color = c.locked ? C.muted : C.primary;
+        if (hidden.contains(c.id)) {
+          _strokeDashed(canvas, Path()..addRect(rect.inflate(3 / scale)), paint);
+        } else {
+          canvas.drawRect(rect.inflate(3 / scale), paint);
+        }
+      });
     }
     if (selected.length == 1) {
       final c = diagram.componentById(selected.first);
-      if (c != null) paintResizeHandles(canvas, Rect.fromLTWH(c.x, c.y, c.w, c.h), scale);
+      if (c != null && !c.locked) {
+        _inLocal(canvas, c, () {
+          paintResizeHandles(canvas, Rect.fromLTWH(0, 0, c.w, c.h), scale);
+          // จุดหมุน: วงกลมเหนือกึ่งกลางขอบบน + เส้นต่อ
+          final top = Offset(c.w / 2, 0);
+          final knob = Offset(c.w / 2, -kWfRotateHandleGap / scale);
+          canvas.drawLine(
+            top,
+            knob,
+            Paint()
+              ..strokeWidth = 1.2 / scale
+              ..color = C.primary,
+          );
+          canvas.drawCircle(knob, 5 / scale, Paint()..color = C.surface);
+          canvas.drawCircle(
+            knob,
+            5 / scale,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.4 / scale
+              ..color = C.primary,
+          );
+        });
+      }
     }
     canvas.restore();
     paintMarquee(canvas, marquee);

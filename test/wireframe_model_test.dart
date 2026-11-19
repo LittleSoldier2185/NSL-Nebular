@@ -194,6 +194,7 @@ void main() {
         final colors = switch (p) {
           WfPathPrim() => [?p.fill, ?p.stroke],
           WfTextPrim() => [p.color],
+          WfGroupPrim() => <int>[], // ไม่มีชิ้นหมุนในตัวอย่างนี้
         };
         for (final c in colors) {
           final r = (c >> 16) & 0xFF, g = (c >> 8) & 0xFF, b = c & 0xFF;

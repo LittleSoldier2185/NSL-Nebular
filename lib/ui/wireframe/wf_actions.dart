@@ -57,6 +57,10 @@ class WireframeActions {
         f.selectAll();
       case Cmd.duplicate:
         f.duplicateSelection();
+      case Cmd.groupSelected:
+        f.groupSelection();
+      case Cmd.ungroupSelected:
+        f.ungroupSelection();
       case Cmd.copy:
         copy();
       case Cmd.paste:

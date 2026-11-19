@@ -59,7 +59,7 @@ class StatusBar extends StatelessWidget {
     } else if (w.activeDocument.type == DocType.wireframe) {
       final d = w.wireframeOf(w.activeId);
       summary = tr('{0} ชิ้นส่วน · {1}', [d.components.length, wfStyleLabel(d.style)]);
-      issues = validateWireframe(d, workspace: w.workspace);
+      issues = wf.docId == w.activeId ? wf.issues : validateWireframe(d, workspace: w.workspace);
       zoom = wf.scale;
     } else if (w.activeDocument.type == DocType.api) {
       final d = w.workspace.documentById(w.activeId)!.api!;

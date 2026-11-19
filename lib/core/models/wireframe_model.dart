@@ -173,9 +173,14 @@ class WfComponent implements EditableBox {
     this.checked = false,
     this.secondary = false,
     this.ref,
+    this.hidden = false,
+    this.locked = false,
+    this.group,
+    double rotation = 0,
   })  : w = w ?? wfDefaultSize(kind).$1,
         h = h ?? wfDefaultSize(kind).$2,
-        columns = columns ?? [];
+        columns = columns ?? [],
+        rotation = wfNormAngle(rotation);
 
   @override
   final String id;
@@ -212,6 +217,18 @@ class WfComponent implements EditableBox {
   /// ผูกกับตาราง/คอลัมน์ใน ER (null = ไม่ผูก)
   WfDataRef? ref;
 
+  /// ซ่อน (ไม่วาดบนแคนวาส/ภาพย่อ/Export ; ซ่อนภาชนะ = ลูกซ่อนตาม) — เหมือนปิดตาในแผงเลเยอร์
+  bool hidden;
+
+  /// ล็อก: คลิก/ลากเลือกบนแคนวาสไม่โดน ย้าย/ปรับขนาด/หมุน/ลบไม่ได้ (เลือกจากแผงเลเยอร์ได้)
+  bool locked;
+
+  /// รหัสกลุ่ม (null = ไม่อยู่กลุ่ม) — สมาชิกกลุ่มเดียวกันถูกเลือก/ย้ายพร้อมกัน
+  String? group;
+
+  /// มุมหมุนรอบจุดกึ่งกลาง (องศา ตามเข็มนาฬิกา, 0 ถึง <360)
+  double rotation;
+
   double get right => x + w;
   double get bottom => y + h;
   double get effectiveFontSize => fontSize ?? wfDefaultFontSize(kind);
@@ -243,6 +260,10 @@ class WfComponent implements EditableBox {
         if (secondary) 'secondary': true,
         if (ref != null) 'ref': ref!.toJson(),
         if (api != null) 'api': api!.toJson(),
+        if (hidden) 'hidden': true,
+        if (locked) 'locked': true,
+        if (group != null) 'group': group,
+        if (rotation != 0) 'rotation': rotation,
       };
 
   /// ค่าผิดปกติ = null (ข้ามชิ้นนั้น) หรือใช้ค่าปลอดภัย
@@ -284,6 +305,10 @@ class WfComponent implements EditableBox {
       checked: j['checked'] == true,
       secondary: j['secondary'] == true,
       ref: WfDataRef.tryFromJson(j['ref']),
+      hidden: j['hidden'] == true,
+      locked: j['locked'] == true,
+      group: j['group'] is String && (j['group'] as String).isNotEmpty ? j['group'] as String : null,
+      rotation: j['rotation'] is num && (j['rotation'] as num).isFinite ? (j['rotation'] as num).toDouble() : 0,
     )..api = ApiRef.tryFromJson(j['api']);
   }
 }
@@ -385,4 +410,63 @@ Set<String> wfDescendants(WireframeDiagram d, Set<String> ids, [Map<String, Stri
     }
   }
   return out;
+}
+
+/// มุมในช่วง 0 ถึง <360 (ปัดละเอียด 0.001 องศา) ; ค่าที่ไม่ใช่ตัวเลข = 0
+double wfNormAngle(double a) {
+  if (!a.isFinite) return 0;
+  var r = a % 360;
+  if (r < 0) r += 360;
+  r = (r * 1000).round() / 1000;
+  return r >= 360 ? 0 : r;
+}
+
+/// จุด ([x],[y]) ในพิกัดหน้าจอ -> พิกัดของชิ้น [c] ก่อนหมุน (หมุนกลับรอบจุดกึ่งกลาง)
+(double, double) wfToLocal(WfComponent c, double x, double y) {
+  if (c.rotation == 0) return (x, y);
+  final cx = c.x + c.w / 2, cy = c.y + c.h / 2;
+  final a = -c.rotation * math.pi / 180;
+  final dx = x - cx, dy = y - cy;
+  return (cx + dx * math.cos(a) - dy * math.sin(a), cy + dx * math.sin(a) + dy * math.cos(a));
+}
+
+/// จุด ([x],[y]) อยู่บนชิ้น [c] (คิดการหมุนแล้ว ; [tol] = ระยะเผื่อ)
+bool wfContains(WfComponent c, double x, double y, {double tol = 0}) {
+  final (lx, ly) = wfToLocal(c, x, y);
+  return lx >= c.x - tol && lx <= c.right + tol && ly >= c.y - tol && ly <= c.bottom + tol;
+}
+
+/// กรอบตั้งฉากที่ครอบชิ้น [c] หลังหมุน
+({double left, double top, double right, double bottom}) wfBounds(WfComponent c) {
+  if (c.rotation == 0) return (left: c.x, top: c.y, right: c.right, bottom: c.bottom);
+  final a = c.rotation * math.pi / 180;
+  final hw = (c.w / 2 * math.cos(a)).abs() + (c.h / 2 * math.sin(a)).abs();
+  final hh = (c.w / 2 * math.sin(a)).abs() + (c.h / 2 * math.cos(a)).abs();
+  final cx = c.x + c.w / 2, cy = c.y + c.h / 2;
+  return (left: cx - hw, top: cy - hh, right: cx + hw, bottom: cy + hh);
+}
+
+/// ชิ้นที่มองไม่เห็น: ชิ้นที่ซ่อน + ลูกหลานในภาชนะที่ซ่อน
+Set<String> wfHiddenIds(WireframeDiagram d, [Map<String, String>? parents]) {
+  final own = {for (final c in d.components) if (c.hidden) c.id};
+  if (own.isEmpty) return own;
+  return {...own, ...wfDescendants(d, own, parents)};
+}
+
+/// สมาชิกของกลุ่ม [group] ตามลำดับการซ้อน
+List<WfComponent> wfGroupMembers(WireframeDiagram d, String group) => [for (final c in d.components) if (c.group == group) c];
+
+/// ขอบเขตของภาพทั้งหน้าจอ: กรอบหน้าจอ + ชิ้นที่มองเห็น (ชิ้นที่ล้นออกนอกกรอบก็นับ ; คิดการหมุนแล้ว)
+({double left, double top, double right, double bottom}) wfContentBounds(WireframeDiagram d) {
+  var l = 0.0, t = 0.0, r = d.width, b = d.height;
+  final hidden = wfHiddenIds(d);
+  for (final c in d.components) {
+    if (hidden.contains(c.id)) continue;
+    final bb = wfBounds(c);
+    l = math.min(l, bb.left);
+    t = math.min(t, bb.top);
+    r = math.max(r, bb.right);
+    b = math.max(b, bb.bottom);
+  }
+  return (left: l, top: t, right: r, bottom: b);
 }

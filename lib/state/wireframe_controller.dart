@@ -4,6 +4,8 @@ import '../core/layout/box_ops.dart';
 import '../core/layout/diagram_geometry.dart' show snapToGrid;
 import '../core/models/wireframe_model.dart';
 import '../core/models/workspace.dart';
+import '../core/validate/issue.dart';
+import '../core/validate/wireframe_validator.dart';
 import 'box_diagram_controller.dart';
 import 'workspace_controller.dart';
 
@@ -67,7 +69,113 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
   // ---------- ลูกในภาชนะ ----------
 
   @override
-  Set<String> moveSet(Set<String> ids) => {...ids, ...wfDescendants(diagram, ids)};
+  Set<String> moveSet(Set<String> ids) => ids.isEmpty ? ids : {...ids, ...wfDescendants(diagram, ids, parents)};
+
+  // ---------- ค่าที่คำนวณแล้วเก็บไว้ (คำนวณใหม่เมื่อเนื้อหาเปลี่ยน) ----------
+
+  Object? _cacheKey;
+  Map<String, String> _parents = const {};
+  Set<String> _hidden = const {};
+
+  void _refresh() {
+    final d = diagram;
+    final key = (revision, identityHashCode(d), d.components.length);
+    if (key == _cacheKey) return;
+    _cacheKey = key;
+    _parents = wfParentMap(d);
+    _hidden = wfHiddenIds(d, _parents);
+  }
+
+  /// พ่อของแต่ละชิ้น (ภาชนะที่ครอบ) — ดู [wfParentMap]
+  Map<String, String> get parents {
+    _refresh();
+    return _parents;
+  }
+
+  /// ชิ้นที่มองไม่เห็น (ซ่อนเอง/อยู่ในภาชนะที่ซ่อน)
+  Set<String> get hiddenIds {
+    _refresh();
+    return _hidden;
+  }
+
+  List<Issue>? _issues;
+  Object? _issuesKey;
+
+  /// ผลตรวจหน้าจอนี้ — คำนวณใหม่เมื่อเนื้อหา/โปรเจกต์เปลี่ยน ; ระหว่างลากใช้ผลเดิม (ตรวจใหม่ตอนปล่อยเมาส์)
+  List<Issue> get issues {
+    final key = (revision, workspace.changeTick, identityHashCode(diagram));
+    final cached = _issues;
+    if (cached != null && (key == _issuesKey || gestureActive)) return cached;
+    _issuesKey = key;
+    return _issues = validateWireframe(diagram, workspace: workspace.workspace);
+  }
+
+  // ---------- ซ่อน / ล็อก / กลุ่ม / หมุน ----------
+
+  @override
+  bool isLocked(WfComponent b) => b.locked;
+
+  @override
+  bool selectableOnCanvas(WfComponent b) => !b.locked && !hiddenIds.contains(b.id);
+
+  @override
+  Set<String> withGroup(String id) {
+    final g = diagram.componentById(id)?.group;
+    if (g == null) return {id};
+    return {for (final c in diagram.components) if (c.group == g) c.id};
+  }
+
+  @override
+  double rotationOf(WfComponent b) => b.rotation;
+
+  @override
+  void setRotationOf(WfComponent b, double degrees) => b.rotation = wfNormAngle(degrees);
+
+  @override
+  bool get canRotate => true;
+
+  /// ซ่อน/แสดงชิ้น [ids] — undo ได้
+  void setHidden(Iterable<String> ids, bool hidden) => updateComponents(ids, (c) => c.hidden = hidden);
+
+  /// ล็อก/ปลดล็อกชิ้น [ids] — undo ได้
+  void setLocked(Iterable<String> ids, bool locked) => updateComponents(ids, (c) => c.locked = locked);
+
+  /// จัดชิ้นที่เลือก (ตั้งแต่ 2 ชิ้น) เป็นกลุ่มเดียว — สมาชิกถูกย้ายมาติดกันในลำดับการซ้อน ณ ตำแหน่งของสมาชิกที่อยู่บนสุด
+  /// (ลำดับภายในคงเดิม ; กลุ่มเดิมของสมาชิกถูกยุบรวม) — undo ขั้นเดียว ; คืนรหัสกลุ่มใหม่ (null = ไม่ได้ทำ)
+  String? groupSelection() {
+    final ids = selectedIds;
+    if (!active || ids.length < 2) return null;
+    final gid = workspace.newId('g');
+    edit((d) {
+      final list = d.components;
+      final members = [for (final c in list) if (ids.contains(c.id)) c];
+      final topIndex = list.lastIndexWhere((c) => ids.contains(c.id));
+      final below = list.sublist(0, topIndex + 1).where((c) => !ids.contains(c.id)).toList();
+      final above = list.sublist(topIndex + 1);
+      for (final m in members) {
+        m.group = gid;
+      }
+      list
+        ..clear()
+        ..addAll(below)
+        ..addAll(members)
+        ..addAll(above);
+    });
+    notifyListeners();
+    return gid;
+  }
+
+  /// เลิกจัดกลุ่มของชิ้นที่เลือก — คืน true ถ้ามีกลุ่มให้เลิก
+  bool ungroupSelection() {
+    final ids = selectedIds;
+    if (!active || !selectedBoxes.any((c) => c.group != null)) return false;
+    updateComponents(ids, (c) => c.group = null);
+    notifyListeners();
+    return true;
+  }
+
+  /// ที่เลือกอยู่มีสมาชิกของกลุ่ม (เปิด/ปิดปุ่ม "เลิกกลุ่ม")
+  bool get selectionHasGroup => selectedBoxes.any((c) => c.group != null);
 
   // ---------- ข้อความ ----------
 
@@ -239,11 +347,13 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
     final src = decodeWireframeClipboard(text);
     if (!active || src == null) return 0;
     final ids = <String>[];
+    final groups = <String, String>{}; // กลุ่มเดิม -> กลุ่มใหม่ (สำเนาเป็นกลุ่มของตัวเอง ไม่ปนกับต้นฉบับ)
     edit((d) {
       for (final c in src) {
         final id = workspace.newId('w');
         ids.add(id);
-        d.components.add(WfComponent.tryFromJson({...c.toJson(), 'id': id, 'x': c.x + offset, 'y': c.y + offset})!);
+        final g = c.group == null ? null : groups.putIfAbsent(c.group!, () => workspace.newId('g'));
+        d.components.add(WfComponent.tryFromJson({...c.toJson(), 'id': id, 'x': c.x + offset, 'y': c.y + offset, 'group': g, 'locked': false})!);
       }
     });
     // เลือกเฉพาะชิ้นบนสุด (ไม่ใช่ลูก) เพื่อให้ลากย้ายทั้งก้อนได้ทันที

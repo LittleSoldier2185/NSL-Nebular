@@ -1585,4 +1585,15 @@ const Map<String, String> kEn = {
   '{0} หน้าจอ': '{0} screens',
   'ขาวดำ เส้นวาดมือ': 'Monochrome, hand-drawn lines',
   'UI สีสว่าง ใช้สีเน้น': 'Light UI with accent color',
+  // Wireframe: เลเยอร์ (ซ่อน/ล็อก/กลุ่ม) + หมุน
+  'ล็อก': 'Lock',
+  'ปลดล็อก': 'Unlock',
+  'ซ่อน': 'Hide',
+  'แสดง': 'Show',
+  'หมุน 90° ตามเข็ม': 'Rotate 90° clockwise',
+  'หมุน 90° ทวนเข็ม': 'Rotate 90° counter-clockwise',
+  'หมุน (องศา)': 'Rotation (°)',
+  'ไม่หมุน (0°)': 'Reset rotation (0°)',
+  'กลุ่ม · {0} ชิ้น': 'Group · {0} items',
+  'ล็อกอยู่ — ย้าย/ปรับขนาด/หมุน/ลบบนแคนวาสไม่ได้': 'Locked — cannot move, resize, rotate or delete on the canvas',
 };

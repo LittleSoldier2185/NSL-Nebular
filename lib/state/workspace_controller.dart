@@ -18,6 +18,7 @@ import 'screenflow_controller.dart';
 import 'wireframe_controller.dart';
 import '../core/models/review_note.dart';
 import '../core/mock/mock_settings.dart';
+import '../core/validate/workspace_validator.dart';
 import '../core/models/api_model.dart';
 import 'api_controller.dart';
 import '../core/models/traceability.dart';
@@ -370,6 +371,32 @@ class WorkspaceController extends ChangeNotifier {
   }
 
   void _onDocChanged() => notifyListeners();
+
+  int _tick = 0;
+
+  /// นับขึ้นทุกครั้งที่ controller นี้แจ้งผู้ฟัง — ใช้เป็นกุญแจของค่าที่คำนวณแล้วเก็บไว้ใช้ซ้ำในรอบวาดเดียวกัน
+  int get changeTick => _tick;
+
+  @override
+  void notifyListeners() {
+    _tick++;
+    super.notifyListeners();
+  }
+
+  /// มีเอกสารใดกำลังลาก/ปรับขนาด/หมุนอยู่บนแคนวาส
+  bool get anyGestureActive => _controllers.values.any((c) => c.gestureActive);
+
+  List<WorkspaceIssue>? _wsIssues;
+  int _wsIssuesTick = -1;
+
+  /// ผลตรวจทั้งโปรเจกต์ ([validateWorkspace]) — คำนวณครั้งเดียวต่อการเปลี่ยนแปลง (หลายวิดเจ็ตใช้ร่วมกัน)
+  /// และระหว่างลากบนแคนวาสใช้ผลเดิม (ไม่ตรวจทั้งโปรเจกต์ใหม่ทุกเฟรม — ตรวจใหม่ตอนปล่อยเมาส์)
+  List<WorkspaceIssue> get workspaceIssues {
+    final cached = _wsIssues;
+    if (cached != null && (_wsIssuesTick == _tick || anyGestureActive)) return cached;
+    _wsIssuesTick = _tick;
+    return _wsIssues = validateWorkspace(_workspace);
+  }
 
   // ---------- เปิด / ใหม่ / กู้คืน / บันทึก ----------
 

@@ -7,8 +7,17 @@ import 'svg_util.dart';
 /// เขียนชิ้นวาดของ Wireframe ([wireframePrims]) เป็นองค์ประกอบ SVG (ไม่มีแท็ก svg ครอบ) — ใช้ทั้งไฟล์ภาพและภาพย่อใน Screen Flow
 String wireframeSvgBody(List<WfPrim> prims) {
   final out = StringBuffer();
+  _svgPrims(out, prims);
+  return out.toString();
+}
+
+void _svgPrims(StringBuffer out, List<WfPrim> prims) {
   for (final p in prims) {
     switch (p) {
+      case WfGroupPrim():
+        out.writeln('<g transform="rotate(${svgNum(p.degrees)} ${svgNum(p.cx)} ${svgNum(p.cy)})">');
+        _svgPrims(out, p.children);
+        out.writeln('</g>');
       case WfPathPrim():
         final fill = p.fill == null ? 'fill="none"' : svgPaint('fill', p.fill!);
         final stroke = p.stroke == null
@@ -34,20 +43,14 @@ String wireframeSvgBody(List<WfPrim> prims) {
         out.writeln('</text>');
     }
   }
-  return out.toString();
 }
 
 /// ภาพ SVG ของหน้าจอ Wireframe ทั้งกรอบ (ตามรูปแบบการแสดงผลของเอกสาร) ; [transparent] = ไม่มีพื้นหลังรอบกรอบ
 String exportWireframeSvg(WireframeDiagram d, {String title = 'Wireframe', bool transparent = false}) {
   const pad = 24.0;
   // ชิ้นที่ล้นออกนอกกรอบก็อยู่ในภาพ
-  var l = 0.0, t = 0.0, r = d.width, b = d.height;
-  for (final c in d.components) {
-    l = math.min(l, c.x);
-    t = math.min(t, c.y);
-    r = math.max(r, c.right);
-    b = math.max(b, c.bottom);
-  }
+  final cb = wfContentBounds(d);
+  var l = cb.left, t = cb.top, r = cb.right, b = cb.bottom;
   l -= pad;
   t -= pad;
   r += pad;

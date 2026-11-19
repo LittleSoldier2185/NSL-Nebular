@@ -39,6 +39,13 @@ class WfTextPrim extends WfPrim {
   final int? maxLines;
 }
 
+/// ชิ้นวาดที่หมุนรอบจุด ([cx],[cy]) เป็นมุม [degrees] (ตามเข็มนาฬิกา) — ใช้กับชิ้นส่วนที่หมุน
+class WfGroupPrim extends WfPrim {
+  const WfGroupPrim(this.children, {required this.cx, required this.cy, required this.degrees});
+  final List<WfPrim> children;
+  final double cx, cy, degrees;
+}
+
 /// ชุดสีของการแสดงผล
 class WfPalette {
   const WfPalette({
@@ -111,9 +118,35 @@ List<WfPrim> wireframePrims(WireframeDiagram d, {bool frame = true}) {
   if (frame) {
     b.rect(0, 0, d.width, d.height, fill: p.frame, stroke: p.sketch ? p.border : 0xFF98A2B3, width: p.sketch ? 1.6 : 1, seed: 7);
   }
+  final hidden = wfHiddenIds(d);
   for (final c in d.components) {
+    if (hidden.contains(c.id)) continue;
+    if (c.rotation == 0) {
+      _component(b, d, c);
+      continue;
+    }
+    final start = b.out.length;
     _component(b, d, c);
+    final kids = b.out.sublist(start);
+    b.out
+      ..removeRange(start, b.out.length)
+      ..add(WfGroupPrim(kids, cx: c.x + c.w / 2, cy: c.y + c.h / 2, degrees: c.rotation));
   }
+  return b.out;
+}
+
+/// ชิ้นวาดของชิ้น [c] ชิ้นเดียว ตามตำแหน่งของมัน (ไม่หมุน ไม่สนว่าซ่อน) — ใช้กับที่เก็บภาพของแคนวาส
+List<WfPrim> wfComponentPrims(WireframeDiagram d, WfComponent c) {
+  final b = _Builder(wfPalette(d));
+  _component(b, d, c);
+  return b.out;
+}
+
+/// ชิ้นวาดของกรอบหน้าจอเปล่า
+List<WfPrim> wfFramePrims(WireframeDiagram d) {
+  final p = wfPalette(d);
+  final b = _Builder(p);
+  b.rect(0, 0, d.width, d.height, fill: p.frame, stroke: p.sketch ? p.border : 0xFF98A2B3, width: p.sketch ? 1.6 : 1, seed: 7);
   return b.out;
 }
 

@@ -32,13 +32,8 @@ Future<PngExport?> _render(double left, double top, double width, double height,
 /// [transparent] = ไม่มีพื้นหลังรอบกรอบหน้าจอ
 Future<PngExport?> exportWireframePng(WireframeDiagram d, {double scale = 2, bool transparent = false}) {
   const pad = 24.0;
-  var l = 0.0, t = 0.0, r = d.width, b = d.height;
-  for (final c in d.components) {
-    l = math.min(l, c.x);
-    t = math.min(t, c.y);
-    r = math.max(r, c.right);
-    b = math.max(b, c.bottom);
-  }
+  final cb = wfContentBounds(d);
+  var l = cb.left, t = cb.top, r = cb.right, b = cb.bottom;
   l -= pad;
   t -= pad;
   r += pad;

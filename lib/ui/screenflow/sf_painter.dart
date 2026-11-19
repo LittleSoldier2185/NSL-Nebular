@@ -6,14 +6,13 @@ import '../../core/layout/diagram_geometry.dart' show roundedRoute;
 import '../../core/layout/flowchart_geometry.dart' show fcArrowHead;
 import '../../core/layout/ortho_route.dart';
 import '../../core/layout/screenflow_geometry.dart';
-import '../../core/layout/wireframe_render.dart';
 import '../../core/models/flowchart_model.dart' show FcArrow;
 import '../../core/models/screenflow_model.dart';
 import '../../core/models/wireframe_model.dart';
 import '../canvas/box_canvas.dart' show paintMarquee, paintResizeHandles;
 import '../flowchart/fc_painter.dart' show fcPath;
 import '../theme.dart';
-import '../wireframe/wf_painter.dart' show paintWfPrims;
+import '../wireframe/wf_painter.dart' show paintWireframe;
 
 const double kSfLabelSize = 12;
 
@@ -160,7 +159,7 @@ void _paintNode(Canvas canvas, SfNode n, {WireframeDiagram? Function(String id)?
       canvas.translate(f.dx, f.dy);
       canvas.scale(f.scale);
       canvas.clipRect(Rect.fromLTWH(0, 0, wf.width, wf.height));
-      paintWfPrims(canvas, wireframePrims(wf));
+      paintWireframe(canvas, wf);
       canvas.restore();
     } else {
       final tp = TextPainter(

@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../core/l10n/l10n.dart';
 import '../core/models/workspace.dart';
 import '../core/validate/issue.dart';
-import '../core/validate/workspace_validator.dart';
 import '../state/workspace_controller.dart';
 import 'canvas/context_menu.dart';
 import 'document_actions.dart';
@@ -31,7 +30,7 @@ class _ProjectExplorerState extends State<ProjectExplorer> {
   Widget build(BuildContext context) {
     final w = context.watch<WorkspaceController>();
     final issues = <String, (int, int)>{}; // docId -> (errors, warnings)
-    for (final i in validateWorkspace(w.workspace)) {
+    for (final i in w.workspaceIssues) {
       final cur = issues[i.docId] ?? (0, 0);
       if (i.issue.severity == Severity.error) {
         issues[i.docId] = (cur.$1 + 1, cur.$2);

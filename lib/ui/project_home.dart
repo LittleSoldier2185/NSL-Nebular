@@ -74,7 +74,7 @@ class ProjectHomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = context.watch<WorkspaceController>();
-    final all = validateWorkspace(w.workspace);
+    final all = w.workspaceIssues;
     final perDoc = <String, _DocIssues>{};
     for (final i in all) {
       final cur = perDoc[i.docId] ?? (errors: 0, warnings: 0);

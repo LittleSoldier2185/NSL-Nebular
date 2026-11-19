@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/export/workspace_summary.dart' show screensLinkingTo;
 import '../../core/l10n/l10n.dart';
 import '../../core/layout/box_ops.dart';
-import '../../core/layout/wireframe_render.dart';
 import '../../core/models/wireframe_model.dart';
 import '../../core/validate/wireframe_validator.dart';
 import '../../state/wireframe_controller.dart';
@@ -148,6 +148,7 @@ class WireframeRightPanel extends StatelessWidget {
           color: C.surface,
           child: SingleChildScrollView(
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const _PanelHeader(),
               body,
               if (sel != null || f.selectedIds.length > 1) Divider(height: 1, color: C.border),
               const _LayersFold(),
@@ -393,6 +394,23 @@ class _ComponentProps extends StatelessWidget {
         const SizedBox(width: 6),
         _numField('wf-h', tr('สูง'), c.h, (v) => f.updateComponents([c.id], (x) => x.h = v.clamp(kWfMinSide, kWfMaxSide).toDouble())),
       ]),
+      const SizedBox(height: 8),
+      Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        _numField('wf-rotation', tr('หมุน (องศา)'), c.rotation, (v) => f.setRotation([c.id], v)),
+        const SizedBox(width: 4),
+        _toggle('wf-rot-ccw', Icons.rotate_left_rounded, tr('หมุน 90° ทวนเข็ม'), false, () => f.setRotation([c.id], -90, relative: true)),
+        _toggle('wf-rot-cw', Icons.rotate_right_rounded, tr('หมุน 90° ตามเข็ม'), false, () => f.setRotation([c.id], 90, relative: true)),
+        _toggle('wf-rot-reset', Icons.restart_alt_rounded, tr('ไม่หมุน (0°)'), false, () => f.setRotation([c.id], 0)),
+      ]),
+      if (c.locked) ...[
+        const SizedBox(height: 6),
+        Row(children: [
+          Icon(Icons.lock_rounded, size: 14, color: C.muted),
+          const SizedBox(width: 6),
+          Expanded(child: Text(tr('ล็อกอยู่ — ย้าย/ปรับขนาด/หมุน/ลบบนแคนวาสไม่ได้'), style: TextStyle(fontSize: 12, color: C.muted))),
+          TextButton(key: const ValueKey('wf-unlock'), onPressed: () => f.setLocked([c.id], false), child: Text(tr('ปลดล็อก'))),
+        ]),
+      ],
       const SizedBox(height: 14),
       _StyleSection(ids: {c.id}, sample: c),
       const SizedBox(height: 10),
@@ -529,48 +547,227 @@ class _FoldState extends State<_Fold> {
 
 String _styleShort(WfStyle s) => s == WfStyle.sketch ? tr('ร่าง') : tr('เรียบร้อย');
 
-/// เลเยอร์: ชิ้นส่วนบนหน้าจอทั้งหมด (บนสุดก่อน ; ลูกในภาชนะเยื้องเข้า) — คลิก = เลือกและเลื่อนไปที่ชิ้นนั้น
-class _LayersFold extends StatelessWidget {
-  const _LayersFold();
+/// หัวแผง (แสดงตลอด ไม่ว่าจะเลือกชิ้นส่วนหรือไม่): ชื่อหน้าจอ · จำนวนชิ้น · ภาพย่อ · ขนาด/รูปแบบ
+class _PanelHeader extends StatelessWidget {
+  const _PanelHeader();
 
   @override
   Widget build(BuildContext context) {
     final f = context.watch<WireframeController>();
-    final parents = wfParentMap(f.diagram);
+    final name = context.select<WorkspaceController, String>((w) => w.activeDocument.name);
+    final d = f.diagram;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: C.border))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Expanded(
+            child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+          ),
+          Text(tr('{0} ชิ้นส่วน', [d.components.length]), style: TextStyle(fontSize: 12.5, color: C.muted)),
+        ]),
+        const SizedBox(height: 10),
+        Container(
+          key: const ValueKey('wf-page-thumb'),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(color: C.bg, borderRadius: BorderRadius.circular(10), border: Border.all(color: C.border)),
+          // ระหว่างลากไม่วาดภาพย่อใหม่ทุกเฟรม (วาดใหม่ตอนปล่อยเมาส์)
+          child: RepaintBoundary(child: WireframeThumbnail(diagram: d, height: 130, version: f.gestureActive ? -1 : f.revision)),
+        ),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(
+            child: Text(wfFrameLabel(d), key: const ValueKey('wf-page-size'), style: TextStyle(fontSize: 11.5, color: C.muted), overflow: TextOverflow.ellipsis),
+          ),
+          Text(_styleShort(d.style), style: TextStyle(fontSize: 11.5, color: C.primaryDark)),
+        ]),
+      ]),
+    );
+  }
+}
+
+/// กลุ่มที่พับไว้ในแผงเลเยอร์ (สถานะมุมมอง ไม่บันทึกในไฟล์)
+final Set<String> _collapsedGroups = {};
+
+/// เลเยอร์ (แบบ Adobe): บนสุดก่อน ; กลุ่มเป็นแถวพับได้ ; ลูกในภาชนะเยื้องเข้า ; ทุกแถวมีตา (ซ่อน/แสดง) และกุญแจ (ล็อก)
+/// คลิกแถว = เลือกชิ้นนั้น (Ctrl/Shift = เพิ่ม/เอาออก) ; คลิกแถวกลุ่ม = เลือกทั้งกลุ่ม
+class _LayersFold extends StatefulWidget {
+  const _LayersFold();
+
+  @override
+  State<_LayersFold> createState() => _LayersFoldState();
+}
+
+class _LayersFoldState extends State<_LayersFold> {
+  bool get _additive => HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isShiftPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = context.watch<WireframeController>();
+    final d = f.diagram;
+    final parents = f.parents;
+    final hidden = f.hiddenIds;
+    final sel = f.selectedIds;
     int depth(String id) {
-      var d = 0;
-      for (var p = parents[id]; p != null && d < 20; p = parents[p]) {
-        d++;
+      var n = 0;
+      for (var p = parents[id]; p != null && n < 20; p = parents[p]) {
+        n++;
       }
-      return d;
+      return n;
     }
 
-    final comps = f.diagram.components.reversed.toList();
+    final rows = <Widget>[];
+    final seenGroups = <String>{};
+    for (final c in d.components.reversed) {
+      final g = c.group;
+      if (g == null) {
+        rows.add(_layerRow(f, c, depth(c.id), hidden, sel));
+        continue;
+      }
+      if (!seenGroups.add(g)) continue;
+      final members = wfGroupMembers(d, g).reversed.toList();
+      final open = !_collapsedGroups.contains(g);
+      rows.add(_groupRow(f, g, members, open, sel));
+      if (open) {
+        for (final m in members) {
+          rows.add(_layerRow(f, m, depth(m.id) + 1, hidden, sel));
+        }
+      }
+    }
+
+    final canGroup = sel.length >= 2;
     return _Fold(
       id: 'wf-fold-layers',
       title: tr('เลเยอร์'),
-      summary: '${comps.length}',
+      summary: '${d.components.length}',
       initiallyOpen: true,
-      child: comps.isEmpty
-          ? Text(tr('ยังไม่มีชิ้นส่วนบนหน้าจอ'), key: const ValueKey('wf-layers-empty'), style: TextStyle(fontSize: 12.5, color: C.muted))
-          : Column(children: [
-              for (final c in comps)
-                ListTile(
-                  key: ValueKey('wf-item-${c.id}'),
-                  dense: true,
-                  visualDensity: VisualDensity.compact,
-                  contentPadding: EdgeInsets.only(left: depth(c.id) * 14.0, right: 4),
-                  selected: f.selectedIds.contains(c.id),
-                  leading: Icon(wfKindIcon(c.kind), size: 16, color: C.muted),
-                  title: Text(c.text.trim().isEmpty ? wfKindLabel(c.kind) : c.text.trim().replaceAll(RegExp(r'\s+'), ' '),
-                      maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
-                  trailing: c.ref == null ? null : Icon(Icons.storage_rounded, size: 14, color: C.muted),
-                  onTap: () {
-                    f.selectBox(c.id);
-                    f.reveal(c.id, f.viewport);
-                  },
-                ),
-            ]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          _layerTool('wf-layer-group', Icons.create_new_folder_outlined, '${tr('จัดกลุ่ม')} (Ctrl+G)', canGroup ? f.groupSelection : null),
+          _layerTool('wf-layer-ungroup', Icons.folder_off_outlined, '${tr('เลิกจัดกลุ่ม')} (Ctrl+Shift+G)', f.selectionHasGroup ? f.ungroupSelection : null),
+          _layerTool('wf-layer-front', Icons.flip_to_front_rounded, tr('นำขึ้นบนสุด'), sel.isEmpty ? null : () => f.reorder(front: true)),
+          _layerTool('wf-layer-back', Icons.flip_to_back_rounded, tr('นำลงล่างสุด'), sel.isEmpty ? null : () => f.reorder(front: false)),
+        ]),
+        const SizedBox(height: 4),
+        if (rows.isEmpty)
+          Text(tr('ยังไม่มีชิ้นส่วนบนหน้าจอ'), key: const ValueKey('wf-layers-empty'), style: TextStyle(fontSize: 12.5, color: C.muted))
+        else
+          ...rows,
+      ]),
+    );
+  }
+
+  Widget _layerTool(String key, IconData icon, String tip, VoidCallback? onTap) => IconButton(
+        key: ValueKey(key),
+        tooltip: tip,
+        visualDensity: VisualDensity.compact,
+        iconSize: 18,
+        color: C.muted,
+        onPressed: onTap,
+        icon: Icon(icon),
+      );
+
+  Widget _eyeLock(String key, {required bool hidden, required bool locked, required VoidCallback onEye, required VoidCallback onLock, bool dimEye = false}) =>
+      Row(mainAxisSize: MainAxisSize.min, children: [
+        _miniToggle('wf-eye-$key', hidden ? Icons.visibility_off_outlined : Icons.visibility_outlined, hidden ? tr('แสดง') : tr('ซ่อน'),
+            hidden || dimEye ? C.muted.withValues(alpha: 0.6) : C.muted, onEye),
+        _miniToggle('wf-lock-$key', locked ? Icons.lock_rounded : Icons.lock_open_rounded, locked ? tr('ปลดล็อก') : tr('ล็อก'),
+            locked ? C.primaryDark : C.muted.withValues(alpha: 0.45), onLock),
+      ]);
+
+  Widget _miniToggle(String key, IconData icon, String tip, Color color, VoidCallback onTap) => Tooltip(
+        message: tip,
+        child: InkWell(
+          key: ValueKey(key),
+          borderRadius: BorderRadius.circular(6),
+          onTap: onTap,
+          child: Padding(padding: const EdgeInsets.all(5), child: Icon(icon, size: 16, color: color)),
+        ),
+      );
+
+  Widget _groupRow(WireframeController f, String g, List<WfComponent> members, bool open, Set<String> sel) {
+    final allSel = members.every((m) => sel.contains(m.id));
+    final allHidden = members.every((m) => m.hidden);
+    final allLocked = members.every((m) => m.locked);
+    final ids = [for (final m in members) m.id];
+    return Material(
+      color: allSel ? C.primaryTint : Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        key: ValueKey('wf-group-$g'),
+        borderRadius: BorderRadius.circular(6),
+        onTap: () => f.setSelection(_additive ? {...sel, ...ids} : ids, exact: true),
+        child: SizedBox(
+          height: 32,
+          child: Row(children: [
+            InkWell(
+              key: ValueKey('wf-group-toggle-$g'),
+              onTap: () => setState(() => open ? _collapsedGroups.add(g) : _collapsedGroups.remove(g)),
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: Icon(open ? Icons.expand_more_rounded : Icons.chevron_right_rounded, size: 18, color: C.muted),
+              ),
+            ),
+            Icon(open ? Icons.folder_open_outlined : Icons.folder_outlined, size: 16, color: C.muted),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(tr('กลุ่ม · {0} ชิ้น', [members.length]),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: allHidden ? C.muted : C.text)),
+            ),
+            _eyeLock(g,
+                hidden: allHidden,
+                locked: allLocked,
+                onEye: () => f.setHidden(ids, !allHidden),
+                onLock: () => f.setLocked(ids, !allLocked)),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _layerRow(WireframeController f, WfComponent c, int depth, Set<String> hidden, Set<String> sel) {
+    final selected = sel.contains(c.id);
+    final invisible = hidden.contains(c.id);
+    final name = c.text.trim().isEmpty ? wfKindLabel(c.kind) : c.text.trim().replaceAll(RegExp(r'\s+'), ' ');
+    return Material(
+      key: ValueKey('wf-item-${c.id}'),
+      color: selected ? C.primaryTint : Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: () {
+          f.selectBox(c.id, add: _additive, exact: true);
+          if (!_additive) f.reveal(c.id, f.viewport);
+        },
+        child: SizedBox(
+          height: 32,
+          child: Row(children: [
+            SizedBox(width: 6 + depth * 14.0),
+            Icon(wfKindIcon(c.kind), size: 16, color: invisible ? C.muted.withValues(alpha: 0.5) : C.muted),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, color: invisible ? C.muted : C.text, fontStyle: invisible ? FontStyle.italic : null)),
+            ),
+            if (c.rotation != 0)
+              Padding(
+                padding: const EdgeInsets.only(right: 2),
+                child: Text('${c.rotation.round()}°', style: TextStyle(fontSize: 11, color: C.muted)),
+              ),
+            if (c.ref != null) Padding(padding: const EdgeInsets.only(right: 2), child: Icon(Icons.storage_rounded, size: 13, color: C.muted)),
+            _eyeLock(c.id,
+                hidden: c.hidden,
+                locked: c.locked,
+                dimEye: invisible && !c.hidden,
+                onEye: () => f.setHidden([c.id], !c.hidden),
+                onLock: () => f.setLocked([c.id], !c.locked)),
+          ]),
+        ),
+      ),
     );
   }
 }
@@ -585,37 +782,11 @@ class _PageProps extends StatelessWidget {
     final w = context.read<WorkspaceController>();
     final a = WireframeActions(context);
     final d = f.diagram;
-    final issues = validateWireframe(d, workspace: w.workspace);
+    final issues = f.issues;
     final linked = screensLinkingTo(w.workspace, f.docId);
     final size = '${d.width.round()} × ${d.height.round()}';
     final device = d.device == WfDevice.custom ? size : wfDeviceLabel(d.device);
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      // หัว + ภาพย่อหน้าจอ
-      Container(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: C.border))),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Row(children: [
-            Expanded(
-              child: Text(w.activeDocument.name,
-                  maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-            ),
-            Text(tr('{0} ชิ้นส่วน', [d.components.length]), style: TextStyle(fontSize: 12.5, color: C.muted)),
-          ]),
-          const SizedBox(height: 10),
-          Container(
-            key: const ValueKey('wf-page-thumb'),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: C.bg, borderRadius: BorderRadius.circular(10), border: Border.all(color: C.border)),
-            child: WireframeThumbnail(diagram: d, height: 130),
-          ),
-          const SizedBox(height: 8),
-          Row(children: [
-            Expanded(child: Text('$size · $device', style: TextStyle(fontSize: 11.5, color: C.muted), overflow: TextOverflow.ellipsis)),
-            Text(_styleShort(d.style), style: TextStyle(fontSize: 11.5, color: C.primaryDark)),
-          ]),
-        ]),
-      ),
       _Fold(
         id: 'wf-fold-look',
         title: tr('การแสดงผล'),
@@ -710,20 +881,24 @@ class _PageProps extends StatelessWidget {
 
 /// ภาพย่อหน้าจอ Wireframe (ใช้ในแผงของ Screen Flow / Project Home)
 class WireframeThumbnail extends StatelessWidget {
-  const WireframeThumbnail({super.key, required this.diagram, this.height = 90});
+  const WireframeThumbnail({super.key, required this.diagram, this.height = 90, this.version});
   final WireframeDiagram diagram;
   final double height;
+
+  /// รุ่นของเนื้อหา: ระบุแล้ววาดใหม่เฉพาะเมื่อรุ่นเปลี่ยน (null = วาดใหม่ทุกครั้ง)
+  final Object? version;
 
   @override
   Widget build(BuildContext context) => SizedBox(
         height: height,
-        child: CustomPaint(painter: _ThumbPainter(diagram), child: const SizedBox.expand()),
+        child: CustomPaint(painter: _ThumbPainter(diagram, version), child: const SizedBox.expand()),
       );
 }
 
 class _ThumbPainter extends CustomPainter {
-  _ThumbPainter(this.d);
+  _ThumbPainter(this.d, this.version);
   final WireframeDiagram d;
+  final Object? version;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -732,10 +907,10 @@ class _ThumbPainter extends CustomPainter {
     canvas.translate((size.width - d.width * s) / 2, (size.height - d.height * s) / 2);
     canvas.scale(s);
     canvas.clipRect(Rect.fromLTWH(0, 0, d.width, d.height));
-    paintWfPrims(canvas, wireframePrims(d));
+    paintWireframe(canvas, d);
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_ThumbPainter old) => true;
+  bool shouldRepaint(_ThumbPainter old) => version == null || old.version != version || !identical(old.d, d);
 }

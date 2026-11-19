@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -104,6 +105,104 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
     super.beginGesture();
   }
 
+  // ---------- ล็อก / ซ่อน / กลุ่ม / หมุน (ชนิดย่อยเปิดใช้เอง) ----------
+
+  /// กล่องที่ล็อก: คลิก/ลากเลือกบนแคนวาสไม่โดน ย้าย/ปรับขนาด/หมุน/ลบ/จัดแนวไม่ได้ (ยังเลือกได้จากแผงเลเยอร์)
+  bool isLocked(B b) => false;
+
+  /// เลือกได้ด้วยการคลิก/ลากกรอบ/Ctrl+A บนแคนวาส (ค่าเริ่มต้น = ไม่ล็อก)
+  bool selectableOnCanvas(B b) => !isLocked(b);
+
+  /// กล่องทั้งหมดที่ถูกเลือกพร้อมกันเมื่อเลือก [id] (กลุ่ม) — ค่าเริ่มต้น = ตัวมันเอง
+  @protected
+  Set<String> withGroup(String id) => {id};
+
+  /// มุมหมุน (องศา) ของกล่อง — ชนิดที่ไม่รองรับการหมุน = 0
+  double rotationOf(B b) => 0;
+
+  /// ตั้งมุมหมุน (เรียกภายใน [edit]/[live] เท่านั้น)
+  @protected
+  void setRotationOf(B b, double degrees) {}
+
+  /// ชนิดนี้หมุนกล่องได้
+  bool get canRotate => false;
+
+  /// ระยะจุดจับหมุนเหนือขอบบน (พิกเซลจอ)
+  double get rotateHandleGap => 26;
+
+  bool _unlocked(String id) {
+    final b = boxById(id);
+    return b != null && !isLocked(b);
+  }
+
+  /// [p] (พิกัดแผนภาพ) -> พิกัดของกล่อง [b] ก่อนหมุน
+  Offset toBoxLocal(B b, Offset p) {
+    final r = rotationOf(b);
+    if (r == 0) return p;
+    final c = Offset(b.x + b.w / 2, b.y + b.h / 2);
+    final a = -r * math.pi / 180;
+    final d = p - c;
+    return c + Offset(d.dx * math.cos(a) - d.dy * math.sin(a), d.dx * math.sin(a) + d.dy * math.cos(a));
+  }
+
+  static Offset _rotate(Offset v, double degrees) {
+    final a = degrees * math.pi / 180;
+    return Offset(v.dx * math.cos(a) - v.dy * math.sin(a), v.dx * math.sin(a) + v.dy * math.cos(a));
+  }
+
+  /// ตำแหน่งจุดจับหมุนของกล่อง [b] (พิกัดแผนภาพ)
+  Offset rotateHandlePos(B b) {
+    final c = Offset(b.x + b.w / 2, b.y + b.h / 2);
+    return c + _rotate(Offset(0, -b.h / 2 - rotateHandleGap / scale), rotationOf(b));
+  }
+
+  /// [world] ชี้ที่จุดจับหมุนของกล่องที่เลือกอยู่ใบเดียว
+  bool rotateHandleAt(Offset world, {double tolPx = 9}) {
+    final b = selectedBox;
+    if (!canRotate || b == null || isLocked(b)) return false;
+    return (world - rotateHandlePos(b)).distance <= tolPx / scale;
+  }
+
+  String? _rotId;
+
+  void beginRotate() {
+    final b = selectedBox;
+    if (!canRotate || b == null || isLocked(b)) return;
+    beginGesture();
+    _rotId = b.id;
+  }
+
+  /// หมุนให้จุดจับชี้ไปที่ [world] ; [snap] = ปัดทีละ 15 องศา
+  void rotateToward(Offset world, {bool snap = false}) {
+    final id = _rotId;
+    final b = id == null ? null : boxById(id);
+    if (b == null) return;
+    final c = Offset(b.x + b.w / 2, b.y + b.h / 2);
+    var deg = math.atan2(world.dy - c.dy, world.dx - c.dx) * 180 / math.pi + 90;
+    if (snap) deg = (deg / 15).round() * 15.0;
+    live((content) {
+      final x = _boxIn(content, id!);
+      if (x != null) setRotationOf(x, deg);
+    });
+  }
+
+  void endRotate() {
+    _rotId = null;
+    endGesture();
+  }
+
+  /// ตั้งมุมหมุนของกล่อง [ids] (ข้ามที่ล็อก) — undo ขั้นเดียว ; [relative] = บวกเพิ่มจากมุมเดิม
+  void setRotation(Iterable<String> ids, double degrees, {bool relative = false}) {
+    if (!canRotate) return;
+    final set = {for (final id in ids) if (_unlocked(id)) id};
+    if (set.isEmpty) return;
+    editIfChanged((c) {
+      for (final b in boxesOf(c)) {
+        if (set.contains(b.id)) setRotationOf(b, relative ? rotationOf(b) + degrees : degrees);
+      }
+    });
+  }
+
   // ---------- การเลือก ----------
 
   final Set<String> _sel = {};
@@ -127,21 +226,31 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
     notifyListeners();
   }
 
-  void selectBox(String id, {bool add = false}) {
+  /// เลือกกล่อง [id] (อยู่ในกลุ่ม = เลือกทั้งกลุ่ม เว้นแต่ [exact]) ; [add] = สลับเข้า/ออกจากที่เลือกอยู่
+  void selectBox(String id, {bool add = false, bool exact = false}) {
     if (boxById(id) == null) return;
     clearOtherSelection();
+    final members = exact ? {id} : withGroup(id);
     if (add) {
-      if (!_sel.remove(id)) _sel.add(id);
+      if (_sel.contains(id)) {
+        _sel.removeAll(members);
+      } else {
+        _sel.addAll(members);
+      }
     } else {
       _sel
         ..clear()
-        ..add(id);
+        ..addAll(members);
     }
     notifyListeners();
   }
 
-  void setSelection(Iterable<String> ids) {
-    final next = {for (final id in ids) if (boxById(id) != null) id};
+  /// เลือกกล่อง [ids] (สมาชิกกลุ่มของแต่ละใบถูกเลือกด้วย เว้นแต่ [exact])
+  void setSelection(Iterable<String> ids, {bool exact = false}) {
+    final next = {
+      for (final id in ids)
+        if (boxById(id) != null) ...(exact ? {id} : withGroup(id)),
+    };
     if (next.length == _sel.length && next.containsAll(_sel) && !hasOtherSelection) return;
     clearOtherSelection();
     _sel
@@ -150,12 +259,29 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
     notifyListeners();
   }
 
+  /// Ctrl+A: เลือกทุกกล่องที่เลือกได้บนแคนวาส (ไม่รวมที่ล็อก/ซ่อน)
   void selectAll() {
     clearOtherSelection();
     _sel
       ..clear()
-      ..addAll(boxes.map((b) => b.id));
+      ..addAll([for (final b in boxes) if (selectableOnCanvas(b)) b.id]);
     notifyListeners();
+  }
+
+  /// กล่องที่กรอบลากเลือก [r] (พิกัดแผนภาพ) แตะ — เฉพาะที่เลือกได้บนแคนวาส
+  Set<String> marqueeHits(Rect r) => {
+        for (final b in boxes)
+          if (selectableOnCanvas(b) && r.overlaps(boundsOf(b))) b.id,
+      };
+
+  /// กรอบตั้งฉากที่ครอบกล่อง [b] หลังหมุน
+  Rect boundsOf(B b) {
+    final r = rotationOf(b);
+    if (r == 0) return Rect.fromLTWH(b.x, b.y, b.w, b.h);
+    final a = r * math.pi / 180;
+    final hw = (b.w / 2 * math.cos(a)).abs() + (b.h / 2 * math.sin(a)).abs();
+    final hh = (b.w / 2 * math.sin(a)).abs() + (b.h / 2 * math.cos(a)).abs();
+    return Rect.fromCenter(center: Offset(b.x + b.w / 2, b.y + b.h / 2), width: hw * 2, height: hh * 2);
   }
 
   /// ล้างการเลือกกล่องเงียบ ๆ (ให้ชนิดย่อยใช้ตอนเลือกอย่างอื่น)
@@ -227,10 +353,10 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
 
   /// ลบกล่องที่เลือก — คืนจำนวนที่ลบ
   int deleteSelectedBoxes() {
-    final ids = _sel.where((id) => boxById(id) != null).toSet();
+    final ids = _sel.where(_unlocked).toSet();
     if (ids.isEmpty) return 0;
     edit((c) => removeBoxes(c, ids));
-    _sel.clear();
+    _sel.removeAll(ids);
     notifyListeners();
     return ids.length;
   }
@@ -245,9 +371,12 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
   double _rawDx = 0, _rawDy = 0;
   String? _anchor;
 
+  /// กล่องที่ย้ายจริงเมื่อย้ายที่เลือกอยู่ (รวมที่ย้ายตาม ไม่รวมที่ล็อก)
+  Set<String> _movingIds() => moveSet({for (final b in selectedBoxes) if (!isLocked(b)) b.id}).where(_unlocked).toSet();
+
   void beginMove() {
     beginGesture();
-    final ids = moveSet({for (final b in selectedBoxes) b.id});
+    final ids = _movingIds();
     _origin = {for (final b in boxes) if (ids.contains(b.id)) b.id: (b.x, b.y)};
     _anchor = selectedBoxes.firstOrNull?.id;
     _rawDx = 0;
@@ -283,7 +412,7 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
 
   /// ขยับกล่องที่เลือก (และที่ย้ายตาม) ด้วยปุ่มลูกศร (undo ต่อการกด)
   bool nudge(double dx, double dy) {
-    final ids = moveSet({for (final b in selectedBoxes) b.id});
+    final ids = _movingIds();
     if (ids.isEmpty) return false;
     edit((c) {
       for (final b in boxesOf(c)) {
@@ -305,12 +434,16 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
   /// จุดจับของกล่องที่เลือกอยู่ใบเดียวที่ [world] ชี้อยู่ ; รัศมีเป็นพิกเซลจอ
   DfdHandle? handleAt(Offset world, {double tolPx = 8}) {
     final b = selectedBox;
-    return b == null ? null : dfdHandleAtRect(Rect.fromLTWH(b.x, b.y, b.w, b.h), world, tolPx / scale);
+    if (b == null || isLocked(b)) return null;
+    return dfdHandleAtRect(Rect.fromLTWH(b.x, b.y, b.w, b.h), toBoxLocal(b, world), tolPx / scale);
   }
+
+  double _resizeAngle = 0;
 
   void beginResize(DfdHandle h) {
     final b = selectedBox;
-    if (b == null) return;
+    if (b == null || isLocked(b)) return;
+    _resizeAngle = rotationOf(b);
     beginGesture();
     _resizeId = b.id;
     _resizeHandle = h;
@@ -324,7 +457,14 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
     if (id == null || h == null || r0 == null) return;
     _resizeDx += dx;
     _resizeDy += dy;
-    final r = resizeDfdRect(r0, h, _resizeDx, _resizeDy, grid: grid, minW: minSide, minH: minSide, maxSide: maxSide);
+    var r = resizeDfdRect(r0, h, _resizeDx, _resizeDy, grid: grid, minW: minSide, minH: minSide, maxSide: maxSide);
+    if (_resizeAngle != 0) {
+      // กล่องที่หมุน: ปรับขนาดในพิกัดของกล่อง แล้วเลื่อนจุดกึ่งกลางตามแนวที่หมุน (ขอบฝั่งตรงข้ามอยู่กับที่)
+      final local = _rotate(Offset(_resizeDx, _resizeDy), -_resizeAngle);
+      final lr = resizeDfdRect(r0, h, local.dx, local.dy, minW: minSide, minH: minSide, maxSide: maxSide);
+      final center = r0.center + _rotate(lr.center - r0.center, _resizeAngle);
+      r = Rect.fromCenter(center: center, width: lr.width, height: lr.height);
+    }
     live((c) {
       final b = _boxIn(c, id);
       if (b == null) return;
@@ -351,7 +491,7 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
     final delta = <String, (double, double)>{};
     for (final b in boxes) {
       final p = pos[b.id];
-      if (p == null) continue;
+      if (p == null || isLocked(b)) continue;
       final d = (p.$1 - b.x, p.$2 - b.y);
       for (final id in moveSet({b.id})) {
         delta.putIfAbsent(id, () => d);
@@ -388,7 +528,7 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
     if (_sel.length < 2) return false;
     final ref = boxById(_sel.first);
     if (ref == null) return false;
-    final ids = Set.of(_sel);
+    final ids = _sel.where(_unlocked).toSet();
     editIfChanged((c) {
       for (final b in boxesOf(c)) {
         if (!ids.contains(b.id)) continue;

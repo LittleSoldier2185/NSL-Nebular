@@ -112,7 +112,8 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
   BoxHit hitTest(WireframeController c, Offset world) {
     final tol = 2 / c.scale;
     for (final x in c.diagram.components.reversed) {
-      if (world.dx >= x.x - tol && world.dx <= x.right + tol && world.dy >= x.y - tol && world.dy <= x.bottom + tol) {
+      if (!c.selectableOnCanvas(x)) continue; // ซ่อน/ล็อก = คลิกทะลุ
+      if (wfContains(x, world.dx, world.dy, tol: tol)) {
         return (box: x.id, edge: null);
       }
     }
@@ -170,6 +171,12 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
         MenuSpec(tr('ทำสำเนา'), Icons.file_copy_outlined, c.duplicateSelection, shortcut: 'Ctrl+D'),
         MenuSpec(tr('นำขึ้นบนสุด'), Icons.flip_to_front_rounded, () => c.reorder(front: true)),
         MenuSpec(tr('นำลงล่างสุด'), Icons.flip_to_back_rounded, () => c.reorder(front: false)),
+        null,
+        if (many) MenuSpec(tr('จัดกลุ่ม'), Icons.folder_outlined, c.groupSelection, shortcut: 'Ctrl+G'),
+        if (c.selectionHasGroup) MenuSpec(tr('เลิกจัดกลุ่ม'), Icons.folder_off_outlined, c.ungroupSelection, shortcut: 'Ctrl+Shift+G'),
+        MenuSpec(tr('หมุน 90° ตามเข็ม'), Icons.rotate_right_rounded, () => c.setRotation(ids, 90, relative: true)),
+        MenuSpec(tr('ล็อก'), Icons.lock_outline_rounded, () => c.setLocked(ids, true)),
+        MenuSpec(tr('ซ่อน'), Icons.visibility_off_outlined, () => c.setHidden(ids, true)),
         if (many) ...[
           null,
           MenuSpec(tr('จัดชิดซ้าย'), Icons.align_horizontal_left_rounded, () => c.align(BoxAlign.left)),
@@ -214,6 +221,7 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
         for (final x in c.diagram.components)
           if (x.ref != null) x.id: (wfRefLabel(w, x.ref!), wfRefProblem(w, x.ref!) != null),
       },
+      hidden: c.hiddenIds,
       marquee: marquee,
       hideTextOf: c.editing?.id,
     );

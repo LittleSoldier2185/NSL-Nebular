@@ -15,7 +15,7 @@ import '../note_pins.dart';
 /// ผลการคลิกบนแคนวาส: กล่อง [box] หรือเส้น [edge] (ไม่โดนอะไร = ทั้งคู่ null)
 typedef BoxHit = ({String? box, String? edge});
 
-enum _Drag { none, move, marquee, pan, resize }
+enum _Drag { none, move, marquee, pan, resize, rotate }
 
 /// ฐานร่วมของแคนวาสแผนภาพแบบกล่อง (Wireframe, Screen Flow): เลื่อน/ซูม (ล้อเมาส์, Ctrl+ล้อ, เมาส์กลาง, Space+ลาก),
 /// คลิกเลือก/Ctrl-Shift คลิก, ดับเบิลคลิก, ลากย้าย, จุดจับปรับขนาด, กรอบลากเลือก, ลากของจากแผงซ้ายมาวาง, เมนูคลิกขวา
@@ -149,6 +149,11 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
       return;
     }
     final world = c.toWorld(s.localPosition);
+    if (c.rotateHandleAt(world)) {
+      c.beginRotate();
+      _drag = _Drag.rotate;
+      return;
+    }
     final handle = c.handleAt(world);
     if (handle != null) {
       c.beginResize(handle);
@@ -176,6 +181,8 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
         c.panBy(u.delta);
       case _Drag.move:
         c.moveBy(u.delta.dx / c.scale, u.delta.dy / c.scale, grid: grid);
+      case _Drag.rotate:
+        c.rotateToward(c.toWorld(u.localPosition), snap: HardwareKeyboard.instance.isShiftPressed);
       case _Drag.resize:
         c.resizeBy(u.delta.dx / c.scale, u.delta.dy / c.scale, grid: grid);
       case _Drag.marquee:
@@ -183,8 +190,7 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
         final r = Rect.fromPoints(c.toWorld(_marqueeStart!), c.toWorld(_marqueeEnd!));
         c.setSelection({
           ..._marqueeBase,
-          for (final b in c.boxes)
-            if (r.overlaps(Rect.fromLTWH(b.x, b.y, b.w, b.h))) b.id,
+          ...c.marqueeHits(r),
         });
       case _Drag.none:
         break;
@@ -195,6 +201,7 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
     final c = ctl;
     if (_drag == _Drag.move) c.endMove();
     if (_drag == _Drag.resize) c.endResize();
+    if (_drag == _Drag.rotate) c.endRotate();
     setState(() {
       _drag = _Drag.none;
       _marqueeStart = null;
