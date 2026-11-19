@@ -39,14 +39,18 @@ class SqlCodeView extends StatelessWidget {
     // จึงบรรทัดสั้นกว่าอาจกว้างกว่า) — จำกัดจำนวนผู้เข้าชิงไว้ไม่ให้ช้าเมื่อไฟล์ใหญ่
     final longest = lines.reduce((a, b) => b.length > a.length ? b : a);
     final candidates = <String>{longest};
-    for (final l in lines) {
-      if (candidates.length >= 60) break;
-      if (l.runes.any((r) => r > 0x7e)) candidates.add(l);
-    }
+    final wide = [
+      for (final l in lines)
+        if (l.runes.any((r) => r > 0x7e)) l,
+    ]..sort((a, b) => b.length.compareTo(a.length));
+    candidates.addAll(wide.take(60));
     var w = 0.0;
     for (final text in candidates) {
       final tp = TextPainter(
-        text: TextSpan(text: text, style: monoStyle.copyWith(fontSize: 12.5, height: 1.0)),
+        text: TextSpan(
+          text: text,
+          style: monoStyle.copyWith(fontSize: 12.5, height: 1.0),
+        ),
         textDirection: TextDirection.ltr,
         maxLines: 1,
       )..layout();
@@ -72,45 +76,55 @@ class SqlCodeView extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 itemExtent: _lineHeight,
                 itemCount: lines.length,
-                itemBuilder: (_, i) => Row(
-                  children: [
-                    SizedBox(
-                      width: _gutter,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: Text(
-                          '${i + 1}',
-                          textAlign: TextAlign.right,
+                itemBuilder: (_, i) => ClipRect(
+                  child: OverflowBox(
+                    alignment: Alignment.centerLeft,
+                    minWidth: 0,
+                    maxWidth: double.infinity,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: _gutter,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 16),
+                            child: Text(
+                              '${i + 1}',
+                              textAlign: TextAlign.right,
+                              style: monoStyle.copyWith(
+                                fontSize: 12.5,
+                                height: 1.0,
+                                color: const Color(0xFF8A99AE),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              if (!highlight)
+                                TextSpan(text: lines[i])
+                              else
+                                for (final t in tokenizeSqlLine(lines[i]))
+                                  TextSpan(
+                                    text: t.text,
+                                    style: TextStyle(
+                                      color: sqlTokenColor(t.kind),
+                                    ),
+                                  ),
+                            ],
+                          ),
                           style: monoStyle.copyWith(
                             fontSize: 12.5,
                             height: 1.0,
-                            color: const Color(0xFF8A99AE),
+                            color: sqlTokenColor(SqlTokenKind.plain),
                           ),
+                          softWrap: false,
+                          maxLines: 1,
                         ),
-                      ),
+                      ],
                     ),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          if (!highlight)
-                            TextSpan(text: lines[i])
-                          else
-                            for (final t in tokenizeSqlLine(lines[i]))
-                              TextSpan(
-                                text: t.text,
-                                style: TextStyle(color: sqlTokenColor(t.kind)),
-                              ),
-                        ],
-                      ),
-                      style: monoStyle.copyWith(
-                        fontSize: 12.5,
-                        height: 1.0,
-                        color: sqlTokenColor(SqlTokenKind.plain),
-                      ),
-                      softWrap: false,
-                      maxLines: 1,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
