@@ -7,7 +7,9 @@ import 'package:nsl_nebular/main.dart';
 import 'package:nsl_nebular/state/app_settings.dart';
 import 'package:nsl_nebular/state/workspace_controller.dart';
 import 'package:nsl_nebular/ui/canvas/canvas_controller.dart';
+import 'package:nsl_nebular/ui/db_connect_dialog.dart';
 import 'package:nsl_nebular/ui/home_page.dart';
+import 'package:nsl_nebular/state/project_controller.dart';
 import 'package:provider/provider.dart';
 
 /// เมนูมุมมอง/เครื่องมือแบบใหม่ (ตามแบบใน Artifact "เมนูมุมมองใหม่"): หมวด + คอลัมน์ติ๊ก + เปลี่ยนตามชนิดเอกสาร + คีย์ลัดใหม่
@@ -49,7 +51,7 @@ void main() {
   }
 
   bool enabled(WidgetTester tester, String label) =>
-      tester.widget<PopupMenuItem<VoidCallback>>(find.ancestor(of: find.text(label), matching: find.byType(PopupMenuItem<VoidCallback>))).enabled;
+      tester.widget<PopupMenuItem<VoidCallback>>(find.widgetWithText(PopupMenuItem<VoidCallback>, label)).enabled;
 
   Finder checked(String label) => find.byKey(ValueKey('menu-checked-$label'));
 
@@ -171,5 +173,101 @@ void main() {
     expect(find.text('Check'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await close(tester);
+  });
+
+  // ---------------------------------------------------------------- Phase 14: ไฟล์ / แก้ไข / ช่วยเหลือ
+
+  testWidgets('ไฟล์ บน DFD: Export .sql / Migration เทา + "เฉพาะ ER" ; Export เอกสารเทา ; นำเข้า/เชื่อมต่อฐานข้อมูลใช้ได้ (เดิมไม่ทำอะไร)', (tester) async {
+    await boot(tester);
+    w.addDocument(DocType.dfd, name: 'Level 0');
+    await tester.pump();
+    await open(tester, 'ไฟล์');
+    for (final t in ['โปรเจกต์', 'นำเข้า', 'ส่งออก', 'ฐานข้อมูล']) {
+      expect(find.text(t), findsWidgets, reason: t);
+    }
+    expect(enabled(tester, 'Export .sql…'), isFalse);
+    expect(enabled(tester, 'เปรียบเทียบกับไฟล์เก่า (Migration)…'), isFalse);
+    expect(find.text('เฉพาะ ER'), findsNWidgets(2));
+    expect(enabled(tester, 'Export เอกสาร / DBML / ข้อมูลตัวอย่าง…'), isFalse);
+    expect(find.text('ไม่มีสำหรับ DFD'), findsOneWidget);
+    expect(enabled(tester, 'นำเข้าจาก .sql…'), isTrue);
+    await tester.tap(find.text('เชื่อมต่อฐานข้อมูล…'));
+    await tester.pumpAndSettle();
+    expect(find.byType(DbConnectDialog), findsOneWidget);
+  });
+
+  testWidgets('ไฟล์ บน ER: ทุกรายการใช้ได้', (tester) async {
+    await boot(tester);
+    await open(tester, 'ไฟล์');
+    expect(enabled(tester, 'Export .sql…'), isTrue);
+    expect(enabled(tester, 'เปรียบเทียบกับไฟล์เก่า (Migration)…'), isTrue);
+    expect(find.text('เฉพาะ ER'), findsNothing);
+    await close(tester);
+  });
+
+  testWidgets('แก้ไข บน ER: ชื่อกลาง ; หัวหมวดบอกจำนวนที่เลือก ; หมวด "ตาราง" มีแก้โครงสร้างตาราง', (tester) async {
+    await boot(tester);
+    final c = tester.element(find.byType(HomePage)).read<ProjectController>();
+    await open(tester, 'แก้ไข');
+    expect(find.widgetWithText(PopupMenuItem<VoidCallback>, 'คัดลอก'), findsOneWidget);
+    expect(find.widgetWithText(PopupMenuItem<VoidCallback>, 'คัดลอกตาราง'), findsNothing);
+    expect(enabled(tester, 'คัดลอก'), isFalse);
+    expect(enabled(tester, 'แก้โครงสร้างตาราง…'), isFalse);
+    expect(find.text('กลุ่ม'), findsNothing);
+    await close(tester);
+
+    c.addTable(x: 40, y: 40);
+    c.addTable(x: 400, y: 40);
+    c.selectAllTables();
+    await tester.pump();
+    expect(c.selectionCount, 2);
+    await open(tester, 'แก้ไข');
+    expect(find.text('${c.selectionCount} ตาราง'), findsOneWidget);
+    expect(enabled(tester, 'คัดลอก'), isTrue);
+    await close(tester);
+  });
+
+  testWidgets('แก้ไข บน Flowchart: ไม่มีหมวดตาราง ; มีหมวดกลุ่ม ; F2 = แก้ข้อความ ; บน API ไม่มีคัดลอก/วาง', (tester) async {
+    await boot(tester);
+    w.addDocument(DocType.flowchart, name: 'FC');
+    await tester.pump();
+    await open(tester, 'แก้ไข');
+    expect(find.text('สร้างตารางแบบฟอร์ม…'), findsNothing);
+    expect(find.text('จัดกลุ่ม'), findsOneWidget);
+    expect(find.text('เลิกจัดกลุ่ม'), findsOneWidget);
+    expect(find.text('แก้ข้อความ…'), findsOneWidget);
+    await close(tester);
+
+    w.addDocument(DocType.api, name: 'API');
+    await tester.pump();
+    await open(tester, 'แก้ไข');
+    Finder item(String t) => find.widgetWithText(PopupMenuItem<VoidCallback>, t);
+    expect(item('คัดลอก'), findsNothing);
+    expect(item('วาง'), findsNothing);
+    expect(item('ทำสำเนา'), findsOneWidget);
+    expect(item('จัดวางอัตโนมัติ'), findsNothing);
+    await close(tester);
+  });
+
+  testWidgets('ช่วยเหลือ: ภาษาใช้คอลัมน์ติ๊ก ; ภาษาอังกฤษแปลครบทุกเมนู ไม่ล้น', (tester) async {
+    await boot(tester);
+    await open(tester, 'ช่วยเหลือ');
+    expect(checked('ไทย'), findsOneWidget);
+    expect(find.textContaining('✓'), findsNothing);
+    await close(tester);
+  });
+
+  testWidgets('ภาษาอังกฤษ: เมนูไฟล์/แก้ไขแปลครบ ไม่ล้น', (tester) async {
+    await boot(tester, lang: Lang.en);
+    await open(tester, 'File');
+    for (final t in ['Export', 'Database', 'New project…']) {
+      expect(find.text(t), findsWidgets, reason: t);
+    }
+    await close(tester);
+    await open(tester, 'Edit');
+    expect(find.text('Selection'), findsOneWidget);
+    expect(find.text('Edit table structure…'), findsOneWidget);
+    await close(tester);
+    expect(tester.takeException(), isNull);
   });
 }

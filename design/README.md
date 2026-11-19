@@ -20,6 +20,8 @@
 | `Trace.dc.html` | Requirements และ Traceability | 9 |
 | `Codegen.dc.html` | Code Generation | 10 |
 | `Mock.dc.html` | Mock Server | 11 |
+| `wireframe-panel/` | แผงขวาของ Wireframe 3 แนวทาง (ใช้แบบ C) — สำเนาของ Artifact "Wireframe แผงขวา" https://claude.ai/artifact/WE9mmEUw3g6y3arvpf3Y6t | (ระหว่าง 11–12) |
+| `menus/` | เมนูมุมมอง/เครื่องมือ (ทำแล้ว) + เมนูไฟล์/แก้ไข/ช่วยเหลือ — สำเนาของ Artifact "NSL Nebular — เมนูมุมมองใหม่" https://claude.ai/artifact/FQZNui1HypLGJdgxHaeK4s | 12, 14 |
 
 ## วิธีดู
 

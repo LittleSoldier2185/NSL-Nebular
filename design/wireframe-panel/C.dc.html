@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>แผงขวา Wireframe แบบ C</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="width:400px;height:900px;box-sizing:border-box;background:#131b26;border-left:1px solid #263344;color:#e8eef5;display:flex;flex-direction:column;font-family:'Noto Sans Thai',system-ui,sans-serif;font-size:13px">
+
+<!-- ภาพย่อหน้าจอ -->
+<div style="padding:18px 20px 16px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid #263344">
+<div style="display:flex;align-items:baseline;justify-content:space-between">
+<div style="font-size:15px;font-weight:600">Wireframe</div>
+<div style="font-size:12px;color:#93a1b3">0 ชิ้นส่วน</div>
+</div>
+<div style="height:150px;border-radius:10px;background:#0e151e;border:1px solid #263344;display:flex;align-items:center;justify-content:center;position:relative">
+<div style="width:200px;height:125px;background:#ffffff;border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,.4)"></div>
+<span style="position:absolute;left:10px;bottom:8px;font-size:11.5px;color:#93a1b3">1440 × 900 · เดสก์ท็อป</span>
+<span style="position:absolute;right:10px;bottom:8px;font-size:11.5px;color:#8be9d6">เรียบร้อย</span>
+</div>
+</div>
+
+<div style="flex-grow:1;overflow:hidden">
+
+<!-- ส่วนที่ 1: กางอยู่ -->
+<div style="border-bottom:1px solid #263344">
+<button type="button" style="all:unset;cursor:pointer;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:14px 20px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#93a1b3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+<span style="flex-grow:1;font-weight:600">การแสดงผล</span>
+<span style="font-size:12px;color:#93a1b3">เรียบร้อย · น้ำเงิน</span>
+</button>
+<div style="padding:0 20px 18px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;background:#0e151e;border-radius:9px;padding:3px">
+<span style="flex:1;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#93a1b3">ร่าง</span>
+<span style="flex:1;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;background:#24566b;color:#e8eef5;font-weight:600">เรียบร้อย</span>
+</div>
+<div style="display:flex;gap:10px;align-items:center">
+<span style="width:24px;height:24px;border-radius:50%;background:#2f6bff;box-shadow:0 0 0 2px #131b26,0 0 0 4px #e8eef5"></span>
+<span style="width:24px;height:24px;border-radius:50%;background:#1fa65a"></span>
+<span style="width:24px;height:24px;border-radius:50%;background:#e0312f"></span>
+<span style="width:24px;height:24px;border-radius:50%;background:#e8851a"></span>
+<span style="width:24px;height:24px;border-radius:50%;background:#14a39a"></span>
+<span style="width:24px;height:24px;border-radius:50%;background:#7c3aed"></span>
+<span style="width:24px;height:24px;border-radius:50%;background:#e0267a"></span>
+</div>
+</div>
+</div>
+
+<!-- ส่วนที่ 2: พับอยู่ -->
+<div style="border-bottom:1px solid #263344">
+<button type="button" style="all:unset;cursor:pointer;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:14px 20px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#93a1b3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+<span style="flex-grow:1;font-weight:600">ขนาดหน้าจอ</span>
+<span style="font-size:12px;color:#93a1b3">เดสก์ท็อป 1440 × 900</span>
+</button>
+</div>
+
+<!-- ส่วนที่ 3: พับอยู่ -->
+<div style="border-bottom:1px solid #263344">
+<button type="button" style="all:unset;cursor:pointer;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:14px 20px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#93a1b3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+<span style="flex-grow:1;font-weight:600">ตรวจสอบ</span>
+<span style="font-size:12px;color:#8be9d6;display:flex;align-items:center;gap:5px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5fd9c2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>ไม่พบปัญหา</span>
+</button>
+</div>
+
+<!-- ส่วนที่ 4: ใช้ใน Screen Flow -->
+<div>
+<button type="button" style="all:unset;cursor:pointer;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:14px 20px">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#93a1b3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+<span style="flex-grow:1;font-weight:600">ใช้ใน Screen Flow</span>
+<span style="font-size:12px;color:#93a1b3">2 หน้าจอ</span>
+</button>
+</div>
+
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":400,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

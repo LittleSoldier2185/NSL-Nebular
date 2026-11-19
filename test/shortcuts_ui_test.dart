@@ -423,9 +423,9 @@ void main() {
       expect(find.text('Ctrl+C'), findsOneWidget);
       expect(find.text('Ctrl+D'), findsOneWidget);
       expect(find.text('F2'), findsOneWidget);
-      final copy = tester.widget<PopupMenuItem<VoidCallback>>(find.widgetWithText(PopupMenuItem<VoidCallback>, 'คัดลอกตาราง'));
+      final copy = tester.widget<PopupMenuItem<VoidCallback>>(find.widgetWithText(PopupMenuItem<VoidCallback>, 'คัดลอก'));
       expect(copy.enabled, false); // ยังไม่ได้เลือกอะไร
-      final selectAll = tester.widget<PopupMenuItem<VoidCallback>>(find.widgetWithText(PopupMenuItem<VoidCallback>, 'เลือกทุกตาราง'));
+      final selectAll = tester.widget<PopupMenuItem<VoidCallback>>(find.widgetWithText(PopupMenuItem<VoidCallback>, 'เลือกทั้งหมด'));
       expect(selectAll.enabled, true);
     });
 
@@ -433,7 +433,7 @@ void main() {
       await boot(tester);
       await tester.tap(find.text('แก้ไข'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('เลือกทุกตาราง'));
+      await tester.tap(find.text('เลือกทั้งหมด'));
       await tester.pumpAndSettle();
       expect(c.selectionCount, 2);
 

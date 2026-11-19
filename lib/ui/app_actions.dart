@@ -120,6 +120,9 @@ class AppActions {
 
   /// คำสั่งระดับหน้าต่าง/โปรเจกต์ ทำงานเหมือนกันทุกชนิดเอกสาร — run() ทำทันทีไม่ส่งต่อตามชนิด
   static const workspaceCmds = {
+    // นำเข้า/เชื่อมต่อฐานข้อมูล: ผลเป็น ER ใหม่/แทนที่ ER/โปรเจกต์ใหม่ — ใช้ได้จากทุกเอกสาร (เดิม DFD ฯลฯ ตก default ไม่ทำอะไร)
+    Cmd.importSql,
+    Cmd.connectDb,
     Cmd.toggleNotePins,
     Cmd.toggleExplorer,
     Cmd.toggleSqlPreview,

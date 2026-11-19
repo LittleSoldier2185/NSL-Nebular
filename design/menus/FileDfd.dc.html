@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>เมนูไฟล์ใหม่ (DFD)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5ED0C4}a:hover{color:#8FE3DA}
+.row{all:unset;box-sizing:border-box;display:grid;grid-template-columns:16px 16px minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;height:32px;padding:0 10px;border-radius:6px;font-size:13px;color:#E6EBF2;cursor:default}
+.row svg{width:16px;height:16px;fill:none;stroke:#9AA7B8;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.row.off{color:#6B7787}
+.row.off svg{stroke:#4A5566}
+.row.hover{background:#133533}
+.row.hover svg{stroke:#5ED0C4}
+.kbd{font-size:12px;color:#9AA7B8;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row.off .kbd{color:#6B7787}
+.sec{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:#9AA7B8;padding:10px 10px 4px}
+.tag{font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:4px;background:#2A3441;color:#9AA7B8}
+.tag.er{background:#133533;color:#5ED0C4}
+.div{height:1px;background:#2E3946;margin:6px 4px}
+.mi{font-size:13px;padding:6px 10px;border-radius:6px}
+.lbl{display:flex;align-items:center;gap:8px;min-width:0}
+</style>
+</helmet>
+<div style="width: 620px; height: 900px; background: #0E1319; font-family: 'Noto Sans Thai', system-ui, sans-serif; color: #E6EBF2; position: relative; overflow: hidden">
+  <div style="height: 44px; background: #19212B; border-bottom: 1px solid #242E3A; display: flex; align-items: center; gap: 2px; padding: 0 12px">
+    <span class="mi" style="background: #133533; color: #5ED0C4">ไฟล์</span>
+    <span class="mi">แก้ไข</span>
+    <span class="mi">มุมมอง</span>
+    <span class="mi">เครื่องมือ</span>
+    <span class="mi">ช่วยเหลือ</span>
+  </div>
+
+  <div role="menu" aria-label="ไฟล์" style="position: absolute; left: 12px; top: 48px; width: 400px; box-sizing: border-box; background: #212B37; border: 1px solid #2E3946; border-radius: 10px; box-shadow: 0 16px 40px rgba(0,0,0,0.55); padding: 6px">
+    <div class="sec">โปรเจกต์</div>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M4 1.5h5.5L13 5v9.5H4zM9 1.5V5h4M8.5 8v4M6.5 10h4"/></svg><span>โปรเจกต์ใหม่…</span><span class="kbd">Ctrl+N</span></button>
+    <button class="row hover"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M1.5 4h4l1.5 1.5h7.5V13h-13z"/></svg><span>เปิด…</span><span class="kbd">Ctrl+O</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2.5 2.5h9l2 2v9h-11zM5 2.5v3.5h5V2.5M5 13.5v-4h6v4"/></svg><span>บันทึก</span><span class="kbd">Ctrl+S</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2.5 2.5h9l2 2v4M2.5 2.5v11h6M5 2.5v3.5h5V2.5M11 11l2 2 2-4"/></svg><span>บันทึกเป็น…</span><span class="kbd">Ctrl+Shift+S</span></button>
+
+    <div class="div"></div>
+    <div class="sec">นำเข้า</div>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M4 1.5h5.5L13 5v9.5H4zM8.5 7v5M6.5 10l2 2 2-2"/></svg><span class="lbl">นำเข้าจาก .sql…</span><span class="kbd">Ctrl+I</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2zM3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span>เชื่อมต่อฐานข้อมูล…</span><span class="kbd">Ctrl+Shift+O</span></button>
+
+    <div class="div"></div>
+    <div class="sec">ส่งออก</div>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 3h12v10H2zM2 11l3.5-3.5 3 3 2-2L14 12M10.5 6h.01"/></svg><span>Export ภาพ (PNG / SVG)…</span><span class="kbd">Ctrl+Shift+E</span></button>
+    <button class="row off" disabled="disabled"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M4 1.5h5.5L13 5v9.5H4zM9 1.5V5h4M6 8.5h5M6 11h5"/></svg><span class="lbl">Export เอกสาร / DBML… <span class="tag">ไม่มีสำหรับ DFD</span></span><span class="kbd">Ctrl+Shift+D</span></button>
+
+    <div class="div"></div>
+    <div class="sec">ฐานข้อมูล <span class="tag er">ER</span></div>
+    <button class="row off" disabled="disabled"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M5 4L2 8l3 4M11 4l3 4-3 4M9 3L7 13"/></svg><span class="lbl">Export .sql… <span class="tag">เฉพาะ ER</span></span><span class="kbd">Ctrl+E</span></button>
+    <button class="row off" disabled="disabled"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 5h10M9 2l3 3-3 3M14 11H4M7 8l-3 3 3 3"/></svg><span class="lbl">เปรียบเทียบกับไฟล์เก่า (Migration)… <span class="tag">เฉพาะ ER</span></span><span class="kbd">Ctrl+M</span></button>
+  </div>
+
+  <div style="position: absolute; left: 12px; top: 600px; width: 560px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; line-height: 1.55; color: #9AA7B8">
+    <div style="font-size: 13px; font-weight: 600; color: #E6EBF2">เมนูไฟล์</div>
+    <div>• หมวด โปรเจกต์ / นำเข้า / ส่งออก / ฐานข้อมูล (ER) — ไอคอนและคอลัมน์ตรงแนวแบบเดียวกับเมนูมุมมอง</div>
+    <div>• <b style="color: #E6EBF2">แก้บั๊ก:</b> ตอนนี้บน DFD/Flowchart/Wireframe/Screen Flow กด “นำเข้า .sql” และ “เชื่อมต่อฐานข้อมูล” แล้วไม่เกิดอะไร — แบบใหม่ใช้ได้ทุกเอกสาร (ผลนำเข้าเป็น ER ใหม่อยู่แล้ว)</div>
+    <div>• Export .sql / Migration ใช้กับ ER — เทาพร้อมป้ายเมื่อเปิดเอกสารอื่น (แบบเดียวกับ SQL Preview)</div>
+    <div>• Export เอกสาร: Flowchart/Wireframe/Screen Flow/API มีแล้ว ; DFD ยังไม่มี — เทาไว้ก่อน</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":620,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

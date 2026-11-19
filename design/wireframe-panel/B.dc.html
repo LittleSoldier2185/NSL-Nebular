@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>แผงขวา Wireframe แบบ B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="width:400px;height:900px;box-sizing:border-box;background:#131b26;border-left:1px solid #263344;color:#e8eef5;display:flex;flex-direction:column;font-family:'Noto Sans Thai',system-ui,sans-serif;font-size:13px">
+
+<!-- แท็บ: เลือกชิ้นส่วนแล้วสลับมาที่ "ชิ้นส่วน" เอง -->
+<div style="display:flex;padding:0 12px;border-bottom:1px solid #263344">
+<button type="button" style="all:unset;cursor:pointer;box-sizing:border-box;padding:14px 12px 12px;color:#93a1b3;font-size:13px;border-bottom:2px solid transparent">หน้าจอ</button>
+<button type="button" style="all:unset;cursor:pointer;box-sizing:border-box;padding:14px 12px 12px;color:#8be9d6;font-weight:600;font-size:13px;border-bottom:2px solid #34c3a8">ชิ้นส่วน · ปุ่ม</button>
+<button type="button" style="all:unset;cursor:pointer;box-sizing:border-box;padding:14px 12px 12px;color:#93a1b3;font-size:13px;border-bottom:2px solid transparent;display:flex;gap:6px;align-items:center">ตรวจสอบ <span style="font-size:11px;background:#3a2a14;color:#f0b25a;border-radius:9px;padding:1px 7px">1</span></button>
+</div>
+
+<div style="flex-grow:1;overflow:hidden;padding:18px 20px;display:flex;flex-direction:column;gap:18px">
+
+<!-- ตัวตนของชิ้นส่วน -->
+<div style="display:flex;gap:12px;align-items:center">
+<div style="width:36px;height:36px;border-radius:9px;background:#1a2432;display:flex;align-items:center;justify-content:center">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#93a1b3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="3"/></svg>
+</div>
+<div style="flex-grow:1">
+<div style="font-weight:600;font-size:15px">ปุ่ม</div>
+<div style="font-size:12px;color:#93a1b3">อยู่ใน การ์ด · 120 × 40</div>
+</div>
+</div>
+
+<label style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#93a1b3">ข้อความ
+<input value="เข้าสู่ระบบ" style="box-sizing:border-box;height:36px;border-radius:8px;border:1px solid #263344;background:#0e151e;color:#e8eef5;padding:0 10px;font:inherit;font-size:13px">
+</label>
+
+<!-- ผูกข้อมูล -->
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:12px;color:#93a1b3">ผูกกับข้อมูลใน ER</div>
+<div style="display:flex;gap:10px;align-items:center;border:1px dashed #3a4a5f;border-radius:10px;padding:10px 12px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#93a1b3" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>
+<span style="flex-grow:1;color:#93a1b3">ยังไม่ผูก</span>
+<button type="button" style="all:unset;cursor:pointer;color:#8be9d6;font-size:12.5px">เลือกตาราง…</button>
+</div>
+</div>
+
+<!-- รูปแบบ -->
+<div style="display:flex;flex-direction:column;gap:12px;padding-top:4px;border-top:1px solid #263344">
+<div style="font-size:11px;font-weight:600;letter-spacing:.06em;color:#93a1b3;padding-top:14px">รูปแบบ</div>
+<div style="display:flex;gap:6px;align-items:center">
+<div style="width:92px;height:32px;border:1px solid #263344;border-radius:8px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:12.5px">อัตโนมัติ <span style="color:#93a1b3">▾</span></div>
+<span style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(52,195,168,.16);color:#8be9d6;font-weight:700">B</span>
+<span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#93a1b3">⇤</span>
+<span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#93a1b3">⇔</span>
+<span style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#93a1b3">⇥</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+<div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#93a1b3">พื้น<span style="height:30px;border-radius:8px;background:#2f6bff;border:1px solid #263344"></span></div>
+<div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#93a1b3">ขอบ<span style="height:30px;border-radius:8px;background:#0e151e;border:1px solid #3a4a5f"></span></div>
+<div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:#93a1b3">ตัวอักษร<span style="height:30px;border-radius:8px;background:#ffffff;border:1px solid #263344"></span></div>
+</div>
+<label style="display:flex;gap:10px;align-items:center;font-size:13px"><span style="width:16px;height:16px;border-radius:4px;border:1.5px solid #5a6b80"></span>ใช้งานไม่ได้ (disabled)</label>
+</div>
+
+</div>
+
+<!-- แถบงานด้านล่าง -->
+<div style="padding:12px 20px;border-top:1px solid #263344;display:flex;gap:8px">
+<button type="button" style="all:unset;cursor:pointer;flex:1;height:34px;border-radius:8px;border:1px solid #263344;display:flex;align-items:center;justify-content:center;font-size:12.5px">ทำสำเนา</button>
+<button type="button" style="all:unset;cursor:pointer;flex:1;height:34px;border-radius:8px;border:1px solid #263344;display:flex;align-items:center;justify-content:center;font-size:12.5px">นำไปหน้า</button>
+<button type="button" style="all:unset;cursor:pointer;flex:1;height:34px;border-radius:8px;border:1px solid #5a2a2a;color:#f08a8a;display:flex;align-items:center;justify-content:center;font-size:12.5px">ลบ</button>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":400,"height":900}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

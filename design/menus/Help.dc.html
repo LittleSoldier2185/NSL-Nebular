@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>เมนูช่วยเหลือใหม่</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5ED0C4}a:hover{color:#8FE3DA}
+.row{all:unset;box-sizing:border-box;display:grid;grid-template-columns:16px 16px minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;height:32px;padding:0 10px;border-radius:6px;font-size:13px;color:#E6EBF2;cursor:default}
+.row svg{width:16px;height:16px;fill:none;stroke:#9AA7B8;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.row .chk svg{stroke:#5ED0C4;stroke-width:2}
+.row.hover{background:#133533}
+.row.hover svg{stroke:#5ED0C4}
+.kbd{font-size:12px;color:#9AA7B8;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sec{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:#9AA7B8;padding:10px 10px 4px}
+.new{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#F4D58A}
+.new i{width:7px;height:7px;border-radius:4px;background:#F4D58A;display:inline-block}
+.div{height:1px;background:#2E3946;margin:6px 4px}
+.mi{font-size:13px;padding:6px 10px;border-radius:6px}
+</style>
+</helmet>
+<div style="width: 620px; height: 900px; background: #0E1319; font-family: 'Noto Sans Thai', system-ui, sans-serif; color: #E6EBF2; position: relative; overflow: hidden">
+  <div style="height: 44px; background: #19212B; border-bottom: 1px solid #242E3A; display: flex; align-items: center; gap: 2px; padding: 0 12px">
+    <span class="mi">ไฟล์</span>
+    <span class="mi">แก้ไข</span>
+    <span class="mi">มุมมอง</span>
+    <span class="mi">เครื่องมือ</span>
+    <span class="mi" style="background: #133533; color: #5ED0C4">ช่วยเหลือ</span>
+  </div>
+
+  <div role="menu" aria-label="ช่วยเหลือ" style="position: absolute; left: 200px; top: 48px; width: 360px; box-sizing: border-box; background: #212B37; border: 1px solid #2E3946; border-radius: 10px; box-shadow: 0 16px 40px rgba(0,0,0,0.55); padding: 6px">
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M1.5 4h13v8h-13zM4 6.5h1M7 6.5h2M11 6.5h1M4 9.5h8"/></svg><span>ดูคีย์ลัดทั้งหมด</span><span class="kbd">F1</span></button>
+    <button class="row hover"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M8 1.5l1.6 4.2 4.4.3-3.4 2.8 1.1 4.3L8 10.7l-3.7 2.4 1.1-4.3L2 6l4.4-.3z"/></svg><span>มีอะไรใหม่ (Patch note)…</span><span class="new"><i></i>0.7.0</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"/><path d="M8 7v4.5M8 4.8v.01"/></svg><span>เกี่ยวกับ NSL Nebular…</span><span class="kbd"></span></button>
+
+    <div class="div"></div>
+    <div class="sec">ภาษา</div>
+    <button class="row"><span class="chk"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></svg></span><span></span><span>ไทย</span><span class="kbd"></span></button>
+    <button class="row"><span></span><span></span><span>English</span><span class="kbd"></span></button>
+  </div>
+
+  <div style="position: absolute; left: 200px; top: 330px; width: 380px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; line-height: 1.55; color: #9AA7B8">
+    <div style="font-size: 13px; font-weight: 600; color: #E6EBF2">เมนูช่วยเหลือ</div>
+    <div>• ไอคอนหน้ารายการ ; ภาษาใช้คอลัมน์ติ๊ก ไม่ใช่ “✓ ” + เว้นวรรค</div>
+    <div>• “มีอะไรใหม่” บอกเลขรุ่นพร้อมจุดเมื่อยังไม่ได้อ่าน (จุดเดียวกับแถบสถานะ)</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":620,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

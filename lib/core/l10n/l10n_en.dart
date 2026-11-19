@@ -277,9 +277,11 @@ const Map<String, String> kEn = {
   'ไอคอนโปรแกรมใหม่ (กาแล็กซี) ตามชุดแบรนด์ NSL ทั้งหน้าต่าง ทาสก์บาร์ ตัวติดตั้ง และโลโก้ในแอป': 'New galaxy app icon from the NSL brand pack, used for the window, taskbar, installer and in-app logo',
   'เมนูมุมมองจัดหมวดใหม่ (แผง/หน้า/แคนวาส) เปลี่ยนตามชนิดเอกสาร มีติ๊กและไอคอน + เมนูเครื่องมือใหม่ + คีย์ลัด Ctrl+B/J/H, Ctrl+Shift+I/N/H/P/B': 'Reorganized View menu (panels / pages / canvas) that adapts to the document type, with checkmarks and icons, plus a new Tools menu and shortcuts Ctrl+B/J/H, Ctrl+Shift+I/N/H/P/B',
   'สร้างโค้ด HTML จาก Wireframe ได้หน้าตาตรงตามแบบ: วางทุกชิ้นตามตำแหน่ง/ขนาด/การหมุน ซ้อนในภาชนะ สีและรูปแบบ (เรียบร้อย/ร่าง) เหมือนบนแคนวาส ชิ้นที่ซ่อนไม่แสดง และใช้ข้อมูลตั้งต้นของ ER ในตัวเลือกและตาราง': 'HTML generated from a wireframe now matches the design: every component keeps its position, size and rotation, nests inside its container, uses the canvas colors and style (clean or sketch), hidden components stay hidden, and selects and tables use the ER seed data',
+  'เมนูไฟล์/แก้ไข/ช่วยเหลือจัดหมวดใหม่ มีไอคอน ชื่อคำสั่งเป็นกลางทุกชนิดเอกสาร และบอกจำนวนที่เลือก': 'File, Edit and Help menus reorganized with icons, document-neutral command names and a selection count',
   'Mock Server ส่งค่า DEFAULT ของคอลัมน์พร้อมเครื่องหมายคำพูด SQL': 'Mock Server returned column DEFAULT values wrapped in SQL quotes',
   'ข้อความล้นแถวในพจนานุกรมข้อมูลและมุมมอง SQL เมื่อชื่อยาวหรือมีภาษาไทยหลายบรรทัด': 'Rows overflowed in the data dictionary and SQL view with long names or many Thai lines',
   'ตั้งค่าหน้าจอ Wireframe กดได้ครั้งเดียว': 'Wireframe screen settings only responded to the first change',
+  'นำเข้า .sql และเชื่อมต่อฐานข้อมูลไม่ทำงานเมื่อเปิดเอกสารที่ไม่ใช่ ER': 'Importing .sql and connecting to a database did nothing while a non-ER document was open',
   'ยังไม่บันทึก': 'Unsaved changes',
   'เอกสาร ER ใหม่ในโปรเจกต์นี้': 'A new ER document in this project',
   'เอกสารอื่นไม่ถูกแตะ': 'Other documents are left untouched',
@@ -1677,4 +1679,11 @@ const Map<String, String> kEn = {
   'แสดง/ซ่อน SQL Preview (ER)': 'Show/hide SQL Preview (ER)',
   'แสดง/ซ่อนแผงโน้ตและงานค้าง': 'Show/hide notes and to-do panel',
   'ปัญหาทั้งโปรเจกต์': 'Project-wide problems',
+  // ---- เมนูไฟล์ / แก้ไข / ช่วยเหลือ (Phase 14) ----
+  'ส่งออก': 'Export',
+  'ฐานข้อมูล': 'Database',
+  'ไม่มีสำหรับ {0}': 'not for {0}',
+  'โปรเจกต์ใหม่…': 'New project…',
+  'ที่เลือก': 'Selection',
+  'แก้โครงสร้างตาราง…': 'Edit table structure…',
 };

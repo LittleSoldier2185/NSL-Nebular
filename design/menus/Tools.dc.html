@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>เมนูเครื่องมือใหม่</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5ED0C4}a:hover{color:#8FE3DA}
+.row{all:unset;box-sizing:border-box;display:grid;grid-template-columns:16px 16px minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;height:32px;padding:0 10px;border-radius:6px;font-size:13px;color:#E6EBF2;cursor:default}
+.row svg{width:16px;height:16px;fill:none;stroke:#9AA7B8;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.row.hover{background:#133533}
+.row.hover svg{stroke:#5ED0C4}
+.kbd{font-size:12px;color:#9AA7B8;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sec{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:#9AA7B8;padding:10px 10px 4px}
+.live{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#5ED0C4}
+.live i{width:7px;height:7px;border-radius:4px;background:#14958B;display:inline-block}
+.cnt{font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;background:#3A2E10;color:#F4D58A}
+.tag{font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:4px;background:#133533;color:#5ED0C4}
+.div{height:1px;background:#2E3946;margin:6px 4px}
+.mi{font-size:13px;padding:6px 10px;border-radius:6px}
+</style>
+</helmet>
+<div style="width: 620px; height: 900px; background: #0E1319; font-family: 'Noto Sans Thai', system-ui, sans-serif; color: #E6EBF2; position: relative; overflow: hidden">
+  <div style="height: 44px; background: #19212B; border-bottom: 1px solid #242E3A; display: flex; align-items: center; gap: 2px; padding: 0 12px">
+    <span class="mi">ไฟล์</span>
+    <span class="mi">แก้ไข</span>
+    <span class="mi">มุมมอง</span>
+    <span class="mi" style="background: #133533; color: #5ED0C4">เครื่องมือ</span>
+    <span class="mi">ช่วยเหลือ</span>
+  </div>
+
+  <div role="menu" aria-label="เครื่องมือ" style="position: absolute; left: 150px; top: 48px; width: 400px; box-sizing: border-box; background: #212B37; border: 1px solid #2E3946; border-radius: 10px; box-shadow: 0 16px 40px rgba(0,0,0,0.55); padding: 6px">
+    <div class="sec">ค้นหา</div>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 3h12v10H2zM4.5 6.5l2 1.5-2 1.5M8 10h3"/></svg><span>Command palette</span><span class="kbd">Ctrl+K</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg><span style="display: flex; align-items: center; gap: 8px">ค้นหาตาราง / คอลัมน์ <span class="tag">ER</span></span><span class="kbd">Ctrl+F</span></button>
+
+    <div class="div"></div>
+    <div class="sec">ตรวจ</div>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M8 2l6.5 11.5h-13zM8 6.5V10M8 12v.01"/></svg><span style="display: flex; align-items: center; gap: 8px">ปัญหาทั้งโปรเจกต์… <span class="cnt">3</span></span><span class="kbd">Ctrl+Shift+P</span></button>
+
+    <div class="div"></div>
+    <div class="sec">สร้าง</div>
+    <button class="row hover"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M5 4L2 8l3 4M11 4l3 4-3 4M9 3L7 13"/></svg><span>สร้างโค้ด…</span><span class="kbd">Ctrl+Shift+B</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 3h12v4H2zM2 9h12v4H2zM4.5 5h.01M4.5 11h.01"/></svg><span>Mock Server</span><span class="live"><i></i>ทำงานที่ :8788</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 2h7l3 3v9H3zM10 2v3h3M6 9h4M6 11.5h4"/></svg><span>ส่งออกพจนานุกรมข้อมูล…</span><span class="kbd"></span></button>
+  </div>
+
+  <div style="position: absolute; left: 150px; top: 440px; width: 400px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; line-height: 1.55; color: #9AA7B8">
+    <div style="font-size: 13px; font-weight: 600; color: #E6EBF2">เมนูใหม่ “เครื่องมือ”</div>
+    <div>• รวมสิ่งที่ “ทำงาน” ไม่ใช่ “ดู” — ค้นหา ตรวจ สร้างโค้ด Mock Server</div>
+    <div>• “ปัญหาทั้งโปรเจกต์” แยกจาก “ปัญหาในเอกสารนี้” ชัดเจน พร้อมตัวเลขจำนวน</div>
+    <div>• Mock Server บอกสถานะในเมนูเลยว่ากำลังทำงานที่พอร์ตไหน</div>
+    <div>• คีย์ลัดใหม่ทั้งหมดเช็กแล้วว่าไม่ชนกับ <span style="font-family: ui-monospace, monospace; color: #E6EBF2">shortcuts.dart</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":620,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

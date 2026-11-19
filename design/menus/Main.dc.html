@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>เมนูมุมมองใหม่ (ER)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5ED0C4}a:hover{color:#8FE3DA}
+.row{all:unset;box-sizing:border-box;display:grid;grid-template-columns:16px 16px minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;height:32px;padding:0 10px;border-radius:6px;font-size:13px;color:#E6EBF2;cursor:default}
+.row svg{width:16px;height:16px;fill:none;stroke:#9AA7B8;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.row .chk svg{stroke:#5ED0C4;stroke-width:2}
+.kbd{font-size:12px;color:#9AA7B8;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row.hover{background:#133533}
+.row.hover svg{stroke:#5ED0C4}
+.sec{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:#9AA7B8;padding:10px 10px 4px}
+.tag{font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:4px;background:#133533;color:#5ED0C4}
+.div{height:1px;background:#2E3946;margin:6px 4px}
+.mi{font-size:13px;padding:6px 10px;border-radius:6px}
+</style>
+</helmet>
+<div style="width: 620px; height: 900px; background: #0E1319; font-family: 'Noto Sans Thai', system-ui, sans-serif; color: #E6EBF2; position: relative; overflow: hidden">
+  <div style="height: 44px; background: #19212B; border-bottom: 1px solid #242E3A; display: flex; align-items: center; gap: 2px; padding: 0 12px">
+    <span class="mi">ไฟล์</span>
+    <span class="mi">แก้ไข</span>
+    <span class="mi" style="background: #133533; color: #5ED0C4">มุมมอง</span>
+    <span class="mi">เครื่องมือ</span>
+    <span class="mi">ช่วยเหลือ</span>
+  </div>
+
+  <div role="menu" aria-label="มุมมอง" style="position: absolute; left: 70px; top: 48px; width: 400px; box-sizing: border-box; background: #212B37; border: 1px solid #2E3946; border-radius: 10px; box-shadow: 0 16px 40px rgba(0,0,0,0.55); padding: 6px">
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg><span>พอดีหน้าจอ</span><span class="kbd">Ctrl+0</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14M5 7h4"/></svg><span>ซูม 100%</span><span class="kbd">Ctrl+1</span></button>
+
+    <div class="div"></div>
+    <div class="sec">แผง</div>
+    <button class="row"><span class="chk"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></svg></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 4h4l1.5 1.5H14V13H2z"/></svg><span>ตัวสำรวจโปรเจกต์</span><span class="kbd">Ctrl+B</span></button>
+    <button class="row"><span class="chk"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></svg></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2zM3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"/></svg><span>SQL Preview</span><span class="kbd">Ctrl+J</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M8 2l6.5 11.5h-13zM8 6.5V10M8 12v.01"/></svg><span>ปัญหาในเอกสารนี้</span><span class="kbd">Ctrl+Shift+I</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 2h10v8l-4 4H3zM9 14v-4h4"/></svg><span>แผงโน้ตและงานค้าง</span><span class="kbd">Ctrl+Shift+N</span></button>
+    <button class="row"><span class="chk"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></svg></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M8 14V9M5 2h6l-1 4 2 3H4l2-3z"/></svg><span>หมุดโน้ตบนแคนวาส</span><span class="kbd">Shift+N</span></button>
+
+    <div class="div"></div>
+    <div class="sec">หน้า</div>
+    <button class="row hover"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 7.5L8 2.5l6 5M3.5 6.5V14h9V6.5"/></svg><span>Project Home</span><span class="kbd">Ctrl+H</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 12V3.5a1.5 1.5 0 0 1 1.5-1.5H13v10H4.5A1.5 1.5 0 0 0 3 13.5 1.5 1.5 0 0 0 4.5 15H13M6 5.5h4"/></svg><span>พจนานุกรมข้อมูล</span><span class="kbd"></span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg><span>ประวัติเวอร์ชันและ Diff</span><span class="kbd">Ctrl+Shift+H</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1"/></svg><span>ความต้องการและการไล่ตาม</span><span class="kbd"></span></button>
+
+    <div class="div"></div>
+    <div class="sec">แคนวาส <span class="tag">ER</span></div>
+    <button class="row"><span class="chk"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></svg></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 2h12v12H2zM2 6h12M2 10h12M6 2v12M10 2v12"/></svg><span>จัดแนวตามตาราง (Snap)</span><span class="kbd">กด Alt ข้าม</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 2h12v12H2zM5 11l6-6M8 5h3v3"/></svg><span>ขนาดกระดาน…</span><span class="kbd"></span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 12c4 0 4-8 8-8h4M12 2l2 2-2 2"/></svg><span>เส้นความสัมพันธ์ (FK)…</span><span class="kbd"></span></button>
+  </div>
+
+  <div style="position: absolute; left: 70px; top: 732px; width: 480px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; line-height: 1.55; color: #9AA7B8">
+    <div style="font-size: 13px; font-weight: 600; color: #E6EBF2">สิ่งที่เปลี่ยน</div>
+    <div>• แบ่งเป็นหมวด แผง / หน้า / แคนวาส มีหัวข้อกำกับ — เครื่องมือย้ายไปเมนู “เครื่องมือ”</div>
+    <div>• คอลัมน์ติ๊กแยก ทุกบรรทัดตรงแนว ; รายการเปิด/ปิดทุกอันบอกสถานะด้วยติ๊ก</div>
+    <div>• ไอคอนหน้ารายการชุดเดียวกับเมนูคลิกขวา ; คีย์ลัดใหม่ไม่ชนของเดิม</div>
+    <div>• หมวด “แคนวาส” บอกชนิดเอกสารที่ใช้ได้ (ป้าย ER)</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":620,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

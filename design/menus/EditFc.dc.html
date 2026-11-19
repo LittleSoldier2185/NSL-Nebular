@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>เมนูแก้ไขใหม่ (Flowchart)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5ED0C4}a:hover{color:#8FE3DA}
+.row{all:unset;box-sizing:border-box;display:grid;grid-template-columns:16px 16px minmax(0,1fr) auto;align-items:center;column-gap:10px;width:100%;height:32px;padding:0 10px;border-radius:6px;font-size:13px;color:#E6EBF2;cursor:default}
+.row svg{width:16px;height:16px;fill:none;stroke:#9AA7B8;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.row.off{color:#6B7787}
+.row.off svg{stroke:#4A5566}
+.row.hover{background:#133533}
+.row.hover svg{stroke:#5ED0C4}
+.kbd{font-size:12px;color:#9AA7B8;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row.off .kbd{color:#6B7787}
+.sec{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;color:#9AA7B8;padding:10px 10px 4px}
+.div{height:1px;background:#2E3946;margin:6px 4px}
+.mi{font-size:13px;padding:6px 10px;border-radius:6px}
+</style>
+</helmet>
+<div style="width: 620px; height: 900px; background: #0E1319; font-family: 'Noto Sans Thai', system-ui, sans-serif; color: #E6EBF2; position: relative; overflow: hidden">
+  <div style="height: 44px; background: #19212B; border-bottom: 1px solid #242E3A; display: flex; align-items: center; gap: 2px; padding: 0 12px">
+    <span class="mi">ไฟล์</span>
+    <span class="mi" style="background: #133533; color: #5ED0C4">แก้ไข</span>
+    <span class="mi">มุมมอง</span>
+    <span class="mi">เครื่องมือ</span>
+    <span class="mi">ช่วยเหลือ</span>
+  </div>
+
+  <div role="menu" aria-label="แก้ไข (Flowchart)" style="position: absolute; left: 60px; top: 48px; width: 400px; box-sizing: border-box; background: #212B37; border: 1px solid #2E3946; border-radius: 10px; box-shadow: 0 16px 40px rgba(0,0,0,0.55); padding: 6px">
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M5 3L2 6l3 3M2 6h7.5a4 4 0 0 1 0 8H6"/></svg><span>ย้อนกลับ</span><span class="kbd">Ctrl+Z</span></button>
+    <button class="row off" disabled="disabled"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M11 3l3 3-3 3M14 6H6.5a4 4 0 0 0 0 8H10"/></svg><span>ทำซ้ำ</span><span class="kbd">Ctrl+Shift+Z</span></button>
+
+    <div class="div"></div>
+    <div class="sec">ที่เลือก</div>
+    <button class="row off" disabled="disabled"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M5.5 5.5h8v8h-8zM3 10.5H2.5v-8h8V3"/></svg><span>คัดลอก</span><span class="kbd">Ctrl+C</span></button>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M5.5 2.5h5v2h-5zM4 3.5H2.5v11h11v-11H12"/></svg><span>วาง</span><span class="kbd">Ctrl+V</span></button>
+    <button class="row off" disabled="disabled"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M5.5 5.5h8v8h-8zM3 10.5H2.5v-8h8V3M9.5 7.5v4M7.5 9.5h4"/></svg><span>ทำสำเนา</span><span class="kbd">Ctrl+D</span></button>
+    <button class="row off" disabled="disabled"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M10.5 2.5l3 3L6 13H3v-3z"/></svg><span>แก้ข้อความ…</span><span class="kbd">F2</span></button>
+    <button class="row off" disabled="disabled"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2.5 4.5h11M6 4.5V2.5h4v2M4 4.5l.8 9h6.4l.8-9"/></svg><span>ลบที่เลือก</span><span class="kbd">Delete</span></button>
+    <button class="row hover"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2.5 2.5h11v11h-11zM5 8l2 2 4-4"/></svg><span>เลือกทั้งหมด</span><span class="kbd">Ctrl+A</span></button>
+
+    <div class="div"></div>
+    <div class="sec">กลุ่ม</div>
+    <button class="row off" disabled="disabled"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M1.5 1.5h13v13h-13zM4 4h3.5v3.5H4zM8.5 8.5H12V12H8.5z"/></svg><span>จัดกลุ่ม</span><span class="kbd">Ctrl+G</span></button>
+    <button class="row off" disabled="disabled"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M4 4h3.5v3.5H4zM8.5 8.5H12V12H8.5zM1.5 5V1.5H5M11 1.5h3.5V5M14.5 11v3.5H11M5 14.5H1.5V11"/></svg><span>เลิกจัดกลุ่ม</span><span class="kbd">Ctrl+Shift+G</span></button>
+
+    <div class="div"></div>
+    <button class="row"><span></span><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 2h5v5H2zM9 2h5v5H9zM2 9h5v5H2zM9 9h5v5H9z"/></svg><span>จัดวางอัตโนมัติ</span><span class="kbd"></span></button>
+  </div>
+
+  <div style="position: absolute; left: 60px; top: 600px; width: 500px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; line-height: 1.55; color: #9AA7B8">
+    <div style="font-size: 13px; font-weight: 600; color: #E6EBF2">เมนูแก้ไข — เอกสารอื่น</div>
+    <div>• ตัวอย่างนี้ยังไม่ได้เลือกอะไร: คำสั่งที่ต้องมีของที่เลือกเป็นสีเทา ; ไม่มีอะไรให้ทำซ้ำ = ทำซ้ำเทา</div>
+    <div>• หมวด “ตาราง ER” หายไป ; หมวด “กลุ่ม” ขึ้นเฉพาะ Flowchart / Wireframe (เอกสารที่จัดกลุ่มได้)</div>
+    <div>• คำตามชนิด: F2 = “แก้ข้อความ…” บน Flowchart/Wireframe, “เปลี่ยนชื่อ…” บน ER/DFD/Screen Flow</div>
+    <div>• API: ย้อนกลับ/ทำซ้ำ, ทำสำเนา/ลบ endpoint ; Wireframe: จัดวางอัตโนมัติเทา (ไม่มีให้ใช้)</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":620,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

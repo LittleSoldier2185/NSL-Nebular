@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/app_info.dart';
 import '../core/l10n/l10n.dart';
 import '../core/models/workspace.dart';
 import '../core/validate/issue.dart';
@@ -14,6 +15,7 @@ import 'app_actions.dart';
 import '../state/dfd_controller.dart';
 import '../state/flowchart_controller.dart';
 import '../state/screenflow_controller.dart';
+import '../state/wireframe_controller.dart';
 import 'canvas/canvas_controller.dart';
 import 'file_actions.dart';
 import 'line_settings_dialog.dart';
@@ -225,61 +227,159 @@ class TopBar extends StatelessWidget {
       bool? checked,
       Widget? tag,
     }) => _item(label, shortcutText(k), enabled ? () => a.run(k) : null, icon: icon, checked: checked, tag: tag);
-    const div = PopupMenuDivider();
 
     return [
-      _MenuButton(
-        label: tr('ไฟล์'),
-        items: () => [
-          cmd(tr('โปรเจกต์ใหม่'), Cmd.newProject),
-          cmd(tr('เปิด…'), Cmd.open),
-          cmd(tr('บันทึก'), Cmd.save),
-          cmd(tr('บันทึกเป็น…'), Cmd.saveAs),
-          div,
-          cmd(tr('นำเข้าจาก .sql…'), Cmd.importSql),
-          cmd(tr('เปรียบเทียบกับไฟล์เก่า (Migration)…'), Cmd.compare),
-          cmd(tr('เชื่อมต่อฐานข้อมูล…'), Cmd.connectDb),
-          div,
-          cmd(tr('Export ภาพ (PNG / SVG)…'), Cmd.exportImage),
-          cmd(tr('Export เอกสาร / DBML / ข้อมูลตัวอย่าง…'), Cmd.exportText),
-          cmd('Export .sql…', Cmd.exportSql),
-        ],
-      ),
-      _MenuButton(
-        label: tr('แก้ไข'),
-        items: () {
-          final hasSel = c.selectionCount > 0;
-          return [
-            cmd(tr('ย้อนกลับ'), Cmd.undo, enabled: w.canUndo),
-            cmd(tr('ทำซ้ำ'), Cmd.redo, enabled: w.canRedo),
-            div,
-            cmd(tr('คัดลอกตาราง'), Cmd.copy, enabled: hasSel),
-            cmd(tr('สร้างตารางแบบฟอร์ม…'), Cmd.createTableForm),
-            cmd(tr('จัดกลุ่มตารางที่เลือก'), Cmd.groupSelected, enabled: hasSel),
-            div,
-            cmd(tr('วางตาราง'), Cmd.paste),
-            cmd(tr('ทำสำเนาตาราง'), Cmd.duplicate, enabled: hasSel),
-            cmd(tr('เลือกทุกตาราง'), Cmd.selectAll, enabled: c.project.tables.isNotEmpty),
-            cmd(tr('เปลี่ยนชื่อ…'), Cmd.rename, enabled: c.selectedTable != null),
-            cmd(tr('ลบที่เลือก'), Cmd.delete, enabled: hasSel),
-            div,
-            _item(tr('จัดวางอัตโนมัติ'), '', _autoLayout(context, c, cv, w)),
-          ];
-        },
-      ),
+      _MenuButton(label: tr('ไฟล์'), items: () => _fileMenu(context, w, cmd)),
+      _MenuButton(label: tr('แก้ไข'), items: () => _editMenu(context, c, cv, w, cmd)),
       _MenuButton(label: tr('มุมมอง'), items: () => _viewMenu(context, c, w, a, cmd)),
       _MenuButton(label: tr('เครื่องมือ'), items: () => _toolsMenu(context, w, a, cmd)),
-      _MenuButton(
-        label: tr('ช่วยเหลือ'),
-        items: () => [
-          cmd(tr('ดูคีย์ลัดทั้งหมด'), Cmd.help),
-          _item(tr('มีอะไรใหม่ (Patch note)…'), '', () => showWhatsNew(context)),
-          _item(tr('เกี่ยวกับ NSL Nebular…'), '', () => showAbout(context)),
-          div,
-          for (final l in Lang.values)
-            _item(l.label, '', () => context.read<AppSettings>().setLang(l), checked: l == currentLang),
-        ],
+      _MenuButton(label: tr('ช่วยเหลือ'), items: () => _helpMenu(context, cmd)),
+    ];
+  }
+
+  /// เมนูไฟล์: โปรเจกต์ / นำเข้า / ส่งออก / ฐานข้อมูล (ER) — นำเข้าใช้ได้ทุกเอกสาร (ผลเป็น ER ใหม่) ; Export .sql / Migration เฉพาะ ER
+  static List<PopupMenuEntry<VoidCallback>> _fileMenu(
+    BuildContext context,
+    WorkspaceController w,
+    PopupMenuEntry<VoidCallback> Function(String, Cmd, {bool enabled, IconData? icon, bool? checked, Widget? tag}) cmd,
+  ) {
+    final type = w.activeDocument.type;
+    final er = type == DocType.er || type == null;
+    const div = PopupMenuDivider();
+    // ส่งออกภาพ: ทุกแผนภาพยกเว้น API (ไม่มีภาพ) ; ส่งออกเอกสาร: ยังไม่มีของ DFD
+    final noImage = type == DocType.api;
+    final noText = type == DocType.dfd;
+    Widget notFor() => _tag(tr('ไม่มีสำหรับ {0}', [_docShort(type) ?? '']), muted: true);
+    final erOnly = er ? null : _tag(tr('เฉพาะ ER'), muted: true);
+    return [
+      _section(tr('โปรเจกต์')),
+      cmd(tr('โปรเจกต์ใหม่…'), Cmd.newProject, icon: Icons.note_add_outlined),
+      cmd(tr('เปิด…'), Cmd.open, icon: Icons.folder_open_outlined),
+      cmd(tr('บันทึก'), Cmd.save, icon: Icons.save_outlined),
+      cmd(tr('บันทึกเป็น…'), Cmd.saveAs, icon: Icons.save_as_outlined),
+      div,
+      _section(tr('นำเข้า')),
+      cmd(tr('นำเข้าจาก .sql…'), Cmd.importSql, icon: Icons.upload_file_outlined),
+      cmd(tr('เชื่อมต่อฐานข้อมูล…'), Cmd.connectDb, icon: Icons.storage_rounded),
+      div,
+      _section(tr('ส่งออก')),
+      cmd(tr('Export ภาพ (PNG / SVG)…'), Cmd.exportImage, icon: Icons.image_outlined, enabled: !noImage, tag: noImage ? notFor() : null),
+      cmd(tr('Export เอกสาร / DBML / ข้อมูลตัวอย่าง…'), Cmd.exportText,
+          icon: Icons.description_outlined, enabled: !noText, tag: noText ? notFor() : null),
+      div,
+      _section(tr('ฐานข้อมูล'), tag: 'ER'),
+      cmd('Export .sql…', Cmd.exportSql, icon: Icons.code_rounded, enabled: er, tag: erOnly),
+      cmd(tr('เปรียบเทียบกับไฟล์เก่า (Migration)…'), Cmd.compare, icon: Icons.compare_arrows_rounded, enabled: er, tag: erOnly),
+    ];
+  }
+
+  /// สิ่งที่เลือกอยู่ในเอกสารที่เปิด: จำนวนวัตถุหลัก + หน่วย ; [any] = มีอะไรเลือกอยู่ (รวมเส้น/กลุ่ม) ; [items] = เอกสารมีวัตถุให้เลือก
+  static ({int count, String unit, bool any, bool items}) _selection(BuildContext context, ProjectController c, WorkspaceController w) {
+    switch (w.activeDocument.type) {
+      case DocType.dfd:
+        final d = context.read<DfdController>();
+        final n = d.selectedNodeIds.length;
+        return (
+          count: n,
+          unit: tr('วัตถุ'),
+          any: n > 0 || d.selectedFlowId != null || d.selectedBoundaryId != null,
+          items: d.diagram.nodes.isNotEmpty,
+        );
+      case DocType.flowchart:
+        final f = context.read<FlowchartController>();
+        final n = f.selectedNodeIds.length;
+        return (count: n, unit: tr('สัญลักษณ์'), any: n > 0 || f.selectedEdgeId != null, items: f.diagram.nodes.isNotEmpty);
+      case DocType.wireframe:
+        final f = context.read<WireframeController>();
+        final n = f.selectedIds.length;
+        return (count: n, unit: tr('ชิ้นส่วน'), any: n > 0, items: f.diagram.components.isNotEmpty);
+      case DocType.screenflow:
+        final f = context.read<ScreenFlowController>();
+        final n = f.selectedIds.length;
+        return (count: n, unit: tr('หน้าจอ'), any: n > 0 || f.selectedEdgeId != null, items: f.diagram.nodes.isNotEmpty);
+      case DocType.api:
+        final n = w.currentApi.selectedId == null ? 0 : 1;
+        return (count: n, unit: 'endpoint', any: n > 0, items: false);
+      case DocType.er || null:
+        final n = c.selectionCount;
+        return (count: n, unit: tr('ตาราง'), any: n > 0 || c.selectedGroup != null, items: c.project.tables.isNotEmpty);
+    }
+  }
+
+  /// เมนูแก้ไข: ชื่อคำสั่งเป็นกลางทุกชนิดเอกสาร ; หัวหมวดบอกจำนวนที่เลือก ; หมวด "ตาราง" เฉพาะ ER, "กลุ่ม" เฉพาะ Flowchart/Wireframe
+  static List<PopupMenuEntry<VoidCallback>> _editMenu(
+    BuildContext context,
+    ProjectController c,
+    CanvasController cv,
+    WorkspaceController w,
+    PopupMenuEntry<VoidCallback> Function(String, Cmd, {bool enabled, IconData? icon, bool? checked, Widget? tag}) cmd,
+  ) {
+    final type = w.activeDocument.type;
+    final er = type == DocType.er || type == null;
+    final api = type == DocType.api;
+    final sel = _selection(context, c, w);
+    final grouping = type == DocType.flowchart || type == DocType.wireframe;
+    const div = PopupMenuDivider();
+    return [
+      cmd(tr('ย้อนกลับ'), Cmd.undo, icon: Icons.undo_rounded, enabled: w.canUndo),
+      cmd(tr('ทำซ้ำ'), Cmd.redo, icon: Icons.redo_rounded, enabled: w.canRedo),
+      div,
+      _section(tr('ที่เลือก'), tag: sel.count > 0 ? '${sel.count} ${sel.unit}' : null),
+      if (!api) ...[
+        cmd(tr('คัดลอก'), Cmd.copy, icon: Icons.copy_rounded, enabled: sel.count > 0),
+        cmd(tr('วาง'), Cmd.paste, icon: Icons.content_paste_rounded),
+      ],
+      cmd(tr('ทำสำเนา'), Cmd.duplicate, icon: Icons.library_add_outlined, enabled: sel.count > 0),
+      if (!api) cmd(grouping ? tr('แก้ข้อความ…') : tr('เปลี่ยนชื่อ…'), Cmd.rename, icon: Icons.edit_outlined, enabled: sel.any),
+      cmd(tr('ลบที่เลือก'), Cmd.delete, icon: Icons.delete_outline_rounded, enabled: sel.any),
+      if (!api) cmd(tr('เลือกทั้งหมด'), Cmd.selectAll, icon: Icons.select_all_rounded, enabled: sel.items),
+      if (er) ...[
+        div,
+        _section(tr('ตาราง'), tag: 'ER'),
+        cmd(tr('สร้างตารางแบบฟอร์ม…'), Cmd.createTableForm, icon: Icons.table_chart_outlined),
+        cmd(tr('แก้โครงสร้างตาราง…'), Cmd.editTableStructure, icon: Icons.edit_note_rounded, enabled: c.selectedTable != null),
+        cmd(tr('จัดกลุ่มตารางที่เลือก'), Cmd.groupSelected, icon: Icons.auto_awesome_mosaic_outlined, enabled: sel.count > 0),
+      ],
+      if (grouping) ...[
+        div,
+        _section(tr('กลุ่ม')),
+        cmd(tr('จัดกลุ่ม'), Cmd.groupSelected, icon: Icons.auto_awesome_mosaic_outlined, enabled: sel.count > 1),
+        cmd(tr('เลิกจัดกลุ่ม'), Cmd.ungroupSelected, icon: Icons.grid_view_rounded, enabled: sel.count > 0),
+      ],
+      if (!api) ...[
+        div,
+        _item(tr('จัดวางอัตโนมัติ'), '', _autoLayout(context, c, cv, w), icon: Icons.dashboard_outlined),
+      ],
+    ];
+  }
+
+  /// เมนูช่วยเหลือ: คีย์ลัด / มีอะไรใหม่ (บอกรุ่น + จุดยังไม่ได้อ่าน) / เกี่ยวกับ ; ภาษา (คอลัมน์ติ๊ก)
+  static List<PopupMenuEntry<VoidCallback>> _helpMenu(
+    BuildContext context,
+    PopupMenuEntry<VoidCallback> Function(String, Cmd, {bool enabled, IconData? icon, bool? checked, Widget? tag}) cmd,
+  ) {
+    final s = context.read<AppSettings>();
+    final unseen = s.hasUnseenNotes(kAppVersion);
+    const div = PopupMenuDivider();
+    return [
+      cmd(tr('ดูคีย์ลัดทั้งหมด'), Cmd.help, icon: Icons.keyboard_outlined),
+      _item(
+        tr('มีอะไรใหม่ (Patch note)…'),
+        '',
+        () => showWhatsNew(context),
+        icon: Icons.auto_awesome_outlined,
+        trailing: unseen
+            ? Row(key: const ValueKey('menu-whats-new-unseen'), mainAxisSize: MainAxisSize.min, children: [
+                Container(width: 7, height: 7, decoration: BoxDecoration(color: C.palette.warnText, shape: BoxShape.circle)),
+                const SizedBox(width: 5),
+                Text(kAppVersion, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: C.palette.warnText)),
+              ])
+            : null,
       ),
+      _item(tr('เกี่ยวกับ NSL Nebular…'), '', () => showAbout(context), icon: Icons.info_outline_rounded),
+      div,
+      _section(tr('ภาษา')),
+      for (final l in Lang.values) _item(l.label, '', () => s.setLang(l), checked: l == currentLang),
     ];
   }
 
@@ -439,6 +539,8 @@ class TopBar extends StatelessWidget {
     ),
     child: Text(
       text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: TextStyle(
         fontSize: 10.5,
         fontWeight: FontWeight.w600,
@@ -488,7 +590,8 @@ class TopBar extends StatelessWidget {
                     style: TextStyle(fontSize: 13, color: on ? C.text : C.muted),
                   ),
                 ),
-                if (tag != null) ...[const SizedBox(width: 8), tag],
+                // ป้ายหดได้ (ตัดเป็น …) — ชื่อยาว + ป้ายยาวต้องไม่ล้นเมนู
+                if (tag != null) ...[const SizedBox(width: 8), Flexible(child: tag)],
               ]),
             ),
             const SizedBox(width: 12),
