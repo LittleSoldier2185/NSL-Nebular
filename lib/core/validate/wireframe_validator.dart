@@ -140,6 +140,22 @@ String wfKindLabel(WfKind k) => switch (k) {
       WfKind.breadcrumb => tr('เส้นทางนำทาง (breadcrumb)'),
       WfKind.map => tr('แผนที่'),
       WfKind.chart => tr('กราฟ'),
+      WfKind.link => tr('ลิงก์'),
+      WfKind.chip => tr('แท็ก (chip)'),
+      WfKind.progress => tr('แถบความคืบหน้า'),
+      WfKind.alert => tr('แบนเนอร์แจ้งเตือน'),
+      WfKind.datepicker => tr('ช่องเลือกวันที่'),
+      WfKind.upload => tr('อัปโหลดไฟล์'),
+      WfKind.stepper => tr('ขั้นตอน (stepper)'),
+      WfKind.rating => tr('ให้คะแนนดาว'),
+      WfKind.video => tr('วิดีโอ'),
+      WfKind.accordion => tr('ส่วนที่พับได้ (accordion)'),
+      WfKind.footer => tr('ส่วนท้ายหน้า'),
+      WfKind.tooltip => tr('คำอธิบายลอย (tooltip)'),
+      WfKind.skeleton => tr('โครงรอโหลด (skeleton)'),
+      WfKind.calendar => tr('ปฏิทิน'),
+      WfKind.stat => tr('ตัวเลขสรุป (KPI)'),
+      WfKind.tree => tr('โครงสร้างต้นไม้'),
     };
 
 /// ชื่อรูปแบบการแสดงผล

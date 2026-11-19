@@ -404,6 +404,19 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
         WfKind.badge => tr('ใหม่'),
         WfKind.breadcrumb => tr('หน้าแรก\nหมวดหมู่\nหน้านี้'),
         WfKind.list => tr('รายการที่ 1\nรายการที่ 2\nรายการที่ 3'),
+        WfKind.link => tr('อ่านเพิ่มเติม'),
+        WfKind.chip => tr('แท็ก'),
+        WfKind.progress => '60%',
+        WfKind.alert => tr('ข้อความแจ้งเตือนสำคัญ'),
+        WfKind.datepicker => tr('เลือกวันที่'),
+        WfKind.upload => tr('ลากไฟล์มาวาง หรือคลิกเพื่อเลือก'),
+        WfKind.stepper => tr('ข้อมูล\nที่อยู่\nยืนยัน'),
+        WfKind.accordion => tr('หัวข้อที่ 1\nหัวข้อที่ 2\nหัวข้อที่ 3'),
+        WfKind.footer => tr('ลิขสิทธิ์ © บริษัทของคุณ'),
+        WfKind.tooltip => tr('ข้อความช่วยเหลือ'),
+        WfKind.calendar => tr('พฤศจิกายน 2569'),
+        WfKind.stat => tr('ยอดขายวันนี้\n1,250'),
+        WfKind.tree => tr('โฟลเดอร์\n  ไฟล์ 1\n  ไฟล์ 2\nโฟลเดอร์ 2'),
         _ => '',
       };
 
@@ -432,7 +445,7 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
         w: w,
         h: h,
         columns: kind == WfKind.table ? [tr('ชื่อ'), tr('สถานะ'), tr('วันที่')] : null,
-        align: kind == WfKind.button || kind == WfKind.badge ? WfAlign.center : WfAlign.left,
+        align: const {WfKind.button, WfKind.badge, WfKind.chip, WfKind.tooltip, WfKind.footer}.contains(kind) ? WfAlign.center : WfAlign.left,
       );
       d.components.add(c);
     });

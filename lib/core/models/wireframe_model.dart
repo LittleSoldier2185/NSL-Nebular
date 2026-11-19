@@ -36,10 +36,28 @@ enum WfKind {
   breadcrumb,
   map,
   chart,
+
+  // เพิ่มภายหลัง (ต่อท้ายเพื่อไม่เปลี่ยนลำดับเดิมในคลัง)
+  link,
+  chip,
+  progress,
+  alert,
+  datepicker,
+  upload,
+  stepper,
+  rating,
+  video,
+  accordion,
+  footer,
+  tooltip,
+  skeleton,
+  calendar,
+  stat,
+  tree,
 }
 
 /// ชิ้นส่วนที่เป็น "ภาชนะ" — ชิ้นอื่นที่อยู่ข้างในทั้งใบ (และอยู่เหนือมันในลำดับการซ้อน) เป็นลูก ย้ายตามกัน
-const Set<WfKind> kWfContainerKinds = {WfKind.container, WfKind.card, WfKind.modal, WfKind.sidebar, WfKind.navbar};
+const Set<WfKind> kWfContainerKinds = {WfKind.container, WfKind.card, WfKind.modal, WfKind.sidebar, WfKind.navbar, WfKind.footer};
 
 /// ชิ้นส่วนที่ผูกกับตาราง/คอลัมน์ใน ER ได้ (data binding อย่างง่าย)
 const Set<WfKind> kWfBindableKinds = {
@@ -51,6 +69,7 @@ const Set<WfKind> kWfBindableKinds = {
   WfKind.label,
   WfKind.table,
   WfKind.list,
+  WfKind.datepicker,
 };
 
 /// ชิ้นส่วนที่มีสถานะ "เลือกอยู่" (checked/on)
@@ -84,13 +103,29 @@ const Set<WfKind> kWfCheckableKinds = {WfKind.checkbox, WfKind.radio, WfKind.tog
       WfKind.breadcrumb => (300, 24),
       WfKind.map => (320, 220),
       WfKind.chart => (320, 200),
+      WfKind.link => (120, 24),
+      WfKind.chip => (96, 28),
+      WfKind.progress => (240, 20),
+      WfKind.alert => (420, 56),
+      WfKind.datepicker => (240, 40),
+      WfKind.upload => (320, 120),
+      WfKind.stepper => (420, 56),
+      WfKind.rating => (150, 28),
+      WfKind.video => (320, 200),
+      WfKind.accordion => (320, 170),
+      WfKind.footer => (640, 80),
+      WfKind.tooltip => (160, 48),
+      WfKind.skeleton => (260, 90),
+      WfKind.calendar => (280, 260),
+      WfKind.stat => (200, 96),
+      WfKind.tree => (240, 150),
     };
 
 /// ขนาดตัวอักษรเริ่มต้นของแต่ละชนิด
 double wfDefaultFontSize(WfKind k) => switch (k) {
       WfKind.heading => 22,
       WfKind.navbar || WfKind.modal || WfKind.card => 15,
-      WfKind.badge || WfKind.breadcrumb => 12,
+      WfKind.badge || WfKind.breadcrumb || WfKind.chip || WfKind.tooltip || WfKind.footer => 12,
       _ => 14,
     };
 

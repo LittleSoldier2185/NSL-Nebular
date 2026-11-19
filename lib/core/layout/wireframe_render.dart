@@ -498,6 +498,171 @@ void _component(_Builder b, WireframeDiagram d, WfComponent c) {
         final bx = l + bw * 0.6 + i * bw * 1.6, bh = (bt - tp) * vals[i];
         b.rect(bx, bt - bh, bw, bh, fill: p.sketch ? null : _alpha(accent, i.isEven ? 0.85 : 0.55), stroke: p.sketch ? border : null, width: 1.2);
       }
+    case WfKind.link:
+      b.text(c.text, x, y, w, h, size: fs, color: c.textColor != null ? ink : (p.sketch ? p.text : accent), align: al, maxLines: 1);
+      final tw = math.min(w, c.text.trim().length * fs * 0.56);
+      final ux = al == 1 ? x + (w - tw) / 2 : (al == 2 ? x + w - tw : x);
+      b.line(ux, y + h / 2 + fs * 0.66, ux + tw, y + h / 2 + fs * 0.66, stroke: c.textColor != null ? ink : (p.sketch ? p.text : accent), width: 1);
+    case WfKind.chip:
+      b.rect(x, y, w, h, fill: c.fill != null ? surface : (p.sketch ? 0xFFFFFFFF : p.subtle), stroke: border, width: sw, r: h / 2);
+      b.text(c.text, x + 10, y, w - h - 6, h, size: fs, color: ink, align: al == 1 ? 0 : al, maxLines: 1);
+      final cx = x + w - h / 2 - 2, cy = y + h / 2, k = h * 0.16;
+      b.line(cx - k, cy - k, cx + k, cy + k, stroke: muted, width: 1.5);
+      b.line(cx + k, cy - k, cx - k, cy + k, stroke: muted, width: 1.5);
+    case WfKind.progress:
+      final digits = RegExp(r'\d+(\.\d+)?').firstMatch(c.text)?.group(0);
+      final pct = (double.tryParse(digits ?? '') ?? 60).clamp(0, 100) / 100;
+      final th = math.min(10.0, h);
+      final ty = y + (h - th) / 2;
+      final showLabel = c.text.trim().isNotEmpty && w > 110;
+      final tw = showLabel ? w - 44 : w;
+      b.rect(x, ty, tw, th, fill: p.sketch ? 0xFFFFFFFF : col(null, p.subtle), stroke: p.sketch ? border : null, width: sw, r: th / 2);
+      if (pct > 0) b.rect(x, ty, math.max(th, tw * pct), th, fill: p.sketch ? 0xFF9A9A9A : accent, r: th / 2);
+      if (showLabel) b.text(c.text, x + tw + 8, y, 36, h, size: math.min(fs, 12), color: ink, align: 2, maxLines: 1);
+    case WfKind.alert:
+      b.rect(x, y, w, h, fill: c.fill != null ? surface : (p.sketch ? 0xFFFFFFFF : p.accentTint), stroke: border, width: sw, r: 6);
+      b.rect(x, y, 5, h, fill: p.sketch ? p.border : accent, r: 2);
+      final r = math.min(10.0, h / 3);
+      b.ellipse(x + 24, y + h / 2, r, r, fill: p.sketch ? null : accent, stroke: p.sketch ? border : null, width: 1.4);
+      b.text('!', x + 24 - r, y + h / 2 - r, r * 2, r * 2, size: r * 1.4, color: p.sketch ? p.text : p.onAccent, bold: true, align: 1, maxLines: 1);
+      b.text(c.text, x + 44, y, w - 56, h, size: fs, color: ink, align: al, maxLines: lines(h));
+    case WfKind.datepicker:
+      b.rect(x, y, w, h, fill: c.disabled ? col(null, p.subtle) : surface, stroke: border, width: sw, r: 4);
+      b.text(c.text, x + 10, y, w - 44, h, size: fs, color: muted, align: al, maxLines: 1);
+      final ix = x + w - 28, iy = y + h / 2 - 8;
+      b.rect(ix, iy + 2, 16, 14, stroke: ink, width: 1.3, r: 2);
+      b.line(ix, iy + 7, ix + 16, iy + 7, stroke: ink, width: 1.3);
+      b.line(ix + 4.5, iy, ix + 4.5, iy + 4, stroke: ink, width: 1.3);
+      b.line(ix + 11.5, iy, ix + 11.5, iy + 4, stroke: ink, width: 1.3);
+    case WfKind.upload:
+      b.rect(x, y, w, h, fill: c.fill != null ? surface : (p.sketch ? null : p.subtle), stroke: border, width: sw, r: 8, dashed: true);
+      final cx = x + w / 2, cy = y + h * 0.36, s = math.min(14.0, h * 0.14);
+      b.line(cx, cy + s, cx, cy - s, stroke: muted, width: 2);
+      b.poly([(cx - s * 0.7, cy - s * 0.2), (cx, cy - s), (cx + s * 0.7, cy - s * 0.2)], stroke: muted, width: 2);
+      b.text(c.text, x + 12, y + h * 0.58, w - 24, h * 0.34, size: fs, color: muted, align: 1, top: true, maxLines: lines(h * 0.34));
+    case WfKind.stepper:
+      final items = c.items.isEmpty ? ['', '', ''] : c.items;
+      final n = items.length;
+      final r = math.min(11.0, h * 0.24);
+      final cy = y + r + 2;
+      for (var i = 0; i < n; i++) {
+        final cx = x + (i + 0.5) * w / n;
+        if (i < n - 1) b.line(cx + r + 2, cy, x + (i + 1.5) * w / n - r - 2, cy, stroke: i == 0 && !p.sketch ? accent : border, width: 1.5);
+        final on = i == 0;
+        b.ellipse(cx, cy, r, r, fill: on ? (p.sketch ? 0xFF9A9A9A : accent) : surface, stroke: on && !p.sketch ? accent : border, width: sw);
+        b.text('${i + 1}', cx - r, cy - r, r * 2, r * 2, size: r * 1.15, color: on ? (p.sketch ? p.text : p.onAccent) : muted, bold: true, align: 1, maxLines: 1);
+        b.text(items[i], cx - w / n / 2 + 2, cy + r + 4, w / n - 4, math.max(0, h - (cy - y) - r - 4), size: math.min(fs, 13), color: on ? ink : muted, bold: on, align: 1, top: true, maxLines: 2);
+      }
+    case WfKind.rating:
+      final s = math.min(h, w / 5) - 2;
+      for (var i = 0; i < 5; i++) {
+        final cx = x + (i + 0.5) * (w / 5), cy = y + h / 2;
+        final pts = <RoutePoint>[];
+        for (var k = 0; k < 10; k++) {
+          final ang = -math.pi / 2 + k * math.pi / 5;
+          final rr = k.isEven ? s / 2 : s / 4.4;
+          pts.add((cx + math.cos(ang) * rr, cy + math.sin(ang) * rr));
+        }
+        final on = i < 3;
+        b.poly(pts, fill: on ? (p.sketch ? 0xFFBDBDBD : 0xFFF5B301) : null, stroke: on && !p.sketch ? 0xFFF5B301 : border, width: 1.3, close: true);
+      }
+    case WfKind.video:
+      b.rect(x, y, w, h, fill: c.fill != null ? surface : (p.sketch ? 0xFFFFFFFF : 0xFF1D2939), stroke: border, width: sw, r: 4);
+      final cx = x + w / 2, cy = y + h / 2 - 8, r = math.min(w, h) * 0.13;
+      final fg = p.sketch ? border : 0xFFFFFFFF;
+      b.ellipse(cx, cy, r, r, stroke: fg, width: 2);
+      b.poly([(cx - r * 0.3, cy - r * 0.45), (cx + r * 0.5, cy), (cx - r * 0.3, cy + r * 0.45)], fill: p.sketch ? null : fg, stroke: p.sketch ? border : null, close: true);
+      b.line(x + 14, y + h - 16, x + w - 14, y + h - 16, stroke: p.sketch ? border : 0xFF667085, width: 3);
+      b.line(x + 14, y + h - 16, x + 14 + (w - 28) * 0.35, y + h - 16, stroke: p.sketch ? p.text : accent, width: 3);
+    case WfKind.accordion:
+      final items = c.items.isEmpty ? [''] : c.items;
+      b.rect(x, y, w, h, fill: surface, stroke: border, width: sw, r: 6);
+      var ay = y;
+      for (var i = 0; i < items.length && ay + 36 <= y + h + 0.5; i++) {
+        final open = i == 0;
+        b.text(items[i], x + 14, ay, w - 44, 36, size: fs, color: ink, bold: open, maxLines: 1);
+        final cx = x + w - 20, cy = ay + 18;
+        if (open) {
+          b.poly([(cx - 5, cy - 2.5), (cx, cy + 2.5), (cx + 5, cy - 2.5)], stroke: ink, width: 1.5);
+        } else {
+          b.poly([(cx - 2.5, cy - 5), (cx + 2.5, cy), (cx - 2.5, cy + 5)], stroke: ink, width: 1.5);
+        }
+        ay += 36;
+        if (open && ay + 44 <= y + h + 0.5) {
+          final grey = col(null, p.sketch ? 0xFFBDBDBD : 0xFFE4E7EC);
+          b.bar(x + 14, ay + 6, w - 40, 6, grey);
+          b.bar(x + 14, ay + 20, (w - 40) * 0.7, 6, grey);
+          ay += 44;
+        }
+        if (i < items.length - 1 && ay < y + h - 1) b.line(x + 1, ay, x + w - 1, ay, stroke: border, width: 0.8);
+      }
+    case WfKind.footer:
+      b.rect(x, y, w, h, fill: c.fill != null ? surface : col(null, p.subtle), stroke: border, width: sw);
+      b.text(c.text, x + 16, y, w * 0.5, h, size: fs, color: muted, align: al == 1 ? 0 : al, maxLines: 1);
+      for (var i = 0; i < 3; i++) {
+        b.bar(x + w - 16 - (i + 1) * 72 + 8, y + h / 2 - 3, 56, 6, col(null, p.sketch ? 0xFFBDBDBD : 0xFFD0D5DD));
+      }
+    case WfKind.tooltip:
+      final bh = math.max(8.0, h - 8);
+      b.rect(x, y, w, bh, fill: c.fill != null ? surface : (p.sketch ? 0xFFFFFFFF : 0xFF1D2939), stroke: border, width: sw, r: 6);
+      b.poly([(x + w / 2 - 6, y + bh), (x + w / 2, y + bh + 7), (x + w / 2 + 6, y + bh)],
+          fill: c.fill != null ? surface : (p.sketch ? 0xFFFFFFFF : 0xFF1D2939), stroke: p.sketch ? border : null, close: true);
+      b.text(c.text, x + 8, y, w - 16, bh, size: fs, color: c.textColor != null ? ink : (p.sketch ? p.text : 0xFFFFFFFF), align: 1, maxLines: lines(bh));
+    case WfKind.skeleton:
+      final grey = col(null, p.sketch ? 0xFFBDBDBD : 0xFFE4E7EC);
+      final r = math.min(h * 0.28, 22.0);
+      b.ellipse(x + r, y + r, r, r, fill: p.sketch ? null : grey, stroke: p.sketch ? grey : null, width: 1.5);
+      b.bar(x + r * 2 + 12, y + r - 8, (w - r * 2 - 12) * 0.7, 8, grey);
+      b.bar(x + r * 2 + 12, y + r + 6, (w - r * 2 - 12) * 0.45, 8, grey);
+      var sy = y + r * 2 + 14;
+      for (final f in const [1.0, 0.92, 0.6]) {
+        if (sy + 8 > y + h + 0.5) break;
+        b.bar(x, sy, w * f, 8, grey);
+        sy += 16;
+      }
+    case WfKind.calendar:
+      b.rect(x, y, w, h, fill: surface, stroke: border, width: sw, r: 8);
+      final hh = math.min(40.0, h * 0.15);
+      b.text(c.text, x + 36, y, w - 72, hh, size: fs, color: ink, bold: true, align: 1, maxLines: 1);
+      b.poly([(x + 22, y + hh / 2 - 5), (x + 16, y + hh / 2), (x + 22, y + hh / 2 + 5)], stroke: muted, width: 1.5);
+      b.poly([(x + w - 22, y + hh / 2 - 5), (x + w - 16, y + hh / 2), (x + w - 22, y + hh / 2 + 5)], stroke: muted, width: 1.5);
+      final cw = (w - 16) / 7, rh = math.max(1.0, (h - hh - 28) / 6);
+      final ds = math.min(12.0, cw * 0.42);
+      const days = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+      for (var i = 0; i < 7; i++) {
+        b.text(days[i], x + 8 + i * cw, y + hh, cw, 22, size: ds * 0.9, color: muted, align: 1, maxLines: 1);
+      }
+      for (var n = 0; n < 30; n++) {
+        final idx = n + 3; // วันที่ 1 ตรงคอลัมน์ที่ 4
+        final cx = x + 8 + (idx % 7) * cw, cy = y + hh + 24 + (idx ~/ 7) * rh;
+        if (cy + rh > y + h + 0.5) break;
+        final today = n == 14;
+        if (today) b.ellipse(cx + cw / 2, cy + rh / 2, math.min(cw, rh) * 0.4, math.min(cw, rh) * 0.4, fill: p.sketch ? 0xFFDADADA : accent, stroke: p.sketch ? border : null);
+        b.text('${n + 1}', cx, cy, cw, rh, size: ds, color: today && !p.sketch ? p.onAccent : ink, bold: today, align: 1, maxLines: 1);
+      }
+    case WfKind.stat:
+      b.rect(x, y, w, h, fill: surface, stroke: border, width: sw, r: 8);
+      final parts = c.items;
+      final label = parts.length > 1 ? parts.first : '';
+      final value = parts.isEmpty ? '' : (parts.length > 1 ? parts[1] : parts.first);
+      b.text(label, x + 14, y + 10, w - 28, lineH, size: fs * 0.85, color: muted, align: al, top: true, maxLines: 1);
+      b.text(value, x + 14, y + 10 + lineH, w - 28, math.max(0, h - lineH - 18), size: fs * 2.1, color: ink, bold: true, align: al, maxLines: 1);
+    case WfKind.tree:
+      final raw = [for (final l in c.text.split('\n')) if (l.trim().isNotEmpty) l];
+      final rh = math.min(28.0, h / math.max(1, raw.length));
+      int ind(String l) => (l.length - l.trimLeft().length) ~/ 2;
+      for (var i = 0; i < raw.length && (i + 1) * rh <= h + 0.5; i++) {
+        final d0 = ind(raw[i]);
+        final ry = y + i * rh, rx = x + 6 + d0 * 18;
+        final parent = i + 1 < raw.length && ind(raw[i + 1]) > d0;
+        if (parent) {
+          b.poly([(rx + 2, ry + rh / 2 - 3), (rx + 7, ry + rh / 2 + 2), (rx + 12, ry + rh / 2 - 3)], stroke: ink, width: 1.4);
+        } else {
+          b.ellipse(rx + 7, ry + rh / 2, 2.2, 2.2, fill: muted);
+        }
+        b.text(raw[i].trim(), rx + 18, ry, math.max(0, x + w - rx - 22), rh, size: fs, color: ink, bold: parent, maxLines: 1);
+        if (d0 > 0) b.line(x + 6 + (d0 - 1) * 18 + 7, ry, x + 6 + (d0 - 1) * 18 + 7, ry + rh / 2, stroke: border, width: 0.8);
+      }
   }
 }
 

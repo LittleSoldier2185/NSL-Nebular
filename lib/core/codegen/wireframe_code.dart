@@ -13,6 +13,18 @@ List<WfComponent> readingOrder(WireframeDiagram d) {
 
 String _dartStr(String s) => dartQuoted(s.replaceAll('\n', ' '));
 
+/// สัดส่วนของแถบความคืบหน้าจากข้อความ ("60%" = 0.6 ; อ่านไม่ได้ = 0.6)
+double _progressOf(WfComponent c) {
+  final m = RegExp(r'\d+(\.\d+)?').firstMatch(c.text)?.group(0);
+  return ((double.tryParse(m ?? '') ?? 60).clamp(0, 100)) / 100;
+}
+
+/// บรรทัดของต้นไม้: (ระดับ, ข้อความ) — ระดับนับจากการเยื้อง 2 ช่องต่อระดับ
+List<(int, String)> _treeLines(WfComponent c) => [
+      for (final l in c.text.split('\n'))
+        if (l.trim().isNotEmpty) ((l.length - l.trimLeft().length) ~/ 2, l.trim()),
+    ];
+
 String _one(WfComponent c, String fallback) {
   final t = c.text.trim().replaceAll(RegExp(r'\s+'), ' ');
   return t.isEmpty ? fallback : t;
@@ -46,6 +58,22 @@ String _flutterWidget(WfComponent c) {
     WfKind.badge => 'Chip(label: Text($t))',
     WfKind.pagination => 'Row(mainAxisAlignment: MainAxisAlignment.center, children: [IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_left)), const Text(\'1\'), IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_right))])',
     WfKind.breadcrumb => 'Text(${_dartStr(items.join(' / '))})',
+    WfKind.link => 'TextButton(onPressed: () {}, child: Text($t))',
+    WfKind.chip => 'InputChip(label: Text($t), onDeleted: () {})',
+    WfKind.progress => 'LinearProgressIndicator(value: ${_progressOf(c)})',
+    WfKind.alert => 'MaterialBanner(content: Text($t), actions: [TextButton(onPressed: () {}, child: const Text("OK"))])',
+    WfKind.datepicker => 'TextField(readOnly: true, decoration: InputDecoration(labelText: $t, suffixIcon: const Icon(Icons.calendar_today_outlined)), onTap: () {})',
+    WfKind.upload => 'OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.upload_file), label: Text($t))',
+    WfKind.stepper => 'Stepper(currentStep: 0, controlsBuilder: (_, _) => const SizedBox.shrink(), steps: [${items.map((i) => "Step(title: Text(${_dartStr(i)}), content: const SizedBox.shrink())").join(", ")}])',
+    WfKind.rating => 'Row(children: List.generate(5, (i) => Icon(i < 3 ? Icons.star : Icons.star_border)))',
+    WfKind.video => 'AspectRatio(aspectRatio: 16 / 9, child: Container(color: Colors.black87, child: const Icon(Icons.play_circle_outline, color: Colors.white, size: 48)))',
+    WfKind.accordion => 'Column(children: [${items.map((i) => "ExpansionTile(title: Text(${_dartStr(i)}), children: const [])").join(", ")}])',
+    WfKind.footer => 'Container(padding: const EdgeInsets.all(16), color: Colors.black12, child: Text($t, textAlign: TextAlign.center))',
+    WfKind.tooltip => 'Tooltip(message: $t, child: const Icon(Icons.info_outline))',
+    WfKind.skeleton => 'Container(height: ${c.h.round()}, decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(8)))',
+    WfKind.calendar => 'CalendarDatePicker(initialDate: DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime(2100), onDateChanged: (_) {})',
+    WfKind.stat => 'Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(${_dartStr(items.length > 1 ? items.first : "")}), Text(${_dartStr(items.length > 1 ? items[1] : items.first)}, style: Theme.of(context).textTheme.headlineMedium)])))',
+    WfKind.tree => 'Column(children: [${_treeLines(c).map((l) => "Padding(padding: EdgeInsets.only(left: ${l.$1 * 16.0}), child: ListTile(dense: true, title: Text(${_dartStr(l.$2)})))").join(", ")}])',
   };
 }
 
@@ -119,6 +147,22 @@ String _htmlOf(WfComponent c) {
     WfKind.badge => '<span class="rounded-full bg-slate-200 px-2 py-0.5 text-xs">$t</span>',
     WfKind.pagination => '<nav class="flex justify-center gap-2"><a href="#">‹</a><span>1</span><a href="#">›</a></nav>',
     WfKind.breadcrumb => '<nav class="text-sm text-slate-500">${items.join(' / ')}</nav>',
+    WfKind.link => '<a class="text-teal-700 underline" href="#">$t</a>',
+    WfKind.chip => '<span class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm">$t <button aria-label="remove">×</button></span>',
+    WfKind.progress => '<progress class="w-full" value="${(_progressOf(c) * 100).round()}" max="100"></progress>',
+    WfKind.alert => '<div role="alert" class="rounded-lg border-l-4 border-teal-700 bg-teal-50 p-3">$t</div>',
+    WfKind.datepicker => '<input type="date" class="$field" aria-label="$t">',
+    WfKind.upload => '<label class="flex h-32 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed text-slate-500">$t<input type="file" class="hidden"></label>',
+    WfKind.stepper => '<ol class="flex justify-between">${items.indexed.map((e) => "<li class=\"text-center\"><span class=\"mx-auto flex h-7 w-7 items-center justify-center rounded-full ${e.$1 == 0 ? "bg-teal-700 text-white" : "border"}\">${e.$1 + 1}</span>${e.$2}</li>").join()}</ol>',
+    WfKind.rating => '<div aria-label="rating 3/5" class="text-amber-400">★★★☆☆</div>',
+    WfKind.video => '<video class="w-full rounded-lg bg-black" style="height:${c.h.round()}px" controls></video>',
+    WfKind.accordion => '<div class="divide-y rounded-lg border">${items.map((i) => "<details class=\"p-3\"><summary>$i</summary></details>").join()}</div>',
+    WfKind.footer => '<footer class="bg-slate-100 p-4 text-center text-sm text-slate-500">$t</footer>',
+    WfKind.tooltip => '<span class="rounded bg-slate-800 px-2 py-1 text-xs text-white" role="tooltip">$t</span>',
+    WfKind.skeleton => '<div class="animate-pulse rounded-lg bg-slate-200" style="height:${c.h.round()}px"></div>',
+    WfKind.calendar => '<input type="date" class="$field" aria-label="$t">',
+    WfKind.stat => '<div class="rounded-xl border bg-white p-4"><p class="text-sm text-slate-500">${items.length > 1 ? items.first : ""}</p><p class="text-3xl font-bold">${items.length > 1 ? items[1] : items.first}</p></div>',
+    WfKind.tree => '<ul class="text-sm">${_treeLines(c).map((l) => "<li style=\"margin-left:${l.$1 * 16}px\">${_h(l.$2)}</li>").join()}</ul>',
   };
 }
 

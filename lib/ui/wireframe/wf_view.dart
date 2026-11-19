@@ -63,6 +63,22 @@ IconData wfKindIcon(WfKind k) => switch (k) {
       WfKind.breadcrumb => Icons.chevron_right_rounded,
       WfKind.map => Icons.map_outlined,
       WfKind.chart => Icons.bar_chart_rounded,
+      WfKind.link => Icons.link_rounded,
+      WfKind.chip => Icons.sell_outlined,
+      WfKind.progress => Icons.timelapse_rounded,
+      WfKind.alert => Icons.warning_amber_rounded,
+      WfKind.datepicker => Icons.calendar_today_outlined,
+      WfKind.upload => Icons.upload_file_outlined,
+      WfKind.stepper => Icons.timeline_rounded,
+      WfKind.rating => Icons.star_half_rounded,
+      WfKind.video => Icons.play_circle_outline_rounded,
+      WfKind.accordion => Icons.unfold_more_rounded,
+      WfKind.footer => Icons.vertical_align_bottom_rounded,
+      WfKind.tooltip => Icons.chat_bubble_outline_rounded,
+      WfKind.skeleton => Icons.view_agenda_outlined,
+      WfKind.calendar => Icons.calendar_month_outlined,
+      WfKind.stat => Icons.analytics_outlined,
+      WfKind.tree => Icons.account_tree_outlined,
     };
 
 /// คีย์ลัดของเครื่องมือวางชิ้นส่วน ("" = ไม่มี)
@@ -84,6 +100,10 @@ bool wfMultiline(WfKind k) => const {
       WfKind.sidebar,
       WfKind.breadcrumb,
       WfKind.table,
+      WfKind.stepper,
+      WfKind.accordion,
+      WfKind.tree,
+      WfKind.stat,
     }.contains(k);
 
 /// ชื่อขนาดหน้าจอที่แสดงเหนือกรอบ
@@ -141,6 +161,9 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
         WfKind.map,
         WfKind.chart,
         WfKind.pagination,
+        WfKind.rating,
+        WfKind.video,
+        WfKind.skeleton,
       }.contains(k);
 
   @override
