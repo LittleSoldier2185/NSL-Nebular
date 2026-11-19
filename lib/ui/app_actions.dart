@@ -18,6 +18,9 @@ import 'wireframe/wf_actions.dart';
 import 'shortcuts.dart';
 import 'shortcuts_help.dart';
 import '../core/l10n/l10n.dart';
+import '../state/app_settings.dart';
+import '../state/workspace_controller.dart' show WorkspacePage;
+import 'workspace_issues_dialog.dart';
 
 /// การทำงานจริงของคำสั่งทั้งหมดใน [Cmd] — ใช้ร่วมกันระหว่างคีย์ลัด เมนู และ command palette
 class AppActions {
@@ -101,7 +104,53 @@ class AppActions {
         Cmd.wfContainer: () {},
         Cmd.wfImage: () {},
         Cmd.wfInput: () {},
+        // มุมมอง / เครื่องมือ — ทุกชนิดเอกสาร (ดู [workspaceCmds])
+        Cmd.toggleExplorer: () {
+          final s = context.read<AppSettings>();
+          s.setShowExplorer(!s.showExplorer);
+        },
+        Cmd.toggleSqlPreview: () => toggleDock(DockTab.sql),
+        Cmd.toggleIssues: toggleIssues,
+        Cmd.toggleNotesPanel: () => c.workspaceController.showNotesPanel(),
+        Cmd.showHome: () => c.workspaceController.showHome(!c.workspaceController.homeView),
+        Cmd.showHistory: () => c.workspaceController.showHistory(c.workspaceController.page != WorkspacePage.history),
+        Cmd.workspaceIssues: () => showWorkspaceIssues(context),
+        Cmd.codegen: () => c.workspaceController.showCodegen(c.workspaceController.page != WorkspacePage.codegen),
       };
+
+  /// คำสั่งระดับหน้าต่าง/โปรเจกต์ ทำงานเหมือนกันทุกชนิดเอกสาร — run() ทำทันทีไม่ส่งต่อตามชนิด
+  static const workspaceCmds = {
+    Cmd.toggleNotePins,
+    Cmd.toggleExplorer,
+    Cmd.toggleSqlPreview,
+    Cmd.toggleIssues,
+    Cmd.toggleNotesPanel,
+    Cmd.showHome,
+    Cmd.showHistory,
+    Cmd.workspaceIssues,
+    Cmd.codegen,
+  };
+
+  bool get _erCanvas =>
+      c.workspaceController.activeDocument.type == DocType.er && !c.workspaceController.pageView;
+
+  /// แผงล่างของ ER แสดงแท็บ [t] อยู่ (มองเห็นได้จริง)
+  bool dockShowing(DockTab t) => _erCanvas && !cv.dockCollapsed && cv.dockTab == t;
+
+  /// สลับแผงล่างของ ER: แสดงแท็บนี้อยู่แล้ว = ย่อ ; ไม่เช่นนั้นเปิดแท็บนี้ (เอกสารอื่นไม่มีแผงนี้ — ไม่ทำอะไร)
+  void toggleDock(DockTab t) {
+    if (!_erCanvas) return;
+    dockShowing(t) ? cv.toggleDockCollapsed() : cv.showDock(t);
+  }
+
+  /// ปัญหาในเอกสารนี้: ER = แท็บปัญหาของแผงล่าง ; ชนิดอื่น = กล่องปัญหาที่กรองเฉพาะเอกสารที่เปิด
+  void toggleIssues() {
+    if (_erCanvas) {
+      toggleDock(DockTab.issues);
+    } else {
+      showWorkspaceIssues(context, docId: c.workspaceController.activeId);
+    }
+  }
 
   /// ทำงานตามคำสั่ง: แท็บ DFD ใช้ชุดคำสั่งของ DFD, แท็บ ER ใช้ชุดเดิม (และเมินคำสั่งของ DFD)
   void run(Cmd cmd) {
@@ -109,7 +158,7 @@ class AppActions {
       c.workspaceController.cancelPinRequest(); // Esc ระหว่างรอคลิกปักหมุด = เลิกปักหมุดก่อนอย่างอื่น
       return;
     }
-    if (cmd == Cmd.toggleNotePins) {
+    if (workspaceCmds.contains(cmd)) {
       map[cmd]!();
       return;
     }

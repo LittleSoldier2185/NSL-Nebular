@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 
 import '../core/l10n/l10n.dart';
 import '../core/models/workspace.dart';
+import '../core/validate/issue.dart';
 import '../state/app_settings.dart';
+import '../state/mock_controller.dart';
 import '../state/project_controller.dart';
 import '../state/workspace_controller.dart';
 import 'app_actions.dart';
@@ -19,7 +21,6 @@ import 'palette/command_palette.dart';
 import 'search_launcher.dart';
 import 'shortcuts.dart';
 import 'whats_new_dialog.dart';
-import 'workspace_issues_dialog.dart';
 import 'theme.dart';
 import 'theme_dialog.dart';
 import 'window_chrome.dart';
@@ -56,11 +57,14 @@ class TopBar extends StatelessWidget {
               height: 34,
               filterQuality: FilterQuality.medium,
             ),
-            const SizedBox(width: 10),
-            const Text(
-              'NSL Nebular',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-            ),
+            // หน้าต่างแคบ: ตัดชื่อโปรแกรมออกก่อน (เหลือโลโก้) ให้เมนูทั้ง 5 ไม่ล้น
+            if (box.maxWidth >= 900) ...[
+              const SizedBox(width: 10),
+              const Text(
+                'NSL Nebular',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+            ],
             const SizedBox(width: 14),
             Container(width: 1, height: 22, color: C.border),
             const SizedBox(width: 8),
@@ -209,6 +213,7 @@ class TopBar extends StatelessWidget {
   }
 
   /// เมนูหลัก: คีย์ลัดที่แสดงมาจาก [shortcutText] (ข้อมูลชุดเดียวกับตัวดักปุ่มจริง)
+  /// รายการสร้างตอนกดเปิดเมนู ([_MenuButton.items] เป็นฟังก์ชัน) — ติ๊กและสถานะตรงกับตอนเปิดเสมอ
   static List<Widget> _menus(BuildContext context, ProjectController c, WorkspaceController w) {
     final a = AppActions(context);
     final cv = a.cv;
@@ -216,14 +221,16 @@ class TopBar extends StatelessWidget {
       String label,
       Cmd k, {
       bool enabled = true,
-    }) => _item(label, shortcutText(k), enabled ? () => a.run(k) : null);
+      IconData? icon,
+      bool? checked,
+      Widget? tag,
+    }) => _item(label, shortcutText(k), enabled ? () => a.run(k) : null, icon: icon, checked: checked, tag: tag);
     const div = PopupMenuDivider();
-    final hasSel = c.selectionCount > 0;
 
     return [
       _MenuButton(
         label: tr('ไฟล์'),
-        items: [
+        items: () => [
           cmd(tr('โปรเจกต์ใหม่'), Cmd.newProject),
           cmd(tr('เปิด…'), Cmd.open),
           cmd(tr('บันทึก'), Cmd.save),
@@ -240,168 +247,272 @@ class TopBar extends StatelessWidget {
       ),
       _MenuButton(
         label: tr('แก้ไข'),
-        items: [
-          cmd(tr('ย้อนกลับ'), Cmd.undo, enabled: w.canUndo),
-          cmd(tr('ทำซ้ำ'), Cmd.redo, enabled: w.canRedo),
-          div,
-          cmd(tr('คัดลอกตาราง'), Cmd.copy, enabled: hasSel),
-          cmd(tr('สร้างตารางแบบฟอร์ม…'), Cmd.createTableForm),
-          cmd(tr('จัดกลุ่มตารางที่เลือก'), Cmd.groupSelected, enabled: hasSel),
-          div,
-          cmd(tr('วางตาราง'), Cmd.paste),
-          cmd(tr('ทำสำเนาตาราง'), Cmd.duplicate, enabled: hasSel),
-          cmd(
-            tr('เลือกทุกตาราง'),
-            Cmd.selectAll,
-            enabled: c.project.tables.isNotEmpty,
-          ),
-          cmd(tr('เปลี่ยนชื่อ…'), Cmd.rename, enabled: c.selectedTable != null),
-          cmd(tr('ลบที่เลือก'), Cmd.delete, enabled: hasSel),
-          div,
-          _item(
-            tr('จัดวางอัตโนมัติ'),
-            '',
-            w.activeDocument.type == DocType.wireframe || w.activeDocument.type == DocType.api
-                ? null
-                : w.activeDocument.type == DocType.screenflow
-                ? (w.screenflowOf(w.activeId).nodes.length < 2
-                    ? null
-                    : () {
-                        final f = context.read<ScreenFlowController>();
-                        if (f.autoLayout()) f.fit(f.viewport);
-                      })
-                : w.activeDocument.type == DocType.flowchart
-                ? (w.flowchartOf(w.activeId).nodes.length < 2
-                    ? null
-                    : () {
-                        final f = context.read<FlowchartController>();
-                        if (f.autoLayout()) f.fit(f.viewport);
-                      })
-                : w.activeDocument.type == DocType.dfd
-                ? (w.dfdOf(w.activeId).nodes.length < 2
-                    ? null
-                    : () {
-                        final d = context.read<DfdController>();
-                        if (d.autoLayout()) d.fit(d.viewport);
-                      })
-                : c.project.tables.isEmpty
-                    ? null
-                    : () {
-                        c.autoLayoutTables();
-                        cv.fit(c.project);
-                      },
-          ),
-        ],
+        items: () {
+          final hasSel = c.selectionCount > 0;
+          return [
+            cmd(tr('ย้อนกลับ'), Cmd.undo, enabled: w.canUndo),
+            cmd(tr('ทำซ้ำ'), Cmd.redo, enabled: w.canRedo),
+            div,
+            cmd(tr('คัดลอกตาราง'), Cmd.copy, enabled: hasSel),
+            cmd(tr('สร้างตารางแบบฟอร์ม…'), Cmd.createTableForm),
+            cmd(tr('จัดกลุ่มตารางที่เลือก'), Cmd.groupSelected, enabled: hasSel),
+            div,
+            cmd(tr('วางตาราง'), Cmd.paste),
+            cmd(tr('ทำสำเนาตาราง'), Cmd.duplicate, enabled: hasSel),
+            cmd(tr('เลือกทุกตาราง'), Cmd.selectAll, enabled: c.project.tables.isNotEmpty),
+            cmd(tr('เปลี่ยนชื่อ…'), Cmd.rename, enabled: c.selectedTable != null),
+            cmd(tr('ลบที่เลือก'), Cmd.delete, enabled: hasSel),
+            div,
+            _item(tr('จัดวางอัตโนมัติ'), '', _autoLayout(context, c, cv, w)),
+          ];
+        },
       ),
-      _MenuButton(
-        label: tr('มุมมอง'),
-        items: [
-          cmd(tr('พอดีหน้าจอ'), Cmd.fit),
-          cmd(tr('ซูม 100%'), Cmd.zoom100),
-          div,
-          _item(tr('แสดง SQL Preview'), '', () => cv.showDock(DockTab.sql)),
-          _item(
-            tr('แสดงปัญหาที่ตรวจพบ'),
-            '',
-            () => cv.showDock(DockTab.issues),
-          ),
-          _item(tr('หน้า Project Home'), '', () => context.read<WorkspaceController>().showHome()),
-          _item(tr('พจนานุกรมข้อมูล'), '', () => context.read<WorkspaceController>().showDictionary()),
-          _item(tr('ประวัติเวอร์ชันและ Diff'), '', () => context.read<WorkspaceController>().showHistory()),
-          _item(tr('ความต้องการและการไล่ตาม'), '', () => context.read<WorkspaceController>().showTrace()),
-          _item(tr('สร้างโค้ด'), '', () => context.read<WorkspaceController>().showCodegen()),
-          _item(tr('Mock Server'), '', () => context.read<WorkspaceController>().showMock()),
-          _item(tr('แผงโน้ตและงานค้าง'), '', () => context.read<WorkspaceController>().showNotesPanel()),
-          _item(tr('ซ่อน/แสดงหมุดโน้ตและงานค้าง'), 'Shift+N', () => context.read<WorkspaceController>().toggleNotePins()),
-          _item(tr('ปัญหาทั้งโปรเจกต์…'), '', () => showWorkspaceIssues(context)),
-          _item(
-            '${context.read<AppSettings>().showExplorer ? '✓ ' : '    '}${tr('แสดงตัวสำรวจโปรเจกต์')}',
-            '',
-            () {
-              final s = context.read<AppSettings>();
-              s.setShowExplorer(!s.showExplorer);
-            },
-          ),
-          div,
-          _item(
-            tr('ขนาดกระดาน…'),
-            '',
-            () => FileActions.changeBoardSize(context, c),
-          ),
-          _item(
-            '${context.read<AppSettings>().snapToGrid ? '✓ ' : '    '}${tr('จัดแนวตามตาราง (Snap)')}',
-            '',
-            () {
-              final s = context.read<AppSettings>();
-              s.setSnapToGrid(!s.snapToGrid);
-            },
-          ),
-          _item(
-            tr('เส้นความสัมพันธ์ (FK)…'),
-            '',
-            () => showLineSettingsDialog(context, c),
-          ),
-          div,
-          cmd(tr('ค้นหาตาราง / คอลัมน์'), Cmd.find),
-          cmd('Command palette', Cmd.palette),
-        ],
-      ),
+      _MenuButton(label: tr('มุมมอง'), items: () => _viewMenu(context, c, w, a, cmd)),
+      _MenuButton(label: tr('เครื่องมือ'), items: () => _toolsMenu(context, w, a, cmd)),
       _MenuButton(
         label: tr('ช่วยเหลือ'),
-        items: [
+        items: () => [
           cmd(tr('ดูคีย์ลัดทั้งหมด'), Cmd.help),
           _item(tr('มีอะไรใหม่ (Patch note)…'), '', () => showWhatsNew(context)),
           _item(tr('เกี่ยวกับ NSL Nebular…'), '', () => showAbout(context)),
           div,
           for (final l in Lang.values)
-            _item(
-              '${l == currentLang ? '✓ ' : '    '}${l.label}',
-              '',
-              () => context.read<AppSettings>().setLang(l),
-            ),
+            _item(l.label, '', () => context.read<AppSettings>().setLang(l), checked: l == currentLang),
         ],
       ),
     ];
   }
 
-  static PopupMenuEntry<VoidCallback> _item(
-    String label,
-    String shortcut,
-    VoidCallback? onTap,
-  ) => PopupMenuItem<VoidCallback>(
-    value: onTap,
-    enabled: onTap != null,
-    height: 36,
-    child: SizedBox(
-      width: 400,
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(shortcut, style: TextStyle(fontSize: 12, color: C.muted)),
+  /// จัดวางอัตโนมัติตามชนิดเอกสารที่เปิด (null = ใช้ไม่ได้ / มีวัตถุไม่พอ)
+  static VoidCallback? _autoLayout(BuildContext context, ProjectController c, CanvasController cv, WorkspaceController w) {
+    switch (w.activeDocument.type) {
+      case DocType.wireframe || DocType.api || null:
+        return null;
+      case DocType.screenflow:
+        if (w.screenflowOf(w.activeId).nodes.length < 2) return null;
+        return () {
+          final f = context.read<ScreenFlowController>();
+          if (f.autoLayout()) f.fit(f.viewport);
+        };
+      case DocType.flowchart:
+        if (w.flowchartOf(w.activeId).nodes.length < 2) return null;
+        return () {
+          final f = context.read<FlowchartController>();
+          if (f.autoLayout()) f.fit(f.viewport);
+        };
+      case DocType.dfd:
+        if (w.dfdOf(w.activeId).nodes.length < 2) return null;
+        return () {
+          final d = context.read<DfdController>();
+          if (d.autoLayout()) d.fit(d.viewport);
+        };
+      case DocType.er:
+        if (c.project.tables.isEmpty) return null;
+        return () {
+          c.autoLayoutTables();
+          cv.fit(c.project);
+        };
+    }
+  }
+
+  /// ป้ายชนิดเอกสารสั้น ๆ บนหัวหมวด "แคนวาส"
+  static String? _docShort(DocType? t) => switch (t) {
+    null => null,
+    DocType.er => 'ER',
+    DocType.dfd => 'DFD',
+    DocType.flowchart => 'Flowchart',
+    DocType.wireframe => 'Wireframe',
+    DocType.screenflow => 'Screen Flow',
+    DocType.api => 'API',
+  };
+
+  /// เมนูมุมมอง: แผง / หน้า / แคนวาส (หมวดแคนวาสเปลี่ยนตามชนิดเอกสาร ; รายการเฉพาะ ER เป็นสีเทาหรือซ่อน)
+  static List<PopupMenuEntry<VoidCallback>> _viewMenu(
+    BuildContext context,
+    ProjectController c,
+    WorkspaceController w,
+    AppActions a,
+    PopupMenuEntry<VoidCallback> Function(String, Cmd, {bool enabled, IconData? icon, bool? checked, Widget? tag}) cmd,
+  ) {
+    final s = context.read<AppSettings>();
+    final type = w.activeDocument.type;
+    final canvas = !w.pageView && type != DocType.api;
+    final erCanvas = type == DocType.er && !w.pageView;
+    const div = PopupMenuDivider();
+    return [
+      cmd(tr('พอดีหน้าจอ'), Cmd.fit, icon: Icons.fit_screen_outlined, enabled: canvas),
+      cmd(tr('ซูม 100%'), Cmd.zoom100, icon: Icons.zoom_in_rounded, enabled: canvas),
+      div,
+      _section(tr('แผง')),
+      cmd(tr('ตัวสำรวจโปรเจกต์'), Cmd.toggleExplorer, icon: Icons.folder_outlined, checked: s.showExplorer),
+      cmd(
+        'SQL Preview',
+        Cmd.toggleSqlPreview,
+        icon: Icons.storage_rounded,
+        checked: a.dockShowing(DockTab.sql),
+        enabled: erCanvas,
+        tag: erCanvas ? null : _tag(tr('เฉพาะ ER'), muted: true),
+      ),
+      cmd(tr('ปัญหาในเอกสารนี้'), Cmd.toggleIssues, icon: Icons.warning_amber_rounded, checked: a.dockShowing(DockTab.issues)),
+      cmd(tr('แผงโน้ตและงานค้าง'), Cmd.toggleNotesPanel, icon: Icons.sticky_note_2_outlined, checked: w.notesPanel),
+      cmd(tr('หมุดโน้ตบนแคนวาส'), Cmd.toggleNotePins, icon: Icons.push_pin_outlined, checked: w.notePinsVisible),
+      div,
+      _section(tr('หน้า')),
+      cmd('Project Home', Cmd.showHome, icon: Icons.home_outlined, checked: w.homeView),
+      _item(tr('พจนานุกรมข้อมูล'), '', () => w.showDictionary(!w.dictionaryView),
+          icon: Icons.menu_book_outlined, checked: w.dictionaryView),
+      cmd(tr('ประวัติเวอร์ชันและ Diff'), Cmd.showHistory, icon: Icons.history_rounded, checked: w.page == WorkspacePage.history),
+      _item(tr('ความต้องการและการไล่ตาม'), '', () => w.showTrace(w.page != WorkspacePage.trace),
+          icon: Icons.link_rounded, checked: w.page == WorkspacePage.trace),
+      if (canvas) ...[
+        div,
+        _section(tr('แคนวาส'), tag: _docShort(type)),
+        _item(tr('จัดแนวตามตาราง (Snap)'), '', () => s.setSnapToGrid(!s.snapToGrid),
+            icon: Icons.grid_4x4_rounded, checked: s.snapToGrid),
+        if (erCanvas) ...[
+          _item(tr('ขนาดกระดาน…'), '', () => FileActions.changeBoardSize(context, c), icon: Icons.aspect_ratio_rounded),
+          _item(tr('เส้นความสัมพันธ์ (FK)…'), '', () => showLineSettingsDialog(context, c), icon: Icons.timeline_rounded),
         ],
+      ],
+    ];
+  }
+
+  /// เมนูเครื่องมือ: ค้นหา / ตรวจ / สร้าง
+  static List<PopupMenuEntry<VoidCallback>> _toolsMenu(
+    BuildContext context,
+    WorkspaceController w,
+    AppActions a,
+    PopupMenuEntry<VoidCallback> Function(String, Cmd, {bool enabled, IconData? icon, bool? checked, Widget? tag}) cmd,
+  ) {
+    final erCanvas = w.activeDocument.type == DocType.er && !w.pageView;
+    final problems = w.workspaceIssues.where((i) => i.issue.severity != Severity.info).length;
+    final mock = context.read<MockController>();
+    const div = PopupMenuDivider();
+    return [
+      _section(tr('ค้นหา')),
+      cmd('Command palette', Cmd.palette, icon: Icons.terminal_rounded),
+      cmd(tr('ค้นหาตาราง / คอลัมน์'), Cmd.find, icon: Icons.search_rounded, enabled: erCanvas, tag: _tag('ER', muted: !erCanvas)),
+      div,
+      _section(tr('ตรวจ')),
+      cmd(tr('ปัญหาทั้งโปรเจกต์…'), Cmd.workspaceIssues,
+          icon: Icons.rule_rounded, tag: problems > 0 ? _tag('$problems', warn: true) : null),
+      div,
+      _section(tr('สร้าง')),
+      cmd(tr('สร้างโค้ด'), Cmd.codegen, icon: Icons.code_rounded, checked: w.page == WorkspacePage.codegen),
+      _item(
+        'Mock Server',
+        '',
+        () => w.showMock(w.page != WorkspacePage.mock),
+        icon: Icons.dns_outlined,
+        checked: w.page == WorkspacePage.mock,
+        trailing: mock.running
+            ? Row(key: const ValueKey('menu-mock-running'), mainAxisSize: MainAxisSize.min, children: [
+                Container(width: 7, height: 7, decoration: BoxDecoration(color: C.primary, shape: BoxShape.circle)),
+                const SizedBox(width: 5),
+                Text(tr('ทำงานที่ :{0}', [mock.port ?? '']),
+                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: C.primaryDark)),
+              ])
+            : null,
+      ),
+    ];
+  }
+
+  /// หัวหมวดในเมนู (กดไม่ได้)
+  static PopupMenuEntry<VoidCallback> _section(String label, {String? tag}) => PopupMenuItem<VoidCallback>(
+    enabled: false,
+    height: 26,
+    child: Padding(
+      padding: const EdgeInsets.only(left: 24, top: 4),
+      child: Row(children: [
+        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: C.muted)),
+        if (tag != null) ...[const SizedBox(width: 6), _tag(tag)],
+      ]),
+    ),
+  );
+
+  /// ป้ายเล็กข้างชื่อรายการ: ชนิดเอกสาร (สีหลัก) · "เฉพาะ ER" ([muted]) · จำนวนปัญหา ([warn])
+  static Widget _tag(String text, {bool muted = false, bool warn = false}) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+    decoration: BoxDecoration(
+      color: warn ? C.palette.warnBg : (muted ? C.border : C.primaryTint),
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 10.5,
+        fontWeight: FontWeight.w600,
+        color: warn ? C.palette.warnText : (muted ? C.muted : C.primaryDark),
       ),
     ),
   );
+
+  /// รายการเมนู: [คอลัมน์ติ๊ก][ไอคอน] ชื่อ [ป้าย] ……… คีย์ลัด/[trailing]
+  /// [checked] = null คือไม่ใช่รายการเปิด/ปิด (คอลัมน์ติ๊กยังเว้นที่ไว้ ทุกบรรทัดจึงตรงแนว)
+  static PopupMenuEntry<VoidCallback> _item(
+    String label,
+    String shortcut,
+    VoidCallback? onTap, {
+    IconData? icon,
+    bool? checked,
+    Widget? tag,
+    Widget? trailing,
+  }) {
+    final on = onTap != null;
+    return PopupMenuItem<VoidCallback>(
+      value: onTap,
+      enabled: on,
+      height: 34,
+      child: SizedBox(
+        width: 380,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              child: checked == true
+                  ? Icon(Icons.check_rounded, key: ValueKey('menu-checked-$label'), size: 16, color: C.primaryDark)
+                  : null,
+            ),
+            const SizedBox(width: 8),
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: on ? C.muted : C.muted.withValues(alpha: 0.45)),
+              const SizedBox(width: 10),
+            ],
+            Expanded(
+              child: Row(children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 13, color: on ? C.text : C.muted),
+                  ),
+                ),
+                if (tag != null) ...[const SizedBox(width: 8), tag],
+              ]),
+            ),
+            const SizedBox(width: 12),
+            trailing ?? Text(shortcut, style: TextStyle(fontSize: 12, color: C.muted)),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _MenuButton extends StatelessWidget {
   const _MenuButton({required this.label, required this.items});
   final String label;
-  final List<PopupMenuEntry<VoidCallback>> items;
+
+  /// สร้างรายการตอนเปิดเมนู
+  final List<PopupMenuEntry<VoidCallback>> Function() items;
 
   @override
   Widget build(BuildContext context) => PopupMenuButton<VoidCallback>(
     tooltip: '',
     offset: const Offset(0, 36),
     onSelected: (f) => f(),
-    itemBuilder: (_) => items,
+    itemBuilder: (_) => items(),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       child: Text(label, style: const TextStyle(fontSize: 13)),

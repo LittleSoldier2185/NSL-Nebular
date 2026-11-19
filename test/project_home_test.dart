@@ -59,7 +59,7 @@ void main() {
     await boot(tester);
     await tester.tap(find.text('มุมมอง'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('หน้า Project Home'));
+    await tester.tap(find.text('Project Home'));
     await tester.pumpAndSettle();
     expect(home, findsOneWidget);
 

@@ -65,6 +65,15 @@ enum Cmd {
   dialectSqlite,
   dialectMssql,
   help,
+  // มุมมอง / เครื่องมือ (ทำงานได้ทุกชนิดเอกสาร — AppActions ดักไว้ก่อนส่งต่อตามชนิด)
+  toggleExplorer,
+  toggleSqlPreview,
+  toggleIssues,
+  toggleNotesPanel,
+  showHome,
+  showHistory,
+  workspaceIssues,
+  codegen,
 }
 
 /// คีย์ลัดหนึ่งรายการ — เป็นแหล่งข้อมูลเดียวของทั้งตัวดักปุ่ม หน้า F1 และเมนู
@@ -224,6 +233,26 @@ const List<ShortcutDef> kShortcuts = [
   ShortcutDef('Canvas', 'เลือกหลายตาราง', 'Ctrl / Shift + คลิก'),
   ShortcutDef('Canvas', 'ซูม', 'Ctrl + ล้อเมาส์'),
   ShortcutDef('Canvas', 'เลื่อนมุมมอง (pan)', 'Space + ลาก'),
+
+  // ---- มุมมอง ----
+  ShortcutDef('มุมมอง', 'แสดง/ซ่อนตัวสำรวจโปรเจกต์', 'Ctrl+B', cmd: Cmd.toggleExplorer, global: true,
+      activator: SingleActivator(LogicalKeyboardKey.keyB, control: _ctrl, includeRepeats: false)),
+  ShortcutDef('มุมมอง', 'แสดง/ซ่อน SQL Preview (ER)', 'Ctrl+J', cmd: Cmd.toggleSqlPreview, global: true,
+      activator: SingleActivator(LogicalKeyboardKey.keyJ, control: _ctrl, includeRepeats: false)),
+  ShortcutDef('มุมมอง', 'ปัญหาในเอกสารนี้', 'Ctrl+Shift+I', cmd: Cmd.toggleIssues, global: true,
+      activator: SingleActivator(LogicalKeyboardKey.keyI, control: _ctrl, shift: true, includeRepeats: false)),
+  ShortcutDef('มุมมอง', 'แสดง/ซ่อนแผงโน้ตและงานค้าง', 'Ctrl+Shift+N', cmd: Cmd.toggleNotesPanel, global: true,
+      activator: SingleActivator(LogicalKeyboardKey.keyN, control: _ctrl, shift: true, includeRepeats: false)),
+  ShortcutDef('มุมมอง', 'หน้า Project Home', 'Ctrl+H', cmd: Cmd.showHome, global: true,
+      activator: SingleActivator(LogicalKeyboardKey.keyH, control: _ctrl, includeRepeats: false)),
+  ShortcutDef('มุมมอง', 'ประวัติเวอร์ชันและ Diff', 'Ctrl+Shift+H', cmd: Cmd.showHistory, global: true,
+      activator: SingleActivator(LogicalKeyboardKey.keyH, control: _ctrl, shift: true, includeRepeats: false)),
+
+  // ---- เครื่องมือ ----
+  ShortcutDef('เครื่องมือ', 'ปัญหาทั้งโปรเจกต์', 'Ctrl+Shift+P', cmd: Cmd.workspaceIssues, global: true,
+      activator: SingleActivator(LogicalKeyboardKey.keyP, control: _ctrl, shift: true, includeRepeats: false)),
+  ShortcutDef('เครื่องมือ', 'สร้างโค้ด', 'Ctrl+Shift+B', cmd: Cmd.codegen, global: true,
+      activator: SingleActivator(LogicalKeyboardKey.keyB, control: _ctrl, shift: true, includeRepeats: false)),
 
   // ---- ทั่วไป ----
   ShortcutDef('ทั่วไป', 'ค้นหาตาราง / คอลัมน์', 'Ctrl+F', cmd: Cmd.find, global: true,

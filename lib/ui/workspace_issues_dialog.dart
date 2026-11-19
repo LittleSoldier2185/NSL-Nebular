@@ -67,11 +67,15 @@ void gotoWorkspaceIssue(BuildContext context, WorkspaceIssue wi, {VoidCallback? 
 }
 
 /// ปัญหาที่ตรวจพบทั้งโปรเจกต์ — รวมทุกเอกสาร (ER และ DFD ทุกแท็บ) แยกเป็นกลุ่มตามเอกสาร คลิกรายการเพื่อไปที่วัตถุนั้น
-Future<void> showWorkspaceIssues(BuildContext context) =>
-    showDialog<void>(context: context, builder: (_) => const WorkspaceIssuesDialog());
+/// [docId] = แสดงเฉพาะเอกสารนั้น ("ปัญหาในเอกสารนี้")
+Future<void> showWorkspaceIssues(BuildContext context, {String? docId}) =>
+    showDialog<void>(context: context, builder: (_) => WorkspaceIssuesDialog(docId: docId));
 
 class WorkspaceIssuesDialog extends StatefulWidget {
-  const WorkspaceIssuesDialog({super.key});
+  const WorkspaceIssuesDialog({super.key, this.docId});
+
+  /// กรองเฉพาะเอกสารนี้ (null = ทั้งโปรเจกต์)
+  final String? docId;
 
   @override
   State<WorkspaceIssuesDialog> createState() => _WorkspaceIssuesDialogState();
@@ -88,7 +92,8 @@ class _WorkspaceIssuesDialogState extends State<WorkspaceIssuesDialog> {
   @override
   Widget build(BuildContext context) {
     final w = context.watch<WorkspaceController>();
-    final all = validateWorkspace(w.workspace);
+    final one = widget.docId;
+    final all = [for (final x in validateWorkspace(w.workspace)) if (one == null || x.docId == one) x];
     final shown = _showInfo ? all : all.where((x) => x.issue.severity != Severity.info).toList();
     final n = countIssues(all.map((x) => x.issue));
 
@@ -100,7 +105,7 @@ class _WorkspaceIssuesDialogState extends State<WorkspaceIssuesDialog> {
 
     return AlertDialog(
       key: const ValueKey('workspace-issues'),
-      title: Text(tr('ปัญหาที่ตรวจพบทั้งโปรเจกต์')),
+      title: Text(one == null ? tr('ปัญหาที่ตรวจพบทั้งโปรเจกต์') : tr('ปัญหาในเอกสารนี้')),
       content: SizedBox(
         width: 560,
         height: 460,
@@ -109,7 +114,7 @@ class _WorkspaceIssuesDialogState extends State<WorkspaceIssuesDialog> {
             Expanded(
               child: Text(
                 all.isEmpty
-                    ? tr('✓ ไม่พบปัญหาในทุกเอกสาร')
+                    ? (one == null ? tr('✓ ไม่พบปัญหาในทุกเอกสาร') : tr('✓ ไม่พบปัญหาในเอกสารนี้'))
                     : tr('{0} ข้อผิดพลาด · {1} คำเตือน · {2} คำแนะนำ — ใน {3} เอกสาร', [n.errors, n.warnings, n.infos, groups.length]),
                 key: const ValueKey('workspace-issues-summary'),
                 style: TextStyle(fontSize: 12.5, color: C.muted),

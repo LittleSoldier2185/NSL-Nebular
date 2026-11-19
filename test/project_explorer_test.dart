@@ -189,14 +189,14 @@ void main() {
 
     await tester.tap(find.text('มุมมอง'));
     await tester.pumpAndSettle();
-    await tester.tap(find.textContaining('แสดงตัวสำรวจโปรเจกต์'));
+    await tester.tap(find.text('ตัวสำรวจโปรเจกต์').last);
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('project-explorer')), findsNothing);
     expect(AppSettings.load(file).showExplorer, isFalse);
 
     await tester.tap(find.text('มุมมอง'));
     await tester.pumpAndSettle();
-    await tester.tap(find.textContaining('แสดงตัวสำรวจโปรเจกต์'));
+    await tester.tap(find.text('ตัวสำรวจโปรเจกต์').last);
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('project-explorer')), findsOneWidget);
     expect(AppSettings.load(file).showExplorer, isTrue);
@@ -213,7 +213,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('View'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Show Project Explorer'), findsOneWidget);
+    expect(find.byKey(const ValueKey('menu-checked-Project Explorer')), findsOneWidget); // ติ๊กอยู่คอลัมน์แยก
+    expect(find.text('Panels'), findsOneWidget);
     currentLang = Lang.th;
   });
 }
