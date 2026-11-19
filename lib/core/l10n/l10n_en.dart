@@ -274,6 +274,7 @@ const Map<String, String> kEn = {
   'นำเข้า .sql/ฐานข้อมูลเลือกได้ว่าจะเพิ่มเป็น ER ใหม่ แทนที่ ER ที่เปิดอยู่ (เลิกทำได้) หรือเปิดเป็นโปรเจกต์ใหม่': 'Importing .sql or a database can add a new ER, replace the open ER (undoable), or open as a new project',
   'แท็บและตัวสำรวจโปรเจกต์มีจุดบอกเอกสารที่ยังไม่บันทึก': 'Tabs and the project explorer mark documents with unsaved changes',
   'DFD จัดวางอัตโนมัติใหม่ และลากขยับเส้น/ย้ายป้ายได้แบบ draw.io ในทุกแผนภาพ': 'New DFD auto layout, and draggable lines and labels in every diagram, in the style of draw.io',
+  'ไอคอนโปรแกรมใหม่ (กาแล็กซี) ตามชุดแบรนด์ NSL ทั้งหน้าต่าง ทาสก์บาร์ ตัวติดตั้ง และโลโก้ในแอป': 'New galaxy app icon from the NSL brand pack, used for the window, taskbar, installer and in-app logo',
   'Mock Server ส่งค่า DEFAULT ของคอลัมน์พร้อมเครื่องหมายคำพูด SQL': 'Mock Server returned column DEFAULT values wrapped in SQL quotes',
   'ข้อความล้นแถวในพจนานุกรมข้อมูลและมุมมอง SQL เมื่อชื่อยาวหรือมีภาษาไทยหลายบรรทัด': 'Rows overflowed in the data dictionary and SQL view with long names or many Thai lines',
   'ตั้งค่าหน้าจอ Wireframe กดได้ครั้งเดียว': 'Wireframe screen settings only responded to the first change',
