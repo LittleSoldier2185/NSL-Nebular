@@ -302,6 +302,23 @@ class ProjectController extends DocController {
     });
   }
 
+  /// ลากช่วงแนวตั้งกลางเส้น FK ไปที่ x (พิกัดแผนภาพ) แบบ live — ครอบด้วย beginGesture/endGesture (undo ขั้นเดียว)
+  /// [x] = null คืนเป็นอัตโนมัติ
+  void setRelationBendLive(String id, double? x) {
+    final r = _project.relations.where((r) => r.id == id).firstOrNull;
+    if (r == null || r.bendX == x) return;
+    r.bendX = x;
+    markLive();
+    notifyListeners();
+  }
+
+  /// คืนเส้น FK เป็นอัตโนมัติ (undo ได้)
+  void resetRelationBend(String id) {
+    final r = _project.relations.where((r) => r.id == id).firstOrNull;
+    if (r == null || r.bendX == null) return;
+    _edit(() => r.bendX = null);
+  }
+
   /// สีเส้นของความสัมพันธ์เดียว (null = ใช้สีเริ่มต้น)
   void setRelationColor(String id, int? argb) {
     final r = _project.relations.where((r) => r.id == id).firstOrNull;

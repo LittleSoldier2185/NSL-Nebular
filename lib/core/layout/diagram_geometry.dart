@@ -190,13 +190,18 @@ Map<String, List<RoutePoint>> relationRoutes(Project p) {
   }
 
   final slots = parentEndSlots(p);
+  // เส้นที่ผู้ใช้ลากช่วงกลางเอง : ใช้ x ที่กำหนดตรง ๆ (ไม่เลี่ยงสิ่งกีดขวาง ไม่เข้าเลน)
+  final manual = {for (final r in p.relations) if (r.bendX != null) r.id: r.bendX!};
 
   List<RoutePoint> build(int i, double extraLane) {
     final it = items[i];
     final g = it.g;
     final ignore = {it.fromT, it.toT};
     final List<RoutePoint> pts;
-    if (it.same) {
+    final bx = manual[it.id];
+    if (bx != null) {
+      pts = [(g.fx, g.fy), (bx, g.fy), (bx, g.ty), (g.tx, g.ty)];
+    } else if (it.same) {
       // ฝั่งเดียวกัน (การ์ดซ้อนกัน / ตารางเดียวกัน): อ้อมออกด้านข้าง self-reference ยื่นไกลกว่าเพื่อให้เห็นเป็นห่วง
       final stub = it.self ? kRouteSelfLoop : kRouteStub;
       pts = _sameSideRoute(g, it.base, stub + lane[i] + extraLane, boxes, ignore, edges);
@@ -230,6 +235,7 @@ Map<String, List<RoutePoint>> relationRoutes(Project p) {
   for (var pass = 0; pass < 8; pass++) {
     var changed = false;
     for (var j = 1; j < routes.length; j++) {
+      if (manual.containsKey(items[j].id)) continue; // เส้นที่ลากเองไม่ถูกดัน
       for (var i = 0; i < j; i++) {
         if (overlapping(routes[i], routes[j])) {
           extra[j] += kRouteLaneGap;
@@ -584,6 +590,28 @@ DiagramBounds? diagramBounds(Project p, {bool includeNotes = true}) {
   final a = route[best - 1], b = route[best];
   // ทิศจากแม่ไปลูก = จาก b กลับไป a
   return (x: (a.$1 + b.$1) / 2, y: (a.$2 + b.$2) / 2, dx: (a.$1 - b.$1) / bestLen, dy: (a.$2 - b.$2) / bestLen);
+}
+
+/// จุดจับกลางช่วงแนวตั้งที่ยาวที่สุดของเส้น FK [route] (ลากไปซ้าย/ขวาเพื่อย้ายช่วงนั้น) ; ไม่มีช่วงแนวตั้งยาวพอ = null
+RoutePoint? relationBendHandleOf(List<RoutePoint> route, {double minLength = 14}) {
+  var best = -1;
+  var bestLen = 0.0;
+  for (var i = 1; i < route.length; i++) {
+    if ((route[i - 1].$1 - route[i].$1).abs() > 0.001) continue;
+    final len = (route[i - 1].$2 - route[i].$2).abs();
+    if (len > bestLen) {
+      bestLen = len;
+      best = i;
+    }
+  }
+  if (best < 0 || bestLen < minLength) return null;
+  return (route[best].$1, (route[best - 1].$2 + route[best].$2) / 2);
+}
+
+/// จุดจับกลางช่วงแนวตั้งของความสัมพันธ์ [id] ; ไม่มี = null
+RoutePoint? relationBendHandle(Project p, String id) {
+  final r = relationRoutes(p)[id];
+  return r == null ? null : relationBendHandleOf(r);
 }
 
 /// id ของความสัมพันธ์ที่เส้นอยู่ใกล้จุด ([x],[y] พิกัดโปรเจกต์) ภายใน [tolerance] พิกเซล — ใกล้สุดก่อน; ไม่มี = null

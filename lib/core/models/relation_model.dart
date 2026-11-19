@@ -18,6 +18,10 @@ class RelationModel {
   /// สีเส้นของความสัมพันธ์นี้ (ARGB) — null = ใช้สีเส้นเริ่มต้นของโปรเจกต์/ธีม
   int? color;
 
+  /// ตำแหน่ง x (พิกัดแผนภาพ) ของช่วงแนวตั้งกลางเส้นที่ผู้ใช้ลากเอง — null = จัดอัตโนมัติ
+  /// (ปลายเส้นผูกกับคอลัมน์ จึงปรับได้แค่ช่วงกลาง ต่างจาก DFD/Flowchart ที่ย้ายปลายได้)
+  double? bendX;
+
   String id;
   String fromTableId;
   String fromColumnId;
@@ -37,6 +41,7 @@ class RelationModel {
         'onUpdate': onUpdate.name,
         if (name != null) 'name': name,
         if (color != null) 'color': color,
+        if (bendX != null) 'bendX': bendX,
       };
 
   factory RelationModel.fromJson(Map<String, dynamic> j) => RelationModel(
@@ -49,5 +54,5 @@ class RelationModel {
         onUpdate: RefAction.values.byName(j['onUpdate'] as String? ?? 'noAction'),
         name: j['name'] as String?,
         color: parseArgb(j['color']),
-      );
+      )..bendX = j['bendX'] is num && (j['bendX'] as num).isFinite ? (j['bendX'] as num).toDouble() : null;
 }

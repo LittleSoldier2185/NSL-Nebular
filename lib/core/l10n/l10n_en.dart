@@ -784,6 +784,8 @@ const Map<String, String> kEn = {
   'สลับทิศทาง': 'Reverse direction',
   'ข้อมูลไหลสองทาง': 'Data flows both ways',
   'สีเส้น…': 'Line color…',
+  'รีเซ็ตเส้น (จัดอัตโนมัติ)': 'Reset route (auto)',
+  'ย้ายป้ายกลับที่เดิม': 'Reset label position',
   'ลบเส้นข้อมูล': 'Delete data flow',
   'วางผู้ใช้ภายนอกที่นี่': 'Place an external entity here',
   'วางกระบวนการที่นี่': 'Place a process here',

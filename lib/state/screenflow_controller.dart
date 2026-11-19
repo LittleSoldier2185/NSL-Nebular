@@ -6,14 +6,17 @@ import '../core/models/screenflow_model.dart';
 import '../core/models/wireframe_model.dart';
 import '../core/models/workspace.dart';
 import '../core/validate/screenflow_validator.dart' show sfKindLabel;
+import '../core/layout/ortho_route.dart' show RouteBox, RoutePoint;
+import '../core/layout/route_edit.dart' show RouteEditable;
 import 'box_diagram_controller.dart';
+import 'route_editing.dart';
 import 'workspace_controller.dart';
 
 /// เครื่องมือของแท็บ Screen Flow: เลือก / วางโหนด ([ScreenFlowController.toolKind]) / ลากเส้นการเปลี่ยนหน้า
 enum SfTool { select, node, edge }
 
 /// controller ของเอกสาร Screen Flow หนึ่งชิ้น: เนื้อหา + ประวัติ undo/redo + สถานะหน้าจอ (เลือก/เส้น/มุมมอง)
-class ScreenFlowController extends BoxDiagramController<ScreenFlowDiagram, SfNode> {
+class ScreenFlowController extends BoxDiagramController<ScreenFlowDiagram, SfNode> with RouteEditing {
   ScreenFlowController.forDoc(super.doc, super.workspace) : assert(doc.content is ScreenFlowDiagram);
 
   /// ตัวแทนตอนไม่มีเอกสาร Screen Flow ที่ใช้งานอยู่ (ว่าง แก้ไขไม่ได้)
@@ -275,6 +278,35 @@ class ScreenFlowController extends BoxDiagramController<ScreenFlowDiagram, SfNod
     });
   }
 
+  // ---------- แก้เส้นด้วยมือ (แบบ draw.io) : ตรรกะลากอยู่ใน [RouteEditing] ----------
+
+  @override
+  RouteEditable? routeEdgeById(String id) => diagram.edgeById(id);
+
+  @override
+  RouteEditable? get routeSelectedEdge => selectedEdge;
+
+  @override
+  String routeEdgeIdOf(RouteEditable e) => (e as SfEdge).id;
+
+  @override
+  Map<String, List<RoutePoint>> routeRoutes() => sfRoutes(diagram);
+
+  @override
+  String? routeNodeAt(double x, double y) => sfNodeAt(diagram, x, y)?.id;
+
+  @override
+  RouteBox? routeBoxOf(String id) {
+    final n = diagram.nodeById(id);
+    return n == null ? null : RouteBox(n.id, n.x, n.y, n.w, n.h);
+  }
+
+  @override
+  void routeLive(void Function() change) => live((_) => change());
+
+  @override
+  void routeEditEdge(String id, void Function(RouteEditable e) change) => updateEdge(id, change);
+
   void reverseEdge(String id) => updateEdge(id, (e) {
         final t = e.fromId;
         e.fromId = e.toId;
@@ -288,6 +320,13 @@ class ScreenFlowController extends BoxDiagramController<ScreenFlowDiagram, SfNod
     if (!active || diagram.nodes.isEmpty) return false;
     final pos = sfAutoLayout(diagram);
     return editIfChanged((d) {
+      // จัดวางใหม่ = เส้นที่เคยลากเองใช้ไม่ได้แล้ว กลับเป็นอัตโนมัติ
+      for (final e in d.edges) {
+        e
+          ..resetRoute()
+          ..labelDx = 0
+          ..labelDy = 0;
+      }
       for (final n in d.nodes) {
         final p = pos[n.id];
         if (p == null) continue;

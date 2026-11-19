@@ -10,6 +10,8 @@ import '../../core/layout/ortho_route.dart';
 import '../../core/layout/smart_guides.dart' show GuideLine;
 import '../../core/models/flowchart_model.dart';
 import '../theme.dart';
+import '../../core/layout/route_edit.dart' show routeLabelPoint;
+import '../canvas/route_handles_painter.dart';
 
 /// สีสำเร็จรูปให้เลือกในแผงขวา
 const List<int> kFcPalette = [
@@ -114,7 +116,7 @@ TextPainter _labelPainter(String text, Color color) => TextPainter(
 /// สี่เหลี่ยมของป้ายชื่อเส้น (ใช้ทั้งวาดและตรวจการคลิก) ; ไม่มีป้าย = null
 Rect? fcLabelRect(FcEdge e, List<RoutePoint> route) {
   if (e.label.trim().isEmpty) return null;
-  final (ax, ay) = routeLabelAnchor(route);
+  final (ax, ay) = routeLabelPoint(route, e);
   final tp = _labelPainter(e.label, C.text);
   return Rect.fromCenter(center: Offset(ax, ay), width: tp.width + 10, height: tp.height + 4);
 }
@@ -284,8 +286,14 @@ class FlowchartScreenPainter extends CustomPainter {
     this.hideTextOf,
     this.hoverNodeId,
     this.guides = const [],
+    this.dropNode,
+    this.dropPort,
     required this.repaint,
   }) : super(repaint: repaint);
+
+  /// กล่อง/จุดต่อที่ปลายเส้นที่กำลังลากจะไปวาง (null = ไม่ได้ลากปลายเส้น)
+  final String? dropNode;
+  final RoutePort? dropPort;
 
   final FlowchartDiagram diagram;
   final Offset offset;
@@ -326,6 +334,12 @@ class FlowchartScreenPainter extends CustomPainter {
         }
       }
     }
+    // จุดจับของเส้นที่เลือก + กล่องที่ปลายเส้นกำลังจะไปวาง
+    final se = selectedEdge == null ? null : diagram.edgeById(selectedEdge!);
+    final sr = se == null ? null : fcRoutes(diagram)[se.id];
+    if (se != null && sr != null) paintRouteHandles(canvas, sr, Color(se.color ?? C.primary.toARGB32()), scale);
+    final dn = dropNode == null ? null : diagram.nodeById(dropNode!);
+    if (dn != null) paintRouteDrop(canvas, RouteBox(dn.id, dn.x, dn.y, dn.w, dn.h), dropPort, scale);
     // กรอบประของกลุ่มที่มีสมาชิกถูกเลือก (เห็นว่าทั้งกลุ่มเคลื่อนไปด้วยกัน)
     final boxes = <String, Rect>{};
     for (final n in diagram.nodes) {

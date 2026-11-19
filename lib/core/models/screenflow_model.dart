@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import '../layout/box_ops.dart';
+import '../layout/ortho_route.dart' show RoutePort;
+import '../layout/route_edit.dart';
 import 'color_utils.dart';
 import 'workspace.dart';
 import 'api_ref.dart';
@@ -108,14 +110,27 @@ class SfNode implements EditableBox {
 }
 
 /// การเปลี่ยนหน้า (navigation) จาก [fromId] ไป [toId] — [label] = สิ่งที่ผู้ใช้ทำ (เช่น "กด Login"), [condition] = เงื่อนไข
-class SfEdge {
+class SfEdge implements RouteEditable {
   SfEdge({required this.id, required this.fromId, required this.toId, this.label = '', this.condition = ''});
 
   final String id;
+  @override
   String fromId;
+  @override
   String toId;
   String label;
   String condition;
+
+  /// เส้นที่ผู้ใช้ลากแก้เอง (null = อัตโนมัติ) — ดู [RouteEditable]
+  @override
+  RoutePort? exit, entry;
+  @override
+  List<double>? hints;
+  @override
+  double labelDx = 0, labelDy = 0;
+
+  bool get hasManualRoute => routeEditableIsManual(this);
+  void resetRoute() => routeEditableReset(this);
 
   /// ข้อความที่แสดงบนเส้น: "ป้าย [เงื่อนไข]"
   String get caption {
@@ -127,26 +142,32 @@ class SfEdge {
   /// endpoint ในเอกสาร API ที่วัตถุนี้เรียกใช้ (null = ไม่ผูก)
   ApiRef? api;
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'from': fromId,
-        'to': toId,
-        'label': label,
-        if (condition.isNotEmpty) 'condition': condition,
-        if (api != null) 'api': api!.toJson(),
-      };
+  Map<String, dynamic> toJson() {
+    final j = <String, dynamic>{
+      'id': id,
+      'from': fromId,
+      'to': toId,
+      'label': label,
+      if (condition.isNotEmpty) 'condition': condition,
+      if (api != null) 'api': api!.toJson(),
+    };
+    writeRouteJson(this, j);
+    return j;
+  }
 
   static SfEdge? tryFromJson(Object? j) {
     if (j is! Map) return null;
     final id = j['id'], from = j['from'], to = j['to'];
     if (id is! String || id.isEmpty || from is! String || to is! String) return null;
-    return SfEdge(
+    final e = SfEdge(
       id: id,
       fromId: from,
       toId: to,
       label: j['label'] is String ? j['label'] as String : '',
       condition: j['condition'] is String ? j['condition'] as String : '',
     )..api = ApiRef.tryFromJson(j['api']);
+    readRouteJson(e, j);
+    return e;
   }
 }
 

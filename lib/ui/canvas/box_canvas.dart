@@ -15,7 +15,7 @@ import '../note_pins.dart';
 /// ผลการคลิกบนแคนวาส: กล่อง [box] หรือเส้น [edge] (ไม่โดนอะไร = ทั้งคู่ null)
 typedef BoxHit = ({String? box, String? edge});
 
-enum _Drag { none, move, marquee, pan, resize, rotate }
+enum _Drag { none, move, marquee, pan, resize, rotate, edge }
 
 /// ฐานร่วมของแคนวาสแผนภาพแบบกล่อง (Wireframe, Screen Flow): เลื่อน/ซูม (ล้อเมาส์, Ctrl+ล้อ, เมาส์กลาง, Space+ลาก),
 /// คลิกเลือก/Ctrl-Shift คลิก, ดับเบิลคลิก, ลากย้าย, จุดจับปรับขนาด, กรอบลากเลือก, ลากของจากแผงซ้ายมาวาง, เมนูคลิกขวา
@@ -90,6 +90,13 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
   /// ต้องติดตามเมาส์ (เช่น กำลังลากเส้น)
   bool trackCursor(Ctl c) => false;
 
+  /// ชนิดย่อยที่มีเส้นเชื่อมแก้ด้วยมือได้ : กดที่จุดจับ/ป้ายของเส้นที่เลือก = เริ่มลาก แล้วคืน true (ทำงานก่อนจุดจับของกล่อง)
+  bool edgeDragStart(Ctl c, Offset world) => false;
+
+  /// ลากต่อ / ปล่อย ของการลากที่เริ่มด้วย [edgeDragStart]
+  void edgeDragUpdate(Ctl c, DragUpdateDetails u) {}
+  void edgeDragEnd(Ctl c) {}
+
   // ---------- การทำงานร่วม ----------
 
   bool get _ctrlOrShift => HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isShiftPressed;
@@ -149,6 +156,10 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
       return;
     }
     final world = c.toWorld(s.localPosition);
+    if (edgeDragStart(c, world)) {
+      _drag = _Drag.edge;
+      return;
+    }
     if (c.rotateHandleAt(world)) {
       c.beginRotate();
       _drag = _Drag.rotate;
@@ -181,6 +192,8 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
         c.panBy(u.delta);
       case _Drag.move:
         c.moveBy(u.delta.dx / c.scale, u.delta.dy / c.scale, grid: grid);
+      case _Drag.edge:
+        edgeDragUpdate(c, u);
       case _Drag.rotate:
         c.rotateToward(c.toWorld(u.localPosition), snap: HardwareKeyboard.instance.isShiftPressed);
       case _Drag.resize:
@@ -202,6 +215,7 @@ abstract class BoxCanvasState<W extends StatefulWidget, Ctl extends BoxDiagramCo
     if (_drag == _Drag.move) c.endMove();
     if (_drag == _Drag.resize) c.endResize();
     if (_drag == _Drag.rotate) c.endRotate();
+    if (_drag == _Drag.edge) edgeDragEnd(c);
     setState(() {
       _drag = _Drag.none;
       _marqueeStart = null;

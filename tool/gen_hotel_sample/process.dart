@@ -77,12 +77,13 @@ DfdDiagram buildDfdLevel1() {
 }
 
 void _layout(DfdDiagram d) {
-  final pos = dfdAutoLayout(d);
+  final plan = dfdLayoutPlan(d);
   for (final n in d.nodes) {
-    final p = pos[n.id];
+    final p = plan.positions[n.id];
     if (p != null) {
       n.x = p.x + 60;
       n.y = p.y + 60;
+      n.h = plan.heights[n.id] ?? n.h;
     }
   }
 }

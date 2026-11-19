@@ -97,11 +97,28 @@ class CanvasView extends StatelessWidget {
                       cv.setPanning(true);
                       return;
                     }
+                    // จุดจับกลางเส้น FK ที่เลือก = ลากย้ายช่วงแนวตั้งของเส้น (undo ขั้นเดียว)
+                    final fr = _focusRelation(c);
+                    final hp = fr == null ? null : relationBendHandle(c.project, fr);
+                    if (fr != null && hp != null) {
+                      final w = cv.toWorld(d.localPosition);
+                      if ((Offset(hp.$1, hp.$2) - w).distance <= 9 / cv.scale) {
+                        c.beginGesture();
+                        cv.bendRelation = fr;
+                        return;
+                      }
+                    }
                     final add = HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isShiftPressed;
                     cv.beginMarquee(d.localPosition, base: add ? c.selectedTableIds : const {});
                     cv.marqueeBaseGroups = add ? c.attachedGroupIds : const {};
                   },
                   onPanUpdate: (d) {
+                    final br = cv.bendRelation;
+                    if (br != null) {
+                      final x = cv.toWorld(d.localPosition).dx;
+                      c.setRelationBendLive(br, context.read<AppSettings>().snapToGrid ? snapToGrid(x) : x);
+                      return;
+                    }
                     if (cv.panning) {
                       cv.panBy(d.delta);
                     } else if (cv.marquee != null) {
@@ -112,10 +129,18 @@ class CanvasView extends StatelessWidget {
                     }
                   },
                   onPanEnd: (_) {
+                    if (cv.bendRelation != null) {
+                      cv.bendRelation = null;
+                      c.endGesture();
+                    }
                     cv.setPanning(false);
                     cv.endMarquee();
                   },
                   onPanCancel: () {
+                    if (cv.bendRelation != null) {
+                      cv.bendRelation = null;
+                      c.endGesture();
+                    }
                     cv.setPanning(false);
                     cv.endMarquee();
                   },
@@ -156,6 +181,7 @@ class CanvasView extends StatelessWidget {
                           project: c.project,
                           selectedTableId: c.selectedTableId,
                           focusRelationId: _focusRelation(c),
+                          handleScale: cv.scale,
                           showFlow: context.select<AppSettings, bool>((s) => s.showFlow),
                           animate: context.select<AppSettings, bool>((s) => s.flowAnimation),
                           always: context.select<AppSettings, bool>((s) => s.flowAlways),
@@ -445,6 +471,7 @@ class _RelationLayer extends StatefulWidget {
     required this.project,
     required this.selectedTableId,
     required this.focusRelationId,
+    this.handleScale = 0,
     required this.showFlow,
     required this.animate,
     this.always = false,
@@ -454,6 +481,9 @@ class _RelationLayer extends StatefulWidget {
   final Project project;
   final String? selectedTableId;
   final String? focusRelationId;
+
+  /// ซูมปัจจุบัน (วาดจุดจับของเส้นที่เลือกขนาดคงที่บนจอ)
+  final double handleScale;
   final bool showFlow;
   final bool animate;
 
@@ -512,6 +542,7 @@ class _RelationLayerState extends State<_RelationLayer> with SingleTickerProvide
             widget.selectedTableId,
             origin: CanvasController.worldOrigin,
             focusRelationId: widget.focusRelationId,
+            handleScale: widget.handleScale,
             flow: widget.showFlow,
             flowPhase: _wantAnimation ? _ctl.value : null,
             flowAll: widget.always,

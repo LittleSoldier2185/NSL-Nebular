@@ -13,6 +13,8 @@ import '../canvas/box_canvas.dart' show paintMarquee, paintResizeHandles;
 import '../flowchart/fc_painter.dart' show fcPath;
 import '../theme.dart';
 import '../wireframe/wf_painter.dart' show paintWireframe;
+import '../../core/layout/route_edit.dart' show routeLabelPoint;
+import '../canvas/route_handles_painter.dart';
 
 const double kSfLabelSize = 12;
 
@@ -30,7 +32,7 @@ TextPainter _label(String text, Color color, {double max = 220}) => TextPainter(
 Rect? sfLabelRect(SfEdge e, List<RoutePoint> route) {
   final cap = e.caption;
   if (cap.isEmpty) return null;
-  final (ax, ay) = routeLabelAnchor(route);
+  final (ax, ay) = routeLabelPoint(route, e);
   final tp = _label(cap, C.text);
   return Rect.fromCenter(center: Offset(ax, ay), width: tp.width + 10, height: tp.height + 4);
 }
@@ -198,8 +200,14 @@ class ScreenFlowScreenPainter extends CustomPainter {
     this.linkCursor,
     this.marquee,
     this.hideTextOf,
+    this.dropNode,
+    this.dropPort,
     required Listenable repaint,
   }) : super(repaint: repaint);
+
+  /// กล่อง/จุดต่อที่ปลายเส้นที่กำลังลากจะไปวาง (null = ไม่ได้ลากปลายเส้น)
+  final String? dropNode;
+  final RoutePort? dropPort;
 
   final ScreenFlowDiagram diagram;
   final Offset offset;
@@ -227,6 +235,11 @@ class ScreenFlowScreenPainter extends CustomPainter {
       final n = diagram.nodeById(selectedNodes.first);
       if (n != null) paintResizeHandles(canvas, Rect.fromLTWH(n.x, n.y, n.w, n.h), scale);
     }
+    final se = selectedEdge == null ? null : diagram.edgeById(selectedEdge!);
+    final sr = se == null ? null : sfRoutes(diagram)[se.id];
+    if (se != null && sr != null) paintRouteHandles(canvas, sr, C.primary, scale);
+    final dn = dropNode == null ? null : diagram.nodeById(dropNode!);
+    if (dn != null) paintRouteDrop(canvas, RouteBox(dn.id, dn.x, dn.y, dn.w, dn.h), dropPort, scale);
     final src = linkSource == null ? null : diagram.nodeById(linkSource!);
     final cur = linkCursor?.value;
     if (src != null && cur != null) {

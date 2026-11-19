@@ -8,10 +8,13 @@ import '../core/clipboard/dfd_clipboard.dart';
 import '../core/layout/dfd_layout.dart';
 import '../core/layout/dfd_resize.dart';
 import '../core/layout/diagram_geometry.dart' show snapToGrid, kGridSize;
+import '../core/layout/ortho_route.dart';
+import '../core/layout/route_edit.dart';
 import '../core/models/dfd_model.dart';
 import '../core/models/doc_ref.dart';
 import '../core/models/workspace.dart';
 import 'doc_controller.dart';
+import 'route_editing.dart';
 import 'workspace_controller.dart';
 
 enum DfdTool { select, entity, process, store, flow }
@@ -19,7 +22,7 @@ enum DfdTool { select, entity, process, store, flow }
 /// controller ของเอกสาร DFD หนึ่งชิ้น: เนื้อหา + ประวัติ undo/redo ของเอกสารนี้ และสถานะหน้าจอ (เครื่องมือ การเลือก มุมมอง)
 ///
 /// งานข้ามเอกสาร (สร้างแผนภาพย่อย, เปิดแท็บอื่น, ไปที่ตาราง ER) ทำผ่าน [workspace]
-class DfdController extends DocController {
+class DfdController extends DocController with RouteEditing {
   /// controller ของเอกสาร DFD [doc] ใน [workspace] (สร้างโดย workspace controller)
   DfdController.forDoc(super.doc, this.workspace) : assert(doc.content is DfdDiagram);
 
@@ -410,6 +413,35 @@ class DfdController extends DocController {
     endGesture();
   }
 
+  // ---------- แก้เส้นด้วยมือ (แบบ draw.io) : ตรรกะลากอยู่ใน [RouteEditing] ----------
+
+  @override
+  RouteEditable? routeEdgeById(String id) => diagram.flowById(id);
+
+  @override
+  RouteEditable? get routeSelectedEdge => selectedFlow;
+
+  @override
+  String routeEdgeIdOf(RouteEditable e) => (e as DfdFlow).id;
+
+  @override
+  Map<String, List<RoutePoint>> routeRoutes() => dfdRoutes(diagram);
+
+  @override
+  String? routeNodeAt(double x, double y) => dfdNodeAt(diagram, x, y)?.id;
+
+  @override
+  RouteBox? routeBoxOf(String id) {
+    final n = diagram.nodeById(id);
+    return n == null ? null : RouteBox(n.id, n.x, n.y, n.w, n.h, inset: dfdPortInset(n.kind));
+  }
+
+  @override
+  void routeLive(void Function() change) => _live((_) => change());
+
+  @override
+  void routeEditEdge(String id, void Function(RouteEditable e) change) => updateFlow(id, change);
+
   /// ขยับวัตถุที่เลือกด้วยปุ่มลูกศร (undo ต่อการกด)
   bool nudge(double dx, double dy) {
     final ids = _nodes.where((id) => diagram.nodeById(id) != null).toList();
@@ -462,6 +494,10 @@ class DfdController extends DocController {
             label: f.label,
             bidirectional: f.bidirectional,
             color: f.color,
+            exit: f.exit,
+            entry: f.entry,
+            labelDx: f.labelDx,
+            labelDy: f.labelDy,
           ));
         }
       }
@@ -739,6 +775,10 @@ class DfdController extends DocController {
           label: f.label,
           bidirectional: f.bidirectional,
           color: f.color,
+          exit: f.exit,
+          entry: f.entry,
+          labelDx: f.labelDx,
+          labelDy: f.labelDy,
         ));
       }
       for (final b in payload.boundaries) {
@@ -839,6 +879,7 @@ class DfdController extends DocController {
   double _scale = 1;
 
   Offset get offset => _offset;
+  @override
   double get scale => _scale;
 
   void _setView(Offset o, double s) {
@@ -866,19 +907,29 @@ class DfdController extends DocController {
   /// จัดวางวัตถุอัตโนมัติเป็นชั้นตามทิศทางข้อมูล (undo ขั้นเดียว) ; คืน false ถ้าว่างหรือไม่มีอะไรขยับ
   bool autoLayout() {
     if (!active || diagram.nodes.isEmpty) return false;
-    final pos = dfdAutoLayout(diagram);
+    final plan = dfdLayoutPlan(diagram);
+    final pos = plan.positions, heights = plan.heights;
     final moved = diagram.nodes.any((n) {
-      final p = pos[n.id];
-      return p != null && (p.x != n.x || p.y != n.y);
-    });
+          final p = pos[n.id];
+          return p != null && (p.x != n.x || p.y != n.y || (heights[n.id] ?? n.h) != n.h);
+        }) ||
+        diagram.flows.any((f) => f.hasManualRoute || f.labelDx != 0 || f.labelDy != 0);
     if (!moved) return false;
     _edit((d) {
+      // จัดวางใหม่ = เส้นที่เคยลากเองใช้ไม่ได้แล้ว กลับเป็นอัตโนมัติ
+      for (final f in d.flows) {
+        f
+          ..resetRoute()
+          ..labelDx = 0
+          ..labelDy = 0;
+      }
       for (final n in d.nodes) {
         final p = pos[n.id];
         if (p == null) continue;
         n
           ..x = p.x
-          ..y = p.y;
+          ..y = p.y
+          ..h = heights[n.id] ?? n.h;
       }
     });
     return true;

@@ -5,6 +5,7 @@ import '../layout/flowchart_geometry.dart';
 import '../layout/ortho_route.dart';
 import '../models/color_utils.dart';
 import '../models/flowchart_model.dart';
+import '../layout/route_edit.dart' show routeLabelPoint;
 
 const _sans = "'Noto Sans Thai','Leelawadee UI',Tahoma,'Segoe UI',sans-serif";
 
@@ -133,7 +134,7 @@ String? exportFlowchartSvg(FlowchartDiagram d, {bool dark = false, String title 
   for (final e in d.edges) {
     final r = routes[e.id];
     if (r == null || e.label.trim().isEmpty) continue;
-    final (ax, ay) = routeLabelAnchor(r);
+    final (ax, ay) = routeLabelPoint(r, e);
     final label = _wrap(e.label, 200, 6.8, 1).first;
     final bw = label.length * 6.8 + 10;
     out.writeln('<rect x="${_n(ax - bw / 2)}" y="${_n(ay - 9)}" width="${_n(bw)}" height="18" rx="5" fill="${th.canvas}"/>');

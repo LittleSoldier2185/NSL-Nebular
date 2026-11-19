@@ -136,6 +136,8 @@ List<MenuSpec?> relationMenuEntries(BuildContext context, String relationId) {
     MenuSpec(tr('ใช้สีเส้นเริ่มต้น'), Icons.format_color_reset_outlined, () => c.setRelationColor(relationId, null),
         enabled: r.color != null),
     MenuSpec(tr('สีเส้นทั้งหมด…'), Icons.palette_outlined, () => StyleActions.lineColor(context, c)),
+    MenuSpec(tr('รีเซ็ตเส้น (จัดอัตโนมัติ)'), Icons.timeline_rounded, () => c.resetRelationBend(relationId),
+        enabled: r.bendX != null),
     null,
     MenuSpec(tr('ลบ FK นี้'), Icons.delete_outline, () => c.removeRelation(relationId), danger: true),
   ];

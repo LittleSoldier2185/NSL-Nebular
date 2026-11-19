@@ -49,6 +49,7 @@ bool axisAligned(List<DfdPoint> pts) {
 }
 
 void main() {
+  _routeAvoidTest();
   group('โมเดล / ไฟล์', () {
     test('บันทึกแล้วเปิดกลับมาครบ (เนื้อหาแยกต่อแท็บ) และเป็นไฟล์เวอร์ชัน 3', () {
       final c = ProjectController(base());
@@ -725,3 +726,28 @@ void main() {
 }
 
 const kDfdTestPalette1 = 0xFF9333EA;
+
+void _routeAvoidTest() {
+  test('เส้น DFD ที่ข้ามกล่องอื่นถูกอ้อมไปช่องทางเหนือ/ใต้ ไม่วิ่งทะลุกล่อง', () {
+    final d = DfdDiagram(nodes: [
+      DfdNode(id: 'a', kind: DfdKind.process, name: 'A', number: '1', x: 0, y: 100, w: 120, h: 60),
+      DfdNode(id: 'b', kind: DfdKind.process, name: 'B', number: '2', x: 300, y: 100, w: 120, h: 60),
+      DfdNode(id: 'c', kind: DfdKind.process, name: 'C', number: '3', x: 600, y: 100, w: 120, h: 60),
+    ], flows: [
+      DfdFlow(id: 'f1', fromId: 'a', toId: 'c', label: 'x'),
+      DfdFlow(id: 'f2', fromId: 'c', toId: 'a', label: 'y'),
+    ]);
+    final routes = dfdRoutes(d);
+    final b = d.nodes[1];
+    for (final r in routes.values) {
+      for (var i = 1; i < r.length; i++) {
+        final l = r[i - 1].$1 < r[i].$1 ? r[i - 1].$1 : r[i].$1;
+        final rr = r[i - 1].$1 < r[i].$1 ? r[i].$1 : r[i - 1].$1;
+        final t = r[i - 1].$2 < r[i].$2 ? r[i - 1].$2 : r[i].$2;
+        final bb = r[i - 1].$2 < r[i].$2 ? r[i].$2 : r[i - 1].$2;
+        expect(rr > b.x && l < b.right && bb > b.y && t < b.bottom, isFalse);
+      }
+    }
+    expect(routes['f1']!.length, 4);
+  });
+}

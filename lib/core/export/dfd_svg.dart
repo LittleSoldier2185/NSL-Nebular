@@ -60,7 +60,8 @@ String? exportDfdSvg(DfdDiagram d, {bool dark = false, String title = 'DFD'}) {
     if (r == null) continue;
     final color = f.color != null ? hexRgb(f.color!) : th.line;
     final path = StringBuffer();
-    for (final (op, pts) in roundedRoute(r, radius: 8)) {
+    final body = dfdTrimRoute(r, start: f.bidirectional ? kDfdArrowSize - 1 : 0, end: kDfdArrowSize - 1);
+    for (final (op, pts) in roundedRoute(body, radius: 8)) {
       switch (op) {
         case 'M':
           path.write('M${_n(pts[0].$1)} ${_n(pts[0].$2)} ');
@@ -110,7 +111,7 @@ String? exportDfdSvg(DfdDiagram d, {bool dark = false, String title = 'DFD'}) {
   for (final f in d.flows) {
     final r = routes[f.id];
     if (r == null || f.label.trim().isEmpty) continue;
-    final (ax, ay) = dfdLabelAnchor(r);
+    final (ax, ay) = dfdFlowLabelCenter(f, r);
     final label = _fit(f.label, 220, 6.8);
     final bw = label.length * 6.8 + 8;
     out.writeln('<rect x="${_n(ax - bw / 2)}" y="${_n(ay - 9)}" width="${_n(bw)}" height="18" rx="5" fill="${th.canvas}"/>');
@@ -129,7 +130,7 @@ String _arrow(DfdPoint from, DfdPoint to, String color) {
   final len = math.sqrt(dx * dx + dy * dy);
   if (len < 0.001) return '';
   final ux = dx / len, uy = dy / len;
-  const size = 10.0;
+  const size = kDfdArrowSize;
   final bx = to.$1 - ux * size, by = to.$2 - uy * size;
   final nx = -uy, ny = ux;
   return '<polygon points="${_n(to.$1)},${_n(to.$2)} ${_n(bx + nx * size * 0.45)},${_n(by + ny * size * 0.45)} '

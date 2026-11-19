@@ -381,8 +381,8 @@ void gotoDfd(BuildContext context, String tabId, {String? node, String? flow}) {
       d.selectFlow(flow);
       final f = d.diagram.flowById(flow);
       final r = f == null ? null : dfdRoutes(d.diagram)[flow];
-      if (r != null) {
-        final (x, y) = dfdLabelAnchor(r);
+      if (r != null && f != null) {
+        final (x, y) = dfdFlowLabelCenter(f, r);
         d.revealPoint(Offset(x, y), d.viewport);
       }
     }

@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import '../layout/ortho_route.dart' show RoutePort;
+import '../layout/route_edit.dart';
 import 'color_utils.dart';
 import 'workspace.dart';
 import 'api_ref.dart';
@@ -314,7 +316,7 @@ class FcNode {
   }
 }
 
-class FcEdge {
+class FcEdge implements RouteEditable {
   FcEdge({
     required this.id,
     required this.fromId,
@@ -328,7 +330,9 @@ class FcEdge {
   });
 
   final String id;
+  @override
   String fromId;
+  @override
   String toId;
   String label;
   int? color;
@@ -336,24 +340,39 @@ class FcEdge {
   double width;
   FcArrow startArrow, endArrow;
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'from': fromId,
-        'to': toId,
-        'label': label,
-        if (color != null) 'color': color,
-        if (dash != FcDash.solid) 'dash': dash.name,
-        if (width != 1.8) 'width': width,
-        if (startArrow != FcArrow.none) 'startArrow': startArrow.name,
-        if (endArrow != FcArrow.arrow) 'endArrow': endArrow.name,
-      };
+  /// เส้นที่ผู้ใช้ลากแก้เอง (null = อัตโนมัติ) — ดู [RouteEditable]
+  @override
+  RoutePort? exit, entry;
+  @override
+  List<double>? hints;
+  @override
+  double labelDx = 0, labelDy = 0;
+
+  bool get hasManualRoute => routeEditableIsManual(this);
+  void resetRoute() => routeEditableReset(this);
+
+  Map<String, dynamic> toJson() {
+    final j = <String, dynamic>{
+      'id': id,
+      'from': fromId,
+      'to': toId,
+      'label': label,
+      if (color != null) 'color': color,
+      if (dash != FcDash.solid) 'dash': dash.name,
+      if (width != 1.8) 'width': width,
+      if (startArrow != FcArrow.none) 'startArrow': startArrow.name,
+      if (endArrow != FcArrow.arrow) 'endArrow': endArrow.name,
+    };
+    writeRouteJson(this, j);
+    return j;
+  }
 
   static FcEdge? tryFromJson(Object? j) {
     if (j is! Map) return null;
     final id = j['id'], from = j['from'], to = j['to'];
     if (id is! String || id.isEmpty || from is! String || to is! String) return null;
     final w = j['width'];
-    return FcEdge(
+    final e = FcEdge(
       id: id,
       fromId: from,
       toId: to,
@@ -364,6 +383,8 @@ class FcEdge {
       startArrow: FcArrow.values.asNameMap()[j['startArrow']] ?? FcArrow.none,
       endArrow: FcArrow.values.asNameMap()[j['endArrow']] ?? FcArrow.arrow,
     );
+    readRouteJson(e, j);
+    return e;
   }
 }
 

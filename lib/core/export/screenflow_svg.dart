@@ -1,6 +1,5 @@
 import '../layout/diagram_geometry.dart' show roundedRoute;
 import '../layout/flowchart_geometry.dart' show fcArrowHead;
-import '../layout/ortho_route.dart';
 import '../layout/screenflow_geometry.dart';
 import '../layout/wireframe_render.dart';
 import '../models/flowchart_model.dart' show FcArrow;
@@ -8,6 +7,7 @@ import '../models/screenflow_model.dart';
 import '../models/wireframe_model.dart';
 import 'svg_util.dart';
 import 'wireframe_svg.dart';
+import '../layout/route_edit.dart' show routeLabelPoint;
 
 class _Theme {
   const _Theme({required this.canvas, required this.surface, required this.text, required this.muted, required this.tint});
@@ -87,7 +87,7 @@ String? exportScreenFlowSvg(ScreenFlowDiagram d,
     final r = routes[e.id];
     final cap = e.caption;
     if (r == null || cap.isEmpty) continue;
-    final (ax, ay) = routeLabelAnchor(r);
+    final (ax, ay) = routeLabelPoint(r, e);
     final label = svgWrap(cap, 220, 6.8, 1).first;
     final bw = label.length * 6.8 + 10;
     out.writeln('<rect x="${svgNum(ax - bw / 2)}" y="${svgNum(ay - 9)}" width="${svgNum(bw)}" height="18" rx="5" fill="${th.canvas}"/>');

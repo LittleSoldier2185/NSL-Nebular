@@ -148,6 +148,9 @@ class CanvasController extends ChangeNotifier {
   bool _panning = false;
 
   /// กำลังเลื่อนมุมมองอยู่ (ลากปุ่มกลาง / ลากพื้นว่าง) — ใช้เปลี่ยนเคอร์เซอร์เป็นรูปมือกำ
+  /// เส้น FK ที่กำลังลากช่วงกลาง (null = ไม่ได้ลาก) — สถานะชั่วคราวของแคนวาส ไม่ต้องวาดใหม่
+  String? bendRelation;
+
   bool get panning => _panning;
 
   void setPanning(bool v) {

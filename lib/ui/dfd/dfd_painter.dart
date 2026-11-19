@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../core/layout/diagram_geometry.dart' show roundedRoute;
+import '../../core/layout/ortho_route.dart' show RouteBox, RoutePort;
+import '../canvas/route_handles_painter.dart';
 import '../../core/models/color_utils.dart';
 import '../../core/layout/dfd_resize.dart';
 import '../../core/models/dfd_model.dart';
@@ -83,7 +85,9 @@ void paintDfd(
       ..strokeJoin = StrokeJoin.round
       ..strokeCap = StrokeCap.round;
     final path = Path();
-    for (final (op, pts) in roundedRoute(route, radius: 8)) {
+    // ตัวเส้นหยุดที่ฐานหัวลูกศร (ถ้าวาดถึงปลายหัว ปลายเส้นจะโผล่ทะลุหัว)
+    final body = dfdTrimRoute(route, start: f.bidirectional ? kDfdArrowSize - 1 : 0, end: kDfdArrowSize - 1);
+    for (final (op, pts) in roundedRoute(body, radius: 8)) {
       switch (op) {
         case 'M':
           path.moveTo(pts[0].$1, pts[0].$2);
@@ -146,7 +150,7 @@ void _paintBoundary(Canvas canvas, DfdBoundary b, {required bool selected}) {
 
 /// สี่เหลี่ยมของป้ายชื่อ flow (ใช้ทั้งวาดและตรวจการคลิก)
 Rect dfdLabelRect(DfdFlow f, List<DfdPoint> route) {
-  final (ax, ay) = dfdLabelAnchor(route);
+  final (ax, ay) = dfdFlowLabelCenter(f, route);
   final tp = _tp(f.label, kDfdLabelSize, C.text, weight: FontWeight.w500, maxWidth: 220);
   final w = tp.width + 8, h = tp.height + 4;
   return Rect.fromCenter(center: Offset(ax, ay), width: w, height: h);
@@ -157,7 +161,7 @@ void _arrow(Canvas canvas, DfdPoint from, DfdPoint to, Paint line) {
   final len = math.sqrt(dx * dx + dy * dy);
   if (len < 0.001) return;
   final ux = dx / len, uy = dy / len;
-  const size = 10.0;
+  const size = kDfdArrowSize;
   final base = Offset(to.$1 - ux * size, to.$2 - uy * size);
   final nx = -uy, ny = ux;
   final path = Path()
@@ -288,9 +292,14 @@ class DfdScreenPainter extends CustomPainter {
     this.linkCursor,
     this.marquee,
     this.selectedBoundary,
+    this.dropNode,
+    this.dropPort,
     required this.repaint,
   }) : super(repaint: repaint);
 
+  /// กล่อง/จุดต่อที่ปลายเส้นที่กำลังลากจะไปวาง (null = ไม่ได้ลากปลายเส้น)
+  final String? dropNode;
+  final RoutePort? dropPort;
   final DfdDiagram diagram;
   final Offset offset;
   final double scale;
@@ -339,6 +348,12 @@ class DfdScreenPainter extends CustomPainter {
         }
       }
     }
+    // จุดจับของเส้นที่เลือก + กล่องที่ปลายเส้นกำลังจะไปวาง
+    final sf = selectedFlow == null ? null : diagram.flowById(selectedFlow!);
+    final sr = sf == null ? null : dfdRoutes(diagram)[sf.id];
+    if (sf != null && sr != null) paintRouteHandles(canvas, sr, Color(sf.color ?? C.primary.toARGB32()), scale);
+    final dn = dropNode == null ? null : diagram.nodeById(dropNode!);
+    if (dn != null) paintRouteDrop(canvas, RouteBox(dn.id, dn.x, dn.y, dn.w, dn.h, inset: dfdPortInset(dn.kind)), dropPort, scale);
     final src = linkSource == null ? null : diagram.nodeById(linkSource!);
     if (src != null && linkCursor != null) {
       canvas.drawLine(

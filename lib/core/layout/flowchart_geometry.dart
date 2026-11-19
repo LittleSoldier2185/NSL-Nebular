@@ -428,7 +428,7 @@ Map<String, List<RoutePoint>> fcRoutes(FlowchartDiagram d) {
     boxes.putIfAbsent(n.id, () => RouteBox(n.id, n.x, n.y, n.w, n.h));
     byId.putIfAbsent(n.id, () => n);
   }
-  final links = [for (final e in d.edges) if (e.fromId != e.toId) RouteLink(e.id, e.fromId, e.toId)];
+  final links = [for (final e in d.edges) if (e.fromId != e.toId) RouteLink(e.id, e.fromId, e.toId, exit: e.exit, entry: e.entry, hints: e.hints)];
   final raw = orthogonalRoutes(boxes, links, gutter: 24, slotGap: 16, preferVertical: true);
   final out = <String, List<RoutePoint>>{};
   for (final e in d.edges) {

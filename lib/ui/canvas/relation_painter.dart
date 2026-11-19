@@ -18,8 +18,12 @@ class RelationPainter extends CustomPainter {
     this.flow = false,
     this.flowPhase,
     this.flowAll = false,
+    this.handleScale = 0,
     super.repaint,
   });
+
+  /// > 0 = ซูมปัจจุบัน : วาดจุดจับลากช่วงกลางของเส้นที่เลือก ([focusRelationId]) ขนาดคงที่บนจอ
+  final double handleScale;
 
   /// วาดเครื่องหมายทิศทางข้อมูล (วงกลมลูกศร) กลางเส้นทุกเส้น
   final bool flow;
@@ -92,6 +96,20 @@ class RelationPainter extends CustomPainter {
       }
       final end = route.last;
       _parentEnd(canvas, paint, end.$1, end.$2, g.d1, g.mandatory, crowded: (slots[r.id]?.count ?? 1) > 1);
+      if (focused && handleScale > 0) {
+        final h = relationBendHandleOf(route);
+        if (h != null) {
+          canvas.drawCircle(Offset(h.$1, h.$2), 5.5 / handleScale, Paint()..color = C.surface);
+          canvas.drawCircle(
+            Offset(h.$1, h.$2),
+            5.5 / handleScale,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.8 / handleScale
+              ..color = lineColor,
+          );
+        }
+      }
     }
   }
 

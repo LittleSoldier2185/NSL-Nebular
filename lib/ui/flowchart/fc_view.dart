@@ -21,6 +21,7 @@ import 'fc_actions.dart';
 import 'fc_minimap.dart';
 import 'fc_painter.dart';
 import '../note_pins.dart';
+import '../../core/layout/route_edit.dart' show routeLabelPoint;
 
 /// รูปทรงในแถบเครื่องมือ/คลังสัญลักษณ์ ตามลำดับที่แสดง
 const List<FcShape> kFcToolShapes = [
@@ -101,7 +102,7 @@ class FlowchartCanvas extends StatefulWidget {
   State<FlowchartCanvas> createState() => _FlowchartCanvasState();
 }
 
-enum _Drag { none, move, marquee, pan, resize, link }
+enum _Drag { none, move, marquee, pan, resize, link, edgeHandle, edgeLabel }
 
 class _FlowchartCanvasState extends State<FlowchartCanvas> {
   _Drag _drag = _Drag.none;
@@ -114,6 +115,7 @@ class _FlowchartCanvasState extends State<FlowchartCanvas> {
 
   /// ต้นทางของเส้นที่กำลังลากจากจุดต่อเส้น (null = ไม่ได้ลาก)
   String? _dragLinkFrom;
+  String? _labelEdge; // เส้นที่กำลังลากป้ายชื่อ
   DateTime _lastTap = DateTime.fromMillisecondsSinceEpoch(0);
   String? _lastTapId;
   Set<String> _marqueeBase = const {};
@@ -274,6 +276,9 @@ class _FlowchartCanvasState extends State<FlowchartCanvas> {
             () => f.updateEdge(e.id, (x) => x.dash = x.dash == FcDash.dashed ? FcDash.solid : FcDash.dashed),
             checked: e.dash == FcDash.dashed ? true : null),
         MenuSpec(tr('สีเส้น…'), Icons.colorize_rounded, () => a.pickEdgeColor(e)),
+        MenuSpec(tr('รีเซ็ตเส้น (จัดอัตโนมัติ)'), Icons.timeline_rounded, () => f.resetEdgeRoute(e.id), enabled: e.hasManualRoute),
+        MenuSpec(tr('ย้ายป้ายกลับที่เดิม'), Icons.label_outline_rounded, () => f.resetEdgeLabelPosition(e.id),
+            enabled: e.labelDx != 0 || e.labelDy != 0),
         null,
         MenuSpec(tr('ลบเส้นเชื่อม'), Icons.delete_outline, f.deleteSelection, shortcut: 'Del', danger: true),
       ]);
@@ -315,6 +320,22 @@ class _FlowchartCanvasState extends State<FlowchartCanvas> {
       return;
     }
     final world = f.toWorld(s.localPosition);
+    // จุดจับของเส้นที่เลือก (ปลาย/กลางช่วง) และป้ายชื่อของเส้นนั้น — มาก่อนจุดต่อเส้นของสัญลักษณ์
+    final eh = f.edgeHandleAt(world);
+    if (eh != null) {
+      f.beginEdgeHandle(eh);
+      _hoverId.value = null;
+      _drag = _Drag.edgeHandle;
+      return;
+    }
+    final se = f.selectedEdge;
+    final sr = se == null ? null : fcRoutes(f.diagram)[se.id];
+    if (se != null && sr != null && fcLabelRect(se, sr)?.contains(world) == true) {
+      _labelEdge = se.id;
+      f.beginEdgeLabelDrag();
+      _drag = _Drag.edgeLabel;
+      return;
+    }
     final link = _linkHandleAt(f, world);
     if (link != null) {
       _hoverId.value = null;
@@ -366,6 +387,11 @@ class _FlowchartCanvasState extends State<FlowchartCanvas> {
         });
       case _Drag.link:
         _cursor.value = f.toWorld(u.localPosition);
+      case _Drag.edgeHandle:
+        f.edgeHandleTo(f.toWorld(u.localPosition), grid: grid);
+      case _Drag.edgeLabel:
+        final id = _labelEdge;
+        if (id != null) f.edgeLabelDragBy(id, u.delta.dx / f.scale, u.delta.dy / f.scale);
       case _Drag.none:
         break;
     }
@@ -395,6 +421,9 @@ class _FlowchartCanvasState extends State<FlowchartCanvas> {
     if (_drag == _Drag.move) f.endMove();
     if (_drag == _Drag.resize) f.endResize();
     if (_drag == _Drag.link) _finishLink(f);
+    if (_drag == _Drag.edgeHandle) f.endEdgeHandle();
+    if (_drag == _Drag.edgeLabel) f.endEdgeLabelDrag();
+    _labelEdge = null;
     setState(() {
       _drag = _Drag.none;
       _marqueeStart = null;
@@ -469,6 +498,8 @@ class _FlowchartCanvasState extends State<FlowchartCanvas> {
                       scale: f.scale,
                       selectedNodes: f.selectedNodeIds,
                       selectedEdge: f.selectedEdgeId,
+                      dropNode: f.dropNodeId,
+                      dropPort: f.dropPort,
                       linkSource: f.linkSource ?? _dragLinkFrom,
                       linkCursor: _cursor.value,
                       marquee: marquee,
@@ -592,7 +623,7 @@ class _InlineEditorState extends State<_InlineEditor> {
       final e = f.diagram.edgeById(t.id);
       final r = e == null ? null : fcRoutes(f.diagram)[e.id];
       if (r == null) return const SizedBox.shrink();
-      final (ax, ay) = routeLabelAnchor(r);
+      final (ax, ay) = routeLabelPoint(r, e!);
       rect = Rect.fromCenter(center: Offset(ax, ay), width: 160, height: 26);
       fontSize = kFcLabelSize;
     } else {

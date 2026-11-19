@@ -29,7 +29,7 @@ class DfdCanvas extends StatefulWidget {
   State<DfdCanvas> createState() => _DfdCanvasState();
 }
 
-enum _Drag { none, move, marquee, pan, resize, boundary }
+enum _Drag { none, move, marquee, pan, resize, boundary, flowHandle, label }
 
 class _DfdCanvasState extends State<DfdCanvas> {
   _Drag _drag = _Drag.none;
@@ -37,6 +37,7 @@ class _DfdCanvasState extends State<DfdCanvas> {
   final ValueNotifier<Offset?> _cursor = ValueNotifier(null); // พิกัดแผนภาพ ใช้ทำเส้นพรีวิวตอนต่อ flow
   DateTime _lastTap = DateTime.fromMillisecondsSinceEpoch(0);
   String? _lastTapId;
+  String? _labelFlow; // เส้นที่กำลังลากป้ายชื่อ
 
   @override
   void dispose() {
@@ -164,6 +165,9 @@ class _DfdCanvasState extends State<DfdCanvas> {
         MenuSpec(tr('ข้อมูลไหลสองทาง'), Icons.sync_alt_rounded, () => d.setFlowBidirectional(f.id, !f.bidirectional),
             checked: f.bidirectional ? true : null),
         MenuSpec(tr('สีเส้น…'), Icons.colorize_rounded, () => actions.pickFlowColor(f)),
+        MenuSpec(tr('รีเซ็ตเส้น (จัดอัตโนมัติ)'), Icons.timeline_rounded, () => d.resetEdgeRoute(f.id), enabled: f.hasManualRoute),
+        MenuSpec(tr('ย้ายป้ายกลับที่เดิม'), Icons.label_outline_rounded, () => d.resetEdgeLabelPosition(f.id),
+            enabled: f.labelDx != 0 || f.labelDy != 0),
         null,
         MenuSpec(tr('ลบเส้นข้อมูล'), Icons.delete_outline, d.deleteSelection, shortcut: 'Del', danger: true),
       ]);
@@ -211,6 +215,23 @@ class _DfdCanvasState extends State<DfdCanvas> {
       _drag = _Drag.resize;
       return;
     }
+    // จุดจับของเส้นที่เลือก (ปลาย/กลางช่วง) และป้ายชื่อของเส้นนั้น
+    final fh = d.edgeHandleAt(world);
+    if (fh != null) {
+      d.beginEdgeHandle(fh);
+      _drag = _Drag.flowHandle;
+      return;
+    }
+    final sel = d.selectedFlow;
+    if (sel != null && sel.label.trim().isNotEmpty) {
+      final r = dfdRoutes(d.diagram)[sel.id];
+      if (r != null && dfdLabelRect(sel, r).contains(world)) {
+        _labelFlow = sel.id;
+        d.beginEdgeLabelDrag();
+        _drag = _Drag.label;
+        return;
+      }
+    }
     final hit = _hit(d, world);
     if (hit.node == null && hit.flow == null && hit.boundary != null) {
       d.selectBoundary(hit.boundary!.id);
@@ -243,6 +264,11 @@ class _DfdCanvasState extends State<DfdCanvas> {
         d.moveBoundaryBy(u.delta.dx / d.scale, u.delta.dy / d.scale, grid: context.read<AppSettings>().snapToGrid ? kGridSize : null);
       case _Drag.resize:
         d.resizeBy(u.delta.dx / d.scale, u.delta.dy / d.scale, grid: context.read<AppSettings>().snapToGrid ? kGridSize : null);
+      case _Drag.flowHandle:
+        d.edgeHandleTo(d.toWorld(u.localPosition), grid: context.read<AppSettings>().snapToGrid ? kGridSize : null);
+      case _Drag.label:
+        final id = _labelFlow;
+        if (id != null) d.edgeLabelDragBy(id, u.delta.dx / d.scale, u.delta.dy / d.scale);
       case _Drag.marquee:
         setState(() => _marqueeEnd = u.localPosition);
         final a = d.toWorld(_marqueeStart!), b = d.toWorld(_marqueeEnd!);
@@ -262,6 +288,9 @@ class _DfdCanvasState extends State<DfdCanvas> {
     if (_drag == _Drag.move) d.endMove();
     if (_drag == _Drag.resize) d.endResize();
     if (_drag == _Drag.boundary) d.endBoundaryMove();
+    if (_drag == _Drag.flowHandle) d.endEdgeHandle();
+    if (_drag == _Drag.label) d.endEdgeLabelDrag();
+    _labelFlow = null;
     setState(() {
       _drag = _Drag.none;
       _marqueeStart = null;
@@ -322,6 +351,8 @@ class _DfdCanvasState extends State<DfdCanvas> {
                     scale: d.scale,
                     selectedNodes: d.selectedNodeIds,
                     selectedFlow: d.selectedFlowId,
+                    dropNode: d.dropNodeId,
+                    dropPort: d.dropPort,
                     selectedBoundary: d.selectedBoundaryId,
                     linkSource: d.linkSource,
                     linkCursor: _cursor.value,

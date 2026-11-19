@@ -14,7 +14,10 @@ import '../core/models/flowchart_model.dart';
 import '../core/models/workspace.dart';
 import '../core/validate/flowchart_validator.dart' show fcShapeLabel;
 import 'diagram_viewport.dart';
+import '../core/layout/ortho_route.dart' show RouteBox, RoutePoint;
+import '../core/layout/route_edit.dart' show RouteEditable;
 import 'doc_controller.dart';
+import 'route_editing.dart';
 import 'workspace_controller.dart';
 
 /// เครื่องมือของแท็บ Flowchart: เลือก / วางสัญลักษณ์ ([FlowchartController.toolShape]) / ลากเส้นเชื่อม
@@ -25,7 +28,7 @@ enum FcAlignKind { left, centerH, right, top, middle, bottom }
 
 /// controller ของเอกสาร Flowchart หนึ่งชิ้น: เนื้อหา + ประวัติ undo/redo ของเอกสารนี้ และสถานะหน้าจอ
 /// (เครื่องมือ การเลือก ข้อความที่กำลังแก้ มุมมอง) — สถานะหน้าจอแยกต่อแท็บ ไม่ถูกบันทึกในไฟล์
-class FlowchartController extends DocController with DiagramViewport {
+class FlowchartController extends DocController with DiagramViewport, RouteEditing {
   FlowchartController.forDoc(super.doc, this.workspace) : assert(doc.content is FlowchartDiagram);
 
   /// ตัวแทนตอนไม่มีเอกสาร Flowchart ที่ใช้งานอยู่: แผนภาพว่างที่ไม่อยู่ในโปรเจกต์ แก้ไขไม่ได้
@@ -62,6 +65,35 @@ class FlowchartController extends DocController with DiagramViewport {
     markLive();
     notifyListeners();
   }
+
+  // ---------- แก้เส้นด้วยมือ (แบบ draw.io) : ตรรกะลากอยู่ใน [RouteEditing] ----------
+
+  @override
+  RouteEditable? routeEdgeById(String id) => diagram.edgeById(id);
+
+  @override
+  RouteEditable? get routeSelectedEdge => selectedEdge;
+
+  @override
+  String routeEdgeIdOf(RouteEditable e) => (e as FcEdge).id;
+
+  @override
+  Map<String, List<RoutePoint>> routeRoutes() => fcRoutes(diagram);
+
+  @override
+  String? routeNodeAt(double x, double y) => fcNodeAt(diagram, x, y)?.id;
+
+  @override
+  RouteBox? routeBoxOf(String id) {
+    final n = diagram.nodeById(id);
+    return n == null ? null : RouteBox(n.id, n.x, n.y, n.w, n.h);
+  }
+
+  @override
+  void routeLive(void Function() change) => _live((_) => change());
+
+  @override
+  void routeEditEdge(String id, void Function(RouteEditable e) change) => updateEdge(id, change);
 
   @override
   void beginGesture() {
@@ -686,11 +718,19 @@ class FlowchartController extends DocController with DiagramViewport {
     if (!active || diagram.nodes.isEmpty) return false;
     final pos = fcAutoLayout(diagram, kind: kind);
     final moved = diagram.nodes.any((n) {
-      final p = pos[n.id];
-      return p != null && (p.x != n.x || p.y != n.y);
-    });
+          final p = pos[n.id];
+          return p != null && (p.x != n.x || p.y != n.y);
+        }) ||
+        diagram.edges.any((e) => e.hasManualRoute || e.labelDx != 0 || e.labelDy != 0);
     if (!moved) return false;
     _edit((d) {
+      // จัดวางใหม่ = เส้นที่เคยลากเองใช้ไม่ได้แล้ว กลับเป็นอัตโนมัติ
+      for (final e in d.edges) {
+        e
+          ..resetRoute()
+          ..labelDx = 0
+          ..labelDy = 0;
+      }
       for (final n in d.nodes) {
         final p = pos[n.id];
         if (p == null) continue;

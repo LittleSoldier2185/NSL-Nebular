@@ -17,6 +17,8 @@ import '../shortcuts.dart' show Cmd;
 import '../theme.dart';
 import 'sf_actions.dart';
 import 'sf_painter.dart';
+import '../../core/layout/route_edit.dart' show routeLabelPoint;
+import '../../core/layout/diagram_geometry.dart' show kGridSize;
 
 IconData sfKindIcon(SfKind k) => switch (k) {
       SfKind.start => Icons.play_circle_outline_rounded,
@@ -68,6 +70,49 @@ class _ScreenFlowCanvasState extends BoxCanvasState<ScreenFlowCanvas, ScreenFlow
 
   @override
   bool isSelectTool(ScreenFlowController c) => c.tool == SfTool.select;
+
+  bool _handleDrag = false; // กำลังลากจุดจับของเส้น (false = ลากป้าย)
+  String? _labelEdge;
+
+  @override
+  bool edgeDragStart(ScreenFlowController c, Offset world) {
+    final h = c.edgeHandleAt(world);
+    if (h != null) {
+      c.beginEdgeHandle(h);
+      _handleDrag = true;
+      _labelEdge = null;
+      return true;
+    }
+    final e = c.selectedEdge;
+    final r = e == null ? null : sfRoutes(c.diagram)[e.id];
+    if (e != null && r != null && sfLabelRect(e, r)?.contains(world) == true) {
+      c.beginEdgeLabelDrag();
+      _handleDrag = false;
+      _labelEdge = e.id;
+      return true;
+    }
+    return false;
+  }
+
+  @override
+  void edgeDragUpdate(ScreenFlowController c, DragUpdateDetails u) {
+    if (_handleDrag) {
+      c.edgeHandleTo(c.toWorld(u.localPosition), grid: snap ? kGridSize : null);
+    } else if (_labelEdge != null) {
+      c.edgeLabelDragBy(_labelEdge!, u.delta.dx / c.scale, u.delta.dy / c.scale);
+    }
+  }
+
+  @override
+  void edgeDragEnd(ScreenFlowController c) {
+    if (_handleDrag) {
+      c.endEdgeHandle();
+    } else if (_labelEdge != null) {
+      c.endEdgeLabelDrag();
+    }
+    _handleDrag = false;
+    _labelEdge = null;
+  }
 
   @override
   void resetTool(ScreenFlowController c) => c.setTool(SfTool.select);
@@ -161,6 +206,9 @@ class _ScreenFlowCanvasState extends BoxCanvasState<ScreenFlowCanvas, ScreenFlow
       showContextMenu(context, t.globalPosition, [
         MenuSpec(tr('แก้ป้ายเส้น'), Icons.edit_outlined, () => c.beginEditEdge(e.id), shortcut: 'F2'),
         MenuSpec(tr('สลับทิศทาง'), Icons.swap_horiz_rounded, () => c.reverseEdge(e.id)),
+        MenuSpec(tr('รีเซ็ตเส้น (จัดอัตโนมัติ)'), Icons.timeline_rounded, () => c.resetEdgeRoute(e.id), enabled: e.hasManualRoute),
+        MenuSpec(tr('ย้ายป้ายกลับที่เดิม'), Icons.label_outline_rounded, () => c.resetEdgeLabelPosition(e.id),
+            enabled: e.labelDx != 0 || e.labelDy != 0),
         null,
         MenuSpec(tr('ลบเส้นการเปลี่ยนหน้า'), Icons.delete_outline, c.deleteSelection, shortcut: 'Del', danger: true),
       ]);
@@ -195,6 +243,8 @@ class _ScreenFlowCanvasState extends BoxCanvasState<ScreenFlowCanvas, ScreenFlow
       wireframeOf: (id) => w.documentById(id)?.wireframe,
       selectedNodes: c.selectedIds,
       selectedEdge: c.selectedEdgeId,
+      dropNode: c.dropNodeId,
+      dropPort: c.dropPort,
       linkSource: c.linkSource,
       linkCursor: cursor,
       marquee: marquee,
@@ -214,9 +264,9 @@ class _ScreenFlowCanvasState extends BoxCanvasState<ScreenFlowCanvas, ScreenFlow
         final e = c.diagram.edgeById(editing.id);
         final r = e == null ? null : sfRoutes(c.diagram)[e.id];
         if (r != null) {
-          final (ax, ay) = routeLabelAnchor(r);
+          final (ax, ay) = routeLabelPoint(r, e!);
           world = Rect.fromCenter(center: Offset(ax, ay), width: 180, height: 26);
-          initial = e!.label;
+          initial = e.label;
         }
       } else {
         final n = c.diagram.nodeById(editing.id);

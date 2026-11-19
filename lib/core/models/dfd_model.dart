@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../layout/ortho_route.dart';
+import '../layout/route_edit.dart';
 import 'color_utils.dart';
 import 'workspace.dart';
 import 'api_ref.dart';
@@ -124,7 +125,7 @@ class DfdNode {
   }
 }
 
-class DfdFlow {
+class DfdFlow implements RouteEditable {
   DfdFlow({
     required this.id,
     required this.fromId,
@@ -132,16 +133,44 @@ class DfdFlow {
     this.label = '',
     this.bidirectional = false,
     this.color,
+    this.exit,
+    this.entry,
+    this.hints,
+    this.labelDx = 0,
+    this.labelDy = 0,
   });
 
   final String id;
+  @override
   String fromId;
+  @override
   String toId;
   String label;
 
   /// ลูกศรทั้งสองปลาย (ข้อมูลไหลสองทาง)
   bool bidirectional;
   int? color;
+
+  /// จุดต่อที่ผู้ใช้ลากกำหนดเองบนกล่องต้นทาง/ปลายทาง (null = จัดอัตโนมัติ)
+  @override
+  RoutePort? exit, entry;
+
+  /// พิกัดของช่วงกลางทุกช่วงที่ผู้ใช้ลากเอง (null/ว่าง = เส้นอัตโนมัติ) — ดู [routeFromHints]
+  @override
+  List<double>? hints;
+
+  /// ระยะที่ผู้ใช้ลากป้ายชื่อออกจากตำแหน่งปกติ (กลางช่วงที่ยาวที่สุด)
+  @override
+  double labelDx, labelDy;
+
+  bool get hasManualRoute => exit != null || entry != null || (hints?.isNotEmpty ?? false);
+
+  /// ล้างเส้นที่ลากเอง (กลับเป็นอัตโนมัติ) ; ตำแหน่งป้ายไม่แตะ
+  void resetRoute() {
+    exit = null;
+    entry = null;
+    hints = null;
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -150,12 +179,17 @@ class DfdFlow {
         'label': label,
         if (bidirectional) 'both': true,
         if (color != null) 'color': color,
+        if (exit != null) 'exit': routePortToJson(exit!),
+        if (entry != null) 'entry': routePortToJson(entry!),
+        if (hints != null && hints!.isNotEmpty) 'bends': hints,
+        if (labelDx != 0 || labelDy != 0) 'lbl': [labelDx, labelDy],
       };
 
   static DfdFlow? tryFromJson(Object? j) {
     if (j is! Map) return null;
     final id = j['id'], from = j['from'], to = j['to'];
     if (id is! String || id.isEmpty || from is! String || to is! String) return null;
+    final lbl = j['lbl'] is List ? j['lbl'] as List : const [];
     return DfdFlow(
       id: id,
       fromId: from,
@@ -163,6 +197,11 @@ class DfdFlow {
       label: j['label'] is String ? j['label'] as String : '',
       bidirectional: j['both'] == true,
       color: parseArgb(j['color']),
+      exit: routePortFromJson(j['exit']),
+      entry: routePortFromJson(j['entry']),
+      hints: routeHintsFromJson(j['bends']),
+      labelDx: lbl.length == 2 && lbl[0] is num && (lbl[0] as num).isFinite ? (lbl[0] as num).toDouble() : 0,
+      labelDy: lbl.length == 2 && lbl[1] is num && (lbl[1] as num).isFinite ? (lbl[1] as num).toDouble() : 0,
     );
   }
 }
@@ -302,8 +341,11 @@ typedef DfdPoint = (double x, double y);
 /// ระยะห่างขั้นต่ำระหว่างขอบสองกล่องที่จะถือว่า "อยู่คนละฝั่ง" (พอให้มีช่องหักมุมและหัวลูกศร)
 const double kDfdGutter = 28;
 
+/// ระยะจากมุมที่เส้นไม่ควรต่อ : process มุมมนรัศมี 16 ; ชนิดอื่นเว้นเล็กน้อย
+double dfdPortInset(DfdKind k) => k == DfdKind.process ? 16 : 8;
+
 /// ระยะห่างระหว่างเส้นที่ออก/เข้าด้านเดียวกันของกล่องเดียวกัน
-const double kDfdSlotGap = 18;
+const double kDfdSlotGap = 22;
 
 /// เส้นทางของ flow ทุกเส้น (key = id) แบบหักมุมฉาก: ออกด้านที่หันหาอีกกล่อง กระจายช่องตามด้านของกล่อง
 /// เส้นที่ออก/เข้าด้านเดียวกันของกล่องเดียวกันถูกเรียงเป็นช่องคนละระดับ จึงไม่ซ้อนกัน
@@ -311,18 +353,55 @@ const double kDfdSlotGap = 18;
 Map<String, List<DfdPoint>> dfdRoutes(DfdDiagram d) {
   final boxes = <String, RouteBox>{};
   for (final n in d.nodes) {
-    boxes.putIfAbsent(n.id, () => RouteBox(n.id, n.x, n.y, n.w, n.h));
+    boxes.putIfAbsent(n.id, () => RouteBox(n.id, n.x, n.y, n.w, n.h, inset: dfdPortInset(n.kind)));
   }
   return orthogonalRoutes(
     boxes,
-    [for (final f in d.flows) RouteLink(f.id, f.fromId, f.toId)],
+    [for (final f in d.flows) RouteLink(f.id, f.fromId, f.toId, exit: f.exit, entry: f.entry, hints: f.hints)],
     gutter: kDfdGutter,
     slotGap: kDfdSlotGap,
+    avoidBoxes: true,
   );
+}
+
+/// ขนาดหัวลูกศร (ความยาวจากฐานถึงปลาย)
+const double kDfdArrowSize = 10;
+
+/// เส้นที่ตัดปลายออกด้านละ [start]/[end] px (ตามแนวเส้น) — ใช้วาดตัวเส้นให้หยุดที่ฐานหัวลูกศร ไม่ให้ปลายเส้นโผล่ทะลุหัว
+List<DfdPoint> dfdTrimRoute(List<DfdPoint> pts, {double start = 0, double end = 0}) {
+  var r = [...pts];
+  List<DfdPoint> cut(List<DfdPoint> p, double d) {
+    var left = d;
+    while (p.length > 2 && left > 0) {
+      final a = p[p.length - 2], b = p.last;
+      final len = (b.$1 - a.$1).abs() + (b.$2 - a.$2).abs();
+      if (len > left) break;
+      left -= len;
+      p = p.sublist(0, p.length - 1);
+    }
+    final a = p[p.length - 2], b = p.last;
+    final len = (b.$1 - a.$1).abs() + (b.$2 - a.$2).abs();
+    if (len > 0.001 && left > 0) {
+      final k = math.min(left, len - 0.001) / len;
+      p = [...p.sublist(0, p.length - 1), (b.$1 - (b.$1 - a.$1) * k, b.$2 - (b.$2 - a.$2) * k)];
+    }
+    return p;
+  }
+
+  if (r.length < 2) return r;
+  if (end > 0) r = cut(r, end);
+  if (start > 0) r = cut(r.reversed.toList(), start).reversed.toList();
+  return r;
 }
 
 /// จุดวางป้ายชื่อ: กึ่งกลางช่วงที่ยาวที่สุดของเส้น
 DfdPoint dfdLabelAnchor(List<DfdPoint> pts) => routeLabelAnchor(pts);
+
+/// จุดกึ่งกลางป้ายชื่อของ [f] จริง = จุดปกติ + ระยะที่ผู้ใช้ลากป้ายไป
+DfdPoint dfdFlowLabelCenter(DfdFlow f, List<DfdPoint> pts) {
+  final (ax, ay) = routeLabelAnchor(pts);
+  return (ax + f.labelDx, ay + f.labelDy);
+}
 
 /// ระยะจากจุดถึงเส้นทาง (ช่วงสั้นสุด)
 double dfdDistanceToRoute(List<DfdPoint> pts, double x, double y) => distanceToRoute(pts, x, y);
