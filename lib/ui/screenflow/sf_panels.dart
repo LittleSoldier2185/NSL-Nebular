@@ -411,8 +411,8 @@ class _Overview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.read<ScreenFlowController>();
-    final w = context.read<WorkspaceController>();
+    final f = context.watch<ScreenFlowController>();
+    final w = context.watch<WorkspaceController>();
     final d = f.diagram;
     final issues = validateScreenFlow(d, workspace: w.workspace);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

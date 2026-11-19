@@ -86,6 +86,50 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('ตั้งค่าหน้าจอกดซ้ำได้หลายครั้ง (แผงวาดใหม่ทุกครั้ง): รูปแบบ ร่าง↔เรียบร้อย, สีเน้น, ขนาดหน้าจอ, กว้าง', (tester) async {
+    await boot(tester);
+    Future<void> tap(Finder x) async {
+      await tester.ensureVisible(x);
+      await tester.pumpAndSettle();
+      await tester.tap(x);
+      await tester.pumpAndSettle();
+    }
+
+    final style = find.byKey(const ValueKey('wf-panel-style'));
+    for (final s in [WfStyle.clean, WfStyle.sketch, WfStyle.clean, WfStyle.sketch]) {
+      await tap(find.descendant(of: style, matching: find.text(s == WfStyle.sketch ? 'ร่าง' : 'เรียบร้อย')));
+      expect(f.diagram.style, s);
+      expect(tester.widget<SegmentedButton<WfStyle>>(style).selected, {s}, reason: 'ปุ่มที่เลือกบนจอตรงกับค่าจริง');
+    }
+
+    final swatches = find.descendant(of: find.byType(WireframeRightPanel), matching: find.byWidgetPredicate((w) => w.key is ValueKey && '${(w.key as ValueKey).value}'.startsWith('wf-accent-')));
+    expect(swatches, findsWidgets);
+    final keys = [for (final e in tester.widgetList(swatches)) (e.key as ValueKey).value as String];
+    final picks = keys.where((k) => RegExp(r'^wf-accent-\d+$').hasMatch(k)).take(3).toList();
+    expect(picks.length, greaterThanOrEqualTo(2));
+    final seen = <int>{};
+    for (final k in [...picks, picks.first]) {
+      await tap(find.byKey(ValueKey(k)));
+      seen.add(f.diagram.accent);
+    }
+    expect(seen.length, picks.length, reason: 'กดสีต่าง ๆ ติดกันแล้วเปลี่ยนทุกครั้ง');
+
+    await tap(find.byKey(const ValueKey('wf-fold-size-head')));
+    for (final dev in [WfDevice.mobile, WfDevice.desktop, WfDevice.mobile]) {
+      f.setDevice(dev); // ค่าเปลี่ยนจากที่อื่น (เช่น undo) ช่องในแผงต้องตามด้วย
+      await tester.pumpAndSettle();
+      expect(find.byKey(ValueKey('wf-frame-w-${dev.width.round()}')), findsOneWidget);
+    }
+    for (final v in ['1000', '1100']) {
+      final field = find.descendant(of: find.byKey(ValueKey('wf-frame-w-${f.diagram.width.round()}')), matching: find.byType(TextField));
+      await tester.enterText(field, v);
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      expect(f.diagram.width, double.parse(v));
+    }
+    await tap(find.byKey(const ValueKey('wf-fold-size-head')));
+  });
+
   testWidgets('ภาษาอังกฤษ: หัวส่วนและข้อความว่างแปลครบ', (tester) async {
     await boot(tester, lang: Lang.en);
     final thai = RegExp(r'[฀-๿]');

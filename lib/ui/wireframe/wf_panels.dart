@@ -778,8 +778,8 @@ class _PageProps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.read<WireframeController>();
-    final w = context.read<WorkspaceController>();
+    final f = context.watch<WireframeController>();
+    final w = context.watch<WorkspaceController>();
     final a = WireframeActions(context);
     final d = f.diagram;
     final issues = f.issues;
