@@ -197,13 +197,8 @@ class _Row extends StatelessWidget {
     final picked =
         c.selectedColumnId == column.id && c.selectedTableId == table.id;
 
-    final (flag, bg, fg) = column.isPrimaryKey
-        ? ('PK', C.pkBg, C.pkText)
-        : isFk
-        ? ('FK', C.fkChip, C.primaryDark)
-        : column.unique
-        ? ('UQ', C.uqBg, C.uqText)
-        : ('', Colors.transparent, Colors.transparent);
+    final flags = columnFlags(column, isFk: isFk);
+    final (flag, bg, fg) = flags.isEmpty ? ('', Colors.transparent, Colors.transparent) : _flagStyle(flags.first);
 
     return MouseRegion(
       cursor: cv.tool == CanvasTool.fk
@@ -251,6 +246,13 @@ class _Row extends StatelessWidget {
                   style: tableFont(const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500), table.fontFamily),
                 ),
               ),
+              // ป้ายรอง (เช่น UQ ของ FK แบบ 1:1, FK ของ PK ในตารางเชื่อม) อยู่หน้าชนิดข้อมูล
+              for (final f in flags.skip(1))
+                Padding(
+                  padding: const EdgeInsets.only(right: kFlagGap),
+                  child: _FlagChip(f, key: ValueKey('col-flag-${column.id}-$f')),
+                ),
+              if (flags.length > 1) const SizedBox(width: 8 - kFlagGap),
               Text(
                 typeLabel(column),
                 // ชนิดข้อมูลใช้ฟอนต์ที่ผู้ใช้เลือกด้วย (ไม่ได้เลือก = ฟอนต์เว้นระยะเท่ากัน)
@@ -295,6 +297,30 @@ class _Row extends StatelessWidget {
     }
     c.selectTable(src.tableId, columnId: src.columnId);
     cv.setTool(CanvasTool.select);
+  }
+}
+
+/// สีพื้น/ตัวอักษรของป้ายคอลัมน์ ([columnFlags])
+(String, Color, Color) _flagStyle(String f) => switch (f) {
+      'PK' => (f, C.pkBg, C.pkText),
+      'FK' => (f, C.fkChip, C.primaryDark),
+      _ => (f, C.uqBg, C.uqText),
+    };
+
+class _FlagChip extends StatelessWidget {
+  const _FlagChip(this.flag, {super.key});
+  final String flag;
+
+  @override
+  Widget build(BuildContext context) {
+    final (_, bg, fg) = _flagStyle(flag);
+    return Container(
+      width: kFlagWidth,
+      padding: const EdgeInsets.symmetric(vertical: 1),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
+      alignment: Alignment.center,
+      child: Text(flag, style: monoStyle.copyWith(fontSize: 10, fontWeight: FontWeight.w700, color: fg)),
+    );
   }
 }
 

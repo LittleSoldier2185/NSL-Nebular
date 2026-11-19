@@ -366,6 +366,9 @@ void main() {
       expect(relationGeometry(p, p.relations.first)!.mandatory, false);
     });
 
+    // วงกลมฝั่งแม่ = วงกลมทั้งหมด − วงกลม "ศูนย์" ฝั่งลูก (มีเส้นละ 1 วงเสมอ)
+    int parentCircles(String svg, Project p) => RegExp('<circle').allMatches(svg).length - p.relations.length;
+
     int bars(String svg) => RegExp(r'<path d="M[\d.]+ [\d.-]+ L[\d.]+ [\d.-]+"/>').allMatches(svg).length;
 
     test('SVG: FK NOT NULL = ขีดคู่ไม่มีวงกลม ; FK NULL ได้ = ขีดเดียวกับวงกลม', () {
@@ -377,12 +380,12 @@ void main() {
         ..x = 500
         ..y = 300;
       final mandatory = exportSvg(p)!;
-      expect(mandatory, isNot(contains('<circle')));
+      expect(parentCircles(mandatory, p), 0);
       final barsMandatory = bars(mandatory);
 
       cl(p, 'to', 'o2').notNull = false;
       final optional = exportSvg(p)!;
-      expect(optional, contains('<circle'));
+      expect(parentCircles(optional, p), 1);
       expect(bars(optional), barsMandatory - 1); // ขีดคู่ -> ขีดเดียว
     });
 
@@ -398,7 +401,7 @@ void main() {
           id: 'r2', fromTableId: 'to', fromColumnId: 'o3', toTableId: 'tu', toColumnId: 'u1'));
       cl(p, 'to', 'o2').notNull = false;
       cl(p, 'to', 'o3').notNull = false;
-      expect(RegExp('<circle').allMatches(exportSvg(p)!).length, 2); // NULL ได้ทั้งสองเส้น = วงกลมสองวง
+      expect(parentCircles(exportSvg(p)!, p), 2); // NULL ได้ทั้งสองเส้น = วงกลมสองวง
     });
 
     test('FK NULL ได้ปนกับ NOT NULL ที่คอลัมน์แม่เดียวกัน: แต่ละเส้นแสดงตามของตัวเอง (วงกลมเฉพาะเส้นที่ NULL ได้)', () {
@@ -412,7 +415,7 @@ void main() {
       p.relations.add(RelationModel(
           id: 'r2', fromTableId: 'to', fromColumnId: 'o3', toTableId: 'tu', toColumnId: 'u1'));
       cl(p, 'to', 'o3').notNull = false; // o2 ยัง NOT NULL
-      expect(RegExp('<circle').allMatches(exportSvg(p)!).length, 1);
+      expect(parentCircles(exportSvg(p)!, p), 1);
     });
   });
 

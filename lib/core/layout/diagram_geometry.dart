@@ -16,6 +16,22 @@ const double kCardRowHeight = 28;
 bool isUniqueAlone(TableModel t, ColumnModel c) =>
     c.unique || (c.isPrimaryKey && t.columns.where((x) => x.isPrimaryKey).length == 1);
 
+/// ป้ายของคอลัมน์บนการ์ดตาราง (ลำดับ PK, FK, UQ) — ตัวแรกอยู่ช่องหน้าชื่อ ตัวที่เหลืออยู่หน้าชนิดข้อมูล
+/// คอลัมน์ที่เป็นหลายอย่างพร้อมกันต้องเห็นครบ: PK+FK (ตารางเชื่อม), FK+UQ (ความสัมพันธ์ 1:1)
+/// UQ ไม่แสดงคู่กับ PK เพราะ PK ไม่ซ้ำอยู่แล้ว
+List<String> columnFlags(ColumnModel c, {required bool isFk}) => [
+      if (c.isPrimaryKey) 'PK',
+      if (isFk) 'FK',
+      if (c.unique && !c.isPrimaryKey) 'UQ',
+    ];
+
+/// ความกว้างป้ายคอลัมน์ และระยะห่างระหว่างป้ายรองที่อยู่หน้าชนิดข้อมูล
+const double kFlagWidth = 24;
+const double kFlagGap = 4;
+
+/// ระยะจากขอบการ์ดถึงจุดกลางวงกลม "ศูนย์" ที่ปลายฝั่งลูก (ถัดจากตีนกาที่ยาว 14 / ขีดที่ 8)
+double childZeroOffset(bool oneToOne) => oneToOne ? 17 : 20;
+
 double tableHeight(TableModel t) => kCardHeaderHeight + kCardRowHeight * t.columns.length;
 
 /// จุดกึ่งกลางแนวตั้งของแถวคอลัมน์ที่ [index]
@@ -93,6 +109,10 @@ const double kRouteLaneGap = 12;
 
 /// แนวตั้งของสองเส้นที่ช่วง y ซ้อนกัน ต้องห่างกันอย่างน้อยเท่านี้ (น้อยกว่านี้ตามองเห็นเป็นเส้นหนาซ้อนกัน)
 const double kRouteMinSeparation = 7;
+
+/// เส้นแนวนอนสองเส้นที่อยู่ระดับเดียวกัน (ห่าง < [kRouteMinSeparation]) ต้องเว้นช่องในแนวนอนอย่างน้อยเท่านี้
+/// ไม่งั้นตาจะต่อเป็นเส้นเดียวกันแล้วอ่านว่าความสัมพันธ์ต่อผิดตาราง
+const double kRouteCollinearGap = 24;
 
 /// เส้นแนวตั้ง/แนวนอนต้องห่างจากขอบกรอบของกลุ่มอย่างน้อยเท่านี้ (ไม่วิ่งทับเส้นขอบประของกลุ่ม)
 const double kGroupEdgeClear = 9;
@@ -193,6 +213,9 @@ Map<String, List<RoutePoint>> relationRoutes(Project p) {
   // เส้นที่ผู้ใช้ลากช่วงกลางเอง : ใช้ x ที่กำหนดตรง ๆ (ไม่เลี่ยงสิ่งกีดขวาง ไม่เข้าเลน)
   final manual = {for (final r in p.relations) if (r.bendX != null) r.id: r.bendX!};
 
+  // ระยะเลื่อนระดับที่เส้นเข้าตารางแม่เพิ่มจากช่องปกติ (แก้เส้นแนวนอนที่ทับกัน — ดูด้านล่าง)
+  final endNudge = List<double>.filled(items.length, 0);
+
   List<RoutePoint> build(int i, double extraLane) {
     final it = items[i];
     final g = it.g;
@@ -208,7 +231,7 @@ Map<String, List<RoutePoint>> relationRoutes(Project p) {
     } else {
       pts = _gutterRoute(g, it.base + lane[i] + extraLane, boxes, ignore, edges);
     }
-    return _withEnd(pts, slots[it.id]?.dy ?? 0);
+    return _withEnd(pts, (slots[it.id]?.dy ?? 0) + endNudge[i]);
   }
 
   final routes = [for (var i = 0; i < items.length; i++) build(i, 0)];
@@ -246,6 +269,70 @@ Map<String, List<RoutePoint>> relationRoutes(Project p) {
       }
     }
     if (!changed) break;
+  }
+
+  // ---- เส้นแนวนอนที่ทับกัน: ตารางสองใบที่แถวอยู่ระดับเดียวกันพอดี (เช่นแถว id ของการ์ดที่วางเรียงกัน)
+  // เส้นที่เข้าตารางแม่ใบหนึ่งอาจวิ่งทับเส้นที่ออก/เข้าอีกใบในแนวเดียวกัน ตาจึงอ่านว่าต่อผิดตาราง
+  // -> เลื่อนระดับที่เส้นเข้าตารางแม่ (ช่วงสุดท้าย) ขึ้น/ลงภายในแถวของคอลัมน์แม่ให้พ้นกัน
+  bool hOverlap(List<RoutePoint> a, List<RoutePoint> b, {required bool lastOfB}) {
+    for (var u = lastOfB ? b.length - 1 : 1; u < b.length; u++) {
+      if ((b[u - 1].$2 - b[u].$2).abs() > 0.001) continue; // ไม่ใช่แนวนอน
+      final by = b[u].$2;
+      final b0 = math.min(b[u - 1].$1, b[u].$1), b1 = math.max(b[u - 1].$1, b[u].$1);
+      if (b1 - b0 < 2) continue;
+      for (var s = 1; s < a.length; s++) {
+        if ((a[s - 1].$2 - a[s].$2).abs() > 0.001) continue;
+        if ((a[s].$2 - by).abs() >= kRouteMinSeparation) continue;
+        final a0 = math.min(a[s - 1].$1, a[s].$1), a1 = math.max(a[s - 1].$1, a[s].$1);
+        // แนวเดียวกันที่เว้นช่องสั้น ๆ ก็นับ เพราะตาจะต่อเป็นเส้นเดียวกัน
+        if (math.min(a1, b1) - math.max(a0, b0) > -kRouteCollinearGap) return true;
+      }
+    }
+    return false;
+  }
+
+  bool clashesH(int j) {
+    for (var i = 0; i < routes.length; i++) {
+      if (i == j) continue;
+      if (hOverlap(routes[i], routes[j], lastOfB: true) || hOverlap(routes[j], routes[i], lastOfB: true)) return true;
+    }
+    return false;
+  }
+
+  bool clashesV(int j) {
+    for (var i = 0; i < routes.length; i++) {
+      if (i != j && (overlapping(routes[i], routes[j]) || overlapping(routes[j], routes[i]))) return true;
+    }
+    return false;
+  }
+
+  // ทางเลือก (เลื่อนเลนแนวตั้ง, เลื่อนระดับเข้า) เรียงจากเปลี่ยนน้อยไปมาก ; ระดับเข้าต้องอยู่ในแถวของคอลัมน์แม่ (ห่างกึ่งกลาง ≤ 12)
+  final moves = <(double, double)>[
+    for (var e = -300.0; e <= 300; e += kRouteStep)
+      for (final d in const [0.0, 4.0, -4.0, 8.0, -8.0, 10.0, -10.0, 12.0, -12.0]) (e, d),
+  ]..sort((x, y) => (x.$1.abs() + 3 * x.$2.abs()).compareTo(y.$1.abs() + 3 * y.$2.abs()));
+
+  for (var j = 0; j < routes.length; j++) {
+    if (manual.containsKey(items[j].id) || !clashesH(j)) continue;
+    final slotDy = slots[items[j].id]?.dy ?? 0;
+    final (beforeRoute, beforeExtra) = (routes[j], extra[j]);
+    var fixed = false;
+    for (final (e, d) in moves) {
+      if (e == 0 && d == 0) continue;
+      if ((slotDy + d).abs() > 12) continue;
+      endNudge[j] = d;
+      extra[j] = beforeExtra + e;
+      routes[j] = build(j, extra[j]);
+      if (!clashesH(j) && !clashesV(j)) {
+        fixed = true;
+        break;
+      }
+    }
+    if (!fixed) {
+      endNudge[j] = 0;
+      extra[j] = beforeExtra;
+      routes[j] = beforeRoute;
+    }
   }
 
   return {for (var i = 0; i < items.length; i++) items[i].id: routes[i]};

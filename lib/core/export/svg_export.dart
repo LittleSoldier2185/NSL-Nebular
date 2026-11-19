@@ -162,6 +162,8 @@ class _Svg {
       } else {
         _crow(g.fx, g.fy, g.d0);
       }
+      // ปลายฝั่งลูก: วงกลม "ศูนย์" (ตรงกับที่วาดบนจอ)
+      out.writeln('<circle cx="${n(g.fx + g.d0 * childZeroOffset(g.oneToOne))}" cy="${n(g.fy)}" r="4.5" fill="$canvasHex"/>');
       // ปลายฝั่งแม่ของเส้นนี้เอง (เส้นที่เข้าคอลัมน์เดียวกันเข้าคนละระดับ ย่อสัญลักษณ์ไม่ให้ซ้อนกัน)
       final end = route.last;
       final s = (slots[r.id]?.count ?? 1) > 1 ? 0.6 : 1.0;
@@ -240,19 +242,25 @@ class _Svg {
       final type = typeLabel(c);
       out.writeln('<line x1="0" y1="${n(y0)}" x2="${n(w)}" y2="${n(y0)}" stroke="${th.rowLine}"/>');
 
-      final (flag, (bg, fg)) = c.isPrimaryKey
-          ? ('PK', th.pk)
-          : fkCols.contains(c.id)
-              ? ('FK', th.fk)
-              : c.unique
-                  ? ('UQ', th.uq)
-                  : ('', ('', ''));
-      if (flag.isNotEmpty) {
-        out.writeln('<rect x="10" y="${n(y0 + 6)}" width="24" height="16" rx="4" fill="$bg"/>');
-        out.writeln('<text x="22" y="${n(y0 + 17.5)}" fill="$fg" font-family="$_mono" font-size="10" '
+      void chip(String flag, double x) {
+        final (bg, fg) = switch (flag) { 'PK' => th.pk, 'FK' => th.fk, _ => th.uq };
+        out.writeln('<rect x="${n(x)}" y="${n(y0 + 6)}" width="${n(kFlagWidth)}" height="16" rx="4" fill="$bg"/>');
+        out.writeln('<text x="${n(x + kFlagWidth / 2)}" y="${n(y0 + 17.5)}" fill="$fg" font-family="$_mono" font-size="10" '
             'font-weight="700" text-anchor="middle">$flag</text>');
       }
-      final nameW = w - 42 - 10 - type.length * 6.6 - 8;
+
+      final flags = columnFlags(c, isFk: fkCols.contains(c.id));
+      if (flags.isNotEmpty) chip(flags.first, 10);
+      // ป้ายรองอยู่หน้าชนิดข้อมูล (ตรงกับการ์ดบนแคนวาส)
+      final typeW = type.length * 6.6;
+      var right = w - 10 - typeW - 8;
+      for (final f in flags.skip(1).toList().reversed) {
+        right -= kFlagWidth;
+        chip(f, right);
+        right -= kFlagGap;
+      }
+      final extraW = flags.length > 1 ? (flags.length - 1) * (kFlagWidth + kFlagGap) : 0.0;
+      final nameW = w - 42 - 10 - typeW - 8 - extraW;
       out.writeln('<text x="42" y="${n(y0 + 18)}" font-weight="500" fill="${th.text}">${esc(fit(c.name, nameW, 7.0))}</text>');
       // ชนิดข้อมูล: ถ้าผู้ใช้เลือกฟอนต์ให้ตาราง ใช้ฟอนต์นั้น (ไม่งั้นฟอนต์เว้นระยะเท่ากัน)
       final typeFont = t.fontFamily == null ? ' font-family="$_mono"' : '';

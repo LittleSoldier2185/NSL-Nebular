@@ -146,30 +146,39 @@ void _drawTable(Canvas canvas, Project p, TableModel t) {
     final y0 = t.y + kCardHeaderHeight + kCardRowHeight * i;
     canvas.drawLine(Offset(t.x, y0), Offset(t.x + w, y0), line);
 
-    final (flag, bg, fg) = c.isPrimaryKey
-        ? ('PK', C.pkBg, C.pkText)
-        : fkCols.contains(c.id)
-            ? ('FK', C.fkChip, C.primaryDark)
-            : c.unique
-                ? ('UQ', C.uqBg, C.uqText)
-                : ('', Colors.transparent, Colors.transparent);
-    if (flag.isNotEmpty) {
+    void chip(String flag, double x) {
+      final (bg, fg) = switch (flag) {
+        'PK' => (C.pkBg, C.pkText),
+        'FK' => (C.fkChip, C.primaryDark),
+        _ => (C.uqBg, C.uqText),
+      };
       canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(t.x + 10, y0 + 6, 24, 16), const Radius.circular(4)),
+        RRect.fromRectAndRadius(Rect.fromLTWH(x, y0 + 6, kFlagWidth, 16), const Radius.circular(4)),
         Paint()..color = bg,
       );
       final tp = _tp(flag, _mono(10, fg, weight: FontWeight.w700));
-      tp.paint(canvas, Offset(t.x + 22 - tp.width / 2, y0 + 14 - tp.height / 2));
+      tp.paint(canvas, Offset(x + kFlagWidth / 2 - tp.width / 2, y0 + 14 - tp.height / 2));
       tp.dispose();
     }
+
+    final flags = columnFlags(c, isFk: fkCols.contains(c.id));
+    if (flags.isNotEmpty) chip(flags.first, t.x + 10);
 
     final type = typeLabel(c);
     final typeTp = _tp(type, font == null ? _mono(11, C.muted) : _sans(11, C.muted, family: font));
     final typeW = typeTp.width;
     typeTp.paint(canvas, Offset(t.x + w - 10 - typeW, y0 + 14 - typeTp.height / 2));
     typeTp.dispose();
+    // ป้ายรองอยู่หน้าชนิดข้อมูล (ตรงกับการ์ดบนแคนวาส)
+    var right = t.x + w - 10 - typeW - 8;
+    for (final f in flags.skip(1).toList().reversed) {
+      right -= kFlagWidth;
+      chip(f, right);
+      right -= kFlagGap;
+    }
+    final extraW = flags.length > 1 ? (flags.length - 1) * (kFlagWidth + kFlagGap) : 0.0;
     _text(canvas, c.name, _sans(12.5, C.text, weight: FontWeight.w500, family: font), t.x + 42, y0 + 14,
-        maxWidth: math.max(10.0, w - 42 - 10 - typeW - 8));
+        maxWidth: math.max(10.0, w - 42 - 10 - typeW - 8 - extraW));
   }
 }
 

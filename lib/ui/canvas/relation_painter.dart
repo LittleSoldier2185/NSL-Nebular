@@ -8,6 +8,7 @@ import '../theme.dart';
 
 /// วาดเส้น FK แบบ crow's foot: ปลาย "many" (คอลัมน์ FK) เป็นตีนกา, ปลาย "one" เป็นขีด
 /// ถ้าคอลัมน์ FK เป็น PK/UNIQUE จะเป็น 1:1 (ขีดทั้งสองปลาย)
+/// ปลายฝั่งลูกมีวงกลม "ศูนย์" เสมอ (0..N / 0..1) เพราะ FK ไม่บังคับให้แถวแม่ต้องมีแถวลูก
 /// เรขาคณิตมาจาก [relationGeometry] ซึ่ง SVG/PNG ใช้ตัวเดียวกัน
 class RelationPainter extends CustomPainter {
   RelationPainter(
@@ -94,6 +95,7 @@ class RelationPainter extends CustomPainter {
       } else {
         _crow(canvas, paint, g.fx, g.fy, g.d0);
       }
+      _childZero(canvas, paint, g.fx, g.fy, g.d0, oneToOne: g.oneToOne);
       final end = route.last;
       _parentEnd(canvas, paint, end.$1, end.$2, g.d1, g.mandatory, crowded: (slots[r.id]?.count ?? 1) > 1);
       if (focused && handleScale > 0) {
@@ -186,6 +188,13 @@ class RelationPainter extends CustomPainter {
       canvas.drawCircle(c, 4.5 * s, Paint()..color = C.canvas);
       canvas.drawCircle(c, 4.5 * s, p);
     }
+  }
+
+  /// ปลายฝั่งลูก: วงกลม "ศูนย์" ถัดออกไปจากตีนกา/ขีด
+  void _childZero(Canvas canvas, Paint p, double x, double y, double dir, {required bool oneToOne}) {
+    final c = Offset(x + dir * childZeroOffset(oneToOne), y);
+    canvas.drawCircle(c, 4.5, Paint()..color = C.canvas);
+    canvas.drawCircle(c, 4.5, p);
   }
 
   void _crow(Canvas canvas, Paint p, double x, double y, double dir) {
