@@ -9,7 +9,6 @@ import 'package:nsl_nebular/core/export/flowchart_svg.dart';
 import 'package:nsl_nebular/core/export/screenflow_svg.dart';
 import 'package:nsl_nebular/core/export/wireframe_svg.dart';
 import 'package:nsl_nebular/core/l10n/l10n.dart';
-import 'package:nsl_nebular/core/models/requirement.dart';
 import 'package:nsl_nebular/core/models/traceability.dart';
 import 'package:nsl_nebular/core/models/workspace.dart';
 import 'package:nsl_nebular/core/storage/project_file.dart';
