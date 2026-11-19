@@ -17,6 +17,7 @@ import 'package:nsl_nebular/state/app_settings.dart';
 import 'package:nsl_nebular/state/wireframe_controller.dart';
 import 'package:nsl_nebular/state/workspace_controller.dart';
 import 'package:nsl_nebular/ui/home_page.dart';
+import 'package:nsl_nebular/ui/prompt_dialog.dart';
 import 'package:nsl_nebular/ui/wireframe/wf_painter.dart';
 import 'package:nsl_nebular/ui/wireframe/wf_panels.dart';
 import 'package:nsl_nebular/ui/wireframe/wf_view.dart' show wfFrameLabel;
@@ -270,11 +271,70 @@ void main() {
       // ลากสมาชิกตัวท้ายไปวางที่เดิมถัดจากสมาชิก = ยังอยู่กลุ่ม (ไม่หลุดเพราะลากนิดเดียว)
       expect(f.moveLayerRow(collapsed, 3, 3), isFalse);
 
-      // เอาออกจนเหลือชิ้นเดียว → ยุบกลุ่ม
-      f.moveLayerRow(collapsed, 1, 5);
-      f.moveLayerRow(collapsed, 1, 5);
-      expect(f.layerRows(collapsed).any((r) => r.header), isFalse);
+      // ลากสมาชิกออกหมด → กลุ่มยังอยู่เป็นกลุ่มเปล่า (ไม่ยุบเอง) ตรงตำแหน่งเดิม
+      for (var i = 0; i < 3; i++) {
+        expect(f.moveLayerRow(collapsed, 1, 5), isTrue);
+      }
       expect(f.diagram.components.every((c) => c.group == null), isTrue);
+      expect(rows(), startsWith('G($g) '));
+      // ลากชิ้นล่างสุดเข้าไปใต้หัวกลุ่มเปล่า = เข้ากลุ่ม
+      final last = f.layerRows(collapsed).length - 1;
+      final lastId = f.layerRows(collapsed)[last].id!;
+      expect(f.moveLayerRow(collapsed, last, 1), isTrue);
+      expect(f.diagram.componentById(lastId)!.group, g);
+      // ลบกลุ่ม: ชิ้นส่วนยังอยู่ ไม่อยู่ในกลุ่มแล้ว
+      expect(f.removeGroup(g), isTrue);
+      expect(f.layerRows(collapsed).any((r) => r.header), isFalse);
+      expect(f.diagram.components.length, 5);
+      expect(f.diagram.components.every((c) => c.group == null), isTrue);
+    });
+
+    test('กลุ่มเปล่า: สร้างบนสุด/เหนือชิ้นที่เลือก ; ลากเข้าได้ ; ลากหัวกลุ่มเปล่าย้ายตำแหน่งได้ ; บันทึกลงไฟล์ ; undo', () {
+      final g = f.addEmptyGroup()!;
+      expect(rows(), 'G($g) e d c b a');
+      expect(f.diagram.groupById(g)!.name, 'กลุ่ม 1');
+      f.undo();
+      expect(rows(), 'e d c b a');
+      f.redo();
+
+      f.selectBox('b', exact: true);
+      final h = f.addEmptyGroup()!;
+      expect(rows(), 'G($g) e d c G($h) b a', reason: 'อยู่เหนือชิ้นที่เลือก');
+      expect(f.diagram.groupById(h)!.name, 'กลุ่ม 2');
+
+      // ลาก a (ล่างสุด) ไปใต้หัวกลุ่ม h → เข้ากลุ่ม ; ลาก e เข้ากลุ่ม g
+      expect(f.moveLayerRow(collapsed, 6, 5), isTrue);
+      expect(order(), 'e d c a@$h b');
+      expect(f.moveLayerRow(collapsed, 1, 1), isFalse);
+      expect(f.moveLayerRow(collapsed, 0, 5), isTrue); // หัว g (ว่าง) ลงไปใต้ a … เลื่อนพ้นกลุ่ม h
+      final r = rows();
+      expect(r.indexOf('G($g)'), greaterThan(r.indexOf('a@$h')));
+      expect(f.diagram.components.every((c) => c.group != g), isTrue, reason: 'ย้ายหัวกลุ่มเปล่าไม่ดูดชิ้นอื่นเข้า');
+
+      // ไป-กลับ JSON: กลุ่มเปล่าและตำแหน่งยังอยู่
+      final back = WireframeDiagram.fromJson(jsonDecode(jsonEncode(f.diagram.toJson())));
+      expect(back.groupById(g)?.name, 'กลุ่ม 1');
+      expect(back.groups.length, 2);
+
+      f.renameGroup(h, '  ส่วนหัว  ');
+      expect(f.groupLabel(h), 'ส่วนหัว');
+      f.renameGroup(h, '');
+      expect(f.groupLabel(h), 'กลุ่ม');
+    });
+
+    test('ไฟล์เก่า (ชิ้นมีรหัสกลุ่มแต่ไม่มีรายการกลุ่ม) ยังแสดงกลุ่ม ; ลบสมาชิกหมดทั้งกลุ่ม = ลบกลุ่มด้วย', () {
+      final old = WireframeDiagram.fromJson({
+        'components': [
+          {'id': 'x', 'kind': 'button', 'group': 'g9'},
+          {'id': 'y', 'kind': 'label', 'group': 'g9'},
+        ],
+      });
+      expect(old.groupById('g9'), isNotNull);
+      f.setSelection(['a', 'b'], exact: true);
+      final g = f.groupSelection()!;
+      f.setSelection(['a', 'b'], exact: true);
+      f.deleteSelection();
+      expect(f.diagram.groupById(g), isNull);
     });
   });
 
@@ -363,7 +423,7 @@ void main() {
       await tapKey('wf-layer-group');
       final g = f.diagram.componentById(a.id)!.group!;
       expect(inPanel(find.byKey(ValueKey('wf-group-$g'))), findsOneWidget);
-      expect(find.text('กลุ่ม · 2 ชิ้น'), findsOneWidget);
+      expect(find.textContaining('กลุ่ม 1'), findsWidgets);
 
       await tapKey('wf-item-${a.id}');
       expect(f.selectedIds, {a.id});
@@ -414,6 +474,57 @@ void main() {
       await tester.tap(find.byKey(ValueKey('wf-item-${b.id}')));
       await tester.pumpAndSettle();
       expect(f.selectedIds, {b.id});
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('ปุ่มกลุ่มใหม่ → กลุ่มเปล่า ; ลากชิ้นเข้าด้วยเมาส์ ; ดับเบิลคลิกเปลี่ยนชื่อ ; ปุ่มลบกลุ่ม', (tester) async {
+      await boot(tester);
+      final a = f.addComponent(WfKind.button, 300, 200)!;
+      final b = f.addComponent(WfKind.label, 600, 200)!;
+      f.cancelEditing();
+      f.clearSelection();
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const ValueKey('wf-layer-new-group')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('wf-layer-new-group')));
+      await tester.pumpAndSettle();
+      final g = f.diagram.groups.single.id;
+      expect(find.byKey(ValueKey('wf-layer-row-g-$g')), findsOneWidget);
+      expect(find.textContaining('ลากชิ้นส่วนมาวางใต้แถวนี้'), findsOneWidget);
+
+      // ลาก a (แถวล่างสุด) ขึ้นไปวางใต้หัวกลุ่ม (เหนือ b)
+      final rowA = find.byKey(ValueKey('wf-layer-row-${a.id}'));
+      final rowB = find.byKey(ValueKey('wf-layer-row-${b.id}'));
+      await tester.ensureVisible(rowA);
+      await tester.pumpAndSettle();
+      final from = tester.getCenter(rowA);
+      final to = tester.getTopLeft(rowB) + const Offset(20, 2);
+      final gesture = await tester.startGesture(from, kind: PointerDeviceKind.mouse);
+      for (var i = 1; i <= 10; i++) {
+        await gesture.moveTo(Offset.lerp(from, to, i / 10)!);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(f.diagram.componentById(a.id)!.group, g);
+      expect(f.diagram.componentById(b.id)!.group, isNull);
+
+      // ดับเบิลคลิกหัวกลุ่ม = เปลี่ยนชื่อ
+      await tester.tap(find.byKey(ValueKey('wf-group-label-$g')));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.byKey(ValueKey('wf-group-label-$g')));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextPromptDialog), findsOneWidget, reason: 'ดับเบิลคลิกแล้วกล่องเปลี่ยนชื่อต้องขึ้น');
+      await tester.enterText(find.descendant(of: find.byType(TextPromptDialog), matching: find.byType(TextField)), 'ส่วนหัวเว็บ');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      expect(f.groupLabel(g), 'ส่วนหัวเว็บ');
+
+      await tester.tap(find.byKey(ValueKey('wf-group-remove-$g')));
+      await tester.pumpAndSettle();
+      expect(f.diagram.groups, isEmpty);
+      expect(f.diagram.components.length, 2);
       expect(tester.takeException(), isNull);
     });
 

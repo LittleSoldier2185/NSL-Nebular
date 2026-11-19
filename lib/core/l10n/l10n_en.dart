@@ -1596,4 +1596,8 @@ const Map<String, String> kEn = {
   'ไม่หมุน (0°)': 'Reset rotation (0°)',
   'กลุ่ม · {0} ชิ้น': 'Group · {0} items',
   'ล็อกอยู่ — ย้าย/ปรับขนาด/หมุน/ลบบนแคนวาสไม่ได้': 'Locked — cannot move, resize, rotate or delete on the canvas',
+  // Wireframe: กลุ่มเปล่า
+  'ว่าง — ลากชิ้นส่วนมาวางใต้แถวนี้': 'empty — drag components just below this row',
+  'ลบกลุ่ม (ชิ้นส่วนยังอยู่)': 'Remove group (components stay)',
+  'กลุ่มใหม่ (ว่าง)': 'New empty group',
 };

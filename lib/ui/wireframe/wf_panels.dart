@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +14,7 @@ import '../../state/wireframe_controller.dart';
 import '../../state/workspace_controller.dart';
 import '../canvas/canvas_chrome.dart';
 import '../issue_widgets.dart';
+import '../prompt_dialog.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'wf_actions.dart';
@@ -146,12 +150,15 @@ class WireframeRightPanel extends StatelessWidget {
         decoration: BoxDecoration(border: Border(left: BorderSide(color: C.border))),
         child: Material(
           color: C.surface,
-          child: SingleChildScrollView(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              const _PanelHeader(),
-              body,
-              if (sel != null || f.selectedIds.length > 1) Divider(height: 1, color: C.border),
-              const _LayersFold(),
+          // ส่วนบน (หัว+คุณสมบัติ) เลื่อนเอง ; เลเยอร์ติดอยู่ล่างแผงและเลื่อนแยก — เลือกชิ้นแล้วรายการเลเยอร์ไม่กระโดด
+          child: LayoutBuilder(
+            builder: (context, box) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [const _PanelHeader(), body]),
+                ),
+              ),
+              _LayersFold(key: const ValueKey('wf-layers'), maxHeight: box.maxHeight),
             ]),
           ),
         ),
@@ -589,10 +596,17 @@ class _PanelHeader extends StatelessWidget {
 /// กลุ่มที่พับไว้ในแผงเลเยอร์ (สถานะมุมมอง ไม่บันทึกในไฟล์)
 final Set<String> _collapsedGroups = {};
 
+/// สัดส่วนความสูงของแผงเลเยอร์ต่อแผงขวา (ลากปรับได้) และพับอยู่หรือไม่ — สถานะมุมมอง ไม่บันทึกในไฟล์
+double _layersFrac = 0.42;
+bool _layersCollapsed = false;
+
 /// เลเยอร์ (แบบ Adobe): บนสุดก่อน ; กลุ่มเป็นแถวพับได้ ; ลูกในภาชนะเยื้องเข้า ; ทุกแถวมีตา (ซ่อน/แสดง) และกุญแจ (ล็อก)
 /// คลิกแถว = เลือกชิ้นนั้น (Ctrl/Shift = เพิ่ม/เอาออก) ; คลิกแถวกลุ่ม = เลือกทั้งกลุ่ม
 class _LayersFold extends StatefulWidget {
-  const _LayersFold();
+  const _LayersFold({super.key, required this.maxHeight});
+
+  /// ความสูงของแผงขวาทั้งแผง (ใช้คิดความสูงของแผงเลเยอร์)
+  final double maxHeight;
 
   @override
   State<_LayersFold> createState() => _LayersFoldState();
@@ -630,31 +644,65 @@ class _LayersFoldState extends State<_LayersFold> {
     ];
 
     final canGroup = sel.length >= 2;
-    return _Fold(
-      id: 'wf-fold-layers',
-      title: tr('เลเยอร์'),
-      summary: '${d.components.length}',
-      initiallyOpen: true,
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Row(children: [
-          _layerTool('wf-layer-group', Icons.create_new_folder_outlined, '${tr('จัดกลุ่ม')} (Ctrl+G)', canGroup ? f.groupSelection : null),
-          _layerTool('wf-layer-ungroup', Icons.folder_off_outlined, '${tr('เลิกจัดกลุ่ม')} (Ctrl+Shift+G)', f.selectionHasGroup ? f.ungroupSelection : null),
-          _layerTool('wf-layer-front', Icons.flip_to_front_rounded, tr('นำขึ้นบนสุด'), sel.isEmpty ? null : () => f.reorder(front: true)),
-          _layerTool('wf-layer-back', Icons.flip_to_back_rounded, tr('นำลงล่างสุด'), sel.isEmpty ? null : () => f.reorder(front: false)),
+    final maxH = widget.maxHeight;
+    final header = InkWell(
+      key: const ValueKey('wf-fold-layers-head'),
+      onTap: () => setState(() => _layersCollapsed = !_layersCollapsed),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+        child: Row(children: [
+          Icon(_layersCollapsed ? Icons.chevron_right_rounded : Icons.expand_more_rounded, size: 18, color: C.muted),
+          const SizedBox(width: 8),
+          Text(tr('เลเยอร์'), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Spacer(),
+          Text('${d.components.length}', style: TextStyle(fontSize: 12, color: C.muted)),
         ]),
-        const SizedBox(height: 4),
-        if (rows.isEmpty)
-          Text(tr('ยังไม่มีชิ้นส่วนบนหน้าจอ'), key: const ValueKey('wf-layers-empty'), style: TextStyle(fontSize: 12.5, color: C.muted))
-        else
-          ReorderableListView(
-            key: const ValueKey('wf-layers-list'),
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            buildDefaultDragHandles: false,
-            proxyDecorator: (child, _, _) => Material(elevation: 4, color: C.surface, borderRadius: BorderRadius.circular(6), child: child),
-            onReorderItem: (from, to) => f.moveLayerRow(_collapsedGroups, from, to),
-            children: rows,
+      ),
+    );
+    if (_layersCollapsed) {
+      return Container(decoration: BoxDecoration(border: Border(top: BorderSide(color: C.border))), child: header);
+    }
+    final double h = (maxH * _layersFrac).clamp(math.min(160.0, maxH * 0.5), math.max(160.0, maxH - 180)).toDouble();
+    return Container(
+      height: h,
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: C.border))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        // ลากขอบบนเพื่อปรับความสูงของแผงเลเยอร์
+        MouseRegion(
+          cursor: SystemMouseCursors.resizeRow,
+          child: GestureDetector(
+            key: const ValueKey('wf-layers-resize'),
+            behavior: HitTestBehavior.opaque,
+            onVerticalDragUpdate: (u) => setState(() => _layersFrac = ((h - u.delta.dy) / maxH).clamp(0.15, 0.85)),
+            child: const SizedBox(height: 6),
           ),
+        ),
+        header,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(children: [
+            _layerTool('wf-layer-new-group', Icons.create_new_folder_outlined, tr('กลุ่มใหม่ (ว่าง)'), f.addEmptyGroup),
+            _layerTool('wf-layer-group', Icons.folder_copy_outlined, '${tr('จัดกลุ่ม')} (Ctrl+G)', canGroup ? f.groupSelection : null),
+            _layerTool('wf-layer-ungroup', Icons.folder_off_outlined, '${tr('เลิกจัดกลุ่ม')} (Ctrl+Shift+G)', f.selectionHasGroup ? f.ungroupSelection : null),
+            _layerTool('wf-layer-front', Icons.flip_to_front_rounded, tr('นำขึ้นบนสุด'), sel.isEmpty ? null : () => f.reorder(front: true)),
+            _layerTool('wf-layer-back', Icons.flip_to_back_rounded, tr('นำลงล่างสุด'), sel.isEmpty ? null : () => f.reorder(front: false)),
+          ]),
+        ),
+        Expanded(
+          child: rows.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                  child: Text(tr('ยังไม่มีชิ้นส่วนบนหน้าจอ'), key: const ValueKey('wf-layers-empty'), style: TextStyle(fontSize: 12.5, color: C.muted)),
+                )
+              : ReorderableListView(
+                  key: const ValueKey('wf-layers-list'),
+                  padding: const EdgeInsets.fromLTRB(10, 2, 10, 12),
+                  buildDefaultDragHandles: false,
+                  proxyDecorator: (child, _, _) => Material(elevation: 4, color: C.surface, borderRadius: BorderRadius.circular(6), child: child),
+                  onReorderItem: (from, to) => f.moveLayerRow(_collapsedGroups, from, to),
+                  children: rows,
+                ),
+        ),
       ]),
     );
   }
@@ -687,10 +735,22 @@ class _LayersFoldState extends State<_LayersFold> {
         ),
       );
 
+  Future<void> _rename(WireframeController f, String g) async {
+    final r = await showDialog<PromptResult>(
+      context: context,
+      builder: (_) => TextPromptDialog(title: tr('เปลี่ยนชื่อกลุ่ม'), initial: f.diagram.groupById(g)?.name ?? '', label: tr('ชื่อกลุ่ม')),
+    );
+    if (r != null) f.renameGroup(g, r.text);
+  }
+
+  DateTime _lastHeaderTap = DateTime.fromMillisecondsSinceEpoch(0);
+  String? _lastHeaderId;
+
   Widget _groupRow(WireframeController f, String g, List<WfComponent> members, bool open, Set<String> sel) {
-    final allSel = members.every((m) => sel.contains(m.id));
-    final allHidden = members.every((m) => m.hidden);
-    final allLocked = members.every((m) => m.locked);
+    final empty = members.isEmpty;
+    final allSel = !empty && members.every((m) => sel.contains(m.id));
+    final allHidden = !empty && members.every((m) => m.hidden);
+    final allLocked = !empty && members.every((m) => m.locked);
     final ids = [for (final m in members) m.id];
     return Material(
       color: allSel ? C.primaryTint : Colors.transparent,
@@ -698,7 +758,18 @@ class _LayersFoldState extends State<_LayersFold> {
       child: InkWell(
         key: ValueKey('wf-group-$g'),
         borderRadius: BorderRadius.circular(6),
-        onTap: () => f.setSelection(_additive ? {...sel, ...ids} : ids, exact: true),
+        onTap: () {
+          // ดับเบิลคลิก = เปลี่ยนชื่อ (จับเวลาเอง ไม่ให้คลิกเดียวช้า)
+          final now = clock.now();
+          final dbl = _lastHeaderId == g && now.difference(_lastHeaderTap).inMilliseconds < 400;
+          _lastHeaderTap = now;
+          _lastHeaderId = g;
+          if (dbl) {
+            _rename(f, g);
+            return;
+          }
+          if (!empty) f.setSelection(_additive ? {...sel, ...ids} : ids, exact: true);
+        },
         child: SizedBox(
           height: 32,
           child: Row(children: [
@@ -713,16 +784,26 @@ class _LayersFoldState extends State<_LayersFold> {
             Icon(open ? Icons.folder_open_outlined : Icons.folder_outlined, size: 16, color: C.muted),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(tr('กลุ่ม · {0} ชิ้น', [members.length]),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: allHidden ? C.muted : C.text)),
+              child: Text.rich(
+                TextSpan(children: [
+                  TextSpan(text: f.groupLabel(g), style: TextStyle(fontWeight: FontWeight.w600, color: allHidden ? C.muted : C.text)),
+                  TextSpan(
+                      text: empty ? '  ${tr('ว่าง — ลากชิ้นส่วนมาวางใต้แถวนี้')}' : '  ${members.length}',
+                      style: TextStyle(fontSize: 11.5, color: C.muted)),
+                ]),
+                key: ValueKey('wf-group-label-$g'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 13),
+              ),
             ),
-            _eyeLock(g,
-                hidden: allHidden,
-                locked: allLocked,
-                onEye: () => f.setHidden(ids, !allHidden),
-                onLock: () => f.setLocked(ids, !allLocked)),
+            _miniToggle('wf-group-remove-$g', Icons.folder_off_outlined, tr('ลบกลุ่ม (ชิ้นส่วนยังอยู่)'), C.muted.withValues(alpha: 0.6), () => f.removeGroup(g)),
+            if (!empty)
+              _eyeLock(g,
+                  hidden: allHidden,
+                  locked: allLocked,
+                  onEye: () => f.setHidden(ids, !allHidden),
+                  onLock: () => f.setLocked(ids, !allLocked)),
           ]),
         ),
       ),

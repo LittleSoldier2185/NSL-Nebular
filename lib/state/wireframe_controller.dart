@@ -140,15 +140,23 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
   /// ล็อก/ปลดล็อกชิ้น [ids] — undo ได้
   void setLocked(Iterable<String> ids, bool locked) => updateComponents(ids, (c) => c.locked = locked);
 
+  /// ลบรายการกลุ่มที่ไม่มีสมาชิกแล้ว (เฉพาะใน [only] ถ้าระบุ) — ใช้ตอนเลิกกลุ่ม/ลบชิ้น ไม่ใช้กับกลุ่มเปล่าที่ผู้ใช้สร้างไว้
+  static void _dropEmpty(WireframeDiagram d, Set<String> only) {
+    final used = {for (final c in d.components) ?c.group};
+    d.groups.removeWhere((g) => only.contains(g.id) && !used.contains(g.id));
+  }
+
   /// จัดชิ้นที่เลือก (ตั้งแต่ 2 ชิ้น) เป็นกลุ่มเดียว — สมาชิกถูกย้ายมาติดกันในลำดับการซ้อน ณ ตำแหน่งของสมาชิกที่อยู่บนสุด
-  /// (ลำดับภายในคงเดิม ; กลุ่มเดิมของสมาชิกถูกยุบรวม) — undo ขั้นเดียว ; คืนรหัสกลุ่มใหม่ (null = ไม่ได้ทำ)
+  /// (ลำดับภายในคงเดิม ; กลุ่มเดิมของสมาชิกที่ว่างลงถูกลบ) — undo ขั้นเดียว ; คืนรหัสกลุ่มใหม่ (null = ไม่ได้ทำ)
   String? groupSelection() {
     final ids = selectedIds;
     if (!active || ids.length < 2) return null;
     final gid = workspace.newId('g');
     edit((d) {
+      d.syncGroups();
       final list = d.components;
       final members = [for (final c in list) if (ids.contains(c.id)) c];
+      final old = {for (final m in members) ?m.group};
       final topIndex = list.lastIndexWhere((c) => ids.contains(c.id));
       final below = list.sublist(0, topIndex + 1).where((c) => !ids.contains(c.id)).toList();
       final above = list.sublist(topIndex + 1);
@@ -160,16 +168,24 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
         ..addAll(below)
         ..addAll(members)
         ..addAll(above);
+      d.groups.add(WfGroup(id: gid, name: d.nextGroupName(tr('กลุ่ม'))));
+      _dropEmpty(d, old);
     });
     notifyListeners();
     return gid;
   }
 
-  /// เลิกจัดกลุ่มของชิ้นที่เลือก — คืน true ถ้ามีกลุ่มให้เลิก
+  /// เลิกจัดกลุ่มของชิ้นที่เลือก (กลุ่มที่ว่างลงถูกลบ) — คืน true ถ้ามีกลุ่มให้เลิก
   bool ungroupSelection() {
     final ids = selectedIds;
     if (!active || !selectedBoxes.any((c) => c.group != null)) return false;
-    updateComponents(ids, (c) => c.group = null);
+    final old = {for (final c in selectedBoxes) ?c.group};
+    edit((d) {
+      for (final c in d.components) {
+        if (ids.contains(c.id)) c.group = null;
+      }
+      _dropEmpty(d, old);
+    });
     notifyListeners();
     return true;
   }
@@ -177,14 +193,64 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
   /// ที่เลือกอยู่มีสมาชิกของกลุ่ม (เปิด/ปิดปุ่ม "เลิกกลุ่ม")
   bool get selectionHasGroup => selectedBoxes.any((c) => c.group != null);
 
+  /// สร้างกลุ่มเปล่า (ยังไม่มีสมาชิก) — วางเหนือชิ้นบนสุดที่เลือกอยู่ ไม่ได้เลือก = บนสุด ; คืนรหัสกลุ่ม (null = แก้ไม่ได้)
+  String? addEmptyGroup() {
+    if (!active) return null;
+    final gid = workspace.newId('g');
+    final sel = selectedIds;
+    final list = diagram.components;
+    final top = list.lastIndexWhere((c) => sel.contains(c.id));
+    edit((d) {
+      d.syncGroups();
+      d.groups.add(WfGroup(id: gid, name: d.nextGroupName(tr('กลุ่ม')), at: top < 0 ? d.components.length : top + 1));
+    });
+    return gid;
+  }
+
+  /// ลบกลุ่ม [group] (สมาชิกยังอยู่ แค่ไม่อยู่ในกลุ่มแล้ว) — undo ได้
+  bool removeGroup(String group) {
+    if (!active || diagram.groupById(group) == null && wfGroupMembers(diagram, group).isEmpty) return false;
+    edit((d) {
+      for (final c in d.components) {
+        if (c.group == group) c.group = null;
+      }
+      d.groups.removeWhere((g) => g.id == group);
+    });
+    return true;
+  }
+
+  /// เปลี่ยนชื่อกลุ่ม (ว่าง = ใช้คำว่า "กลุ่ม") — undo ได้
+  void renameGroup(String group, String name) => editIfChanged((d) {
+        d.syncGroups();
+        d.groupById(group)?.name = name.trim();
+      });
+
+  /// ชื่อที่แสดงของกลุ่ม [group]
+  String groupLabel(String group) {
+    final n = diagram.groupById(group)?.name ?? '';
+    return n.isEmpty ? tr('กลุ่ม') : n;
+  }
+
   // ---------- แผงเลเยอร์: แถว + ลากเปลี่ยนลำดับ ----------
 
-  /// แถวในแผงเลเยอร์ (บนสุดก่อน): หัวกลุ่ม แล้วตามด้วยสมาชิก (ถ้ากลุ่มไม่ได้พับใน [collapsed]) ; ชิ้นที่ไม่อยู่กลุ่มเป็นแถวเดี่ยว
+  /// แถวในแผงเลเยอร์ (บนสุดก่อน): หัวกลุ่ม แล้วตามด้วยสมาชิก (ถ้ากลุ่มไม่ได้พับใน [collapsed]) ; ชิ้นที่ไม่อยู่กลุ่มเป็นแถวเดี่ยว ;
+  /// กลุ่มเปล่าอยู่ตามตำแหน่ง [WfGroup.at]
   List<WfLayerRow> layerRows(Set<String> collapsed) {
     final d = diagram;
+    final n = d.components.length;
+    final used = {for (final c in d.components) ?c.group};
+    final empties = [for (final g in d.groups) if (!used.contains(g.id)) g];
     final rows = <WfLayerRow>[];
     final seen = <String>{};
-    for (final c in d.components.reversed) {
+    void emitEmpty(int at) {
+      for (final g in empties) {
+        if (g.at.clamp(0, n) == at) rows.add(WfLayerRow(group: g.id, header: true, open: !collapsed.contains(g.id)));
+      }
+    }
+
+    for (var i = n - 1; i >= 0; i--) {
+      emitEmpty(i + 1);
+      final c = d.components[i];
       final g = c.group;
       if (g == null) {
         rows.add(WfLayerRow(id: c.id));
@@ -199,14 +265,15 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
         }
       }
     }
+    emitEmpty(0);
     return rows;
   }
 
   /// ลากแถว [oldIndex] ไปวางที่ [newIndex] (ดัชนีในรายการหลังเอาแถวที่ลากออกแล้ว แบบ onReorderItem) — undo ขั้นเดียว
   ///
-  /// - ลากหัวกลุ่ม = ย้ายทั้งกลุ่ม (ไม่แทรกกลางกลุ่มอื่น)
-  /// - ลากชิ้นไปวางใต้หัวกลุ่มที่กางอยู่ หรือเหนือสมาชิกของกลุ่ม = เข้ากลุ่มนั้น ; วางนอกกลุ่ม = ออกจากกลุ่ม
-  /// - กลุ่มที่เหลือสมาชิกชิ้นเดียว = ยุบกลุ่ม
+  /// - ลากหัวกลุ่ม = ย้ายทั้งกลุ่ม (ไม่แทรกกลางกลุ่มอื่น) ; กลุ่มเปล่าก็ลากได้
+  /// - ลากชิ้นไปวางใต้หัวกลุ่มที่กางอยู่ (รวมกลุ่มเปล่า) หรือเหนือสมาชิกของกลุ่ม = เข้ากลุ่มนั้น ; วางนอกกลุ่ม = ออกจากกลุ่ม
+  /// - กลุ่มที่สมาชิกถูกลากออกหมดยังอยู่เป็นกลุ่มเปล่า (ลบได้จากปุ่มบนหัวกลุ่ม)
   /// คืน true ถ้าลำดับ/กลุ่มเปลี่ยน
   bool moveLayerRow(Set<String> collapsed, int oldIndex, int newIndex) {
     final rows = layerRows(collapsed);
@@ -247,11 +314,13 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
     }
     rest.insertAll(pos, block);
 
-    // ลำดับชิ้น (บนสุดก่อน) + กลุ่มใหม่
+    // ลำดับชิ้น (บนสุดก่อน) + กลุ่มใหม่ + ตำแหน่งของหัวกลุ่ม (ใช้เมื่อกลุ่มว่าง)
     final groupOf = <String, String?>{};
     final topFirst = <String>[];
+    final headerSeen = <String, int>{}; // กลุ่ม -> จำนวนชิ้นที่อยู่เหนือหัวกลุ่ม
     for (final r in rest) {
       if (r.header) {
+        headerSeen[r.group!] = topFirst.length;
         if (!r.open) {
           for (final m in wfGroupMembers(diagram, r.group!).reversed) {
             topFirst.add(m.id);
@@ -263,20 +332,20 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
       topFirst.add(r.id!);
       groupOf[r.id!] = r == moving ? newGroup : r.group;
     }
-    // กลุ่มที่เหลือชิ้นเดียว = ยุบ
-    final counts = <String, int>{};
-    for (final g in groupOf.values) {
-      if (g != null) counts[g] = (counts[g] ?? 0) + 1;
-    }
+    final total = topFirst.length;
     return editIfChanged((d) {
       final byId = {for (final c in d.components) c.id: c};
-      if (topFirst.length != byId.length) return;
+      if (total != byId.length) return;
       d.components
         ..clear()
         ..addAll([for (final id in topFirst.reversed) byId[id]!]);
       for (final c in d.components) {
-        final g = groupOf[c.id];
-        c.group = g != null && (counts[g] ?? 0) >= 2 ? g : null;
+        c.group = groupOf[c.id];
+      }
+      d.syncGroups();
+      for (final g in d.groups) {
+        final above = headerSeen[g.id];
+        if (above != null) g.at = total - above;
       }
     });
   }
@@ -383,7 +452,11 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
   }
 
   @override
-  void removeBoxes(WireframeDiagram c, Set<String> ids) => c.components.removeWhere((x) => ids.contains(x.id));
+  void removeBoxes(WireframeDiagram c, Set<String> ids) {
+    final old = {for (final x in c.components) if (ids.contains(x.id)) ?x.group};
+    c.components.removeWhere((x) => ids.contains(x.id));
+    _dropEmpty(c, old); // ลบสมาชิกหมดทั้งกลุ่ม = ลบกลุ่มด้วย
+  }
 
   /// ลบชิ้นที่เลือก (ลูกในภาชนะไม่ถูกลบ — ยังอยู่ที่เดิม)
   int deleteSelection() => deleteSelectedBoxes();
@@ -458,6 +531,9 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
         ids.add(id);
         final g = c.group == null ? null : groups.putIfAbsent(c.group!, () => workspace.newId('g'));
         d.components.add(WfComponent.tryFromJson({...c.toJson(), 'id': id, 'x': c.x + offset, 'y': c.y + offset, 'group': g, 'locked': false})!);
+      }
+      for (final g in groups.values) {
+        d.groups.add(WfGroup(id: g, name: d.nextGroupName(tr('กลุ่ม'))));
       }
     });
     // เลือกเฉพาะชิ้นบนสุด (ไม่ใช่ลูก) เพื่อให้ลากย้ายทั้งก้อนได้ทันที

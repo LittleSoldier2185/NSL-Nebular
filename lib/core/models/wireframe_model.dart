@@ -323,7 +323,9 @@ class WireframeDiagram implements DocContent {
     this.style = WfStyle.sketch,
     this.accent = kWfDefaultAccent,
     List<WfComponent>? components,
-  })  : width = width ?? (device == WfDevice.custom ? WfDevice.desktop.width : device.width),
+    List<WfGroup>? groups,
+  })  : groups = groups ?? [],
+        width = width ?? (device == WfDevice.custom ? WfDevice.desktop.width : device.width),
         height = height ?? (device == WfDevice.custom ? WfDevice.desktop.height : device.height),
         components = components ?? [];
 
@@ -334,6 +336,26 @@ class WireframeDiagram implements DocContent {
   /// สีเน้นของเอกสาร (ARGB ทึบ) — ใช้กับปุ่มหลัก/สวิตช์/แท็บที่เลือก ในรูปแบบ "เรียบร้อย"
   int accent;
   final List<WfComponent> components;
+
+  /// กลุ่มในแผงเลเยอร์ (ชื่อ + ตำแหน่งตอนว่าง) — กลุ่มอยู่ได้แม้ไม่มีสมาชิก ; สมาชิกคือชิ้นที่ [WfComponent.group] ตรงกับ id
+  final List<WfGroup> groups;
+
+  WfGroup? groupById(String id) {
+    for (final g in groups) {
+      if (g.id == id) return g;
+    }
+    return null;
+  }
+
+  /// ชื่อกลุ่มถัดไปที่ยังไม่ซ้ำ ("กลุ่ม 1", "กลุ่ม 2", …) — [prefix] คือคำว่า "กลุ่ม" ตามภาษาของโปรแกรม
+  String nextGroupName(String prefix) {
+    final used = {for (final g in groups) g.name};
+    var n = groups.length + 1;
+    while (used.contains('$prefix $n')) {
+      n++;
+    }
+    return '$prefix $n';
+  }
 
   static const double minFrame = 120, maxFrame = 8000;
 
@@ -351,6 +373,7 @@ class WireframeDiagram implements DocContent {
         'style': style.name,
         'accent': accent,
         'components': components.map((c) => c.toJson()).toList(),
+        if (groups.isNotEmpty) 'groups': [for (final g in groups) g.toJson()],
       };
 
   @override
@@ -375,6 +398,42 @@ class WireframeDiagram implements DocContent {
         for (final e in (j['components'] is List ? j['components'] as List : const []))
           if (WfComponent.tryFromJson(e) case final c? when ids.add(c.id)) c,
       ],
+      groups: [
+        for (final e in (j['groups'] is List ? j['groups'] as List : const []))
+          if (WfGroup.tryFromJson(e) case final g? when ids.add('group:${g.id}')) g,
+      ],
+    )..syncGroups();
+  }
+
+  /// ให้ทุกกลุ่มที่ชิ้นส่วนอ้างถึงมีรายการใน [groups] (ไฟล์เก่า/ข้อมูลที่วางมา = เพิ่มให้ ชื่อว่าง)
+  void syncGroups() {
+    final known = {for (final g in groups) g.id};
+    for (final c in components) {
+      final g = c.group;
+      if (g != null && known.add(g)) groups.add(WfGroup(id: g));
+    }
+  }
+}
+
+/// กลุ่มในแผงเลเยอร์ (แบบ Adobe): มีชื่อ และอยู่ได้แม้ยังไม่มีสมาชิก
+/// [at] = จำนวนชิ้นที่อยู่ใต้กลุ่มนี้ในลำดับการซ้อน — ใช้วางตำแหน่งเฉพาะตอนกลุ่มว่าง (มีสมาชิกแล้วอยู่ที่สมาชิกบนสุด)
+class WfGroup {
+  WfGroup({required this.id, this.name = '', this.at = 0});
+  final String id;
+
+  /// ชื่อ (ว่าง = ใช้คำว่า "กลุ่ม")
+  String name;
+  int at;
+
+  Map<String, dynamic> toJson() => {'id': id, if (name.isNotEmpty) 'name': name, if (at != 0) 'at': at};
+
+  static WfGroup? tryFromJson(Object? j) {
+    if (j is! Map || j['id'] is! String || (j['id'] as String).isEmpty) return null;
+    final at = j['at'];
+    return WfGroup(
+      id: j['id'] as String,
+      name: j['name'] is String ? (j['name'] as String).trim() : '',
+      at: at is int && at >= 0 ? at : 0,
     );
   }
 }

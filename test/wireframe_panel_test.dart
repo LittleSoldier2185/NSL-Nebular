@@ -28,7 +28,6 @@ void main() {
     f = tester.element(find.byType(HomePage)).read<WireframeController>();
   }
 
-  final layersHead = find.byKey(const ValueKey('wf-fold-layers-head'));
 
   testWidgets('แผงสูงเต็มคอลัมน์ ; ภาพย่อ ; เลเยอร์อยู่ล่างสุด (ใต้ส่วนตรวจสอบ) ; หน้าจอว่าง = ข้อความว่าง', (tester) async {
     await boot(tester);
@@ -37,24 +36,33 @@ void main() {
     expect(find.byKey(const ValueKey('wf-page-thumb')), findsOneWidget);
     expect(find.byKey(const ValueKey('wf-panel-style')), findsOneWidget);
     expect(find.byKey(const ValueKey('wf-layers-empty')), findsOneWidget);
-    final checksY = tester.getTopLeft(find.byKey(const ValueKey('wf-fold-checks-head'))).dy;
-    expect(tester.getTopLeft(layersHead).dy, greaterThan(checksY));
+    // เลเยอร์ติดอยู่ล่างแผง (เลื่อนแยกจากส่วนบน) ; ส่วนตรวจสอบอยู่ในส่วนบน
+    final layers = find.byKey(const ValueKey('wf-layers'));
+    expect(tester.getBottomLeft(layers).dy, closeTo(tester.getBottomLeft(panel).dy, 1));
+    expect(find.descendant(of: layers, matching: find.byKey(const ValueKey('wf-fold-checks-head'))), findsNothing);
+    expect(find.byKey(const ValueKey('wf-fold-checks-head')), findsOneWidget);
     expect(find.byKey(const ValueKey('wf-fold-flow-head')), findsNothing, reason: 'ไม่มี Screen Flow ใช้ ไม่แสดงส่วนนี้');
   });
 
   testWidgets('คลิกหัวส่วน = พับ/กาง ; เนื้อหาที่พับไม่ถูกสร้าง ; สถานะจำข้ามการเลือกชิ้นส่วน', (tester) async {
     await boot(tester);
+    Future<void> tapHead(String k) async {
+      await tester.ensureVisible(find.byKey(ValueKey(k)));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey(k)));
+    }
+
     expect(find.byKey(const ValueKey('wf-device')), findsNothing, reason: 'ขนาดหน้าจอพับอยู่ตอนเริ่ม');
-    await tester.tap(find.byKey(const ValueKey('wf-fold-size-head')));
+    await tapHead('wf-fold-size-head');
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('wf-device')), findsOneWidget);
     expect(find.byKey(const ValueKey('wf-frame-w-1440')), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('wf-fold-look-head')));
+    await tapHead('wf-fold-look-head');
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('wf-panel-style')), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('wf-fold-look-head'))); // คืนค่า
-    await tester.tap(find.byKey(const ValueKey('wf-fold-size-head')));
+    await tapHead('wf-fold-look-head'); // คืนค่า
+    await tapHead('wf-fold-size-head');
     await tester.pumpAndSettle();
   });
 
@@ -79,7 +87,10 @@ void main() {
     expect(f.selectedIds, {box.id});
     // คุณสมบัติของชิ้นที่เลือกอยู่เหนือเลเยอร์
     expect(find.byKey(const ValueKey('wf-panel-style')), findsNothing);
-    expect(tester.getTopLeft(find.byKey(const ValueKey('wf-bold'))).dy, lessThan(tester.getTopLeft(layersHead).dy));
+    expect(find.byKey(const ValueKey('wf-bold')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('wf-layers')), matching: find.byKey(const ValueKey('wf-bold'))), findsNothing,
+        reason: 'คุณสมบัติอยู่ส่วนบน ไม่ปนกับแผงเลเยอร์');
+    expect(find.byKey(ValueKey('wf-item-${box.id}')), findsOneWidget, reason: 'เลือกชิ้นแล้วเลเยอร์ยังอยู่');
 
     // แผงซ้ายไม่มีรายการชิ้นส่วนแล้ว
     expect(find.descendant(of: find.byType(WireframeLeftPanel), matching: find.byKey(ValueKey('wf-item-${box.id}'))), findsNothing);
@@ -128,6 +139,34 @@ void main() {
       expect(f.diagram.width, double.parse(v));
     }
     await tap(find.byKey(const ValueKey('wf-fold-size-head')));
+  });
+
+  testWidgets('แผงเลเยอร์ติดล่าง: เลือกชิ้นแล้วแถวไม่กระโดด ; ลากขอบบนปรับความสูง ; คลิกหัวพับ/กาง', (tester) async {
+    await boot(tester);
+    final a = f.addComponent(WfKind.button, 300, 200)!;
+    f.cancelEditing();
+    f.clearSelection();
+    await tester.pumpAndSettle();
+    final row = find.byKey(ValueKey('wf-item-${a.id}'));
+    final y0 = tester.getTopLeft(row).dy;
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    expect(f.selectedIds, {a.id});
+    expect(tester.getTopLeft(row).dy, y0, reason: 'แผงด้านบนเปลี่ยนเป็นคุณสมบัติ แต่แถวเลเยอร์อยู่ที่เดิม');
+
+    final layers = find.byKey(const ValueKey('wf-layers'));
+    final h0 = tester.getSize(layers).height;
+    await tester.drag(find.byKey(const ValueKey('wf-layers-resize')), const Offset(0, -120));
+    await tester.pumpAndSettle();
+    expect(tester.getSize(layers).height, greaterThan(h0 + 60));
+
+    await tester.tap(find.byKey(const ValueKey('wf-fold-layers-head')));
+    await tester.pumpAndSettle();
+    expect(row, findsNothing);
+    expect(tester.getSize(layers).height, lessThan(60));
+    await tester.tap(find.byKey(const ValueKey('wf-fold-layers-head')));
+    await tester.pumpAndSettle();
+    expect(row, findsOneWidget);
   });
 
   testWidgets('ภาษาอังกฤษ: หัวส่วนและข้อความว่างแปลครบ', (tester) async {
