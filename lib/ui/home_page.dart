@@ -225,7 +225,7 @@ class _HomePageState extends State<HomePage> {
                       : type == DocType.wireframe
                       ? KeyedSubtree(key: ValueKey('wf-canvas-$docId'), child: _wfCanvas)
                       : type == DocType.screenflow
-                      ? KeyedSubtree(key: ValueKey('sf-canvas-$docId'), child: _sfCanvas)
+                      ? KeyedSubtree(key: ValueKey('sf-canvas-$docId'), child: Column(children: [const ScreenFlowToolbar(), Expanded(child: _sfCanvas)]))
                       : KeyedSubtree(key: ValueKey('dfd-canvas-$docId'), child: _dfdCanvas),
                 ),
               ),

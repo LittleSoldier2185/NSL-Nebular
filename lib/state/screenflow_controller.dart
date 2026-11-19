@@ -25,6 +25,15 @@ class ScreenFlowController extends BoxDiagramController<ScreenFlowDiagram, SfNod
 
   ScreenFlowDiagram get diagram => content;
 
+  /// แสดงภาพย่อ Wireframe ในหน้าจอบนแคนวาส (สถานะมุมมอง ไม่บันทึกในไฟล์ ; ปิด = แคนวาสโล่งและวาดเร็วขึ้น)
+  bool _thumbnails = true;
+  bool get showThumbnails => _thumbnails;
+
+  void toggleThumbnails() {
+    _thumbnails = !_thumbnails;
+    notifyListeners();
+  }
+
   @override
   Object? encodeContent(ScreenFlowDiagram c) => c.toJson();
 

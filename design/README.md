@@ -23,6 +23,7 @@
 | `wireframe-panel/` | แผงขวาของ Wireframe 3 แนวทาง (ใช้แบบ C) — สำเนาของ Artifact "Wireframe แผงขวา" https://claude.ai/artifact/WE9mmEUw3g6y3arvpf3Y6t | (ระหว่าง 11–12) |
 | `menus/` | เมนูมุมมอง/เครื่องมือ (ทำแล้ว) + เมนูไฟล์/แก้ไข/ช่วยเหลือ — สำเนาของ Artifact "NSL Nebular — เมนูมุมมองใหม่" https://claude.ai/artifact/FQZNui1HypLGJdgxHaeK4s | 12, 14 |
 | `dfd/` | ตัวแก้ไข DFD (หน้าต่างเต็ม + แผงขวาเมื่อเลือกที่เก็บข้อมูล/เส้นข้อมูล) — สำเนาของ Artifact "NSL Nebular — ตัวแก้ไข DFD" https://claude.ai/artifact/Kj5SkA4i5TTxpaF1pwPvyE | 15 |
+| `screenflow/` | ตัวแก้ไข Screen Flow (หน้าต่างเต็ม + แผงขวาเมื่อเลือกการเปลี่ยนหน้า / ภาพรวม) — สำเนาของ Artifact "NSL Nebular — ตัวแก้ไข Screen Flow" https://claude.ai/artifact/2RrVKvUKRQDVHhGadNRoQA | 16 |
 
 ## วิธีดู
 

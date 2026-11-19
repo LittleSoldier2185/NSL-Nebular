@@ -47,9 +47,10 @@ void paintScreenFlow(
   String? linkSource,
   String? hideTextOf,
   bool shadows = true,
+  bool thumbnails = true,
 }) {
   for (final n in d.nodes) {
-    _paintNode(canvas, n, wireframeOf: wireframeOf, shadows: shadows, hideText: n.id == hideTextOf);
+    _paintNode(canvas, n, wireframeOf: wireframeOf, shadows: shadows, hideText: n.id == hideTextOf, thumbnails: thumbnails);
   }
 
   final routes = sfRoutes(d);
@@ -112,7 +113,8 @@ void paintScreenFlow(
   }
 }
 
-void _paintNode(Canvas canvas, SfNode n, {WireframeDiagram? Function(String id)? wireframeOf, required bool shadows, required bool hideText}) {
+void _paintNode(Canvas canvas, SfNode n,
+    {WireframeDiagram? Function(String id)? wireframeOf, required bool shadows, required bool hideText, bool thumbnails = true}) {
   final accent = Color(sfNodeColor(n));
   final r = switch (n.kind) { SfKind.start || SfKind.end => n.h / 2, _ => 8.0 };
   final rr = RRect.fromRectAndRadius(Rect.fromLTWH(n.x, n.y, n.w, n.h), Radius.circular(r));
@@ -155,7 +157,14 @@ void _paintNode(Canvas canvas, SfNode n, {WireframeDiagram? Function(String id)?
     }
     final box = sfThumbBox(n);
     final wf = n.wireframeId == null ? null : wireframeOf?.call(n.wireframeId!);
-    if (wf != null) {
+    if (wf != null && !thumbnails) {
+      // ปิดภาพย่อ: บอกขนาดหน้าจอแทน
+      final tp = TextPainter(
+        text: TextSpan(text: '${wf.width.round()} × ${wf.height.round()}', style: TextStyle(fontFamily: kThai, fontSize: 12, color: C.muted)),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      tp.paint(canvas, Offset(box.left + (box.width - tp.width) / 2, box.top + (box.height - tp.height) / 2));
+    } else if (wf != null) {
       final f = sfThumbFit(box, wf.width, wf.height);
       canvas.save();
       canvas.translate(f.dx, f.dy);
@@ -202,8 +211,16 @@ class ScreenFlowScreenPainter extends CustomPainter {
     this.hideTextOf,
     this.dropNode,
     this.dropPort,
+    this.thumbnails = true,
+    this.apiBadges = const {},
     required Listenable repaint,
   }) : super(repaint: repaint);
+
+  /// แสดงภาพย่อ Wireframe ในหน้าจอ
+  final bool thumbnails;
+
+  /// ป้าย endpoint ใต้ป้ายของเส้นที่เรียก API (id เส้น -> "POST /loans") — ตามดีไซน์ Phase 16
+  final Map<String, String> apiBadges;
 
   /// กล่อง/จุดต่อที่ปลายเส้นที่กำลังลากจะไปวาง (null = ไม่ได้ลากปลายเส้น)
   final String? dropNode;
@@ -230,7 +247,9 @@ class ScreenFlowScreenPainter extends CustomPainter {
         selectedNodes: selectedNodes,
         selectedEdge: selectedEdge,
         linkSource: linkSource,
-        hideTextOf: hideTextOf);
+        hideTextOf: hideTextOf,
+        thumbnails: thumbnails);
+    _paintApiBadges(canvas);
     if (selectedNodes.length == 1) {
       final n = diagram.nodeById(selectedNodes.first);
       if (n != null) paintResizeHandles(canvas, Rect.fromLTWH(n.x, n.y, n.w, n.h), scale);
@@ -249,6 +268,29 @@ class ScreenFlowScreenPainter extends CustomPainter {
     }
     canvas.restore();
     paintMarquee(canvas, marquee);
+  }
+
+  void _paintApiBadges(Canvas canvas) {
+    if (apiBadges.isEmpty || scale < 0.45) return;
+    final routes = sfRoutes(diagram);
+    for (final e in diagram.edges) {
+      final text = apiBadges[e.id];
+      final r = routes[e.id];
+      if (text == null || r == null) continue;
+      final (ax, ay) = routeLabelPoint(r, e);
+      final below = sfLabelRect(e, r)?.bottom ?? ay;
+      final tp = TextPainter(
+        text: TextSpan(
+            text: text,
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: C.palette.infoText, fontFamily: kMono, fontFamilyFallback: const ['Consolas'])),
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+        ellipsis: '…',
+      )..layout(maxWidth: 160);
+      final rect = Rect.fromCenter(center: Offset(ax, below + 11), width: tp.width + 12, height: 16);
+      canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), Paint()..color = C.palette.infoBg);
+      tp.paint(canvas, Offset(rect.left + 6, rect.center.dy - tp.height / 2));
+    }
   }
 
   @override

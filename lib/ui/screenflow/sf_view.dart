@@ -6,6 +6,10 @@ import '../../core/layout/box_ops.dart' show BoxAlign;
 import '../../core/layout/ortho_route.dart';
 import '../../core/layout/screenflow_geometry.dart';
 import '../../core/models/screenflow_model.dart';
+import '../../core/models/workspace.dart';
+import '../../core/validate/issue.dart';
+import '../../state/app_settings.dart';
+import '../flowchart/fc_minimap.dart' show MinimapFrame, kFcMinimapSize, kFcMinimapMinCanvasWidth;
 import '../../core/validate/screenflow_validator.dart';
 import '../../state/screenflow_controller.dart';
 import '../../state/workspace_controller.dart';
@@ -236,6 +240,14 @@ class _ScreenFlowCanvasState extends BoxCanvasState<ScreenFlowCanvas, ScreenFlow
   @override
   CustomPainter foregroundPainter(ScreenFlowController c, Rect? marquee) {
     final w = context.read<WorkspaceController>();
+    // ป้าย endpoint ของเส้นที่เรียก API
+    final apiBadges = <String, String>{};
+    for (final e in c.diagram.edges) {
+      final a = e.api;
+      if (a == null) continue;
+      final ep = w.documentById(a.docId)?.api?.endpointById(a.endpointId);
+      if (ep != null) apiBadges[e.id] = '${ep.method.name.toUpperCase()} ${ep.path}';
+    }
     return ScreenFlowScreenPainter(
       diagram: c.diagram,
       offset: c.offset,
@@ -249,6 +261,8 @@ class _ScreenFlowCanvasState extends BoxCanvasState<ScreenFlowCanvas, ScreenFlow
       linkCursor: cursor,
       marquee: marquee,
       hideTextOf: c.editing?.id,
+      thumbnails: c.showThumbnails,
+      apiBadges: apiBadges,
       repaint: cursor,
     );
   }
@@ -298,11 +312,15 @@ class _ScreenFlowCanvasState extends BoxCanvasState<ScreenFlowCanvas, ScreenFlow
     }
     return [
       ?editor,
-      Positioned(top: 12, left: 0, right: 0, child: Center(child: FittedBox(fit: BoxFit.scaleDown, child: _Toolbar(compact: size.width < 760)))),
       Positioned(
         right: 14,
         bottom: 14,
-        child: CanvasZoomBar(controller: c, size: size, keyPrefix: 'sf', extra: [
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end, children: [
+          if (size.width >= kFcMinimapMinCanvasWidth && size.height >= 360 && c.diagram.nodes.isNotEmpty) ...[
+            _SfMinimap(canvas: size),
+            const SizedBox(height: 8),
+          ],
+          CanvasZoomBar(controller: c, size: size, keyPrefix: 'sf', extra: [
           IconButton(
             key: const ValueKey('sf-autolayout'),
             tooltip: tr('จัดวางอัตโนมัติ (ซ้ายไปขวา)'),
@@ -314,6 +332,7 @@ class _ScreenFlowCanvasState extends BoxCanvasState<ScreenFlowCanvas, ScreenFlow
             icon: const Icon(Icons.account_tree_outlined),
           ),
         ]),
+        ]),
       ),
       if (c.diagram.nodes.isEmpty)
         IgnorePointer(
@@ -323,7 +342,7 @@ class _ScreenFlowCanvasState extends BoxCanvasState<ScreenFlowCanvas, ScreenFlow
               const SizedBox(height: 10),
               Text(tr('Screen Flow ว่างอยู่'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: C.muted)),
               const SizedBox(height: 4),
-              Text(tr('วางจุดเริ่มและหน้าจอจากแถบด้านบน (O / P / E) แล้วลากเส้นการเปลี่ยนหน้า (F)'), style: TextStyle(color: C.muted)),
+              Text(tr('วางจุดเริ่มและหน้าจอจากแผงซ้าย (O / P / E) แล้วลากเส้นการเปลี่ยนหน้า (F)'), style: TextStyle(color: C.muted)),
             ]),
           ),
         ),
@@ -331,37 +350,264 @@ class _ScreenFlowCanvasState extends BoxCanvasState<ScreenFlowCanvas, ScreenFlow
   }
 }
 
-class _Toolbar extends StatelessWidget {
-  const _Toolbar({this.compact = false});
-  final bool compact;
+/// แถบเครื่องมือเต็มความกว้างเหนือแคนวาส Screen Flow (ตามดีไซน์ Phase 16):
+/// [เลือก S | การเปลี่ยนหน้า F] · จัดวางซ้ายไปขวา · ภาพย่อ Wireframe ······ ผลตรวจ · Snap · ส่งออกภาพ
+/// การวางโหนดอยู่ที่แผงซ้าย ; แคบ = ไอคอนอย่างเดียว ; ปานกลาง = ป้ายสั้น
+class ScreenFlowToolbar extends StatelessWidget {
+  const ScreenFlowToolbar({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      LayoutBuilder(builder: (context, box) => _ToolbarBody(compact: box.maxWidth < 760, medium: box.maxWidth < 1000));
+}
+
+class _ToolbarBody extends StatelessWidget {
+  const _ToolbarBody({required this.compact, required this.medium});
+  final bool compact, medium;
 
   @override
   Widget build(BuildContext context) {
     final f = context.watch<ScreenFlowController>();
-    return CanvasToolbarBox(children: [
-      canvasToolItem(
-          key: const ValueKey('sf-tool-select'),
-          label: tr('เลือก'),
-          icon: Icons.near_me_outlined,
-          on: f.tool == SfTool.select,
-          onTap: () => f.setTool(SfTool.select),
-          showLabel: !compact),
-      canvasToolDivider(),
-      for (final k in SfKind.values)
-        canvasToolItem(
-            key: ValueKey('sf-tool-${k.name}'),
-            label: '${sfKindLabel(k)} (${sfKindShortcut(k)})',
-            icon: sfKindIcon(k),
-            on: f.tool == SfTool.node && f.toolKind == k,
-            onTap: () => f.setNodeTool(k)),
-      canvasToolDivider(),
-      canvasToolItem(
-          key: const ValueKey('sf-tool-edge'),
-          label: '${tr('เส้นการเปลี่ยนหน้า')} (F)',
-          icon: Icons.arrow_right_alt_rounded,
-          on: f.tool == SfTool.edge,
-          onTap: () => f.setTool(SfTool.edge),
-          showLabel: !compact),
-    ]);
+    final w = context.watch<WorkspaceController>();
+    final s = context.watch<AppSettings>();
+    final dc = C.doc(DocType.screenflow);
+    final issues = validateScreenFlow(f.diagram, workspace: w.workspace);
+    final problems = issues.where((i) => i.severity != Severity.info).length;
+
+    Widget tool(String key, String label, IconData icon, String shortcut, bool on, VoidCallback onTap) => Tooltip(
+          message: '$label ($shortcut)',
+          child: InkWell(
+            key: ValueKey(key),
+            borderRadius: BorderRadius.circular(7),
+            onTap: onTap,
+            child: Container(
+              height: 28,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: on ? C.surface : Colors.transparent,
+                borderRadius: BorderRadius.circular(7),
+                boxShadow: on ? [BoxShadow(color: C.palette.shadow.withValues(alpha: 0.12), blurRadius: 2, offset: const Offset(0, 1))] : null,
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(icon, size: 15, color: on ? dc.ink : C.muted),
+                if (!compact) ...[
+                  const SizedBox(width: 6),
+                  Text(label, style: TextStyle(fontSize: 12, fontWeight: on ? FontWeight.w600 : FontWeight.w400)),
+                  const SizedBox(width: 5),
+                  Text(shortcut, style: TextStyle(fontSize: 11, color: C.muted, fontFamily: kMono, fontFamilyFallback: const ['Consolas'])),
+                ],
+              ]),
+            ),
+          ),
+        );
+
+    Widget button(String key, IconData icon, String label, VoidCallback? onTap, {bool outlined = false, bool on = false}) => Tooltip(
+          message: label,
+          child: InkWell(
+            key: ValueKey(key),
+            borderRadius: BorderRadius.circular(8),
+            onTap: onTap,
+            child: Container(
+              height: 30,
+              padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: outlined ? Border.all(color: C.border) : null,
+                color: on ? dc.tint : (outlined ? C.surface : null),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(icon, size: 15, color: onTap == null ? C.muted.withValues(alpha: 0.5) : (on ? dc.ink : C.muted)),
+                if (!compact) ...[
+                  const SizedBox(width: 6),
+                  Text(label, style: TextStyle(fontSize: 12, color: onTap == null ? C.muted : (on ? dc.ink : C.text))),
+                ],
+              ]),
+            ),
+          ),
+        );
+
+    final ok = problems == 0;
+    final rules = Tooltip(
+      message: ok ? tr('ตรวจแผนผังแล้วไม่พบปัญหา') : tr('ดูปัญหาในแผนผังนี้'),
+      child: InkWell(
+        key: const ValueKey('sf-rules'),
+        borderRadius: BorderRadius.circular(11),
+        onTap: f.clearSelection, // ไม่ได้เลือกอะไร = แผงขวาแสดงภาพรวมพร้อมรายการปัญหา
+        child: Container(
+          height: 22,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(color: ok ? C.primaryTint : C.palette.warnBg, borderRadius: BorderRadius.circular(11)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(ok ? Icons.check_rounded : Icons.warning_amber_rounded, size: 13, color: ok ? C.primaryDark : C.palette.warnText),
+            const SizedBox(width: 4),
+            Text(
+              ok ? (compact || medium ? tr('ผ่าน') : tr('ไม่พบปัญหา')) : tr('{0} ปัญหา', [problems]),
+              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: ok ? C.primaryDark : C.palette.warnText),
+            ),
+          ]),
+        ),
+      ),
+    );
+
+    final snap = Tooltip(
+      message: tr('จัดแนวตามตาราง (Snap) — กด Alt ค้างตอนลากเพื่อข้ามชั่วคราว'),
+      child: InkWell(
+        key: const ValueKey('sf-snap'),
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => s.setSnapToGrid(!s.snapToGrid),
+        child: Container(
+          height: 30,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(color: s.snapToGrid ? C.primaryTint : null, borderRadius: BorderRadius.circular(8)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.grid_4x4_rounded, size: 15, color: s.snapToGrid ? C.primaryDark : C.muted),
+            if (!compact && !medium) ...[
+              const SizedBox(width: 5),
+              Text('Snap', style: TextStyle(fontSize: 12, color: s.snapToGrid ? C.primaryDark : C.text)),
+            ],
+          ]),
+        ),
+      ),
+    );
+
+    final export = Tooltip(
+      message: tr('Export ภาพ PNG / SVG'),
+      child: Material(
+        color: dc.main,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          key: const ValueKey('sf-export'),
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => ScreenFlowActions(context).run(Cmd.exportImage),
+          child: SizedBox(
+            height: 30,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 12),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.image_outlined, size: 15, color: Colors.white),
+                if (!compact) ...[
+                  const SizedBox(width: 6),
+                  Text(tr('ส่งออกภาพ'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                ],
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    return Container(
+      key: const ValueKey('sf-toolbar'),
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(color: C.surface, border: Border(bottom: BorderSide(color: C.borderSoft))),
+      child: Row(children: [
+        Flexible(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(color: C.field, borderRadius: BorderRadius.circular(9)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  tool('sf-tool-select', tr('เลือก'), Icons.near_me_outlined, 'S', f.tool == SfTool.select, () => f.setTool(SfTool.select)),
+                  const SizedBox(width: 2),
+                  tool('sf-tool-edge', tr('การเปลี่ยนหน้า'), Icons.arrow_right_alt_rounded, 'F', f.tool == SfTool.edge, () => f.setTool(SfTool.edge)),
+                ]),
+              ),
+              Container(width: 1, height: 20, margin: const EdgeInsets.symmetric(horizontal: 8), color: C.border),
+              button('sf-autolayout', Icons.east_rounded, tr('จัดวางซ้ายไปขวา'), f.diagram.nodes.length < 2
+                  ? null
+                  : () {
+                      if (f.autoLayout()) f.fit(f.viewport);
+                    }, outlined: true),
+              const SizedBox(width: 4),
+              button('sf-thumbnails', Icons.web_outlined, tr('ภาพย่อ Wireframe'), f.toggleThumbnails, on: f.showThumbnails),
+            ]),
+          ),
+        ),
+        const SizedBox(width: 8),
+        rules,
+        const SizedBox(width: 6),
+        snap,
+        const SizedBox(width: 6),
+        export,
+      ]),
+    );
   }
+}
+
+/// minimap มุมขวาล่างของแคนวาส Screen Flow : โหนดย่อ + กรอบส่วนที่มองเห็น ; คลิก/ลาก = เลื่อนมุมมอง
+class _SfMinimap extends StatelessWidget {
+  const _SfMinimap({required this.canvas});
+  final Size canvas;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = context.watch<ScreenFlowController>();
+    final nodes = f.diagram.nodes;
+    if (nodes.isEmpty || canvas.isEmpty) return const SizedBox.shrink();
+    Rect? b;
+    for (final n in nodes) {
+      final r = Rect.fromLTWH(n.x, n.y, n.w, n.h);
+      b = b == null ? r : b.expandToInclude(r);
+    }
+    final visible = Rect.fromPoints(f.toWorld(Offset.zero), f.toWorld(Offset(canvas.width, canvas.height)));
+    final frame = MinimapFrame(b!.inflate(20).expandToInclude(visible), kFcMinimapSize);
+    void go(Offset local) => f.revealPoint(frame.toWorld(local), canvas);
+    return Semantics(
+      label: tr('แผนที่ย่อ'),
+      child: Tooltip(
+        message: tr('แผนที่ย่อ — คลิกหรือลากเพื่อเลื่อนมุมมอง'),
+        waitDuration: const Duration(milliseconds: 600),
+        child: GestureDetector(
+          key: const ValueKey('sf-minimap'),
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (e) => go(e.localPosition),
+          onPanStart: (e) => go(e.localPosition),
+          onPanUpdate: (e) => go(e.localPosition),
+          child: Container(
+            width: kFcMinimapSize.width,
+            height: kFcMinimapSize.height,
+            decoration: BoxDecoration(color: C.surface, borderRadius: BorderRadius.circular(8), border: Border.all(color: C.border)),
+            clipBehavior: Clip.antiAlias,
+            child: CustomPaint(painter: _SfMinimapPainter(f, frame, visible)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SfMinimapPainter extends CustomPainter {
+  _SfMinimapPainter(this.f, this.frame, this.visible);
+  final ScreenFlowController f;
+  final MinimapFrame frame;
+  final Rect visible;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final col = C.doc(DocType.screenflow).main;
+    canvas.save();
+    canvas.translate(frame.origin.dx - frame.world.left * frame.k, frame.origin.dy - frame.world.top * frame.k);
+    canvas.scale(frame.k);
+    for (final n in f.diagram.nodes) {
+      final r = Rect.fromLTWH(n.x, n.y, n.w, n.h);
+      final screen = n.kind == SfKind.screen;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(r, Radius.circular(screen ? 6 : r.shortestSide / 2)),
+        Paint()..color = (n.kind == SfKind.end ? C.muted : col).withValues(alpha: screen ? 0.35 : 0.5),
+      );
+    }
+    canvas.restore();
+    final view = frame.rectToMini(visible);
+    canvas.drawRect(view, Paint()..color = col.withValues(alpha: 0.08));
+    canvas.drawRect(view, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = col);
+  }
+
+  @override
+  bool shouldRepaint(_SfMinimapPainter old) => true;
 }
