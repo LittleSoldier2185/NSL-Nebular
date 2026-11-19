@@ -1,0 +1,1720 @@
+{
+  "format": "nsl-erd",
+  "version": 3,
+  "name": "ห้องสมุดเล็ก",
+  "meta": {
+    "description": "โปรเจกต์ตัวอย่างขนาดเล็กที่ใช้ทุกฟีเจอร์ของ NSL Nebular — ระบบยืม-คืนหนังสือ",
+    "createdAt": "2026-11-19T00:00:00.000Z",
+    "codegen": {
+      "targets": [
+        "sqlDdl",
+        "seedSql",
+        "prisma",
+        "typescript",
+        "openApi",
+        "htmlTailwind"
+      ],
+      "folder": "generated/mini"
+    },
+    "mock": {
+      "api": "api_lib",
+      "port": 8788,
+      "endpoints": {
+        "e_loan_create": {
+          "delay": 400
+        }
+      }
+    },
+    "requirements": [
+      {
+        "id": "r1",
+        "code": "REQ-01",
+        "text": "สมาชิกค้นหาหนังสือตามชื่อเรื่อง/ISBN/หมวดได้",
+        "priority": "high",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_lib",
+                "el": "books"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "d2"
+              }
+            ]
+          },
+          "flowchart": {
+            "na": true
+          },
+          "wireframe": {
+            "links": [
+              {
+                "doc": "wf_books",
+                "el": "b_search"
+              }
+            ]
+          },
+          "screenflow": {
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_books"
+              }
+            ]
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_lib",
+                "el": "e_books_list"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r2",
+        "code": "REQ-02",
+        "text": "ยืมหนังสือได้คนละไม่เกิน 3 เล่ม กำหนดคืน 14 วัน",
+        "priority": "high",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_lib",
+                "el": "loans"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "p1"
+              }
+            ]
+          },
+          "flowchart": {
+            "links": [
+              {
+                "doc": "fc_borrow",
+                "el": "save"
+              }
+            ]
+          },
+          "wireframe": {
+            "links": [
+              {
+                "doc": "wf_loan",
+                "el": "l_btn"
+              }
+            ]
+          },
+          "screenflow": {
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_loan"
+              }
+            ]
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_lib",
+                "el": "e_loan_create"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r3",
+        "code": "REQ-03",
+        "text": "บรรณารักษ์บันทึกการคืนและดูรายการค้างคืน",
+        "priority": "medium",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_lib",
+                "el": "loans"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "p2"
+              }
+            ]
+          },
+          "flowchart": {
+            "na": true
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_lib",
+                "el": "e_loan_return"
+              },
+              {
+                "doc": "api_lib",
+                "el": "e_overdue"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r4",
+        "code": "REQ-04",
+        "text": "ส่งอีเมลเตือนก่อนถึงกำหนดคืน 1 วัน",
+        "priority": "low",
+        "cells": {}
+      }
+    ]
+  },
+  "folders": [
+    {
+      "id": "f_design",
+      "name": "ออกแบบระบบ",
+      "parent": null
+    },
+    {
+      "id": "f_ui",
+      "name": "หน้าจอ",
+      "parent": null
+    }
+  ],
+  "documents": [
+    {
+      "id": "er_lib",
+      "type": "er",
+      "name": "ER — ห้องสมุด",
+      "folder": "f_design",
+      "typeVersion": 1,
+      "notes": [
+        {
+          "id": "n1",
+          "kind": "todo",
+          "text": "เพิ่มตารางค่าปรับ (fines) เมื่อคืนช้า",
+          "x": 760.0,
+          "y": 100.0,
+          "created": "2026-11-19T00:00:00.000Z"
+        },
+        {
+          "id": "n2",
+          "kind": "question",
+          "text": "สมาชิกหนึ่งคนจองคิวหนังสือที่ถูกยืมอยู่ได้ไหม?",
+          "anchor": "loans",
+          "created": "2026-11-19T00:00:00.000Z"
+        },
+        {
+          "id": "n3",
+          "kind": "memo",
+          "text": "ตั้งชื่อดัชนีขึ้นต้น idx_ ทุกอัน",
+          "done": true,
+          "created": "2026-11-19T00:00:00.000Z"
+        }
+      ],
+      "content": {
+        "name": "Mini Library",
+        "dialect": "postgres",
+        "board": {
+          "width": 1600.0,
+          "height": 1000.0
+        },
+        "tables": [
+          {
+            "id": "categories",
+            "name": "categories",
+            "comment": "หมวดหนังสือ (มีหมวดย่อยได้)",
+            "x": 80.0,
+            "y": 80.0,
+            "width": 240.0,
+            "color": 2,
+            "seed": [
+              {
+                "categories_id": "1",
+                "categories_name": "นิยาย",
+                "categories_parent_id": null
+              },
+              {
+                "categories_id": "2",
+                "categories_name": "วิทยาศาสตร์",
+                "categories_parent_id": null
+              },
+              {
+                "categories_id": "3",
+                "categories_name": "คอมพิวเตอร์",
+                "categories_parent_id": "2"
+              }
+            ],
+            "columns": [
+              {
+                "id": "categories_id",
+                "name": "id",
+                "type": "integer",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "categories_name",
+                "name": "name",
+                "type": "varchar",
+                "length": 80,
+                "pk": false,
+                "notNull": true,
+                "unique": true,
+                "autoIncrement": false
+              },
+              {
+                "id": "categories_parent_id",
+                "name": "parent_id",
+                "type": "integer",
+                "pk": false,
+                "notNull": false,
+                "unique": false,
+                "autoIncrement": false,
+                "comment": "หมวดแม่ (ว่าง = หมวดบนสุด)"
+              }
+            ],
+            "indexes": [
+              {
+                "id": "idx_categories_parent_id",
+                "name": "idx_categories_parent_id",
+                "columns": [
+                  "categories_parent_id"
+                ],
+                "unique": false
+              }
+            ]
+          },
+          {
+            "id": "books",
+            "name": "books",
+            "comment": "หนังสือในห้องสมุด",
+            "x": 420.0,
+            "y": 80.0,
+            "width": 250.0,
+            "color": 2,
+            "seed": [
+              {
+                "books_id": "1",
+                "books_isbn": "9786160000011",
+                "books_title": "สี่แผ่นดิน",
+                "books_category_id": "1",
+                "books_copies": "2"
+              },
+              {
+                "books_id": "2",
+                "books_isbn": "9786160000028",
+                "books_title": "จักรวาลในเปลือกนัท",
+                "books_category_id": "2",
+                "books_copies": "1"
+              },
+              {
+                "books_id": "3",
+                "books_isbn": "9786160000035",
+                "books_title": "เขียนโปรแกรมด้วย Dart",
+                "books_category_id": "3",
+                "books_copies": "3"
+              }
+            ],
+            "columns": [
+              {
+                "id": "books_id",
+                "name": "id",
+                "type": "integer",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "books_isbn",
+                "name": "isbn",
+                "type": "varchar",
+                "length": 13,
+                "pk": false,
+                "notNull": true,
+                "unique": true,
+                "autoIncrement": false
+              },
+              {
+                "id": "books_title",
+                "name": "title",
+                "type": "varchar",
+                "length": 200,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "comment": "ชื่อเรื่อง"
+              },
+              {
+                "id": "books_category_id",
+                "name": "category_id",
+                "type": "integer",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "books_copies",
+                "name": "copies",
+                "type": "smallint",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "1",
+                "comment": "จำนวนเล่มทั้งหมด"
+              },
+              {
+                "id": "books_created_at",
+                "name": "created_at",
+                "type": "timestamp",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "CURRENT_TIMESTAMP"
+              }
+            ],
+            "indexes": [
+              {
+                "id": "idx_books_category_id",
+                "name": "idx_books_category_id",
+                "columns": [
+                  "books_category_id"
+                ],
+                "unique": false
+              }
+            ]
+          },
+          {
+            "id": "members",
+            "name": "members",
+            "comment": "สมาชิกห้องสมุด",
+            "x": 80.0,
+            "y": 420.0,
+            "width": 240.0,
+            "color": 1,
+            "seed": [
+              {
+                "members_id": "1",
+                "members_full_name": "สมชาย ใจดี",
+                "members_email": "somchai@example.com",
+                "members_joined_at": "2026-01-10"
+              },
+              {
+                "members_id": "2",
+                "members_full_name": "สมหญิง รักอ่าน",
+                "members_email": "somying@example.com",
+                "members_joined_at": "2026-03-02"
+              }
+            ],
+            "columns": [
+              {
+                "id": "members_id",
+                "name": "id",
+                "type": "integer",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "members_full_name",
+                "name": "full_name",
+                "type": "varchar",
+                "length": 120,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "members_email",
+                "name": "email",
+                "type": "varchar",
+                "length": 190,
+                "pk": false,
+                "notNull": true,
+                "unique": true,
+                "autoIncrement": false
+              },
+              {
+                "id": "members_joined_at",
+                "name": "joined_at",
+                "type": "date",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "CURRENT_DATE"
+              }
+            ],
+            "indexes": []
+          },
+          {
+            "id": "loans",
+            "name": "loans",
+            "comment": "การยืม-คืน (สมาชิก ↔ หนังสือ)",
+            "x": 420.0,
+            "y": 420.0,
+            "width": 250.0,
+            "color": 3,
+            "columns": [
+              {
+                "id": "loans_id",
+                "name": "id",
+                "type": "integer",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "loans_member_id",
+                "name": "member_id",
+                "type": "integer",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "loans_book_id",
+                "name": "book_id",
+                "type": "integer",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "loans_borrowed_at",
+                "name": "borrowed_at",
+                "type": "date",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "CURRENT_DATE"
+              },
+              {
+                "id": "loans_due_at",
+                "name": "due_at",
+                "type": "date",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "comment": "กำหนดคืน (ยืม + 14 วัน)"
+              },
+              {
+                "id": "loans_returned_at",
+                "name": "returned_at",
+                "type": "date",
+                "pk": false,
+                "notNull": false,
+                "unique": false,
+                "autoIncrement": false,
+                "comment": "ว่าง = ยังไม่คืน"
+              }
+            ],
+            "indexes": [
+              {
+                "id": "idx_loans_member_id",
+                "name": "idx_loans_member_id",
+                "columns": [
+                  "loans_member_id"
+                ],
+                "unique": false
+              },
+              {
+                "id": "idx_loans_book_id_returned_at",
+                "name": "idx_loans_book_id_returned_at",
+                "columns": [
+                  "loans_book_id",
+                  "loans_returned_at"
+                ],
+                "unique": false
+              }
+            ]
+          }
+        ],
+        "relations": [
+          {
+            "id": "fk_1",
+            "fromTable": "categories",
+            "fromColumn": "categories_parent_id",
+            "toTable": "categories",
+            "toColumn": "categories_id",
+            "onDelete": "setNull",
+            "onUpdate": "noAction"
+          },
+          {
+            "id": "fk_2",
+            "fromTable": "books",
+            "fromColumn": "books_category_id",
+            "toTable": "categories",
+            "toColumn": "categories_id",
+            "onDelete": "restrict",
+            "onUpdate": "noAction"
+          },
+          {
+            "id": "fk_3",
+            "fromTable": "loans",
+            "fromColumn": "loans_member_id",
+            "toTable": "members",
+            "toColumn": "members_id",
+            "onDelete": "cascade",
+            "onUpdate": "noAction"
+          },
+          {
+            "id": "fk_4",
+            "fromTable": "loans",
+            "fromColumn": "loans_book_id",
+            "toTable": "books",
+            "toColumn": "books_id",
+            "onDelete": "restrict",
+            "onUpdate": "noAction"
+          }
+        ],
+        "notes": [
+          {
+            "id": "note_due",
+            "text": "ยืมได้คนละไม่เกิน 3 เล่ม · ค้างคืน = due_at < วันนี้ และ returned_at ว่าง",
+            "x": 760.0,
+            "y": 440.0,
+            "width": 240.0
+          }
+        ],
+        "groups": [
+          {
+            "id": "g_catalog",
+            "name": "แค็ตตาล็อก",
+            "x": 50.0,
+            "y": 40.0,
+            "width": 660.0,
+            "height": 320.0,
+            "color": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "dfd_ctx",
+      "type": "dfd",
+      "name": "DFD ระดับ 0",
+      "folder": "f_design",
+      "typeVersion": 1,
+      "content": {
+        "nodes": [
+          {
+            "id": "e_member",
+            "kind": "entity",
+            "name": "สมาชิก",
+            "x": 60.0,
+            "y": 77.0,
+            "w": 150.0,
+            "h": 56.0
+          },
+          {
+            "id": "e_staff",
+            "kind": "entity",
+            "name": "บรรณารักษ์",
+            "x": 697.0,
+            "y": 77.0,
+            "w": 150.0,
+            "h": 56.0
+          },
+          {
+            "id": "p0",
+            "kind": "process",
+            "name": "ระบบห้องสมุด",
+            "number": "0",
+            "x": 350.0,
+            "y": 60.0,
+            "w": 200.0,
+            "h": 90.0,
+            "child": "dfd_l1"
+          }
+        ],
+        "flows": [
+          {
+            "id": "f1",
+            "from": "e_member",
+            "to": "p0",
+            "label": "คำขอยืม"
+          },
+          {
+            "id": "f2",
+            "from": "p0",
+            "to": "e_member",
+            "label": "ผลการยืม"
+          },
+          {
+            "id": "f3",
+            "from": "e_staff",
+            "to": "p0",
+            "label": "ข้อมูลหนังสือ"
+          },
+          {
+            "id": "f4",
+            "from": "p0",
+            "to": "e_staff",
+            "label": "รายงานค้างคืน"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dfd_l1",
+      "type": "dfd",
+      "name": "DFD ระดับ 1",
+      "folder": "f_design",
+      "typeVersion": 1,
+      "content": {
+        "nodes": [
+          {
+            "id": "e_member",
+            "kind": "entity",
+            "name": "สมาชิก",
+            "x": 60.0,
+            "y": 71.38094411058378,
+            "w": 150.0,
+            "h": 56.0
+          },
+          {
+            "id": "e_staff",
+            "kind": "entity",
+            "name": "บรรณารักษ์",
+            "x": 997.0,
+            "y": 257.0,
+            "w": 150.0,
+            "h": 56.0
+          },
+          {
+            "id": "p1",
+            "kind": "process",
+            "name": "ยืมหนังสือ",
+            "number": "1.0",
+            "x": 350.0,
+            "y": 61.38094411058378,
+            "w": 180.0,
+            "h": 76.0,
+            "api": {
+              "doc": "api_lib",
+              "endpoint": "e_loan_create"
+            }
+          },
+          {
+            "id": "p2",
+            "kind": "process",
+            "name": "คืนและติดตามค้างคืน",
+            "number": "2.0",
+            "x": 350.0,
+            "y": 301.38094411058375,
+            "w": 180.0,
+            "h": 76.0,
+            "api": {
+              "doc": "api_lib",
+              "endpoint": "e_overdue"
+            }
+          },
+          {
+            "id": "p3",
+            "kind": "process",
+            "name": "จัดการหนังสือ",
+            "number": "3.0",
+            "x": 350.0,
+            "y": 187.38094411058378,
+            "w": 180.0,
+            "h": 64.0,
+            "api": {
+              "doc": "api_lib",
+              "endpoint": "e_book_create"
+            }
+          },
+          {
+            "id": "d1",
+            "kind": "store",
+            "name": "สมาชิก",
+            "number": "D1",
+            "x": 677.0,
+            "y": 60.0,
+            "w": 180.0,
+            "h": 48.0,
+            "table": "members",
+            "tableDoc": "er_lib"
+          },
+          {
+            "id": "d2",
+            "kind": "store",
+            "name": "หนังสือ",
+            "number": "D2",
+            "x": 677.0,
+            "y": 158.0,
+            "w": 180.0,
+            "h": 48.0,
+            "table": "books",
+            "tableDoc": "er_lib"
+          },
+          {
+            "id": "d3",
+            "kind": "store",
+            "name": "การยืม",
+            "number": "D3",
+            "x": 677.0,
+            "y": 256.0,
+            "w": 180.0,
+            "h": 60.0,
+            "table": "loans",
+            "tableDoc": "er_lib"
+          }
+        ],
+        "flows": [
+          {
+            "id": "f1",
+            "from": "e_member",
+            "to": "p1",
+            "label": "คำขอยืม"
+          },
+          {
+            "id": "f2",
+            "from": "p1",
+            "to": "e_member",
+            "label": "ผลการยืม"
+          },
+          {
+            "id": "f3",
+            "from": "d1",
+            "to": "p1",
+            "label": "ข้อมูลสมาชิก"
+          },
+          {
+            "id": "f4",
+            "from": "d2",
+            "to": "p1",
+            "label": "สถานะหนังสือ"
+          },
+          {
+            "id": "f5",
+            "from": "p1",
+            "to": "d3",
+            "label": "การยืมใหม่"
+          },
+          {
+            "id": "f6",
+            "from": "d3",
+            "to": "p2",
+            "label": "การยืมที่ค้าง"
+          },
+          {
+            "id": "f7",
+            "from": "p2",
+            "to": "d3",
+            "label": "วันที่คืน"
+          },
+          {
+            "id": "f8",
+            "from": "p2",
+            "to": "e_staff",
+            "label": "รายงานค้างคืน"
+          },
+          {
+            "id": "f9",
+            "from": "e_staff",
+            "to": "p3",
+            "label": "ข้อมูลหนังสือ"
+          },
+          {
+            "id": "f10",
+            "from": "p3",
+            "to": "d2",
+            "label": "หนังสือใหม่"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fc_borrow",
+      "type": "flowchart",
+      "name": "Flowchart — ยืมหนังสือ",
+      "folder": "f_design",
+      "typeVersion": 1,
+      "content": {
+        "nodes": [
+          {
+            "id": "start",
+            "shape": "start",
+            "text": "เริ่ม",
+            "x": 170.0,
+            "y": 60.0,
+            "w": 140.0,
+            "h": 50.0
+          },
+          {
+            "id": "input",
+            "shape": "io",
+            "text": "สแกนบัตรสมาชิก\nและ ISBN",
+            "x": 160.0,
+            "y": 170.0,
+            "w": 160.0,
+            "h": 64.0
+          },
+          {
+            "id": "check",
+            "shape": "process",
+            "text": "ตรวจข้อมูลสมาชิก",
+            "x": 160.0,
+            "y": 294.0,
+            "w": 160.0,
+            "h": 64.0,
+            "api": {
+              "doc": "api_lib",
+              "endpoint": "e_member_get"
+            }
+          },
+          {
+            "id": "overdue",
+            "shape": "decision",
+            "text": "มีเล่มค้างคืน?",
+            "x": 165.0,
+            "y": 418.0,
+            "w": 150.0,
+            "h": 90.0
+          },
+          {
+            "id": "warn",
+            "shape": "io",
+            "text": "แจ้งให้คืนก่อน",
+            "x": 260.0,
+            "y": 581.0,
+            "w": 160.0,
+            "h": 64.0
+          },
+          {
+            "id": "avail",
+            "shape": "decision",
+            "text": "หนังสือว่าง?",
+            "x": 60.0,
+            "y": 568.0,
+            "w": 150.0,
+            "h": 90.0
+          },
+          {
+            "id": "save",
+            "shape": "subroutine",
+            "text": "บันทึกการยืม",
+            "x": 65.0,
+            "y": 718.0,
+            "w": 160.0,
+            "h": 64.0,
+            "api": {
+              "doc": "api_lib",
+              "endpoint": "e_loan_create"
+            }
+          },
+          {
+            "id": "due",
+            "shape": "process",
+            "text": "กำหนดคืน +14 วัน",
+            "x": 160.0,
+            "y": 842.0,
+            "w": 160.0,
+            "h": 64.0
+          },
+          {
+            "id": "end_ok",
+            "shape": "end",
+            "text": "จบ: ยืมสำเร็จ",
+            "x": 170.0,
+            "y": 966.0,
+            "w": 140.0,
+            "h": 50.0
+          },
+          {
+            "id": "end_fail",
+            "shape": "end",
+            "text": "จบ: ยืมไม่ได้",
+            "x": 275.0,
+            "y": 725.0,
+            "w": 140.0,
+            "h": 50.0
+          },
+          {
+            "id": "note",
+            "shape": "note",
+            "text": "ยืมได้คนละไม่เกิน 3 เล่ม",
+            "x": 400.0,
+            "y": 294.0,
+            "w": 170.0,
+            "h": 80.0
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "from": "start",
+            "to": "input",
+            "label": ""
+          },
+          {
+            "id": "e2",
+            "from": "input",
+            "to": "check",
+            "label": ""
+          },
+          {
+            "id": "e3",
+            "from": "check",
+            "to": "overdue",
+            "label": ""
+          },
+          {
+            "id": "e4",
+            "from": "overdue",
+            "to": "warn",
+            "label": "มี"
+          },
+          {
+            "id": "e5",
+            "from": "warn",
+            "to": "end_fail",
+            "label": ""
+          },
+          {
+            "id": "e6",
+            "from": "overdue",
+            "to": "avail",
+            "label": "ไม่มี"
+          },
+          {
+            "id": "e7",
+            "from": "avail",
+            "to": "save",
+            "label": "ว่าง"
+          },
+          {
+            "id": "e8",
+            "from": "avail",
+            "to": "end_fail",
+            "label": "ไม่ว่าง"
+          },
+          {
+            "id": "e9",
+            "from": "save",
+            "to": "due",
+            "label": ""
+          },
+          {
+            "id": "e10",
+            "from": "due",
+            "to": "end_ok",
+            "label": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "wf_books",
+      "type": "wireframe",
+      "name": "Books — ค้นหาหนังสือ",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "notes": [
+        {
+          "id": "n4",
+          "kind": "todo",
+          "text": "ใส่ภาพปกหนังสือในตาราง",
+          "anchor": "b_table",
+          "created": "2026-11-19T00:00:00.000Z"
+        }
+      ],
+      "content": {
+        "device": "desktop",
+        "width": 1440.0,
+        "height": 900.0,
+        "style": "clean",
+        "accent": 4280640491,
+        "components": [
+          {
+            "id": "b_nav",
+            "kind": "navbar",
+            "text": "ห้องสมุดเล็ก",
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1440.0,
+            "h": 64.0
+          },
+          {
+            "id": "b_link1",
+            "kind": "link",
+            "text": "หนังสือ",
+            "x": 300.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "b_link2",
+            "kind": "link",
+            "text": "การยืมของฉัน",
+            "x": 400.0,
+            "y": 20.0,
+            "w": 110.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "b_avatar",
+            "kind": "avatar",
+            "text": "",
+            "x": 1376.0,
+            "y": 8.0,
+            "w": 48.0,
+            "h": 48.0
+          },
+          {
+            "id": "b_title",
+            "kind": "heading",
+            "text": "ค้นหาหนังสือ",
+            "x": 80.0,
+            "y": 100.0,
+            "w": 600.0,
+            "h": 48.0
+          },
+          {
+            "id": "b_search",
+            "kind": "search",
+            "text": "ชื่อเรื่องหรือ ISBN",
+            "x": 80.0,
+            "y": 170.0,
+            "w": 520.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_lib",
+              "table": "books",
+              "column": "books_title"
+            },
+            "api": {
+              "doc": "api_lib",
+              "endpoint": "e_books_list"
+            }
+          },
+          {
+            "id": "b_cat",
+            "kind": "select",
+            "text": "ทุกหมวด",
+            "x": 620.0,
+            "y": 170.0,
+            "w": 220.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_lib",
+              "table": "categories",
+              "column": "categories_name"
+            }
+          },
+          {
+            "id": "b_chip1",
+            "kind": "chip",
+            "text": "นิยาย",
+            "x": 80.0,
+            "y": 230.0,
+            "w": 90.0,
+            "h": 30.0,
+            "align": "center"
+          },
+          {
+            "id": "b_chip2",
+            "kind": "chip",
+            "text": "วิทยาศาสตร์",
+            "x": 180.0,
+            "y": 230.0,
+            "w": 120.0,
+            "h": 30.0,
+            "align": "center"
+          },
+          {
+            "id": "b_table",
+            "kind": "table",
+            "text": "",
+            "x": 80.0,
+            "y": 280.0,
+            "w": 1000.0,
+            "h": 360.0,
+            "columns": [
+              "ISBN",
+              "ชื่อเรื่อง",
+              "หมวด",
+              "จำนวน"
+            ],
+            "ref": {
+              "doc": "er_lib",
+              "table": "books"
+            }
+          },
+          {
+            "id": "b_page",
+            "kind": "pagination",
+            "text": "",
+            "x": 80.0,
+            "y": 660.0,
+            "w": 320.0,
+            "h": 40.0
+          },
+          {
+            "id": "b_btn_borrow",
+            "kind": "button",
+            "text": "ยืมเล่มนี้",
+            "x": 940.0,
+            "y": 660.0,
+            "w": 140.0,
+            "h": 44.0,
+            "align": "center",
+            "api": {
+              "doc": "api_lib",
+              "endpoint": "e_loan_create"
+            }
+          },
+          {
+            "id": "b_new",
+            "kind": "badge",
+            "text": "มาใหม่ 3 เล่ม",
+            "x": 1120.0,
+            "y": 100.0,
+            "w": 120.0,
+            "h": 36.0,
+            "align": "center",
+            "rotation": -6.0
+          },
+          {
+            "id": "b_side",
+            "kind": "card",
+            "text": "สถิติ",
+            "x": 1120.0,
+            "y": 280.0,
+            "w": 260.0,
+            "h": 200.0
+          },
+          {
+            "id": "b_stat",
+            "kind": "stat",
+            "text": "ยืมวันนี้ 12",
+            "x": 1140.0,
+            "y": 320.0,
+            "w": 220.0,
+            "h": 80.0
+          },
+          {
+            "id": "b_loading",
+            "kind": "skeleton",
+            "text": "",
+            "x": 1140.0,
+            "y": 410.0,
+            "w": 220.0,
+            "h": 50.0,
+            "hidden": true
+          },
+          {
+            "id": "b_footer",
+            "kind": "footer",
+            "text": "© 2026 ห้องสมุดเล็ก",
+            "x": 0.0,
+            "y": 820.0,
+            "w": 1440.0,
+            "h": 80.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "wf_loan",
+      "type": "wireframe",
+      "name": "Loan — ยืมหนังสือ (มือถือ)",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "content": {
+        "device": "mobile",
+        "width": 390.0,
+        "height": 844.0,
+        "style": "sketch",
+        "accent": 4280640491,
+        "components": [
+          {
+            "id": "l_title",
+            "kind": "heading",
+            "text": "ยืมหนังสือ",
+            "x": 20.0,
+            "y": 40.0,
+            "w": 350.0,
+            "h": 40.0
+          },
+          {
+            "id": "l_lbl_email",
+            "kind": "label",
+            "text": "อีเมลสมาชิก",
+            "x": 20.0,
+            "y": 100.0,
+            "w": 200.0,
+            "h": 22.0
+          },
+          {
+            "id": "l_email",
+            "kind": "input",
+            "text": "name@example.com",
+            "x": 20.0,
+            "y": 126.0,
+            "w": 350.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_lib",
+              "table": "members",
+              "column": "members_email"
+            }
+          },
+          {
+            "id": "l_lbl_book",
+            "kind": "label",
+            "text": "หนังสือ",
+            "x": 20.0,
+            "y": 186.0,
+            "w": 200.0,
+            "h": 22.0
+          },
+          {
+            "id": "l_book",
+            "kind": "select",
+            "text": "เลือกหนังสือ",
+            "x": 20.0,
+            "y": 212.0,
+            "w": 350.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_lib",
+              "table": "books",
+              "column": "books_title"
+            }
+          },
+          {
+            "id": "l_lbl_due",
+            "kind": "label",
+            "text": "กำหนดคืน",
+            "x": 20.0,
+            "y": 272.0,
+            "w": 200.0,
+            "h": 22.0
+          },
+          {
+            "id": "l_due",
+            "kind": "datepicker",
+            "text": "14 วันจากวันนี้",
+            "x": 20.0,
+            "y": 298.0,
+            "w": 350.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_lib",
+              "table": "loans",
+              "column": "loans_due_at"
+            }
+          },
+          {
+            "id": "l_agree",
+            "kind": "checkbox",
+            "text": "ยอมรับระเบียบการยืม",
+            "x": 20.0,
+            "y": 360.0,
+            "w": 350.0,
+            "h": 28.0
+          },
+          {
+            "id": "l_alert",
+            "kind": "alert",
+            "text": "ยืมได้คนละไม่เกิน 3 เล่ม",
+            "x": 20.0,
+            "y": 404.0,
+            "w": 350.0,
+            "h": 56.0
+          },
+          {
+            "id": "l_btn",
+            "kind": "button",
+            "text": "ยืนยันการยืม",
+            "x": 20.0,
+            "y": 480.0,
+            "w": 350.0,
+            "h": 48.0,
+            "align": "center",
+            "api": {
+              "doc": "api_lib",
+              "endpoint": "e_loan_create"
+            }
+          },
+          {
+            "id": "l_back",
+            "kind": "button",
+            "text": "กลับ",
+            "x": 20.0,
+            "y": 540.0,
+            "w": 350.0,
+            "h": 44.0,
+            "align": "center",
+            "secondary": true
+          },
+          {
+            "id": "l_done",
+            "kind": "modal",
+            "text": "ยืมสำเร็จ!",
+            "x": 30.0,
+            "y": 600.0,
+            "w": 330.0,
+            "h": 200.0,
+            "hidden": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "sf_main",
+      "type": "screenflow",
+      "name": "Screen Flow — ยืมหนังสือ",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "content": {
+        "nodes": [
+          {
+            "id": "sf_start",
+            "kind": "start",
+            "title": "เปิดเว็บ",
+            "x": 60.0,
+            "y": 165.0,
+            "w": 130.0,
+            "h": 46.0
+          },
+          {
+            "id": "sf_books",
+            "kind": "screen",
+            "title": "ค้นหาหนังสือ",
+            "x": 300.0,
+            "y": 108.0,
+            "w": 190.0,
+            "h": 160.0,
+            "wireframe": "wf_books"
+          },
+          {
+            "id": "sf_loan",
+            "kind": "screen",
+            "title": "ยืมหนังสือ",
+            "x": 600.0,
+            "y": 60.0,
+            "w": 190.0,
+            "h": 160.0,
+            "wireframe": "wf_loan"
+          },
+          {
+            "id": "sf_mail",
+            "kind": "external",
+            "title": "อีเมลยืนยันการยืม",
+            "x": 900.0,
+            "y": 148.0,
+            "w": 170.0,
+            "h": 80.0
+          },
+          {
+            "id": "sf_end",
+            "kind": "end",
+            "title": "ออก",
+            "x": 630.0,
+            "y": 270.0,
+            "w": 130.0,
+            "h": 46.0
+          }
+        ],
+        "edges": [
+          {
+            "id": "s1",
+            "from": "sf_start",
+            "to": "sf_books",
+            "label": ""
+          },
+          {
+            "id": "s2",
+            "from": "sf_books",
+            "to": "sf_loan",
+            "label": "ยืมเล่มนี้",
+            "condition": "หนังสือว่าง"
+          },
+          {
+            "id": "s3",
+            "from": "sf_loan",
+            "to": "sf_mail",
+            "label": "ยืนยันการยืม",
+            "api": {
+              "doc": "api_lib",
+              "endpoint": "e_loan_create"
+            }
+          },
+          {
+            "id": "s4",
+            "from": "sf_loan",
+            "to": "sf_books",
+            "label": "กลับ"
+          },
+          {
+            "id": "s5",
+            "from": "sf_books",
+            "to": "sf_end",
+            "label": "ออก"
+          }
+        ]
+      }
+    },
+    {
+      "id": "api_lib",
+      "type": "api",
+      "name": "API — ห้องสมุด",
+      "typeVersion": 1,
+      "content": {
+        "title": "Mini Library API",
+        "version": "1.0.0",
+        "baseUrl": "https://api.mini-library.example/v1",
+        "endpoints": [
+          {
+            "id": "e_books_list",
+            "method": "get",
+            "path": "/books",
+            "summary": "ค้นหาหนังสือ",
+            "group": "books",
+            "table": {
+              "doc": "er_lib",
+              "table": "books"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200,
+                "example": "[{\"id\":1,\"isbn\":\"9786160000011\",\"title\":\"สี่แผ่นดิน\",\"copies\":2}]"
+              }
+            ]
+          },
+          {
+            "id": "e_book_create",
+            "method": "post",
+            "path": "/books",
+            "summary": "เพิ่มหนังสือ",
+            "group": "books",
+            "auth": true,
+            "table": {
+              "doc": "er_lib",
+              "table": "books"
+            },
+            "fields": [
+              {
+                "id": "f1",
+                "name": "isbn",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_lib",
+                  "table": "books",
+                  "column": "books_isbn"
+                }
+              },
+              {
+                "id": "f2",
+                "name": "title",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_lib",
+                  "table": "books",
+                  "column": "books_title"
+                }
+              },
+              {
+                "id": "f3",
+                "name": "category_id",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_lib",
+                  "table": "books",
+                  "column": "books_category_id"
+                }
+              },
+              {
+                "id": "f4",
+                "name": "copies",
+                "type": "integer",
+                "column": {
+                  "doc": "er_lib",
+                  "table": "books",
+                  "column": "books_copies"
+                }
+              }
+            ],
+            "responses": [
+              {
+                "status": 201
+              },
+              {
+                "status": 409,
+                "description": "ISBN ซ้ำ",
+                "example": "{\"error\":\"isbn_taken\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_member_get",
+            "method": "get",
+            "path": "/members/{id}",
+            "summary": "ข้อมูลสมาชิก",
+            "group": "members",
+            "auth": true,
+            "table": {
+              "doc": "er_lib",
+              "table": "members"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200,
+                "example": "{\"id\":1,\"full_name\":\"สมชาย ใจดี\",\"email\":\"somchai@example.com\"}"
+              },
+              {
+                "status": 404,
+                "example": "{\"error\":\"not_found\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_loan_create",
+            "method": "post",
+            "path": "/loans",
+            "summary": "ยืมหนังสือ",
+            "group": "loans",
+            "auth": true,
+            "table": {
+              "doc": "er_lib",
+              "table": "loans"
+            },
+            "fields": [
+              {
+                "id": "f5",
+                "name": "member_id",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_lib",
+                  "table": "loans",
+                  "column": "loans_member_id"
+                }
+              },
+              {
+                "id": "f6",
+                "name": "book_id",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_lib",
+                  "table": "loans",
+                  "column": "loans_book_id"
+                }
+              },
+              {
+                "id": "f7",
+                "name": "due_at",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_lib",
+                  "table": "loans",
+                  "column": "loans_due_at"
+                },
+                "description": "YYYY-MM-DD"
+              }
+            ],
+            "responses": [
+              {
+                "status": 201,
+                "description": "ยืมสำเร็จ"
+              },
+              {
+                "status": 409,
+                "description": "หนังสือไม่ว่าง หรือยืมครบ 3 เล่มแล้ว",
+                "example": "{\"error\":\"not_available\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_loan_return",
+            "method": "patch",
+            "path": "/loans/{id}",
+            "summary": "คืนหนังสือ",
+            "group": "loans",
+            "auth": true,
+            "table": {
+              "doc": "er_lib",
+              "table": "loans"
+            },
+            "fields": [
+              {
+                "id": "f8",
+                "name": "returned_at",
+                "type": "string",
+                "column": {
+                  "doc": "er_lib",
+                  "table": "loans",
+                  "column": "loans_returned_at"
+                }
+              }
+            ],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          },
+          {
+            "id": "e_overdue",
+            "method": "get",
+            "path": "/loans/overdue",
+            "summary": "รายการค้างคืน",
+            "group": "loans",
+            "auth": true,
+            "table": {
+              "doc": "er_lib",
+              "table": "loans"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200,
+                "example": "[{\"loan_id\":7,\"member\":\"สมหญิง รักอ่าน\",\"title\":\"จักรวาลในเปลือกนัท\",\"days_late\":3}]"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "links": []
+}
