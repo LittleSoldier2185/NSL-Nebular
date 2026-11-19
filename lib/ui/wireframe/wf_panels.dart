@@ -616,24 +616,18 @@ class _LayersFoldState extends State<_LayersFold> {
       return n;
     }
 
-    final rows = <Widget>[];
-    final seenGroups = <String>{};
-    for (final c in d.components.reversed) {
-      final g = c.group;
-      if (g == null) {
-        rows.add(_layerRow(f, c, depth(c.id), hidden, sel));
-        continue;
-      }
-      if (!seenGroups.add(g)) continue;
-      final members = wfGroupMembers(d, g).reversed.toList();
-      final open = !_collapsedGroups.contains(g);
-      rows.add(_groupRow(f, g, members, open, sel));
-      if (open) {
-        for (final m in members) {
-          rows.add(_layerRow(f, m, depth(m.id) + 1, hidden, sel));
-        }
-      }
-    }
+    // แถว (บนสุดก่อน) — ลากแถวเพื่อเปลี่ยนลำดับการซ้อน ; ลากหัวกลุ่ม = ย้ายทั้งกลุ่ม ; ลากชิ้นเข้า/ออกจากกลุ่มได้
+    final layerRows = f.layerRows(_collapsedGroups);
+    final rows = <Widget>[
+      for (final (i, r) in layerRows.indexed)
+        ReorderableDragStartListener(
+          key: ValueKey(r.header ? 'wf-layer-row-g-${r.group}' : 'wf-layer-row-${r.id}'),
+          index: i,
+          child: r.header
+              ? _groupRow(f, r.group!, wfGroupMembers(d, r.group!).reversed.toList(), r.open, sel)
+              : _layerRow(f, d.componentById(r.id!)!, depth(r.id!) + (r.group == null ? 0 : 1), hidden, sel),
+        ),
+    ];
 
     final canGroup = sel.length >= 2;
     return _Fold(
@@ -652,7 +646,15 @@ class _LayersFoldState extends State<_LayersFold> {
         if (rows.isEmpty)
           Text(tr('ยังไม่มีชิ้นส่วนบนหน้าจอ'), key: const ValueKey('wf-layers-empty'), style: TextStyle(fontSize: 12.5, color: C.muted))
         else
-          ...rows,
+          ReorderableListView(
+            key: const ValueKey('wf-layers-list'),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
+            proxyDecorator: (child, _, _) => Material(elevation: 4, color: C.surface, borderRadius: BorderRadius.circular(6), child: child),
+            onReorderItem: (from, to) => f.moveLayerRow(_collapsedGroups, from, to),
+            children: rows,
+          ),
       ]),
     );
   }

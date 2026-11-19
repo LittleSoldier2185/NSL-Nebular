@@ -177,6 +177,110 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
   /// ที่เลือกอยู่มีสมาชิกของกลุ่ม (เปิด/ปิดปุ่ม "เลิกกลุ่ม")
   bool get selectionHasGroup => selectedBoxes.any((c) => c.group != null);
 
+  // ---------- แผงเลเยอร์: แถว + ลากเปลี่ยนลำดับ ----------
+
+  /// แถวในแผงเลเยอร์ (บนสุดก่อน): หัวกลุ่ม แล้วตามด้วยสมาชิก (ถ้ากลุ่มไม่ได้พับใน [collapsed]) ; ชิ้นที่ไม่อยู่กลุ่มเป็นแถวเดี่ยว
+  List<WfLayerRow> layerRows(Set<String> collapsed) {
+    final d = diagram;
+    final rows = <WfLayerRow>[];
+    final seen = <String>{};
+    for (final c in d.components.reversed) {
+      final g = c.group;
+      if (g == null) {
+        rows.add(WfLayerRow(id: c.id));
+        continue;
+      }
+      if (!seen.add(g)) continue;
+      final open = !collapsed.contains(g);
+      rows.add(WfLayerRow(group: g, header: true, open: open));
+      if (open) {
+        for (final m in wfGroupMembers(d, g).reversed) {
+          rows.add(WfLayerRow(id: m.id, group: g));
+        }
+      }
+    }
+    return rows;
+  }
+
+  /// ลากแถว [oldIndex] ไปวางที่ [newIndex] (ดัชนีในรายการหลังเอาแถวที่ลากออกแล้ว แบบ onReorderItem) — undo ขั้นเดียว
+  ///
+  /// - ลากหัวกลุ่ม = ย้ายทั้งกลุ่ม (ไม่แทรกกลางกลุ่มอื่น)
+  /// - ลากชิ้นไปวางใต้หัวกลุ่มที่กางอยู่ หรือเหนือสมาชิกของกลุ่ม = เข้ากลุ่มนั้น ; วางนอกกลุ่ม = ออกจากกลุ่ม
+  /// - กลุ่มที่เหลือสมาชิกชิ้นเดียว = ยุบกลุ่ม
+  /// คืน true ถ้าลำดับ/กลุ่มเปลี่ยน
+  bool moveLayerRow(Set<String> collapsed, int oldIndex, int newIndex) {
+    final rows = layerRows(collapsed);
+    if (oldIndex < 0 || oldIndex >= rows.length || oldIndex == newIndex) return false;
+    final moving = rows[oldIndex];
+    final withoutMoved = [...rows]..removeAt(oldIndex);
+    final below = newIndex < withoutMoved.length ? withoutMoved[newIndex] : null;
+
+    // แถวที่ย้ายไปด้วยกัน
+    final block = <WfLayerRow>[moving];
+    if (moving.header && moving.open) {
+      for (var i = oldIndex + 1; i < rows.length && !rows[i].header && rows[i].group == moving.group; i++) {
+        block.add(rows[i]);
+      }
+    }
+    if (below != null && block.contains(below)) return false;
+    final rest = [for (final r in rows) if (!block.contains(r)) r];
+    var pos = below == null ? rest.length : rest.indexOf(below);
+
+    String? newGroup = moving.group;
+    if (moving.header) {
+      // ไม่แทรกกลางกลุ่มอื่น: เลื่อนลงไปจนพ้นสมาชิกของกลุ่มนั้น
+      while (pos < rest.length && !rest[pos].header && rest[pos].group != null && pos > 0 && (rest[pos - 1].group == rest[pos].group)) {
+        pos++;
+      }
+    } else {
+      final above = pos > 0 ? rest[pos - 1] : null;
+      final under = pos < rest.length ? rest[pos] : null;
+      if (above != null && above.header && above.open) {
+        newGroup = above.group;
+      } else if (under != null && !under.header && under.group != null) {
+        newGroup = under.group;
+      } else if (above != null && !above.header && above.group != null && above.group == moving.group) {
+        newGroup = moving.group; // สมาชิกตัวท้ายที่วางต่อจากสมาชิกในกลุ่มเดิม = ยังอยู่กลุ่มเดิม
+      } else {
+        newGroup = null;
+      }
+    }
+    rest.insertAll(pos, block);
+
+    // ลำดับชิ้น (บนสุดก่อน) + กลุ่มใหม่
+    final groupOf = <String, String?>{};
+    final topFirst = <String>[];
+    for (final r in rest) {
+      if (r.header) {
+        if (!r.open) {
+          for (final m in wfGroupMembers(diagram, r.group!).reversed) {
+            topFirst.add(m.id);
+            groupOf[m.id] = r.group;
+          }
+        }
+        continue;
+      }
+      topFirst.add(r.id!);
+      groupOf[r.id!] = r == moving ? newGroup : r.group;
+    }
+    // กลุ่มที่เหลือชิ้นเดียว = ยุบ
+    final counts = <String, int>{};
+    for (final g in groupOf.values) {
+      if (g != null) counts[g] = (counts[g] ?? 0) + 1;
+    }
+    return editIfChanged((d) {
+      final byId = {for (final c in d.components) c.id: c};
+      if (topFirst.length != byId.length) return;
+      d.components
+        ..clear()
+        ..addAll([for (final id in topFirst.reversed) byId[id]!]);
+      for (final c in d.components) {
+        final g = groupOf[c.id];
+        c.group = g != null && (counts[g] ?? 0) >= 2 ? g : null;
+      }
+    });
+  }
+
   // ---------- ข้อความ ----------
 
   /// ข้อความที่แก้บนแคนวาส: ตาราง = หัวคอลัมน์บรรทัดละคอลัมน์ ; อื่น ๆ = ข้อความของชิ้น
@@ -372,4 +476,16 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
         pad: 40);
     return b;
   }
+}
+
+/// แถวหนึ่งในแผงเลเยอร์: หัวกลุ่ม ([header], [group], [open]) หรือชิ้นส่วน ([id] ; [group] = กลุ่มที่สังกัด)
+class WfLayerRow {
+  WfLayerRow({this.id, this.group, this.header = false, this.open = true});
+  final String? id;
+  final String? group;
+  final bool header;
+  final bool open;
+
+  @override
+  String toString() => header ? 'G($group${open ? '' : ',closed'})' : (group == null ? id! : '$id@$group');
 }
