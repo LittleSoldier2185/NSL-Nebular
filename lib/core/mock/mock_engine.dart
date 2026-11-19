@@ -418,7 +418,7 @@ class MockEngine {
       } else if (c.isPrimaryKey && c.type == DataType.uuid) {
         row[c.name] = _uuid();
       } else {
-        row[c.name] = _typed(c, c.defaultValue);
+        row[c.name] = _defaultOf(c);
       }
     }
     // PK / UNIQUE ซ้ำกับแถวที่มีอยู่ = 409 (เหมือนฐานข้อมูลจริง)
@@ -460,7 +460,7 @@ class MockEngine {
     return _rows.putIfAbsent(key, () {
       final out = <Map<String, Object?>>[];
       for (final s in t.seedRows) {
-        out.add({for (final c in t.columns) c.name: _typed(c, s[c.id])});
+        out.add({for (final c in t.columns) c.name: s.containsKey(c.id) ? _typed(c, s[c.id]) : _defaultOf(c)});
       }
       // เติม AUTO INCREMENT ที่ seed ไม่ได้ใส่ ต่อจากเลขสูงสุดที่มี
       for (final c in t.columns) {
@@ -503,6 +503,24 @@ class MockEngine {
   }
 
   static bool _isIntType(ColumnModel c) => c.type == DataType.integer || c.type == DataType.bigint || c.type == DataType.smallint;
+
+  /// ค่าเริ่มต้นของคอลัมน์ (DEFAULT ใน ER) เป็นค่า JSON: `'guest'` -> guest (ถอดเครื่องหมายคำพูดของ SQL) ; `CURRENT_TIMESTAMP`/`NOW()` -> เวลาปัจจุบัน ;
+  /// `CURRENT_DATE` -> วันนี้ ; `NULL`/ไม่มี -> null
+  Object? _defaultOf(ColumnModel c) {
+    final raw = c.defaultValue?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    final up = raw.toUpperCase();
+    if (up == 'NULL') return null;
+    final now = _now();
+    String two(int n) => n.toString().padLeft(2, '0');
+    final date = '${now.year.toString().padLeft(4, '0')}-${two(now.month)}-${two(now.day)}';
+    if (up == 'CURRENT_DATE' || up == 'CURDATE()') return date;
+    if (up.startsWith('CURRENT_TIMESTAMP') || up == 'NOW()' || up == 'GETDATE()' || up.startsWith('DATETIME(')) {
+      return c.type == DataType.date ? date : '$date ${two(now.hour)}:${two(now.minute)}:${two(now.second)}';
+    }
+    final quoted = raw.length >= 2 && raw.startsWith("'") && raw.endsWith("'");
+    return _typed(c, quoted ? raw.substring(1, raw.length - 1).replaceAll("''", "'") : raw);
+  }
 
   /// ค่าในช่องของ seed/default -> ค่า JSON ตามชนิดคอลัมน์ (null = NULL)
   static Object? _typed(ColumnModel c, String? raw) {

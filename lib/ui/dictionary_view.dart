@@ -397,7 +397,8 @@ class _TableSection extends StatelessWidget {
                         children: [
                           DocTypeDot(u.doc.type, size: 7),
                           const SizedBox(width: 4),
-                          Text(u.label, style: cell.copyWith(fontSize: 12.5, color: C.primary)),
+                          // ชื่อยาว (เช่น ข้อความของชิ้นส่วน Wireframe) ตัดด้วย … แทนล้นแถว
+                          Flexible(child: Text(u.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: cell.copyWith(fontSize: 12.5, color: C.primary))),
                         ],
                       ),
                     ),

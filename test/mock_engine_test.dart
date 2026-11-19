@@ -125,6 +125,55 @@ void main() {
     });
   });
 
+  group('ค่าเริ่มต้นของคอลัมน์ (DEFAULT ใน ER)', () {
+    // พบจากการทดสอบโปรเจกต์ตัวอย่างจองห้องพัก: ค่า 'guest' ถูกส่งกลับพร้อมเครื่องหมายคำพูดของ SQL และ CURRENT_TIMESTAMP ได้ null
+    late MockEngine eng;
+    setUp(() {
+      w.mainEr.project.tables.add(TableModel(id: 'u', name: 'users', columns: [
+        ColumnModel(id: 'u1', name: 'id', isPrimaryKey: true, autoIncrement: true),
+        ColumnModel(id: 'u2', name: 'name', type: DataType.varchar, length: 40, notNull: true),
+        ColumnModel(id: 'u3', name: 'role', type: DataType.varchar, length: 20, defaultValue: "'guest'"),
+        ColumnModel(id: 'u4', name: 'motto', type: DataType.varchar, length: 40, defaultValue: "'it''s ok'"),
+        ColumnModel(id: 'u5', name: 'created_at', type: DataType.timestamp, defaultValue: 'CURRENT_TIMESTAMP'),
+        ColumnModel(id: 'u6', name: 'joined', type: DataType.date, defaultValue: 'CURRENT_DATE'),
+        ColumnModel(id: 'u7', name: 'level', type: DataType.integer, defaultValue: '3'),
+        ColumnModel(id: 'u8', name: 'vip', type: DataType.boolean, defaultValue: 'false'),
+        ColumnModel(id: 'u9', name: 'nick', type: DataType.varchar, length: 20, defaultValue: 'NULL'),
+      ], seedRows: [
+        {'u2': 'seeded'}, // ไม่ใส่คอลัมน์ที่มี DEFAULT = ใช้ค่าเริ่มต้นเหมือนฐานข้อมูลจริง
+      ]));
+      final uref = ApiTableRef(docId: w.mainEr.docId, tableId: 'u');
+      api.endpoints.addAll([
+        ApiEndpoint(id: 'ul', method: ApiMethod.get, path: '/users', table: uref),
+        ApiEndpoint(id: 'uc', method: ApiMethod.post, path: '/users', table: uref, fields: [ApiField(id: 'n', name: 'name', required: true)]),
+      ]);
+      eng = MockEngine(api: () => api, workspace: () => w.workspace, settings: () => settings, random: Random(1), clock: () => DateTime(2026, 11, 19, 8, 5, 9));
+    });
+
+    test('POST: ค่าเริ่มต้นแบบข้อความถอดเครื่องหมายคำพูด (รวม \'\' = \') ; ตัวเลข/บูลีนตามชนิด ; NULL = null ; เวลาปัจจุบันจากนาฬิกาที่ส่งให้', () {
+      final r = eng.handle(MockRequest(method: 'POST', path: '/users', body: '{"name":"ann"}'));
+      expect(r.reply.status, 201);
+      expect(jsonDecode(r.reply.body), {
+        'id': 2,
+        'name': 'ann',
+        'role': 'guest',
+        'motto': "it's ok",
+        'created_at': '2026-11-19 08:05:09',
+        'joined': '2026-11-19',
+        'level': 3,
+        'vip': false,
+        'nick': null,
+      });
+    });
+
+    test('seed ที่ไม่ได้ใส่คอลัมน์ = ใช้ค่าเริ่มต้น (ไม่ใช่ null) ; ที่ใส่ไว้ = ค่าที่ใส่', () {
+      final rows = jsonDecode(eng.handle(MockRequest(method: 'GET', path: '/users')).reply.body) as List;
+      expect(rows.single['role'], 'guest');
+      expect(rows.single['level'], 3);
+      expect(rows.single['name'], 'seeded');
+    });
+  });
+
   group('เส้นทาง', () {
     test('path ที่ไม่มีใน API = 404 + unknown ; method ที่ไม่มี = 405 พร้อมรายการที่อนุญาต', () {
       final a = call('GET', '/nope');

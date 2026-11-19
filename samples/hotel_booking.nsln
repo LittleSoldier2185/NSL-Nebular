@@ -1,0 +1,6173 @@
+{
+  "format": "nsl-erd",
+  "version": 3,
+  "name": "ระบบจองห้องพัก Siam Residence",
+  "meta": {
+    "description": "เว็บจองห้องพักโรงแรม — ตัวอย่างโปรเจกต์ที่ใช้ครบทุกชนิดเอกสารของ NSL Nebular",
+    "createdAt": "2026-11-19T04:51:37.557283Z",
+    "codegen": {
+      "targets": [
+        "sqlDdl",
+        "seedSql",
+        "laravelMigration",
+        "prisma",
+        "typescript",
+        "dart",
+        "openApi",
+        "laravelRoutes",
+        "flutterScreen",
+        "htmlTailwind"
+      ],
+      "folder": "generated/hotel"
+    },
+    "mock": {
+      "api": "api_main",
+      "port": 8787,
+      "endpoints": {
+        "e_pay_create": {
+          "delay": 600
+        },
+        "e_dashboard": {
+          "delay": 300
+        }
+      }
+    },
+    "requirements": [
+      {
+        "id": "r1",
+        "code": "REQ-01",
+        "text": "ผู้เข้าพักค้นหาห้องว่างตามวันที่และจำนวนผู้เข้าพักได้",
+        "priority": "high",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_main",
+                "el": "rooms"
+              },
+              {
+                "doc": "er_main",
+                "el": "bookings"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "p1"
+              }
+            ]
+          },
+          "flowchart": {
+            "links": [
+              {
+                "doc": "fc_booking",
+                "el": "search"
+              }
+            ]
+          },
+          "wireframe": {
+            "links": [
+              {
+                "doc": "wf_home",
+                "el": "h_btn_search"
+              }
+            ]
+          },
+          "screenflow": {
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_rooms"
+              }
+            ]
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_rooms_available"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r2",
+        "code": "REQ-02",
+        "text": "สมัครสมาชิกและเข้าสู่ระบบด้วยอีเมล",
+        "priority": "high",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_main",
+                "el": "users"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "d1"
+              }
+            ]
+          },
+          "flowchart": {
+            "links": [
+              {
+                "doc": "fc_booking",
+                "el": "auth"
+              }
+            ]
+          },
+          "wireframe": {
+            "links": [
+              {
+                "doc": "wf_home",
+                "el": "h_nav"
+              }
+            ]
+          },
+          "screenflow": {
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_home"
+              }
+            ]
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_register"
+              },
+              {
+                "doc": "api_main",
+                "el": "e_login"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r3",
+        "code": "REQ-03",
+        "text": "จองห้องโดยไม่ให้จองซ้อนในช่วงวันเดียวกัน",
+        "priority": "high",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_main",
+                "el": "bookings"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "p2"
+              }
+            ]
+          },
+          "flowchart": {
+            "links": [
+              {
+                "doc": "fc_booking",
+                "el": "create"
+              }
+            ]
+          },
+          "wireframe": {
+            "links": [
+              {
+                "doc": "wf_detail",
+                "el": "d_btn_book"
+              }
+            ]
+          },
+          "screenflow": {
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_checkout"
+              }
+            ]
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_booking_create"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r4",
+        "code": "REQ-04",
+        "text": "ชำระเงินออนไลน์ (บัตร / PromptPay / โอน)",
+        "priority": "high",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_main",
+                "el": "payments"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "p3"
+              }
+            ]
+          },
+          "flowchart": {
+            "links": [
+              {
+                "doc": "fc_booking",
+                "el": "pay"
+              }
+            ]
+          },
+          "wireframe": {
+            "links": [
+              {
+                "doc": "wf_checkout",
+                "el": "c_btn_pay"
+              }
+            ]
+          },
+          "screenflow": {
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_gateway"
+              }
+            ]
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_pay_create"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r5",
+        "code": "REQ-05",
+        "text": "ดูและยกเลิกการจองของตัวเอง",
+        "priority": "medium",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_main",
+                "el": "bookings"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "d3"
+              }
+            ]
+          },
+          "flowchart": {
+            "links": [
+              {
+                "doc": "fc_booking",
+                "el": "cancel"
+              }
+            ]
+          },
+          "wireframe": {
+            "links": [
+              {
+                "doc": "wf_mybookings"
+              }
+            ]
+          },
+          "screenflow": {
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_mybookings"
+              }
+            ]
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_booking_list"
+              },
+              {
+                "doc": "api_main",
+                "el": "e_booking_cancel"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r6",
+        "code": "REQ-06",
+        "text": "เขียนรีวิวและให้คะแนนหลังเข้าพัก",
+        "priority": "medium",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_main",
+                "el": "reviews"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "p5"
+              }
+            ]
+          },
+          "flowchart": {
+            "na": true
+          },
+          "wireframe": {
+            "links": [
+              {
+                "doc": "wf_mybookings",
+                "el": "m_review"
+              }
+            ]
+          },
+          "screenflow": {
+            "na": true
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_review_create"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r7",
+        "code": "REQ-07",
+        "text": "แอดมินเพิ่ม/แก้ไข/ลบห้องและตั้งราคา",
+        "priority": "high",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_main",
+                "el": "rooms"
+              },
+              {
+                "doc": "er_main",
+                "el": "seasonal_prices"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "p4"
+              }
+            ]
+          },
+          "flowchart": {
+            "na": true
+          },
+          "wireframe": {
+            "links": [
+              {
+                "doc": "wf_adminroom",
+                "el": "x_form"
+              }
+            ]
+          },
+          "screenflow": {
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_adminroom"
+              }
+            ]
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_rooms_create"
+              },
+              {
+                "doc": "api_main",
+                "el": "e_rooms_update"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r8",
+        "code": "REQ-08",
+        "text": "แดชบอร์ดแอดมิน: อัตราเข้าพัก เช็คอิน/เอาท์ รายได้",
+        "priority": "medium",
+        "cells": {
+          "er": {
+            "links": [
+              {
+                "doc": "er_main",
+                "el": "bookings"
+              }
+            ]
+          },
+          "dfd": {
+            "links": [
+              {
+                "doc": "dfd_l1",
+                "el": "p5"
+              }
+            ]
+          },
+          "flowchart": {
+            "na": true
+          },
+          "wireframe": {
+            "links": [
+              {
+                "doc": "wf_admin",
+                "el": "a_side"
+              }
+            ]
+          },
+          "screenflow": {
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_admin"
+              }
+            ]
+          },
+          "api": {
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_dashboard"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "r9",
+        "code": "REQ-09",
+        "text": "ส่งอีเมลยืนยันการจองให้ผู้เข้าพัก",
+        "priority": "low",
+        "cells": {
+          "er": {
+            "na": true
+          },
+          "flowchart": {
+            "links": [
+              {
+                "doc": "fc_booking",
+                "el": "confirm"
+              }
+            ]
+          },
+          "wireframe": {
+            "na": true
+          },
+          "screenflow": {
+            "na": true
+          }
+        }
+      },
+      {
+        "id": "r10",
+        "code": "REQ-10",
+        "text": "รองรับสองภาษา (ไทย/อังกฤษ)",
+        "priority": "low",
+        "cells": {
+          "er": {
+            "na": true
+          },
+          "dfd": {
+            "na": true
+          },
+          "flowchart": {
+            "na": true
+          }
+        }
+      }
+    ]
+  },
+  "folders": [
+    {
+      "id": "f_data",
+      "name": "ข้อมูล",
+      "parent": null
+    },
+    {
+      "id": "f_process",
+      "name": "กระบวนการ",
+      "parent": null
+    },
+    {
+      "id": "f_ui",
+      "name": "หน้าจอ",
+      "parent": null
+    },
+    {
+      "id": "f_api",
+      "name": "API",
+      "parent": null
+    }
+  ],
+  "documents": [
+    {
+      "id": "er_main",
+      "type": "er",
+      "name": "ER — ระบบจองห้องพัก",
+      "folder": "f_data",
+      "typeVersion": 1,
+      "notes": [
+        {
+          "id": "n1",
+          "kind": "todo",
+          "text": "เพิ่มตารางคูปอง/โปรโมชัน (รอข้อสรุปจากฝ่ายการตลาด)",
+          "x": 1180.0,
+          "y": 330.0,
+          "created": "2026-11-19T00:00:00.000Z"
+        },
+        {
+          "id": "n2",
+          "kind": "question",
+          "text": "ต้องเก็บเลขบัตรประชาชน/พาสปอร์ตของผู้เข้าพักต่างชาติหรือไม่? (PDPA)",
+          "x": 90.0,
+          "y": 60.0,
+          "anchor": "users",
+          "created": "2026-11-19T00:00:00.000Z"
+        },
+        {
+          "id": "n3",
+          "kind": "memo",
+          "text": "ราคารวม = base_price × multiplier ของ seasonal_prices ที่ช่วงวันครอบคลุมแต่ละคืน",
+          "anchor": "seasonal_prices",
+          "created": "2026-11-19T00:00:00.000Z"
+        },
+        {
+          "id": "n4",
+          "kind": "todo",
+          "text": "ตั้งชื่อ index ให้ตรงมาตรฐานทีม",
+          "done": true,
+          "created": "2026-11-19T00:00:00.000Z"
+        }
+      ],
+      "content": {
+        "name": "Hotel Booking",
+        "dialect": "mysql",
+        "board": {
+          "width": 2400.0,
+          "height": 1500.0
+        },
+        "tables": [
+          {
+            "id": "users",
+            "name": "users",
+            "comment": "ผู้ใช้งาน (ผู้เข้าพักและแอดมิน)",
+            "x": 80.0,
+            "y": 90.0,
+            "width": 250.0,
+            "color": 1,
+            "seed": [
+              {
+                "users_id": "1",
+                "users_full_name": "ผู้ดูแลระบบ",
+                "users_email": "admin@siam-residence.example",
+                "users_phone": "020000000",
+                "users_password_hash": "$2y$10$exampleexampleexampleexampleexampleexampleexample",
+                "users_role": "admin"
+              },
+              {
+                "users_id": "2",
+                "users_full_name": "สมชาย ใจดี",
+                "users_email": "somchai@example.com",
+                "users_phone": "0812345678",
+                "users_password_hash": "$2y$10$exampleexampleexampleexampleexampleexampleexample",
+                "users_role": "guest"
+              }
+            ],
+            "columns": [
+              {
+                "id": "users_id",
+                "name": "id",
+                "type": "bigint",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "users_full_name",
+                "name": "full_name",
+                "type": "varchar",
+                "length": 120,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "comment": "ชื่อ-นามสกุล"
+              },
+              {
+                "id": "users_email",
+                "name": "email",
+                "type": "varchar",
+                "length": 190,
+                "pk": false,
+                "notNull": true,
+                "unique": true,
+                "autoIncrement": false,
+                "comment": "ใช้เข้าสู่ระบบ"
+              },
+              {
+                "id": "users_phone",
+                "name": "phone",
+                "type": "varchar",
+                "length": 30,
+                "pk": false,
+                "notNull": false,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "users_password_hash",
+                "name": "password_hash",
+                "type": "varchar",
+                "length": 255,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "users_role",
+                "name": "role",
+                "type": "varchar",
+                "length": 20,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "'guest'",
+                "comment": "guest | admin"
+              },
+              {
+                "id": "users_created_at",
+                "name": "created_at",
+                "type": "timestamp",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "CURRENT_TIMESTAMP"
+              }
+            ],
+            "indexes": []
+          },
+          {
+            "id": "room_types",
+            "name": "room_types",
+            "comment": "ประเภทห้องและราคาพื้นฐาน",
+            "x": 420.0,
+            "y": 90.0,
+            "width": 250.0,
+            "color": 2,
+            "seed": [
+              {
+                "room_types_id": "1",
+                "room_types_name": "Standard",
+                "room_types_description": "ห้องมาตรฐาน เตียงคู่ เหมาะกับคู่รัก",
+                "room_types_capacity": "2",
+                "room_types_bed_type": "Queen",
+                "room_types_base_price": "1290.00"
+              },
+              {
+                "room_types_id": "2",
+                "room_types_name": "Deluxe",
+                "room_types_description": "ห้องกว้างขึ้น วิวเมือง พร้อมโซฟา",
+                "room_types_capacity": "3",
+                "room_types_bed_type": "King",
+                "room_types_base_price": "1890.00"
+              },
+              {
+                "room_types_id": "3",
+                "room_types_name": "Family Suite",
+                "room_types_description": "สองห้องนอน เหมาะกับครอบครัว",
+                "room_types_capacity": "5",
+                "room_types_bed_type": "King + Twin",
+                "room_types_base_price": "3290.00"
+              },
+              {
+                "room_types_id": "4",
+                "room_types_name": "Executive Suite",
+                "room_types_description": "สวีทชั้นบน ห้องนั่งเล่นแยก",
+                "room_types_capacity": "2",
+                "room_types_bed_type": "King",
+                "room_types_base_price": "4590.00"
+              }
+            ],
+            "columns": [
+              {
+                "id": "room_types_id",
+                "name": "id",
+                "type": "integer",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "room_types_name",
+                "name": "name",
+                "type": "varchar",
+                "length": 80,
+                "pk": false,
+                "notNull": true,
+                "unique": true,
+                "autoIncrement": false
+              },
+              {
+                "id": "room_types_description",
+                "name": "description",
+                "type": "text",
+                "pk": false,
+                "notNull": false,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "room_types_capacity",
+                "name": "capacity",
+                "type": "smallint",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "2",
+                "comment": "จำนวนผู้เข้าพักสูงสุด"
+              },
+              {
+                "id": "room_types_bed_type",
+                "name": "bed_type",
+                "type": "varchar",
+                "length": 40,
+                "pk": false,
+                "notNull": false,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "room_types_base_price",
+                "name": "base_price",
+                "type": "decimal",
+                "length": 10,
+                "scale": 2,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "comment": "ราคาต่อคืน (บาท)"
+              }
+            ],
+            "indexes": []
+          },
+          {
+            "id": "rooms",
+            "name": "rooms",
+            "comment": "ห้องจริงแต่ละห้อง",
+            "x": 760.0,
+            "y": 90.0,
+            "width": 250.0,
+            "color": 2,
+            "seed": [
+              {
+                "rooms_id": "1",
+                "rooms_room_number": "101",
+                "rooms_room_type_id": "1",
+                "rooms_floor": "1",
+                "rooms_status": "available"
+              },
+              {
+                "rooms_id": "2",
+                "rooms_room_number": "102",
+                "rooms_room_type_id": "1",
+                "rooms_floor": "1",
+                "rooms_status": "available"
+              },
+              {
+                "rooms_id": "3",
+                "rooms_room_number": "201",
+                "rooms_room_type_id": "2",
+                "rooms_floor": "2",
+                "rooms_status": "available"
+              },
+              {
+                "rooms_id": "4",
+                "rooms_room_number": "202",
+                "rooms_room_type_id": "2",
+                "rooms_floor": "2",
+                "rooms_status": "available"
+              },
+              {
+                "rooms_id": "5",
+                "rooms_room_number": "301",
+                "rooms_room_type_id": "3",
+                "rooms_floor": "3",
+                "rooms_status": "available"
+              },
+              {
+                "rooms_id": "6",
+                "rooms_room_number": "302",
+                "rooms_room_type_id": "3",
+                "rooms_floor": "3",
+                "rooms_status": "available"
+              },
+              {
+                "rooms_id": "7",
+                "rooms_room_number": "401",
+                "rooms_room_type_id": "4",
+                "rooms_floor": "4",
+                "rooms_status": "available"
+              }
+            ],
+            "columns": [
+              {
+                "id": "rooms_id",
+                "name": "id",
+                "type": "integer",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "rooms_room_number",
+                "name": "room_number",
+                "type": "varchar",
+                "length": 10,
+                "pk": false,
+                "notNull": true,
+                "unique": true,
+                "autoIncrement": false
+              },
+              {
+                "id": "rooms_room_type_id",
+                "name": "room_type_id",
+                "type": "integer",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "rooms_floor",
+                "name": "floor",
+                "type": "smallint",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "rooms_status",
+                "name": "status",
+                "type": "varchar",
+                "length": 20,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "'available'",
+                "comment": "available | maintenance"
+              }
+            ],
+            "indexes": [
+              {
+                "id": "idx_rooms_room_type_id",
+                "name": "idx_rooms_room_type_id",
+                "columns": [
+                  "rooms_room_type_id"
+                ],
+                "unique": false
+              }
+            ]
+          },
+          {
+            "id": "amenities",
+            "name": "amenities",
+            "comment": "สิ่งอำนวยความสะดวก",
+            "x": 1100.0,
+            "y": 90.0,
+            "width": 230.0,
+            "seed": [
+              {
+                "amenities_id": "1",
+                "amenities_name": "Wi-Fi ฟรี",
+                "amenities_icon": "wifi"
+              },
+              {
+                "amenities_id": "2",
+                "amenities_name": "อาหารเช้า",
+                "amenities_icon": "breakfast"
+              },
+              {
+                "amenities_id": "3",
+                "amenities_name": "สระว่ายน้ำ",
+                "amenities_icon": "pool"
+              },
+              {
+                "amenities_id": "4",
+                "amenities_name": "ที่จอดรถ",
+                "amenities_icon": "parking"
+              },
+              {
+                "amenities_id": "5",
+                "amenities_name": "เครื่องปรับอากาศ",
+                "amenities_icon": "ac"
+              },
+              {
+                "amenities_id": "6",
+                "amenities_name": "อ่างอาบน้ำ",
+                "amenities_icon": "bathtub"
+              }
+            ],
+            "columns": [
+              {
+                "id": "amenities_id",
+                "name": "id",
+                "type": "integer",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "amenities_name",
+                "name": "name",
+                "type": "varchar",
+                "length": 80,
+                "pk": false,
+                "notNull": true,
+                "unique": true,
+                "autoIncrement": false
+              },
+              {
+                "id": "amenities_icon",
+                "name": "icon",
+                "type": "varchar",
+                "length": 40,
+                "pk": false,
+                "notNull": false,
+                "unique": false,
+                "autoIncrement": false
+              }
+            ],
+            "indexes": []
+          },
+          {
+            "id": "room_type_amenities",
+            "name": "room_type_amenities",
+            "comment": "ประเภทห้อง ↔ สิ่งอำนวยความสะดวก (หลายต่อหลาย)",
+            "x": 1100.0,
+            "y": 330.0,
+            "width": 260.0,
+            "seed": [
+              {
+                "room_type_amenities_room_type_id": "1",
+                "room_type_amenities_amenity_id": "1"
+              },
+              {
+                "room_type_amenities_room_type_id": "1",
+                "room_type_amenities_amenity_id": "5"
+              },
+              {
+                "room_type_amenities_room_type_id": "2",
+                "room_type_amenities_amenity_id": "1"
+              },
+              {
+                "room_type_amenities_room_type_id": "2",
+                "room_type_amenities_amenity_id": "2"
+              },
+              {
+                "room_type_amenities_room_type_id": "2",
+                "room_type_amenities_amenity_id": "5"
+              },
+              {
+                "room_type_amenities_room_type_id": "3",
+                "room_type_amenities_amenity_id": "1"
+              },
+              {
+                "room_type_amenities_room_type_id": "3",
+                "room_type_amenities_amenity_id": "2"
+              },
+              {
+                "room_type_amenities_room_type_id": "3",
+                "room_type_amenities_amenity_id": "3"
+              },
+              {
+                "room_type_amenities_room_type_id": "3",
+                "room_type_amenities_amenity_id": "5"
+              },
+              {
+                "room_type_amenities_room_type_id": "4",
+                "room_type_amenities_amenity_id": "1"
+              },
+              {
+                "room_type_amenities_room_type_id": "4",
+                "room_type_amenities_amenity_id": "2"
+              },
+              {
+                "room_type_amenities_room_type_id": "4",
+                "room_type_amenities_amenity_id": "3"
+              },
+              {
+                "room_type_amenities_room_type_id": "4",
+                "room_type_amenities_amenity_id": "5"
+              },
+              {
+                "room_type_amenities_room_type_id": "4",
+                "room_type_amenities_amenity_id": "6"
+              }
+            ],
+            "columns": [
+              {
+                "id": "room_type_amenities_room_type_id",
+                "name": "room_type_id",
+                "type": "integer",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "room_type_amenities_amenity_id",
+                "name": "amenity_id",
+                "type": "integer",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              }
+            ],
+            "indexes": [
+              {
+                "id": "idx_room_type_amenities_amenity_id",
+                "name": "idx_room_type_amenities_amenity_id",
+                "columns": [
+                  "room_type_amenities_amenity_id"
+                ],
+                "unique": false
+              }
+            ]
+          },
+          {
+            "id": "seasonal_prices",
+            "name": "seasonal_prices",
+            "comment": "ราคาตามฤดูกาล (คูณราคาพื้นฐาน)",
+            "x": 420.0,
+            "y": 430.0,
+            "width": 250.0,
+            "seed": [
+              {
+                "seasonal_prices_id": "1",
+                "seasonal_prices_room_type_id": "1",
+                "seasonal_prices_start_date": "2026-12-20",
+                "seasonal_prices_end_date": "2027-01-05",
+                "seasonal_prices_multiplier": "1.50"
+              },
+              {
+                "seasonal_prices_id": "2",
+                "seasonal_prices_room_type_id": "2",
+                "seasonal_prices_start_date": "2026-12-20",
+                "seasonal_prices_end_date": "2027-01-05",
+                "seasonal_prices_multiplier": "1.50"
+              }
+            ],
+            "columns": [
+              {
+                "id": "seasonal_prices_id",
+                "name": "id",
+                "type": "integer",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "seasonal_prices_room_type_id",
+                "name": "room_type_id",
+                "type": "integer",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "seasonal_prices_start_date",
+                "name": "start_date",
+                "type": "date",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "seasonal_prices_end_date",
+                "name": "end_date",
+                "type": "date",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "seasonal_prices_multiplier",
+                "name": "multiplier",
+                "type": "decimal",
+                "length": 4,
+                "scale": 2,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "1.00"
+              }
+            ],
+            "indexes": [
+              {
+                "id": "idx_seasonal_prices_room_type_id",
+                "name": "idx_seasonal_prices_room_type_id",
+                "columns": [
+                  "seasonal_prices_room_type_id"
+                ],
+                "unique": false
+              }
+            ]
+          },
+          {
+            "id": "bookings",
+            "name": "bookings",
+            "comment": "การจองห้อง",
+            "x": 80.0,
+            "y": 560.0,
+            "width": 270.0,
+            "color": 3,
+            "columns": [
+              {
+                "id": "bookings_id",
+                "name": "id",
+                "type": "bigint",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "bookings_booking_code",
+                "name": "booking_code",
+                "type": "varchar",
+                "length": 20,
+                "pk": false,
+                "notNull": true,
+                "unique": true,
+                "autoIncrement": false,
+                "comment": "รหัสที่แสดงให้ลูกค้า"
+              },
+              {
+                "id": "bookings_user_id",
+                "name": "user_id",
+                "type": "bigint",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "bookings_room_id",
+                "name": "room_id",
+                "type": "integer",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "bookings_check_in",
+                "name": "check_in",
+                "type": "date",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "bookings_check_out",
+                "name": "check_out",
+                "type": "date",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "bookings_guests",
+                "name": "guests",
+                "type": "smallint",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "1"
+              },
+              {
+                "id": "bookings_total_price",
+                "name": "total_price",
+                "type": "decimal",
+                "length": 10,
+                "scale": 2,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "bookings_status",
+                "name": "status",
+                "type": "varchar",
+                "length": 20,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "'pending'",
+                "comment": "pending | confirmed | cancelled | completed"
+              },
+              {
+                "id": "bookings_note",
+                "name": "note",
+                "type": "text",
+                "pk": false,
+                "notNull": false,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "bookings_created_at",
+                "name": "created_at",
+                "type": "timestamp",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "CURRENT_TIMESTAMP"
+              }
+            ],
+            "indexes": [
+              {
+                "id": "idx_bookings_room_dates",
+                "name": "idx_bookings_room_dates",
+                "columns": [
+                  "bookings_room_id",
+                  "bookings_check_in",
+                  "bookings_check_out"
+                ],
+                "unique": false
+              },
+              {
+                "id": "idx_bookings_user_id",
+                "name": "idx_bookings_user_id",
+                "columns": [
+                  "bookings_user_id"
+                ],
+                "unique": false
+              }
+            ]
+          },
+          {
+            "id": "payments",
+            "name": "payments",
+            "comment": "การชำระเงิน",
+            "x": 480.0,
+            "y": 800.0,
+            "width": 260.0,
+            "color": 3,
+            "columns": [
+              {
+                "id": "payments_id",
+                "name": "id",
+                "type": "bigint",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "payments_booking_id",
+                "name": "booking_id",
+                "type": "bigint",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "payments_amount",
+                "name": "amount",
+                "type": "decimal",
+                "length": 10,
+                "scale": 2,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "payments_method",
+                "name": "method",
+                "type": "varchar",
+                "length": 30,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "comment": "card | promptpay | transfer"
+              },
+              {
+                "id": "payments_status",
+                "name": "status",
+                "type": "varchar",
+                "length": 20,
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "'pending'"
+              },
+              {
+                "id": "payments_transaction_ref",
+                "name": "transaction_ref",
+                "type": "varchar",
+                "length": 80,
+                "pk": false,
+                "notNull": false,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "payments_paid_at",
+                "name": "paid_at",
+                "type": "datetime",
+                "pk": false,
+                "notNull": false,
+                "unique": false,
+                "autoIncrement": false
+              }
+            ],
+            "indexes": [
+              {
+                "id": "idx_payments_booking_id",
+                "name": "idx_payments_booking_id",
+                "columns": [
+                  "payments_booking_id"
+                ],
+                "unique": false
+              }
+            ]
+          },
+          {
+            "id": "reviews",
+            "name": "reviews",
+            "comment": "รีวิวหลังเข้าพัก (1 การจอง = 1 รีวิว)",
+            "x": 860.0,
+            "y": 640.0,
+            "width": 250.0,
+            "columns": [
+              {
+                "id": "reviews_id",
+                "name": "id",
+                "type": "bigint",
+                "pk": true,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": true
+              },
+              {
+                "id": "reviews_booking_id",
+                "name": "booking_id",
+                "type": "bigint",
+                "pk": false,
+                "notNull": true,
+                "unique": true,
+                "autoIncrement": false
+              },
+              {
+                "id": "reviews_rating",
+                "name": "rating",
+                "type": "smallint",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "comment": "1–5"
+              },
+              {
+                "id": "reviews_comment",
+                "name": "comment",
+                "type": "text",
+                "pk": false,
+                "notNull": false,
+                "unique": false,
+                "autoIncrement": false
+              },
+              {
+                "id": "reviews_created_at",
+                "name": "created_at",
+                "type": "timestamp",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "CURRENT_TIMESTAMP"
+              }
+            ],
+            "indexes": []
+          }
+        ],
+        "relations": [
+          {
+            "id": "fk_1",
+            "fromTable": "rooms",
+            "fromColumn": "rooms_room_type_id",
+            "toTable": "room_types",
+            "toColumn": "room_types_id",
+            "onDelete": "restrict",
+            "onUpdate": "noAction"
+          },
+          {
+            "id": "fk_2",
+            "fromTable": "room_type_amenities",
+            "fromColumn": "room_type_amenities_room_type_id",
+            "toTable": "room_types",
+            "toColumn": "room_types_id",
+            "onDelete": "cascade",
+            "onUpdate": "noAction"
+          },
+          {
+            "id": "fk_3",
+            "fromTable": "room_type_amenities",
+            "fromColumn": "room_type_amenities_amenity_id",
+            "toTable": "amenities",
+            "toColumn": "amenities_id",
+            "onDelete": "cascade",
+            "onUpdate": "noAction"
+          },
+          {
+            "id": "fk_4",
+            "fromTable": "seasonal_prices",
+            "fromColumn": "seasonal_prices_room_type_id",
+            "toTable": "room_types",
+            "toColumn": "room_types_id",
+            "onDelete": "cascade",
+            "onUpdate": "noAction"
+          },
+          {
+            "id": "fk_5",
+            "fromTable": "bookings",
+            "fromColumn": "bookings_user_id",
+            "toTable": "users",
+            "toColumn": "users_id",
+            "onDelete": "restrict",
+            "onUpdate": "noAction"
+          },
+          {
+            "id": "fk_6",
+            "fromTable": "bookings",
+            "fromColumn": "bookings_room_id",
+            "toTable": "rooms",
+            "toColumn": "rooms_id",
+            "onDelete": "restrict",
+            "onUpdate": "noAction"
+          },
+          {
+            "id": "fk_7",
+            "fromTable": "payments",
+            "fromColumn": "payments_booking_id",
+            "toTable": "bookings",
+            "toColumn": "bookings_id",
+            "onDelete": "cascade",
+            "onUpdate": "noAction"
+          },
+          {
+            "id": "fk_8",
+            "fromTable": "reviews",
+            "fromColumn": "reviews_booking_id",
+            "toTable": "bookings",
+            "toColumn": "bookings_id",
+            "onDelete": "cascade",
+            "onUpdate": "noAction"
+          }
+        ],
+        "notes": [
+          {
+            "id": "note_overlap",
+            "text": "กันจองซ้อน: ตรวจ bookings ที่ room_id เดียวกันและช่วงวันทับกัน (status ≠ cancelled) ก่อนสร้างการจองใหม่ — ใช้ idx_bookings_room_dates",
+            "x": 1180.0,
+            "y": 560.0,
+            "width": 260.0
+          }
+        ],
+        "groups": [
+          {
+            "id": "g_catalog",
+            "name": "แค็ตตาล็อกห้อง",
+            "x": 400.0,
+            "y": 50.0,
+            "width": 640.0,
+            "height": 340.0,
+            "color": 2
+          },
+          {
+            "id": "g_booking",
+            "name": "การจองและการเงิน",
+            "x": 50.0,
+            "y": 520.0,
+            "width": 1100.0,
+            "height": 440.0,
+            "color": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "dfd_ctx",
+      "type": "dfd",
+      "name": "DFD ระดับ 0 — ภาพรวมระบบ",
+      "folder": "f_process",
+      "typeVersion": 1,
+      "content": {
+        "nodes": [
+          {
+            "id": "e_guest",
+            "kind": "entity",
+            "name": "ผู้เข้าพัก",
+            "x": 60.0,
+            "y": 113.0,
+            "w": 150.0,
+            "h": 56.0
+          },
+          {
+            "id": "e_admin",
+            "kind": "entity",
+            "name": "แอดมินโรงแรม",
+            "x": 710.0,
+            "y": 60.0,
+            "w": 150.0,
+            "h": 56.0
+          },
+          {
+            "id": "e_gw",
+            "kind": "entity",
+            "name": "ระบบชำระเงิน",
+            "x": 710.0,
+            "y": 166.0,
+            "w": 150.0,
+            "h": 56.0
+          },
+          {
+            "id": "p0",
+            "kind": "process",
+            "name": "ระบบจองห้องพัก",
+            "number": "0",
+            "x": 350.0,
+            "y": 96.0,
+            "w": 220.0,
+            "h": 90.0,
+            "child": "dfd_l1"
+          }
+        ],
+        "flows": [
+          {
+            "id": "f1",
+            "from": "e_guest",
+            "to": "p0",
+            "label": "คำค้นหาห้อง"
+          },
+          {
+            "id": "f2",
+            "from": "p0",
+            "to": "e_guest",
+            "label": "รายการห้องว่าง"
+          },
+          {
+            "id": "f3",
+            "from": "e_guest",
+            "to": "p0",
+            "label": "ข้อมูลการจอง"
+          },
+          {
+            "id": "f4",
+            "from": "p0",
+            "to": "e_guest",
+            "label": "ใบยืนยันการจอง"
+          },
+          {
+            "id": "f5",
+            "from": "e_guest",
+            "to": "p0",
+            "label": "รีวิว"
+          },
+          {
+            "id": "f6",
+            "from": "e_admin",
+            "to": "p0",
+            "label": "ข้อมูลห้อง/ราคา"
+          },
+          {
+            "id": "f7",
+            "from": "p0",
+            "to": "e_admin",
+            "label": "รายงานการจอง"
+          },
+          {
+            "id": "f8",
+            "from": "p0",
+            "to": "e_gw",
+            "label": "คำขอชำระเงิน"
+          },
+          {
+            "id": "f9",
+            "from": "e_gw",
+            "to": "p0",
+            "label": "ผลการชำระเงิน"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dfd_l1",
+      "type": "dfd",
+      "name": "DFD ระดับ 1 — จองห้องพัก",
+      "folder": "f_process",
+      "typeVersion": 1,
+      "notes": [
+        {
+          "id": "n5",
+          "kind": "question",
+          "text": "ควรแยกกระบวนการ \"ยกเลิกการจอง\" ออกจาก 2.0 หรือไม่?",
+          "anchor": "p2",
+          "created": "2026-11-19T00:00:00.000Z"
+        }
+      ],
+      "content": {
+        "nodes": [
+          {
+            "id": "e_guest",
+            "kind": "entity",
+            "name": "ผู้เข้าพัก",
+            "x": 1660.0,
+            "y": 158.0,
+            "w": 150.0,
+            "h": 56.0
+          },
+          {
+            "id": "e_admin",
+            "kind": "entity",
+            "name": "แอดมินโรงแรม",
+            "x": 2285.0,
+            "y": 109.0,
+            "w": 150.0,
+            "h": 56.0
+          },
+          {
+            "id": "e_gw",
+            "kind": "entity",
+            "name": "ระบบชำระเงิน",
+            "x": 1035.0,
+            "y": 60.0,
+            "w": 150.0,
+            "h": 56.0
+          },
+          {
+            "id": "p1",
+            "kind": "process",
+            "name": "ค้นหาห้องว่าง",
+            "number": "1.0",
+            "x": 1340.0,
+            "y": 154.0,
+            "w": 180.0,
+            "h": 64.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_rooms_available"
+            }
+          },
+          {
+            "id": "p2",
+            "kind": "process",
+            "name": "สร้างการจอง",
+            "number": "2.0",
+            "x": 380.0,
+            "y": 154.0,
+            "w": 180.0,
+            "h": 64.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_booking_create"
+            }
+          },
+          {
+            "id": "p3",
+            "kind": "process",
+            "name": "ชำระเงิน",
+            "number": "3.0",
+            "x": 700.0,
+            "y": 154.0,
+            "w": 180.0,
+            "h": 64.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_pay_create"
+            }
+          },
+          {
+            "id": "p4",
+            "kind": "process",
+            "name": "จัดการห้องและราคา",
+            "number": "4.0",
+            "x": 2590.0,
+            "y": 154.0,
+            "w": 180.0,
+            "h": 64.0
+          },
+          {
+            "id": "p5",
+            "kind": "process",
+            "name": "รีวิวและรายงาน",
+            "number": "5.0",
+            "x": 1950.0,
+            "y": 154.0,
+            "w": 180.0,
+            "h": 64.0
+          },
+          {
+            "id": "d1",
+            "kind": "store",
+            "name": "ผู้ใช้",
+            "number": "D1",
+            "x": 60.0,
+            "y": 162.0,
+            "w": 180.0,
+            "h": 48.0,
+            "table": "users",
+            "tableDoc": "er_main"
+          },
+          {
+            "id": "d2",
+            "kind": "store",
+            "name": "ห้องและประเภทห้อง",
+            "number": "D2",
+            "x": 2910.0,
+            "y": 162.0,
+            "w": 180.0,
+            "h": 48.0,
+            "table": "rooms",
+            "tableDoc": "er_main"
+          },
+          {
+            "id": "d3",
+            "kind": "store",
+            "name": "การจอง",
+            "number": "D3",
+            "x": 1020.0,
+            "y": 166.0,
+            "w": 180.0,
+            "h": 48.0,
+            "table": "bookings",
+            "tableDoc": "er_main"
+          },
+          {
+            "id": "d4",
+            "kind": "store",
+            "name": "การชำระเงิน",
+            "number": "D4",
+            "x": 1020.0,
+            "y": 264.0,
+            "w": 180.0,
+            "h": 48.0,
+            "table": "payments",
+            "tableDoc": "er_main"
+          },
+          {
+            "id": "d5",
+            "kind": "store",
+            "name": "รีวิว",
+            "number": "D5",
+            "x": 2270.0,
+            "y": 215.0,
+            "w": 180.0,
+            "h": 48.0,
+            "table": "reviews",
+            "tableDoc": "er_main"
+          }
+        ],
+        "flows": [
+          {
+            "id": "f1",
+            "from": "e_guest",
+            "to": "p1",
+            "label": "คำค้นหาห้อง"
+          },
+          {
+            "id": "f2",
+            "from": "p1",
+            "to": "e_guest",
+            "label": "รายการห้องว่าง"
+          },
+          {
+            "id": "f3",
+            "from": "d2",
+            "to": "p1",
+            "label": "ข้อมูลห้อง"
+          },
+          {
+            "id": "f4",
+            "from": "d3",
+            "to": "p1",
+            "label": "การจองที่ทับซ้อน"
+          },
+          {
+            "id": "f5",
+            "from": "e_guest",
+            "to": "p2",
+            "label": "ข้อมูลการจอง"
+          },
+          {
+            "id": "f6",
+            "from": "d1",
+            "to": "p2",
+            "label": "ข้อมูลผู้ใช้"
+          },
+          {
+            "id": "f7",
+            "from": "d2",
+            "to": "p2",
+            "label": "ราคาห้อง"
+          },
+          {
+            "id": "f8",
+            "from": "p2",
+            "to": "d3",
+            "label": "การจองใหม่"
+          },
+          {
+            "id": "f9",
+            "from": "p2",
+            "to": "e_guest",
+            "label": "ใบยืนยันการจอง"
+          },
+          {
+            "id": "f10",
+            "from": "p2",
+            "to": "p3",
+            "label": "ยอดที่ต้องชำระ"
+          },
+          {
+            "id": "f11",
+            "from": "p3",
+            "to": "e_gw",
+            "label": "คำขอชำระเงิน"
+          },
+          {
+            "id": "f12",
+            "from": "e_gw",
+            "to": "p3",
+            "label": "ผลการชำระเงิน"
+          },
+          {
+            "id": "f13",
+            "from": "p3",
+            "to": "d4",
+            "label": "บันทึกการชำระเงิน"
+          },
+          {
+            "id": "f14",
+            "from": "p3",
+            "to": "d3",
+            "label": "สถานะการจอง"
+          },
+          {
+            "id": "f15",
+            "from": "e_admin",
+            "to": "p4",
+            "label": "ข้อมูลห้อง/ราคา"
+          },
+          {
+            "id": "f16",
+            "from": "p4",
+            "to": "d2",
+            "label": "ข้อมูลห้องที่แก้ไข"
+          },
+          {
+            "id": "f17",
+            "from": "e_guest",
+            "to": "p5",
+            "label": "รีวิว"
+          },
+          {
+            "id": "f18",
+            "from": "p5",
+            "to": "d5",
+            "label": "รีวิวใหม่"
+          },
+          {
+            "id": "f19",
+            "from": "d3",
+            "to": "p5",
+            "label": "ข้อมูลการจอง"
+          },
+          {
+            "id": "f20",
+            "from": "d4",
+            "to": "p5",
+            "label": "ข้อมูลรายได้"
+          },
+          {
+            "id": "f21",
+            "from": "p5",
+            "to": "e_admin",
+            "label": "รายงานการจอง"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fc_booking",
+      "type": "flowchart",
+      "name": "Flowchart — ขั้นตอนการจอง",
+      "folder": "f_process",
+      "typeVersion": 1,
+      "content": {
+        "nodes": [
+          {
+            "id": "start",
+            "shape": "start",
+            "text": "เริ่ม",
+            "x": 175.0,
+            "y": 60.0,
+            "w": 140.0,
+            "h": 50.0
+          },
+          {
+            "id": "input",
+            "shape": "io",
+            "text": "เลือกวันเข้าพัก/ออก\nและจำนวนผู้เข้าพัก",
+            "x": 165.0,
+            "y": 170.0,
+            "w": 160.0,
+            "h": 64.0
+          },
+          {
+            "id": "search",
+            "shape": "process",
+            "text": "ค้นหาห้องว่าง",
+            "x": 165.0,
+            "y": 294.0,
+            "w": 160.0,
+            "h": 64.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_rooms_available"
+            }
+          },
+          {
+            "id": "avail",
+            "shape": "decision",
+            "text": "มีห้องว่าง?",
+            "x": 170.0,
+            "y": 418.0,
+            "w": 150.0,
+            "h": 90.0
+          },
+          {
+            "id": "none",
+            "shape": "io",
+            "text": "แจ้งว่าไม่มีห้องว่าง\nเสนอวันอื่น",
+            "x": 270.0,
+            "y": 568.0,
+            "w": 160.0,
+            "h": 64.0
+          },
+          {
+            "id": "pick",
+            "shape": "process",
+            "text": "เลือกห้อง",
+            "x": 60.0,
+            "y": 568.0,
+            "w": 160.0,
+            "h": 64.0
+          },
+          {
+            "id": "login",
+            "shape": "decision",
+            "text": "เข้าสู่ระบบแล้ว?",
+            "x": 170.0,
+            "y": 692.0,
+            "w": 150.0,
+            "h": 90.0
+          },
+          {
+            "id": "auth",
+            "shape": "subroutine",
+            "text": "สมัครสมาชิก / เข้าสู่ระบบ",
+            "x": 165.0,
+            "y": 842.0,
+            "w": 160.0,
+            "h": 64.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_login"
+            }
+          },
+          {
+            "id": "guest",
+            "shape": "io",
+            "text": "กรอกข้อมูลผู้เข้าพัก",
+            "x": 165.0,
+            "y": 966.0,
+            "w": 160.0,
+            "h": 64.0
+          },
+          {
+            "id": "create",
+            "shape": "process",
+            "text": "สร้างการจอง (pending)",
+            "x": 165.0,
+            "y": 1090.0,
+            "w": 160.0,
+            "h": 64.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_booking_create"
+            }
+          },
+          {
+            "id": "pay",
+            "shape": "subroutine",
+            "text": "ชำระเงิน",
+            "x": 165.0,
+            "y": 1214.0,
+            "w": 160.0,
+            "h": 64.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_pay_create"
+            }
+          },
+          {
+            "id": "paid",
+            "shape": "decision",
+            "text": "ชำระสำเร็จ?",
+            "x": 170.0,
+            "y": 1338.0,
+            "w": 150.0,
+            "h": 90.0
+          },
+          {
+            "id": "confirm",
+            "shape": "process",
+            "text": "ยืนยันการจอง\nส่งอีเมลยืนยัน",
+            "x": 60.0,
+            "y": 1488.0,
+            "w": 160.0,
+            "h": 64.0
+          },
+          {
+            "id": "cancel",
+            "shape": "process",
+            "text": "ยกเลิกการจอง\nคืนห้องว่าง",
+            "x": 270.0,
+            "y": 1488.0,
+            "w": 160.0,
+            "h": 64.0
+          },
+          {
+            "id": "end_ok",
+            "shape": "end",
+            "text": "จบ: จองสำเร็จ",
+            "x": 80.0,
+            "y": 1612.0,
+            "w": 140.0,
+            "h": 50.0
+          },
+          {
+            "id": "end_fail",
+            "shape": "end",
+            "text": "จบ: ไม่สำเร็จ",
+            "x": 270.0,
+            "y": 1612.0,
+            "w": 140.0,
+            "h": 50.0
+          },
+          {
+            "id": "note",
+            "shape": "note",
+            "text": "หมดเวลาชำระ 15 นาที = ยกเลิกอัตโนมัติ",
+            "x": 400.0,
+            "y": 1318.0,
+            "w": 170.0,
+            "h": 80.0
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1",
+            "from": "start",
+            "to": "input",
+            "label": ""
+          },
+          {
+            "id": "e2",
+            "from": "input",
+            "to": "search",
+            "label": ""
+          },
+          {
+            "id": "e3",
+            "from": "search",
+            "to": "avail",
+            "label": ""
+          },
+          {
+            "id": "e4",
+            "from": "avail",
+            "to": "pick",
+            "label": "มี"
+          },
+          {
+            "id": "e5",
+            "from": "avail",
+            "to": "none",
+            "label": "ไม่มี"
+          },
+          {
+            "id": "e6",
+            "from": "none",
+            "to": "end_fail",
+            "label": ""
+          },
+          {
+            "id": "e7",
+            "from": "pick",
+            "to": "login",
+            "label": ""
+          },
+          {
+            "id": "e8",
+            "from": "login",
+            "to": "guest",
+            "label": "ใช่"
+          },
+          {
+            "id": "e9",
+            "from": "login",
+            "to": "auth",
+            "label": "ยัง"
+          },
+          {
+            "id": "e10",
+            "from": "auth",
+            "to": "guest",
+            "label": ""
+          },
+          {
+            "id": "e11",
+            "from": "guest",
+            "to": "create",
+            "label": ""
+          },
+          {
+            "id": "e12",
+            "from": "create",
+            "to": "pay",
+            "label": ""
+          },
+          {
+            "id": "e13",
+            "from": "pay",
+            "to": "paid",
+            "label": ""
+          },
+          {
+            "id": "e14",
+            "from": "paid",
+            "to": "confirm",
+            "label": "สำเร็จ"
+          },
+          {
+            "id": "e15",
+            "from": "paid",
+            "to": "cancel",
+            "label": "ไม่สำเร็จ"
+          },
+          {
+            "id": "e16",
+            "from": "confirm",
+            "to": "end_ok",
+            "label": ""
+          },
+          {
+            "id": "e17",
+            "from": "cancel",
+            "to": "end_fail",
+            "label": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "wf_home",
+      "type": "wireframe",
+      "name": "Home — หน้าแรก",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "notes": [
+        {
+          "id": "n6",
+          "kind": "todo",
+          "text": "ใส่รูปจริงของโรงแรมแทนภาพตัวอย่าง",
+          "x": 1300.0,
+          "y": 100.0,
+          "anchor": "h_hero",
+          "created": "2026-11-19T00:00:00.000Z"
+        },
+        {
+          "id": "n7",
+          "kind": "memo",
+          "text": "ปุ่มค้นหาเรียก GET /rooms/available ด้วยวันที่และจำนวนผู้เข้าพัก",
+          "anchor": "h_btn_search",
+          "created": "2026-11-19T00:00:00.000Z"
+        }
+      ],
+      "content": {
+        "device": "custom",
+        "width": 1440.0,
+        "height": 1760.0,
+        "style": "clean",
+        "accent": 4280640491,
+        "components": [
+          {
+            "id": "h_nav",
+            "kind": "navbar",
+            "text": "Siam Residence",
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1440.0,
+            "h": 64.0
+          },
+          {
+            "id": "h_1",
+            "kind": "link",
+            "text": "ห้องพัก",
+            "x": 330.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "h_2",
+            "kind": "link",
+            "text": "โปรโมชัน",
+            "x": 440.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "h_3",
+            "kind": "link",
+            "text": "การจองของฉัน",
+            "x": 550.0,
+            "y": 20.0,
+            "w": 110.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "h_4",
+            "kind": "avatar",
+            "text": "",
+            "x": 1376.0,
+            "y": 8.0,
+            "w": 48.0,
+            "h": 48.0
+          },
+          {
+            "id": "h_5",
+            "kind": "button",
+            "text": "เข้าสู่ระบบ",
+            "x": 1250.0,
+            "y": 12.0,
+            "w": 110.0,
+            "h": 40.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_login"
+            }
+          },
+          {
+            "id": "h_hero",
+            "kind": "container",
+            "text": "ภาพพื้นหลังโรงแรม",
+            "x": 0.0,
+            "y": 64.0,
+            "w": 1440.0,
+            "h": 440.0
+          },
+          {
+            "id": "h_6",
+            "kind": "heading",
+            "text": "จองห้องพักง่าย ๆ ราคาดีที่สุด",
+            "x": 120.0,
+            "y": 110.0,
+            "w": 760.0,
+            "h": 56.0,
+            "fontSize": 34.0
+          },
+          {
+            "id": "h_7",
+            "kind": "paragraph",
+            "text": "ค้นหาห้องว่าง เลือกประเภทที่ใช่ ชำระเงินปลอดภัย ยกเลิกฟรีก่อนเข้าพัก 24 ชั่วโมง",
+            "x": 120.0,
+            "y": 176.0,
+            "w": 640.0,
+            "h": 56.0
+          },
+          {
+            "id": "h_8",
+            "kind": "badge",
+            "text": "โปรฯ ลด 20%",
+            "x": 1120.0,
+            "y": 130.0,
+            "w": 150.0,
+            "h": 40.0,
+            "fill": 4294829706,
+            "align": "center",
+            "rotation": -8.0
+          },
+          {
+            "id": "h_search",
+            "kind": "card",
+            "text": "ค้นหาห้องว่าง",
+            "x": 120.0,
+            "y": 270.0,
+            "w": 1200.0,
+            "h": 190.0
+          },
+          {
+            "id": "h_9",
+            "kind": "label",
+            "text": "วันเข้าพัก",
+            "x": 150.0,
+            "y": 320.0,
+            "w": 120.0,
+            "h": 22.0
+          },
+          {
+            "id": "h_10",
+            "kind": "datepicker",
+            "text": "เลือกวันที่",
+            "x": 150.0,
+            "y": 346.0,
+            "w": 220.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "bookings",
+              "column": "bookings_check_in"
+            }
+          },
+          {
+            "id": "h_11",
+            "kind": "label",
+            "text": "วันออก",
+            "x": 400.0,
+            "y": 320.0,
+            "w": 120.0,
+            "h": 22.0
+          },
+          {
+            "id": "h_12",
+            "kind": "datepicker",
+            "text": "เลือกวันที่",
+            "x": 400.0,
+            "y": 346.0,
+            "w": 220.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "bookings",
+              "column": "bookings_check_out"
+            }
+          },
+          {
+            "id": "h_13",
+            "kind": "label",
+            "text": "ผู้เข้าพัก",
+            "x": 650.0,
+            "y": 320.0,
+            "w": 120.0,
+            "h": 22.0
+          },
+          {
+            "id": "h_14",
+            "kind": "input",
+            "text": "2 คน",
+            "x": 650.0,
+            "y": 346.0,
+            "w": 140.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "bookings",
+              "column": "bookings_guests"
+            }
+          },
+          {
+            "id": "h_15",
+            "kind": "label",
+            "text": "ประเภทห้อง",
+            "x": 820.0,
+            "y": 320.0,
+            "w": 140.0,
+            "h": 22.0
+          },
+          {
+            "id": "h_16",
+            "kind": "select",
+            "text": "ทุกประเภท",
+            "x": 820.0,
+            "y": 346.0,
+            "w": 240.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_name"
+            }
+          },
+          {
+            "id": "h_btn_search",
+            "kind": "button",
+            "text": "ค้นหาห้องว่าง",
+            "x": 1100.0,
+            "y": 346.0,
+            "w": 190.0,
+            "h": 44.0,
+            "align": "center",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_rooms_available"
+            }
+          },
+          {
+            "id": "h_17",
+            "kind": "heading",
+            "text": "ประเภทห้องพัก",
+            "x": 120.0,
+            "y": 540.0,
+            "w": 500.0,
+            "h": 40.0
+          },
+          {
+            "id": "h_18",
+            "kind": "card",
+            "text": "Standard",
+            "x": 120.0,
+            "y": 600.0,
+            "w": 380.0,
+            "h": 380.0
+          },
+          {
+            "id": "h_19",
+            "kind": "image",
+            "text": "",
+            "x": 136.0,
+            "y": 640.0,
+            "w": 348.0,
+            "h": 190.0
+          },
+          {
+            "id": "h_20",
+            "kind": "label",
+            "text": "Standard",
+            "x": 136.0,
+            "y": 842.0,
+            "w": 200.0,
+            "h": 24.0,
+            "bold": true,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_name"
+            }
+          },
+          {
+            "id": "h_21",
+            "kind": "label",
+            "text": "฿1,290 / คืน",
+            "x": 136.0,
+            "y": 872.0,
+            "w": 200.0,
+            "h": 24.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_base_price"
+            }
+          },
+          {
+            "id": "h_22",
+            "kind": "rating",
+            "text": "",
+            "x": 340.0,
+            "y": 842.0,
+            "w": 144.0,
+            "h": 26.0
+          },
+          {
+            "id": "h_23",
+            "kind": "button",
+            "text": "ดูรายละเอียด",
+            "x": 136.0,
+            "y": 920.0,
+            "w": 348.0,
+            "h": 40.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_types_get"
+            }
+          },
+          {
+            "id": "h_24",
+            "kind": "card",
+            "text": "Deluxe",
+            "x": 530.0,
+            "y": 600.0,
+            "w": 380.0,
+            "h": 380.0
+          },
+          {
+            "id": "h_25",
+            "kind": "image",
+            "text": "",
+            "x": 546.0,
+            "y": 640.0,
+            "w": 348.0,
+            "h": 190.0
+          },
+          {
+            "id": "h_26",
+            "kind": "label",
+            "text": "Deluxe",
+            "x": 546.0,
+            "y": 842.0,
+            "w": 200.0,
+            "h": 24.0,
+            "bold": true,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_name"
+            }
+          },
+          {
+            "id": "h_27",
+            "kind": "label",
+            "text": "฿1,890 / คืน",
+            "x": 546.0,
+            "y": 872.0,
+            "w": 200.0,
+            "h": 24.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_base_price"
+            }
+          },
+          {
+            "id": "h_28",
+            "kind": "rating",
+            "text": "",
+            "x": 750.0,
+            "y": 842.0,
+            "w": 144.0,
+            "h": 26.0
+          },
+          {
+            "id": "h_29",
+            "kind": "button",
+            "text": "ดูรายละเอียด",
+            "x": 546.0,
+            "y": 920.0,
+            "w": 348.0,
+            "h": 40.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_types_get"
+            }
+          },
+          {
+            "id": "h_30",
+            "kind": "card",
+            "text": "Family Suite",
+            "x": 940.0,
+            "y": 600.0,
+            "w": 380.0,
+            "h": 380.0
+          },
+          {
+            "id": "h_31",
+            "kind": "image",
+            "text": "",
+            "x": 956.0,
+            "y": 640.0,
+            "w": 348.0,
+            "h": 190.0
+          },
+          {
+            "id": "h_32",
+            "kind": "label",
+            "text": "Family Suite",
+            "x": 956.0,
+            "y": 842.0,
+            "w": 200.0,
+            "h": 24.0,
+            "bold": true,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_name"
+            }
+          },
+          {
+            "id": "h_33",
+            "kind": "label",
+            "text": "฿3,290 / คืน",
+            "x": 956.0,
+            "y": 872.0,
+            "w": 200.0,
+            "h": 24.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_base_price"
+            }
+          },
+          {
+            "id": "h_34",
+            "kind": "rating",
+            "text": "",
+            "x": 1160.0,
+            "y": 842.0,
+            "w": 144.0,
+            "h": 26.0
+          },
+          {
+            "id": "h_35",
+            "kind": "button",
+            "text": "ดูรายละเอียด",
+            "x": 956.0,
+            "y": 920.0,
+            "w": 348.0,
+            "h": 40.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_types_get"
+            }
+          },
+          {
+            "id": "h_36",
+            "kind": "heading",
+            "text": "ชมบรรยากาศและที่ตั้ง",
+            "x": 120.0,
+            "y": 1020.0,
+            "w": 500.0,
+            "h": 40.0
+          },
+          {
+            "id": "h_37",
+            "kind": "video",
+            "text": "",
+            "x": 120.0,
+            "y": 1070.0,
+            "w": 640.0,
+            "h": 340.0
+          },
+          {
+            "id": "h_38",
+            "kind": "map",
+            "text": "",
+            "x": 800.0,
+            "y": 1070.0,
+            "w": 520.0,
+            "h": 340.0
+          },
+          {
+            "id": "h_39",
+            "kind": "tooltip",
+            "text": "ใกล้ BTS 300 ม.",
+            "x": 1140.0,
+            "y": 1090.0,
+            "w": 150.0,
+            "h": 48.0,
+            "align": "center"
+          },
+          {
+            "id": "h_40",
+            "kind": "heading",
+            "text": "คำถามที่พบบ่อย",
+            "x": 120.0,
+            "y": 1450.0,
+            "w": 500.0,
+            "h": 40.0
+          },
+          {
+            "id": "h_41",
+            "kind": "accordion",
+            "text": "เช็คอิน/เช็คเอาท์กี่โมง?\nยกเลิกการจองได้หรือไม่?\nมีที่จอดรถหรือไม่?",
+            "x": 120.0,
+            "y": 1500.0,
+            "w": 700.0,
+            "h": 170.0
+          },
+          {
+            "id": "h_42",
+            "kind": "alert",
+            "text": "ยกเลิกฟรีก่อนวันเข้าพัก 24 ชั่วโมง",
+            "x": 860.0,
+            "y": 1500.0,
+            "w": 460.0,
+            "h": 64.0
+          },
+          {
+            "id": "h_designnote",
+            "kind": "label",
+            "text": "บันทึกดีไซน์: ใส่รีวิวจริงแทนข้อความตัวอย่าง",
+            "x": 860.0,
+            "y": 1590.0,
+            "w": 300.0,
+            "h": 22.0,
+            "hidden": true
+          },
+          {
+            "id": "h_43",
+            "kind": "footer",
+            "text": "© 2026 Siam Residence · โทร 02-000-0000",
+            "x": 0.0,
+            "y": 1680.0,
+            "w": 1440.0,
+            "h": 80.0,
+            "align": "center"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wf_rooms",
+      "type": "wireframe",
+      "name": "Rooms — รายการห้อง",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "content": {
+        "device": "custom",
+        "width": 1440.0,
+        "height": 1300.0,
+        "style": "clean",
+        "accent": 4280640491,
+        "components": [
+          {
+            "id": "r_nav",
+            "kind": "navbar",
+            "text": "Siam Residence",
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1440.0,
+            "h": 64.0
+          },
+          {
+            "id": "r_1",
+            "kind": "link",
+            "text": "ห้องพัก",
+            "x": 330.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "r_2",
+            "kind": "link",
+            "text": "โปรโมชัน",
+            "x": 440.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "r_3",
+            "kind": "link",
+            "text": "การจองของฉัน",
+            "x": 550.0,
+            "y": 20.0,
+            "w": 110.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "r_4",
+            "kind": "avatar",
+            "text": "",
+            "x": 1376.0,
+            "y": 8.0,
+            "w": 48.0,
+            "h": 48.0
+          },
+          {
+            "id": "r_5",
+            "kind": "button",
+            "text": "เข้าสู่ระบบ",
+            "x": 1250.0,
+            "y": 12.0,
+            "w": 110.0,
+            "h": 40.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_login"
+            }
+          },
+          {
+            "id": "r_6",
+            "kind": "breadcrumb",
+            "text": "หน้าแรก\nค้นหาห้อง\n12–14 ธ.ค. · 2 คน",
+            "x": 40.0,
+            "y": 84.0,
+            "w": 420.0,
+            "h": 24.0
+          },
+          {
+            "id": "r_filter",
+            "kind": "sidebar",
+            "text": "ตัวกรอง",
+            "x": 40.0,
+            "y": 124.0,
+            "w": 300.0,
+            "h": 1040.0
+          },
+          {
+            "id": "r_7",
+            "kind": "heading",
+            "text": "ตัวกรอง",
+            "x": 60.0,
+            "y": 140.0,
+            "w": 240.0,
+            "h": 36.0,
+            "fontSize": 18.0
+          },
+          {
+            "id": "r_8",
+            "kind": "label",
+            "text": "ช่วงราคาต่อคืน",
+            "x": 60.0,
+            "y": 188.0,
+            "w": 240.0,
+            "h": 22.0
+          },
+          {
+            "id": "r_9",
+            "kind": "slider",
+            "text": "",
+            "x": 60.0,
+            "y": 214.0,
+            "w": 240.0,
+            "h": 28.0
+          },
+          {
+            "id": "r_10",
+            "kind": "label",
+            "text": "สิ่งอำนวยความสะดวก",
+            "x": 60.0,
+            "y": 262.0,
+            "w": 240.0,
+            "h": 22.0
+          },
+          {
+            "id": "r_11",
+            "kind": "checkbox",
+            "text": "Wi-Fi ฟรี",
+            "x": 60.0,
+            "y": 292.0,
+            "w": 240.0,
+            "h": 24.0,
+            "checked": true,
+            "ref": {
+              "doc": "er_main",
+              "table": "amenities",
+              "column": "amenities_name"
+            }
+          },
+          {
+            "id": "r_12",
+            "kind": "checkbox",
+            "text": "อาหารเช้า",
+            "x": 60.0,
+            "y": 326.0,
+            "w": 240.0,
+            "h": 24.0,
+            "checked": true,
+            "ref": {
+              "doc": "er_main",
+              "table": "amenities",
+              "column": "amenities_name"
+            }
+          },
+          {
+            "id": "r_13",
+            "kind": "checkbox",
+            "text": "สระว่ายน้ำ",
+            "x": 60.0,
+            "y": 360.0,
+            "w": 240.0,
+            "h": 24.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "amenities",
+              "column": "amenities_name"
+            }
+          },
+          {
+            "id": "r_14",
+            "kind": "checkbox",
+            "text": "ที่จอดรถ",
+            "x": 60.0,
+            "y": 394.0,
+            "w": 240.0,
+            "h": 24.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "amenities",
+              "column": "amenities_name"
+            }
+          },
+          {
+            "id": "r_15",
+            "kind": "label",
+            "text": "ผู้เข้าพัก",
+            "x": 60.0,
+            "y": 448.0,
+            "w": 240.0,
+            "h": 22.0
+          },
+          {
+            "id": "r_16",
+            "kind": "select",
+            "text": "2 คน",
+            "x": 60.0,
+            "y": 474.0,
+            "w": 240.0,
+            "h": 40.0
+          },
+          {
+            "id": "r_17",
+            "kind": "toggle",
+            "text": "เฉพาะห้องที่ยกเลิกฟรี",
+            "x": 60.0,
+            "y": 540.0,
+            "w": 240.0,
+            "h": 28.0,
+            "checked": true
+          },
+          {
+            "id": "r_18",
+            "kind": "button",
+            "text": "ล้างตัวกรอง",
+            "x": 60.0,
+            "y": 600.0,
+            "w": 240.0,
+            "h": 40.0,
+            "align": "center",
+            "secondary": true
+          },
+          {
+            "id": "r_19",
+            "kind": "search",
+            "text": "ค้นหาชื่อประเภทห้อง…",
+            "x": 380.0,
+            "y": 124.0,
+            "w": 520.0,
+            "h": 44.0
+          },
+          {
+            "id": "r_20",
+            "kind": "select",
+            "text": "เรียงตาม: ราคาต่ำไปสูง",
+            "x": 1160.0,
+            "y": 124.0,
+            "w": 240.0,
+            "h": 44.0
+          },
+          {
+            "id": "r_21",
+            "kind": "card",
+            "text": "Standard",
+            "x": 380.0,
+            "y": 196.0,
+            "w": 1020.0,
+            "h": 250.0
+          },
+          {
+            "id": "r_22",
+            "kind": "image",
+            "text": "",
+            "x": 396.0,
+            "y": 236.0,
+            "w": 300.0,
+            "h": 190.0
+          },
+          {
+            "id": "r_23",
+            "kind": "label",
+            "text": "Standard",
+            "x": 720.0,
+            "y": 244.0,
+            "w": 300.0,
+            "h": 24.0,
+            "bold": true,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_name"
+            }
+          },
+          {
+            "id": "r_24",
+            "kind": "label",
+            "text": "Queen · 2 ท่าน",
+            "x": 720.0,
+            "y": 274.0,
+            "w": 300.0,
+            "h": 22.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_bed_type"
+            }
+          },
+          {
+            "id": "r_25",
+            "kind": "chip",
+            "text": "Wi-Fi ฟรี",
+            "x": 720.0,
+            "y": 308.0,
+            "w": 110.0,
+            "h": 28.0,
+            "align": "center"
+          },
+          {
+            "id": "r_26",
+            "kind": "chip",
+            "text": "อาหารเช้า",
+            "x": 840.0,
+            "y": 308.0,
+            "w": 110.0,
+            "h": 28.0,
+            "align": "center"
+          },
+          {
+            "id": "r_27",
+            "kind": "rating",
+            "text": "",
+            "x": 720.0,
+            "y": 352.0,
+            "w": 150.0,
+            "h": 26.0
+          },
+          {
+            "id": "r_28",
+            "kind": "label",
+            "text": "฿1,290 / คืน",
+            "x": 1120.0,
+            "y": 252.0,
+            "w": 250.0,
+            "h": 30.0,
+            "bold": true,
+            "align": "right",
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_base_price"
+            }
+          },
+          {
+            "id": "r_29",
+            "kind": "badge",
+            "text": "เหลือ 2 ห้อง",
+            "x": 1250.0,
+            "y": 296.0,
+            "w": 120.0,
+            "h": 26.0,
+            "align": "center"
+          },
+          {
+            "id": "r_30",
+            "kind": "button",
+            "text": "เลือกห้องนี้",
+            "x": 1120.0,
+            "y": 372.0,
+            "w": 250.0,
+            "h": 44.0,
+            "align": "center",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_types_get"
+            }
+          },
+          {
+            "id": "r_31",
+            "kind": "card",
+            "text": "Deluxe",
+            "x": 380.0,
+            "y": 466.0,
+            "w": 1020.0,
+            "h": 250.0
+          },
+          {
+            "id": "r_32",
+            "kind": "image",
+            "text": "",
+            "x": 396.0,
+            "y": 506.0,
+            "w": 300.0,
+            "h": 190.0
+          },
+          {
+            "id": "r_33",
+            "kind": "label",
+            "text": "Deluxe",
+            "x": 720.0,
+            "y": 514.0,
+            "w": 300.0,
+            "h": 24.0,
+            "bold": true,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_name"
+            }
+          },
+          {
+            "id": "r_34",
+            "kind": "label",
+            "text": "King · 3 ท่าน",
+            "x": 720.0,
+            "y": 544.0,
+            "w": 300.0,
+            "h": 22.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_bed_type"
+            }
+          },
+          {
+            "id": "r_35",
+            "kind": "chip",
+            "text": "Wi-Fi ฟรี",
+            "x": 720.0,
+            "y": 578.0,
+            "w": 110.0,
+            "h": 28.0,
+            "align": "center"
+          },
+          {
+            "id": "r_36",
+            "kind": "chip",
+            "text": "อาหารเช้า",
+            "x": 840.0,
+            "y": 578.0,
+            "w": 110.0,
+            "h": 28.0,
+            "align": "center"
+          },
+          {
+            "id": "r_37",
+            "kind": "rating",
+            "text": "",
+            "x": 720.0,
+            "y": 622.0,
+            "w": 150.0,
+            "h": 26.0
+          },
+          {
+            "id": "r_38",
+            "kind": "label",
+            "text": "฿1,890 / คืน",
+            "x": 1120.0,
+            "y": 522.0,
+            "w": 250.0,
+            "h": 30.0,
+            "bold": true,
+            "align": "right",
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_base_price"
+            }
+          },
+          {
+            "id": "r_39",
+            "kind": "badge",
+            "text": "เหลือ 2 ห้อง",
+            "x": 1250.0,
+            "y": 566.0,
+            "w": 120.0,
+            "h": 26.0,
+            "align": "center"
+          },
+          {
+            "id": "r_40",
+            "kind": "button",
+            "text": "เลือกห้องนี้",
+            "x": 1120.0,
+            "y": 642.0,
+            "w": 250.0,
+            "h": 44.0,
+            "align": "center",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_types_get"
+            }
+          },
+          {
+            "id": "r_41",
+            "kind": "card",
+            "text": "Family Suite",
+            "x": 380.0,
+            "y": 736.0,
+            "w": 1020.0,
+            "h": 250.0
+          },
+          {
+            "id": "r_42",
+            "kind": "image",
+            "text": "",
+            "x": 396.0,
+            "y": 776.0,
+            "w": 300.0,
+            "h": 190.0
+          },
+          {
+            "id": "r_43",
+            "kind": "label",
+            "text": "Family Suite",
+            "x": 720.0,
+            "y": 784.0,
+            "w": 300.0,
+            "h": 24.0,
+            "bold": true,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_name"
+            }
+          },
+          {
+            "id": "r_44",
+            "kind": "label",
+            "text": "King + Twin · 5 ท่าน",
+            "x": 720.0,
+            "y": 814.0,
+            "w": 300.0,
+            "h": 22.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_bed_type"
+            }
+          },
+          {
+            "id": "r_45",
+            "kind": "chip",
+            "text": "Wi-Fi ฟรี",
+            "x": 720.0,
+            "y": 848.0,
+            "w": 110.0,
+            "h": 28.0,
+            "align": "center"
+          },
+          {
+            "id": "r_46",
+            "kind": "chip",
+            "text": "อาหารเช้า",
+            "x": 840.0,
+            "y": 848.0,
+            "w": 110.0,
+            "h": 28.0,
+            "align": "center"
+          },
+          {
+            "id": "r_47",
+            "kind": "rating",
+            "text": "",
+            "x": 720.0,
+            "y": 892.0,
+            "w": 150.0,
+            "h": 26.0
+          },
+          {
+            "id": "r_48",
+            "kind": "label",
+            "text": "฿3,290 / คืน",
+            "x": 1120.0,
+            "y": 792.0,
+            "w": 250.0,
+            "h": 30.0,
+            "bold": true,
+            "align": "right",
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_base_price"
+            }
+          },
+          {
+            "id": "r_49",
+            "kind": "badge",
+            "text": "เหลือ 2 ห้อง",
+            "x": 1250.0,
+            "y": 836.0,
+            "w": 120.0,
+            "h": 26.0,
+            "align": "center"
+          },
+          {
+            "id": "r_50",
+            "kind": "button",
+            "text": "เลือกห้องนี้",
+            "x": 1120.0,
+            "y": 912.0,
+            "w": 250.0,
+            "h": 44.0,
+            "align": "center",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_types_get"
+            }
+          },
+          {
+            "id": "r_51",
+            "kind": "skeleton",
+            "text": "",
+            "x": 380.0,
+            "y": 1014.0,
+            "w": 1020.0,
+            "h": 90.0
+          },
+          {
+            "id": "r_52",
+            "kind": "pagination",
+            "text": "",
+            "x": 800.0,
+            "y": 1120.0,
+            "w": 260.0,
+            "h": 36.0
+          },
+          {
+            "id": "r_53",
+            "kind": "footer",
+            "text": "© 2026 Siam Residence · โทร 02-000-0000",
+            "x": 0.0,
+            "y": 1220.0,
+            "w": 1440.0,
+            "h": 80.0,
+            "align": "center"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wf_detail",
+      "type": "wireframe",
+      "name": "Room Detail — รายละเอียดห้อง",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "content": {
+        "device": "custom",
+        "width": 1440.0,
+        "height": 1500.0,
+        "style": "clean",
+        "accent": 4280640491,
+        "components": [
+          {
+            "id": "d_nav",
+            "kind": "navbar",
+            "text": "Siam Residence",
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1440.0,
+            "h": 64.0
+          },
+          {
+            "id": "d_1",
+            "kind": "link",
+            "text": "ห้องพัก",
+            "x": 330.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "d_2",
+            "kind": "link",
+            "text": "โปรโมชัน",
+            "x": 440.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "d_3",
+            "kind": "link",
+            "text": "การจองของฉัน",
+            "x": 550.0,
+            "y": 20.0,
+            "w": 110.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "d_4",
+            "kind": "avatar",
+            "text": "",
+            "x": 1376.0,
+            "y": 8.0,
+            "w": 48.0,
+            "h": 48.0
+          },
+          {
+            "id": "d_5",
+            "kind": "button",
+            "text": "เข้าสู่ระบบ",
+            "x": 1250.0,
+            "y": 12.0,
+            "w": 110.0,
+            "h": 40.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_login"
+            }
+          },
+          {
+            "id": "d_6",
+            "kind": "breadcrumb",
+            "text": "หน้าแรก\nค้นหาห้อง\nDeluxe",
+            "x": 40.0,
+            "y": 84.0,
+            "w": 420.0,
+            "h": 24.0
+          },
+          {
+            "id": "d_7",
+            "kind": "image",
+            "text": "",
+            "x": 40.0,
+            "y": 124.0,
+            "w": 620.0,
+            "h": 380.0
+          },
+          {
+            "id": "d_8",
+            "kind": "image",
+            "text": "",
+            "x": 680.0,
+            "y": 124.0,
+            "w": 300.0,
+            "h": 184.0
+          },
+          {
+            "id": "d_9",
+            "kind": "image",
+            "text": "",
+            "x": 680.0,
+            "y": 320.0,
+            "w": 300.0,
+            "h": 184.0
+          },
+          {
+            "id": "d_10",
+            "kind": "heading",
+            "text": "Deluxe",
+            "x": 40.0,
+            "y": 530.0,
+            "w": 600.0,
+            "h": 44.0,
+            "fontSize": 30.0
+          },
+          {
+            "id": "d_11",
+            "kind": "rating",
+            "text": "",
+            "x": 40.0,
+            "y": 580.0,
+            "w": 160.0,
+            "h": 28.0
+          },
+          {
+            "id": "d_12",
+            "kind": "paragraph",
+            "text": "ห้องกว้างขึ้น วิวเมือง พร้อมโซฟาและโต๊ะทำงาน เตียง King ผ้าปูคุณภาพโรงแรม 5 ดาว เหมาะกับการเข้าพักทั้งพักผ่อนและทำงาน",
+            "x": 40.0,
+            "y": 620.0,
+            "w": 940.0,
+            "h": 80.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_description"
+            }
+          },
+          {
+            "id": "d_13",
+            "kind": "heading",
+            "text": "สิ่งอำนวยความสะดวก",
+            "x": 40.0,
+            "y": 724.0,
+            "w": 400.0,
+            "h": 32.0,
+            "fontSize": 18.0
+          },
+          {
+            "id": "d_14",
+            "kind": "chip",
+            "text": "Wi-Fi ฟรี",
+            "x": 40.0,
+            "y": 764.0,
+            "w": 140.0,
+            "h": 30.0,
+            "align": "center"
+          },
+          {
+            "id": "d_15",
+            "kind": "chip",
+            "text": "อาหารเช้า",
+            "x": 190.0,
+            "y": 764.0,
+            "w": 140.0,
+            "h": 30.0,
+            "align": "center"
+          },
+          {
+            "id": "d_16",
+            "kind": "chip",
+            "text": "เครื่องปรับอากาศ",
+            "x": 340.0,
+            "y": 764.0,
+            "w": 140.0,
+            "h": 30.0,
+            "align": "center"
+          },
+          {
+            "id": "d_17",
+            "kind": "chip",
+            "text": "ที่จอดรถ",
+            "x": 490.0,
+            "y": 764.0,
+            "w": 140.0,
+            "h": 30.0,
+            "align": "center"
+          },
+          {
+            "id": "d_18",
+            "kind": "heading",
+            "text": "ตรวจสอบวันว่าง",
+            "x": 40.0,
+            "y": 830.0,
+            "w": 500.0,
+            "h": 32.0,
+            "fontSize": 18.0
+          },
+          {
+            "id": "d_19",
+            "kind": "calendar",
+            "text": "",
+            "x": 40.0,
+            "y": 872.0,
+            "w": 330.0,
+            "h": 300.0
+          },
+          {
+            "id": "d_20",
+            "kind": "tree",
+            "text": "ชั้น 2\n  201 ว่าง\n  202 มีผู้เข้าพัก\nชั้น 3\n  301 ว่าง",
+            "x": 400.0,
+            "y": 872.0,
+            "w": 260.0,
+            "h": 150.0
+          },
+          {
+            "id": "d_21",
+            "kind": "progress",
+            "text": "72%",
+            "x": 400.0,
+            "y": 1050.0,
+            "w": 260.0,
+            "h": 22.0
+          },
+          {
+            "id": "d_22",
+            "kind": "label",
+            "text": "อัตราการเข้าพักเดือนนี้",
+            "x": 400.0,
+            "y": 1080.0,
+            "w": 260.0,
+            "h": 22.0
+          },
+          {
+            "id": "d_book",
+            "kind": "card",
+            "text": "จองห้องนี้",
+            "x": 1010.0,
+            "y": 124.0,
+            "w": 390.0,
+            "h": 480.0
+          },
+          {
+            "id": "d_23",
+            "kind": "label",
+            "text": "฿1,890 / คืน",
+            "x": 1040.0,
+            "y": 176.0,
+            "w": 330.0,
+            "h": 30.0,
+            "fontSize": 22.0,
+            "bold": true,
+            "ref": {
+              "doc": "er_main",
+              "table": "room_types",
+              "column": "room_types_base_price"
+            }
+          },
+          {
+            "id": "d_24",
+            "kind": "datepicker",
+            "text": "วันเข้าพัก",
+            "x": 1040.0,
+            "y": 224.0,
+            "w": 330.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "bookings",
+              "column": "bookings_check_in"
+            }
+          },
+          {
+            "id": "d_25",
+            "kind": "datepicker",
+            "text": "วันออก",
+            "x": 1040.0,
+            "y": 280.0,
+            "w": 330.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "bookings",
+              "column": "bookings_check_out"
+            }
+          },
+          {
+            "id": "d_26",
+            "kind": "input",
+            "text": "2 ผู้เข้าพัก",
+            "x": 1040.0,
+            "y": 336.0,
+            "w": 330.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "bookings",
+              "column": "bookings_guests"
+            }
+          },
+          {
+            "id": "d_27",
+            "kind": "divider",
+            "text": "",
+            "x": 1040.0,
+            "y": 400.0,
+            "w": 330.0,
+            "h": 12.0
+          },
+          {
+            "id": "d_28",
+            "kind": "label",
+            "text": "2 คืน × ฿1,890",
+            "x": 1040.0,
+            "y": 424.0,
+            "w": 200.0,
+            "h": 24.0
+          },
+          {
+            "id": "d_29",
+            "kind": "label",
+            "text": "฿3,780",
+            "x": 1240.0,
+            "y": 424.0,
+            "w": 130.0,
+            "h": 24.0,
+            "align": "right"
+          },
+          {
+            "id": "d_30",
+            "kind": "label",
+            "text": "รวมทั้งสิ้น",
+            "x": 1040.0,
+            "y": 456.0,
+            "w": 200.0,
+            "h": 24.0,
+            "bold": true
+          },
+          {
+            "id": "d_31",
+            "kind": "label",
+            "text": "฿3,780",
+            "x": 1240.0,
+            "y": 456.0,
+            "w": 130.0,
+            "h": 24.0,
+            "bold": true,
+            "align": "right",
+            "ref": {
+              "doc": "er_main",
+              "table": "bookings",
+              "column": "bookings_total_price"
+            }
+          },
+          {
+            "id": "d_btn_book",
+            "kind": "button",
+            "text": "จองเลย",
+            "x": 1040.0,
+            "y": 516.0,
+            "w": 330.0,
+            "h": 48.0,
+            "align": "center",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_booking_create"
+            }
+          },
+          {
+            "id": "d_32",
+            "kind": "heading",
+            "text": "รีวิวจากผู้เข้าพัก",
+            "x": 700.0,
+            "y": 1190.0,
+            "w": 500.0,
+            "h": 32.0,
+            "fontSize": 18.0
+          },
+          {
+            "id": "d_33",
+            "kind": "list",
+            "text": "สมชาย: ห้องสะอาด พนักงานน่ารัก\nวิภา: เตียงนุ่ม วิวสวย\nนที: คุ้มค่ากับราคา",
+            "x": 700.0,
+            "y": 1230.0,
+            "w": 700.0,
+            "h": 190.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "reviews",
+              "column": "reviews_comment"
+            }
+          },
+          {
+            "id": "d_34",
+            "kind": "footer",
+            "text": "© 2026 Siam Residence · โทร 02-000-0000",
+            "x": 0.0,
+            "y": 1420.0,
+            "w": 1440.0,
+            "h": 80.0,
+            "align": "center"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wf_checkout",
+      "type": "wireframe",
+      "name": "Checkout — จองและชำระเงิน",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "notes": [
+        {
+          "id": "n8",
+          "kind": "question",
+          "text": "ต้องมี 3D Secure สำหรับบัตรหรือให้เกตเวย์จัดการ?",
+          "anchor": "c_btn_pay",
+          "created": "2026-11-19T00:00:00.000Z"
+        }
+      ],
+      "content": {
+        "device": "custom",
+        "width": 1440.0,
+        "height": 1200.0,
+        "style": "clean",
+        "accent": 4280640491,
+        "components": [
+          {
+            "id": "c_nav",
+            "kind": "navbar",
+            "text": "Siam Residence",
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1440.0,
+            "h": 64.0
+          },
+          {
+            "id": "c_1",
+            "kind": "link",
+            "text": "ห้องพัก",
+            "x": 330.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "c_2",
+            "kind": "link",
+            "text": "โปรโมชัน",
+            "x": 440.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "c_3",
+            "kind": "link",
+            "text": "การจองของฉัน",
+            "x": 550.0,
+            "y": 20.0,
+            "w": 110.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "c_4",
+            "kind": "avatar",
+            "text": "",
+            "x": 1376.0,
+            "y": 8.0,
+            "w": 48.0,
+            "h": 48.0
+          },
+          {
+            "id": "c_5",
+            "kind": "button",
+            "text": "เข้าสู่ระบบ",
+            "x": 1250.0,
+            "y": 12.0,
+            "w": 110.0,
+            "h": 40.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_login"
+            }
+          },
+          {
+            "id": "c_6",
+            "kind": "stepper",
+            "text": "ข้อมูลผู้เข้าพัก\nชำระเงิน\nยืนยัน",
+            "x": 120.0,
+            "y": 96.0,
+            "w": 700.0,
+            "h": 60.0
+          },
+          {
+            "id": "c_7",
+            "kind": "alert",
+            "text": "ห้องถูกกันไว้ให้คุณ 15 นาที กรุณาชำระเงินให้เสร็จ",
+            "x": 120.0,
+            "y": 176.0,
+            "w": 700.0,
+            "h": 56.0
+          },
+          {
+            "id": "c_8",
+            "kind": "heading",
+            "text": "ข้อมูลผู้เข้าพัก",
+            "x": 120.0,
+            "y": 262.0,
+            "w": 500.0,
+            "h": 36.0,
+            "fontSize": 20.0
+          },
+          {
+            "id": "c_9",
+            "kind": "label",
+            "text": "ชื่อ-นามสกุล",
+            "x": 120.0,
+            "y": 312.0,
+            "w": 200.0,
+            "h": 22.0
+          },
+          {
+            "id": "c_10",
+            "kind": "input",
+            "text": "สมชาย ใจดี",
+            "x": 120.0,
+            "y": 338.0,
+            "w": 700.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "users",
+              "column": "users_full_name"
+            }
+          },
+          {
+            "id": "c_11",
+            "kind": "label",
+            "text": "อีเมล",
+            "x": 120.0,
+            "y": 396.0,
+            "w": 200.0,
+            "h": 22.0
+          },
+          {
+            "id": "c_12",
+            "kind": "input",
+            "text": "somchai@example.com",
+            "x": 120.0,
+            "y": 422.0,
+            "w": 340.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "users",
+              "column": "users_email"
+            }
+          },
+          {
+            "id": "c_13",
+            "kind": "label",
+            "text": "โทรศัพท์",
+            "x": 480.0,
+            "y": 396.0,
+            "w": 200.0,
+            "h": 22.0
+          },
+          {
+            "id": "c_14",
+            "kind": "input",
+            "text": "081-234-5678",
+            "x": 480.0,
+            "y": 422.0,
+            "w": 340.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "users",
+              "column": "users_phone"
+            }
+          },
+          {
+            "id": "c_15",
+            "kind": "label",
+            "text": "คำขอพิเศษ",
+            "x": 120.0,
+            "y": 480.0,
+            "w": 300.0,
+            "h": 22.0
+          },
+          {
+            "id": "c_16",
+            "kind": "textarea",
+            "text": "เช่น ชั้นสูง / เตียงเสริม",
+            "x": 120.0,
+            "y": 506.0,
+            "w": 700.0,
+            "h": 100.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "bookings",
+              "column": "bookings_note"
+            }
+          },
+          {
+            "id": "c_17",
+            "kind": "heading",
+            "text": "วิธีชำระเงิน",
+            "x": 120.0,
+            "y": 640.0,
+            "w": 500.0,
+            "h": 36.0,
+            "fontSize": 20.0
+          },
+          {
+            "id": "c_18",
+            "kind": "radio",
+            "text": "บัตรเครดิต/เดบิต",
+            "x": 120.0,
+            "y": 690.0,
+            "w": 320.0,
+            "h": 24.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "payments",
+              "column": "payments_method"
+            }
+          },
+          {
+            "id": "c_19",
+            "kind": "radio",
+            "text": "PromptPay",
+            "x": 120.0,
+            "y": 726.0,
+            "w": 320.0,
+            "h": 24.0,
+            "checked": true,
+            "ref": {
+              "doc": "er_main",
+              "table": "payments",
+              "column": "payments_method"
+            }
+          },
+          {
+            "id": "c_20",
+            "kind": "radio",
+            "text": "โอนผ่านธนาคาร",
+            "x": 120.0,
+            "y": 762.0,
+            "w": 320.0,
+            "h": 24.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "payments",
+              "column": "payments_method"
+            }
+          },
+          {
+            "id": "c_21",
+            "kind": "checkbox",
+            "text": "ฉันยอมรับเงื่อนไขการจองและนโยบายการยกเลิก",
+            "x": 120.0,
+            "y": 820.0,
+            "w": 600.0,
+            "h": 24.0,
+            "checked": true
+          },
+          {
+            "id": "c_22",
+            "kind": "tooltip",
+            "text": "ยกเลิกฟรีก่อน 24 ชม.",
+            "x": 740.0,
+            "y": 806.0,
+            "w": 200.0,
+            "h": 48.0,
+            "align": "center"
+          },
+          {
+            "id": "c_btn_pay",
+            "kind": "button",
+            "text": "ชำระเงิน ฿3,780",
+            "x": 120.0,
+            "y": 880.0,
+            "w": 260.0,
+            "h": 52.0,
+            "align": "center",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_pay_create"
+            }
+          },
+          {
+            "id": "c_23",
+            "kind": "button",
+            "text": "ย้อนกลับ",
+            "x": 400.0,
+            "y": 880.0,
+            "w": 160.0,
+            "h": 52.0,
+            "align": "center",
+            "secondary": true
+          },
+          {
+            "id": "c_summary",
+            "kind": "card",
+            "text": "สรุปการจอง",
+            "x": 900.0,
+            "y": 96.0,
+            "w": 440.0,
+            "h": 460.0
+          },
+          {
+            "id": "c_24",
+            "kind": "image",
+            "text": "",
+            "x": 916.0,
+            "y": 136.0,
+            "w": 408.0,
+            "h": 150.0
+          },
+          {
+            "id": "c_25",
+            "kind": "label",
+            "text": "Deluxe · ห้อง 201",
+            "x": 916.0,
+            "y": 300.0,
+            "w": 400.0,
+            "h": 26.0,
+            "bold": true
+          },
+          {
+            "id": "c_26",
+            "kind": "label",
+            "text": "12 ธ.ค. 2569 → 14 ธ.ค. 2569 (2 คืน)",
+            "x": 916.0,
+            "y": 332.0,
+            "w": 400.0,
+            "h": 22.0
+          },
+          {
+            "id": "c_27",
+            "kind": "label",
+            "text": "2 ผู้เข้าพัก",
+            "x": 916.0,
+            "y": 360.0,
+            "w": 400.0,
+            "h": 22.0
+          },
+          {
+            "id": "c_28",
+            "kind": "divider",
+            "text": "",
+            "x": 916.0,
+            "y": 396.0,
+            "w": 408.0,
+            "h": 12.0
+          },
+          {
+            "id": "c_29",
+            "kind": "label",
+            "text": "ค่าห้อง",
+            "x": 916.0,
+            "y": 420.0,
+            "w": 200.0,
+            "h": 24.0
+          },
+          {
+            "id": "c_30",
+            "kind": "label",
+            "text": "฿3,780",
+            "x": 1200.0,
+            "y": 420.0,
+            "w": 124.0,
+            "h": 24.0,
+            "align": "right"
+          },
+          {
+            "id": "c_31",
+            "kind": "label",
+            "text": "รวมทั้งสิ้น",
+            "x": 916.0,
+            "y": 452.0,
+            "w": 200.0,
+            "h": 24.0,
+            "bold": true
+          },
+          {
+            "id": "c_32",
+            "kind": "label",
+            "text": "฿3,780",
+            "x": 1200.0,
+            "y": 452.0,
+            "w": 124.0,
+            "h": 24.0,
+            "bold": true,
+            "align": "right",
+            "ref": {
+              "doc": "er_main",
+              "table": "payments",
+              "column": "payments_amount"
+            }
+          },
+          {
+            "id": "c_33",
+            "kind": "progress",
+            "text": "เหลือเวลา 12:30",
+            "x": 916.0,
+            "y": 500.0,
+            "w": 408.0,
+            "h": 20.0
+          },
+          {
+            "id": "c_34",
+            "kind": "footer",
+            "text": "© 2026 Siam Residence · โทร 02-000-0000",
+            "x": 0.0,
+            "y": 1120.0,
+            "w": 1440.0,
+            "h": 80.0,
+            "align": "center"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wf_mybookings",
+      "type": "wireframe",
+      "name": "My Bookings — การจองของฉัน",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "content": {
+        "device": "custom",
+        "width": 1440.0,
+        "height": 1100.0,
+        "style": "clean",
+        "accent": 4280640491,
+        "components": [
+          {
+            "id": "m_nav",
+            "kind": "navbar",
+            "text": "Siam Residence",
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1440.0,
+            "h": 64.0
+          },
+          {
+            "id": "m_1",
+            "kind": "link",
+            "text": "ห้องพัก",
+            "x": 330.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "m_2",
+            "kind": "link",
+            "text": "โปรโมชัน",
+            "x": 440.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "m_3",
+            "kind": "link",
+            "text": "การจองของฉัน",
+            "x": 550.0,
+            "y": 20.0,
+            "w": 110.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "m_4",
+            "kind": "avatar",
+            "text": "",
+            "x": 1376.0,
+            "y": 8.0,
+            "w": 48.0,
+            "h": 48.0
+          },
+          {
+            "id": "m_5",
+            "kind": "button",
+            "text": "เข้าสู่ระบบ",
+            "x": 1250.0,
+            "y": 12.0,
+            "w": 110.0,
+            "h": 40.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_login"
+            }
+          },
+          {
+            "id": "m_6",
+            "kind": "heading",
+            "text": "การจองของฉัน",
+            "x": 80.0,
+            "y": 90.0,
+            "w": 500.0,
+            "h": 44.0,
+            "fontSize": 28.0
+          },
+          {
+            "id": "m_7",
+            "kind": "tabs",
+            "text": "กำลังจะมาถึง\nเสร็จสิ้น\nยกเลิก",
+            "x": 80.0,
+            "y": 150.0,
+            "w": 560.0,
+            "h": 44.0
+          },
+          {
+            "id": "m_8",
+            "kind": "search",
+            "text": "ค้นหารหัสการจอง…",
+            "x": 900.0,
+            "y": 150.0,
+            "w": 460.0,
+            "h": 44.0
+          },
+          {
+            "id": "m_9",
+            "kind": "table",
+            "text": "",
+            "x": 80.0,
+            "y": 220.0,
+            "w": 1280.0,
+            "h": 280.0,
+            "columns": [
+              "รหัสการจอง",
+              "ห้อง",
+              "เช็คอิน",
+              "เช็คเอาท์",
+              "ยอดรวม",
+              "สถานะ"
+            ],
+            "rows": 4,
+            "ref": {
+              "doc": "er_main",
+              "table": "bookings"
+            }
+          },
+          {
+            "id": "m_10",
+            "kind": "badge",
+            "text": "ยืนยันแล้ว",
+            "x": 1200.0,
+            "y": 270.0,
+            "w": 110.0,
+            "h": 26.0,
+            "align": "center"
+          },
+          {
+            "id": "m_11",
+            "kind": "button",
+            "text": "ยกเลิกการจอง",
+            "x": 80.0,
+            "y": 520.0,
+            "w": 180.0,
+            "h": 44.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_booking_cancel"
+            }
+          },
+          {
+            "id": "m_12",
+            "kind": "button",
+            "text": "ดูรายละเอียด",
+            "x": 280.0,
+            "y": 520.0,
+            "w": 180.0,
+            "h": 44.0,
+            "align": "center",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_booking_get"
+            }
+          },
+          {
+            "id": "m_13",
+            "kind": "pagination",
+            "text": "",
+            "x": 1100.0,
+            "y": 520.0,
+            "w": 260.0,
+            "h": 36.0
+          },
+          {
+            "id": "m_14",
+            "kind": "alert",
+            "text": "ค่าธรรมเนียมการยกเลิก: ฟรีก่อน 24 ชั่วโมง หลังจากนั้นคิด 1 คืน",
+            "x": 80.0,
+            "y": 600.0,
+            "w": 700.0,
+            "h": 56.0
+          },
+          {
+            "id": "m_review",
+            "kind": "modal",
+            "text": "เขียนรีวิว",
+            "x": 380.0,
+            "y": 690.0,
+            "w": 680.0,
+            "h": 320.0
+          },
+          {
+            "id": "m_15",
+            "kind": "rating",
+            "text": "",
+            "x": 420.0,
+            "y": 750.0,
+            "w": 180.0,
+            "h": 30.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "reviews",
+              "column": "reviews_rating"
+            }
+          },
+          {
+            "id": "m_16",
+            "kind": "textarea",
+            "text": "เล่าประสบการณ์การเข้าพักของคุณ…",
+            "x": 420.0,
+            "y": 794.0,
+            "w": 600.0,
+            "h": 100.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "reviews",
+              "column": "reviews_comment"
+            }
+          },
+          {
+            "id": "m_17",
+            "kind": "button",
+            "text": "ส่งรีวิว",
+            "x": 860.0,
+            "y": 920.0,
+            "w": 160.0,
+            "h": 44.0,
+            "align": "center",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_review_create"
+            }
+          },
+          {
+            "id": "m_18",
+            "kind": "button",
+            "text": "ยกเลิก",
+            "x": 680.0,
+            "y": 920.0,
+            "w": 160.0,
+            "h": 44.0,
+            "align": "center",
+            "secondary": true
+          },
+          {
+            "id": "m_19",
+            "kind": "footer",
+            "text": "© 2026 Siam Residence · โทร 02-000-0000",
+            "x": 0.0,
+            "y": 1020.0,
+            "w": 1440.0,
+            "h": 80.0,
+            "align": "center"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wf_admin",
+      "type": "wireframe",
+      "name": "Admin Dashboard — แดชบอร์ด",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "content": {
+        "device": "custom",
+        "width": 1440.0,
+        "height": 1000.0,
+        "style": "clean",
+        "accent": 4280640491,
+        "components": [
+          {
+            "id": "a_side",
+            "kind": "sidebar",
+            "text": "แดชบอร์ด\nห้องพัก\nการจอง\nรายงาน\nตั้งค่า",
+            "x": 0.0,
+            "y": 0.0,
+            "w": 240.0,
+            "h": 1000.0
+          },
+          {
+            "id": "a_1",
+            "kind": "avatar",
+            "text": "",
+            "x": 20.0,
+            "y": 920.0,
+            "w": 48.0,
+            "h": 48.0
+          },
+          {
+            "id": "a_2",
+            "kind": "label",
+            "text": "ผู้ดูแลระบบ",
+            "x": 80.0,
+            "y": 930.0,
+            "w": 150.0,
+            "h": 24.0
+          },
+          {
+            "id": "a_3",
+            "kind": "heading",
+            "text": "ภาพรวมวันนี้",
+            "x": 280.0,
+            "y": 30.0,
+            "w": 500.0,
+            "h": 44.0,
+            "fontSize": 28.0
+          },
+          {
+            "id": "a_4",
+            "kind": "datepicker",
+            "text": "19 พ.ย. 2569",
+            "x": 1100.0,
+            "y": 30.0,
+            "w": 240.0,
+            "h": 44.0
+          },
+          {
+            "id": "a_5",
+            "kind": "stat",
+            "text": "อัตราเข้าพัก\n72%",
+            "x": 280.0,
+            "y": 100.0,
+            "w": 250.0,
+            "h": 100.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_dashboard"
+            }
+          },
+          {
+            "id": "a_6",
+            "kind": "stat",
+            "text": "เช็คอินวันนี้\n5",
+            "x": 555.0,
+            "y": 100.0,
+            "w": 250.0,
+            "h": 100.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_dashboard"
+            }
+          },
+          {
+            "id": "a_7",
+            "kind": "stat",
+            "text": "เช็คเอาท์วันนี้\n3",
+            "x": 830.0,
+            "y": 100.0,
+            "w": 250.0,
+            "h": 100.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_dashboard"
+            }
+          },
+          {
+            "id": "a_8",
+            "kind": "stat",
+            "text": "รายได้วันนี้\n฿18,450",
+            "x": 1105.0,
+            "y": 100.0,
+            "w": 250.0,
+            "h": 100.0,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_dashboard"
+            }
+          },
+          {
+            "id": "a_9",
+            "kind": "heading",
+            "text": "การจองรายสัปดาห์",
+            "x": 280.0,
+            "y": 230.0,
+            "w": 400.0,
+            "h": 32.0,
+            "fontSize": 18.0
+          },
+          {
+            "id": "a_10",
+            "kind": "chart",
+            "text": "",
+            "x": 280.0,
+            "y": 270.0,
+            "w": 620.0,
+            "h": 300.0
+          },
+          {
+            "id": "a_11",
+            "kind": "heading",
+            "text": "อัตราเข้าพักแต่ละประเภท",
+            "x": 940.0,
+            "y": 230.0,
+            "w": 400.0,
+            "h": 32.0,
+            "fontSize": 18.0
+          },
+          {
+            "id": "a_12",
+            "kind": "progress",
+            "text": "80%",
+            "x": 940.0,
+            "y": 280.0,
+            "w": 400.0,
+            "h": 22.0
+          },
+          {
+            "id": "a_13",
+            "kind": "label",
+            "text": "Standard",
+            "x": 940.0,
+            "y": 306.0,
+            "w": 300.0,
+            "h": 22.0
+          },
+          {
+            "id": "a_14",
+            "kind": "progress",
+            "text": "70%",
+            "x": 940.0,
+            "y": 344.0,
+            "w": 400.0,
+            "h": 22.0
+          },
+          {
+            "id": "a_15",
+            "kind": "label",
+            "text": "Deluxe",
+            "x": 940.0,
+            "y": 370.0,
+            "w": 300.0,
+            "h": 22.0
+          },
+          {
+            "id": "a_16",
+            "kind": "progress",
+            "text": "55%",
+            "x": 940.0,
+            "y": 408.0,
+            "w": 400.0,
+            "h": 22.0
+          },
+          {
+            "id": "a_17",
+            "kind": "label",
+            "text": "Family",
+            "x": 940.0,
+            "y": 434.0,
+            "w": 300.0,
+            "h": 22.0
+          },
+          {
+            "id": "a_18",
+            "kind": "progress",
+            "text": "40%",
+            "x": 940.0,
+            "y": 472.0,
+            "w": 400.0,
+            "h": 22.0
+          },
+          {
+            "id": "a_19",
+            "kind": "label",
+            "text": "Executive",
+            "x": 940.0,
+            "y": 498.0,
+            "w": 300.0,
+            "h": 22.0
+          },
+          {
+            "id": "a_20",
+            "kind": "heading",
+            "text": "เช็คอินวันนี้",
+            "x": 280.0,
+            "y": 600.0,
+            "w": 400.0,
+            "h": 32.0,
+            "fontSize": 18.0
+          },
+          {
+            "id": "a_21",
+            "kind": "table",
+            "text": "",
+            "x": 280.0,
+            "y": 640.0,
+            "w": 1060.0,
+            "h": 220.0,
+            "columns": [
+              "รหัสการจอง",
+              "ผู้เข้าพัก",
+              "ห้อง",
+              "เวลา",
+              "สถานะ"
+            ],
+            "ref": {
+              "doc": "er_main",
+              "table": "bookings"
+            }
+          },
+          {
+            "id": "a_22",
+            "kind": "button",
+            "text": "+ เพิ่มห้อง",
+            "x": 280.0,
+            "y": 890.0,
+            "w": 200.0,
+            "h": 44.0,
+            "align": "center",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_rooms_create"
+            }
+          },
+          {
+            "id": "a_23",
+            "kind": "upload",
+            "text": "นำเข้ารายการห้องจากไฟล์ CSV",
+            "x": 1000.0,
+            "y": 880.0,
+            "w": 340.0,
+            "h": 90.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "wf_adminroom",
+      "type": "wireframe",
+      "name": "Admin Room — เพิ่มห้อง",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "content": {
+        "device": "custom",
+        "width": 1440.0,
+        "height": 940.0,
+        "style": "clean",
+        "accent": 4280640491,
+        "components": [
+          {
+            "id": "x_nav",
+            "kind": "navbar",
+            "text": "Siam Residence",
+            "x": 0.0,
+            "y": 0.0,
+            "w": 1440.0,
+            "h": 64.0
+          },
+          {
+            "id": "x_1",
+            "kind": "link",
+            "text": "ห้องพัก",
+            "x": 330.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "x_2",
+            "kind": "link",
+            "text": "โปรโมชัน",
+            "x": 440.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "x_3",
+            "kind": "link",
+            "text": "การจองของฉัน",
+            "x": 550.0,
+            "y": 20.0,
+            "w": 110.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "x_4",
+            "kind": "link",
+            "text": "แอดมิน",
+            "x": 680.0,
+            "y": 20.0,
+            "w": 90.0,
+            "h": 24.0,
+            "group": "g_menu"
+          },
+          {
+            "id": "x_5",
+            "kind": "avatar",
+            "text": "",
+            "x": 1376.0,
+            "y": 8.0,
+            "w": 48.0,
+            "h": 48.0
+          },
+          {
+            "id": "x_6",
+            "kind": "button",
+            "text": "เข้าสู่ระบบ",
+            "x": 1250.0,
+            "y": 12.0,
+            "w": 110.0,
+            "h": 40.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_login"
+            }
+          },
+          {
+            "id": "x_7",
+            "kind": "breadcrumb",
+            "text": "แอดมิน\nห้องพัก\nเพิ่มห้อง",
+            "x": 80.0,
+            "y": 84.0,
+            "w": 420.0,
+            "h": 24.0
+          },
+          {
+            "id": "x_8",
+            "kind": "heading",
+            "text": "เพิ่มห้องพัก",
+            "x": 80.0,
+            "y": 124.0,
+            "w": 500.0,
+            "h": 44.0,
+            "fontSize": 28.0
+          },
+          {
+            "id": "x_form",
+            "kind": "card",
+            "text": "ข้อมูลห้อง",
+            "x": 80.0,
+            "y": 190.0,
+            "w": 760.0,
+            "h": 640.0
+          },
+          {
+            "id": "x_9",
+            "kind": "label",
+            "text": "หมายเลขห้อง",
+            "x": 110.0,
+            "y": 240.0,
+            "w": 200.0,
+            "h": 22.0
+          },
+          {
+            "id": "x_10",
+            "kind": "input",
+            "text": "203",
+            "x": 110.0,
+            "y": 266.0,
+            "w": 340.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "rooms",
+              "column": "rooms_room_number"
+            }
+          },
+          {
+            "id": "x_11",
+            "kind": "label",
+            "text": "ชั้น",
+            "x": 480.0,
+            "y": 240.0,
+            "w": 200.0,
+            "h": 22.0
+          },
+          {
+            "id": "x_12",
+            "kind": "input",
+            "text": "2",
+            "x": 480.0,
+            "y": 266.0,
+            "w": 330.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "rooms",
+              "column": "rooms_floor"
+            }
+          },
+          {
+            "id": "x_13",
+            "kind": "label",
+            "text": "ประเภทห้อง",
+            "x": 110.0,
+            "y": 330.0,
+            "w": 200.0,
+            "h": 22.0
+          },
+          {
+            "id": "x_14",
+            "kind": "select",
+            "text": "Deluxe",
+            "x": 110.0,
+            "y": 356.0,
+            "w": 700.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "rooms",
+              "column": "rooms_room_type_id"
+            }
+          },
+          {
+            "id": "x_15",
+            "kind": "label",
+            "text": "สถานะ",
+            "x": 110.0,
+            "y": 420.0,
+            "w": 200.0,
+            "h": 22.0
+          },
+          {
+            "id": "x_16",
+            "kind": "select",
+            "text": "available",
+            "x": 110.0,
+            "y": 446.0,
+            "w": 340.0,
+            "h": 44.0,
+            "ref": {
+              "doc": "er_main",
+              "table": "rooms",
+              "column": "rooms_status"
+            }
+          },
+          {
+            "id": "x_17",
+            "kind": "toggle",
+            "text": "เปิดให้จอง",
+            "x": 480.0,
+            "y": 454.0,
+            "w": 330.0,
+            "h": 28.0,
+            "checked": true
+          },
+          {
+            "id": "x_18",
+            "kind": "label",
+            "text": "รูปภาพห้อง",
+            "x": 110.0,
+            "y": 510.0,
+            "w": 300.0,
+            "h": 22.0
+          },
+          {
+            "id": "x_19",
+            "kind": "upload",
+            "text": "",
+            "x": 110.0,
+            "y": 536.0,
+            "w": 700.0,
+            "h": 130.0
+          },
+          {
+            "id": "x_20",
+            "kind": "button",
+            "text": "บันทึก",
+            "x": 110.0,
+            "y": 700.0,
+            "w": 200.0,
+            "h": 48.0,
+            "align": "center",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_rooms_create"
+            }
+          },
+          {
+            "id": "x_21",
+            "kind": "button",
+            "text": "ยกเลิก",
+            "x": 330.0,
+            "y": 700.0,
+            "w": 160.0,
+            "h": 48.0,
+            "align": "center",
+            "secondary": true
+          },
+          {
+            "id": "x_22",
+            "kind": "button",
+            "text": "ลบห้อง",
+            "x": 640.0,
+            "y": 700.0,
+            "w": 170.0,
+            "h": 48.0,
+            "align": "center",
+            "secondary": true,
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_rooms_delete"
+            }
+          },
+          {
+            "id": "x_23",
+            "kind": "alert",
+            "text": "หมายเลขห้องต้องไม่ซ้ำกับห้องที่มีอยู่",
+            "x": 880.0,
+            "y": 190.0,
+            "w": 460.0,
+            "h": 64.0
+          },
+          {
+            "id": "x_24",
+            "kind": "icon",
+            "text": "",
+            "x": 880.0,
+            "y": 280.0,
+            "w": 32.0,
+            "h": 32.0
+          },
+          {
+            "id": "x_25",
+            "kind": "paragraph",
+            "text": "ห้องที่ปิดการจองจะไม่ถูกนำไปคำนวณในผลการค้นหาห้องว่าง",
+            "x": 924.0,
+            "y": 280.0,
+            "w": 420.0,
+            "h": 72.0
+          },
+          {
+            "id": "x_26",
+            "kind": "footer",
+            "text": "© 2026 Siam Residence · โทร 02-000-0000",
+            "x": 0.0,
+            "y": 860.0,
+            "w": 1440.0,
+            "h": 80.0,
+            "align": "center"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sf_main",
+      "type": "screenflow",
+      "name": "Screen Flow — เว็บจองห้องพัก",
+      "folder": "f_ui",
+      "typeVersion": 1,
+      "content": {
+        "nodes": [
+          {
+            "id": "sf_start",
+            "kind": "start",
+            "title": "ผู้ใช้เข้าเว็บ",
+            "x": 60.0,
+            "y": 222.0,
+            "w": 130.0,
+            "h": 46.0
+          },
+          {
+            "id": "sf_home",
+            "kind": "screen",
+            "title": "หน้าแรก",
+            "x": 300.0,
+            "y": 165.0,
+            "w": 190.0,
+            "h": 160.0,
+            "wireframe": "wf_home"
+          },
+          {
+            "id": "sf_rooms",
+            "kind": "screen",
+            "title": "รายการห้อง",
+            "x": 600.0,
+            "y": 60.0,
+            "w": 190.0,
+            "h": 160.0,
+            "wireframe": "wf_rooms"
+          },
+          {
+            "id": "sf_detail",
+            "kind": "screen",
+            "title": "รายละเอียดห้อง",
+            "x": 900.0,
+            "y": 60.0,
+            "w": 190.0,
+            "h": 160.0,
+            "wireframe": "wf_detail"
+          },
+          {
+            "id": "sf_checkout",
+            "kind": "screen",
+            "title": "จองและชำระเงิน",
+            "x": 1200.0,
+            "y": 165.0,
+            "w": 190.0,
+            "h": 160.0,
+            "wireframe": "wf_checkout"
+          },
+          {
+            "id": "sf_gateway",
+            "kind": "external",
+            "title": "หน้าชำระเงินของธนาคาร",
+            "x": 1500.0,
+            "y": 205.0,
+            "w": 170.0,
+            "h": 80.0
+          },
+          {
+            "id": "sf_mybookings",
+            "kind": "screen",
+            "title": "การจองของฉัน",
+            "x": 1780.0,
+            "y": 165.0,
+            "w": 190.0,
+            "h": 160.0,
+            "wireframe": "wf_mybookings"
+          },
+          {
+            "id": "sf_admin",
+            "kind": "screen",
+            "title": "แดชบอร์ดแอดมิน",
+            "x": 600.0,
+            "y": 270.0,
+            "w": 190.0,
+            "h": 160.0,
+            "wireframe": "wf_admin"
+          },
+          {
+            "id": "sf_adminroom",
+            "kind": "screen",
+            "title": "เพิ่ม/แก้ไขห้อง",
+            "x": 900.0,
+            "y": 270.0,
+            "w": 190.0,
+            "h": 160.0,
+            "wireframe": "wf_adminroom"
+          },
+          {
+            "id": "sf_end",
+            "kind": "end",
+            "title": "ออกจากระบบ",
+            "x": 2080.0,
+            "y": 222.0,
+            "w": 130.0,
+            "h": 46.0
+          }
+        ],
+        "edges": [
+          {
+            "id": "s1",
+            "from": "sf_start",
+            "to": "sf_home",
+            "label": ""
+          },
+          {
+            "id": "s2",
+            "from": "sf_home",
+            "to": "sf_rooms",
+            "label": "ค้นหาห้องว่าง",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_rooms_available"
+            }
+          },
+          {
+            "id": "s3",
+            "from": "sf_home",
+            "to": "sf_detail",
+            "label": "ดูรายละเอียดประเภทห้อง",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_types_get"
+            }
+          },
+          {
+            "id": "s4",
+            "from": "sf_rooms",
+            "to": "sf_detail",
+            "label": "เลือกห้อง"
+          },
+          {
+            "id": "s5",
+            "from": "sf_detail",
+            "to": "sf_checkout",
+            "label": "จองเลย",
+            "condition": "เข้าสู่ระบบแล้ว",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_booking_create"
+            }
+          },
+          {
+            "id": "s6",
+            "from": "sf_checkout",
+            "to": "sf_gateway",
+            "label": "ชำระเงิน",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_pay_create"
+            }
+          },
+          {
+            "id": "s7",
+            "from": "sf_gateway",
+            "to": "sf_mybookings",
+            "label": "ชำระสำเร็จ"
+          },
+          {
+            "id": "s8",
+            "from": "sf_gateway",
+            "to": "sf_checkout",
+            "label": "ชำระไม่สำเร็จ"
+          },
+          {
+            "id": "s9",
+            "from": "sf_mybookings",
+            "to": "sf_end",
+            "label": "ออกจากระบบ"
+          },
+          {
+            "id": "s10",
+            "from": "sf_home",
+            "to": "sf_admin",
+            "label": "เมนูแอดมิน",
+            "condition": "role = admin"
+          },
+          {
+            "id": "s11",
+            "from": "sf_admin",
+            "to": "sf_adminroom",
+            "label": "เพิ่ม/แก้ไขห้อง"
+          },
+          {
+            "id": "s12",
+            "from": "sf_adminroom",
+            "to": "sf_admin",
+            "label": "บันทึก",
+            "api": {
+              "doc": "api_main",
+              "endpoint": "e_rooms_create"
+            }
+          },
+          {
+            "id": "s13",
+            "from": "sf_admin",
+            "to": "sf_end",
+            "label": "ออกจากระบบ"
+          }
+        ]
+      }
+    },
+    {
+      "id": "api_main",
+      "type": "api",
+      "name": "API — ระบบจองห้องพัก",
+      "folder": "f_api",
+      "typeVersion": 1,
+      "notes": [
+        {
+          "id": "n9",
+          "kind": "question",
+          "text": "ใช้ JWT หรือ session cookie? (โมบายล์แอปในอนาคตควรใช้ JWT)",
+          "created": "2026-11-19T00:00:00.000Z"
+        },
+        {
+          "id": "n10",
+          "kind": "todo",
+          "text": "เพิ่ม query สำหรับ /rooms/available (check_in, check_out, guests) เป็นพารามิเตอร์ตามสัญญา",
+          "created": "2026-11-19T00:00:00.000Z"
+        }
+      ],
+      "content": {
+        "title": "Hotel Booking API",
+        "version": "1.0.0",
+        "baseUrl": "https://api.siam-residence.example/v1",
+        "endpoints": [
+          {
+            "id": "e_register",
+            "method": "post",
+            "path": "/auth/register",
+            "summary": "สมัครสมาชิก",
+            "group": "auth",
+            "table": {
+              "doc": "er_main",
+              "table": "users"
+            },
+            "fields": [
+              {
+                "id": "f1",
+                "name": "full_name",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "users",
+                  "column": "users_full_name"
+                }
+              },
+              {
+                "id": "f2",
+                "name": "email",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "users",
+                  "column": "users_email"
+                }
+              },
+              {
+                "id": "f3",
+                "name": "phone",
+                "type": "string",
+                "column": {
+                  "doc": "er_main",
+                  "table": "users",
+                  "column": "users_phone"
+                }
+              },
+              {
+                "id": "f4",
+                "name": "password",
+                "type": "string",
+                "required": true,
+                "description": "อย่างน้อย 8 ตัวอักษร (เก็บเป็น password_hash)"
+              }
+            ],
+            "responses": [
+              {
+                "status": 201,
+                "description": "สมัครสำเร็จ",
+                "example": "{\"id\":3,\"full_name\":\"สมหญิง รักดี\",\"email\":\"somying@example.com\",\"role\":\"guest\"}"
+              },
+              {
+                "status": 409,
+                "description": "อีเมลนี้ถูกใช้แล้ว",
+                "example": "{\"error\":\"email_taken\"}"
+              },
+              {
+                "status": 422,
+                "description": "ข้อมูลไม่ถูกต้อง",
+                "example": "{\"error\":\"validation_failed\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_login",
+            "method": "post",
+            "path": "/auth/login",
+            "summary": "เข้าสู่ระบบ",
+            "group": "auth",
+            "fields": [
+              {
+                "id": "f5",
+                "name": "email",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "users",
+                  "column": "users_email"
+                }
+              },
+              {
+                "id": "f6",
+                "name": "password",
+                "type": "string",
+                "required": true
+              }
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "description": "ได้โทเคน",
+                "example": "{\"token\":\"demo-token\",\"expires_in\":3600}"
+              },
+              {
+                "status": 401,
+                "description": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+                "example": "{\"error\":\"invalid_credentials\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_me",
+            "method": "get",
+            "path": "/me",
+            "summary": "ข้อมูลของฉัน",
+            "group": "auth",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "users"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200,
+                "example": "{\"id\":2,\"full_name\":\"สมชาย ใจดี\",\"role\":\"guest\"}"
+              },
+              {
+                "status": 401,
+                "example": "{\"error\":\"unauthorized\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_types_list",
+            "method": "get",
+            "path": "/room-types",
+            "summary": "รายการประเภทห้อง",
+            "group": "catalog",
+            "table": {
+              "doc": "er_main",
+              "table": "room_types"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          },
+          {
+            "id": "e_types_get",
+            "method": "get",
+            "path": "/room-types/{id}",
+            "summary": "รายละเอียดประเภทห้อง",
+            "group": "catalog",
+            "table": {
+              "doc": "er_main",
+              "table": "room_types"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200
+              },
+              {
+                "status": 404,
+                "example": "{\"error\":\"not_found\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_amenities",
+            "method": "get",
+            "path": "/amenities",
+            "summary": "รายการสิ่งอำนวยความสะดวก",
+            "group": "catalog",
+            "table": {
+              "doc": "er_main",
+              "table": "amenities"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          },
+          {
+            "id": "e_type_amenities",
+            "method": "get",
+            "path": "/room-types/{id}/amenities",
+            "summary": "สิ่งอำนวยความสะดวกของประเภทห้อง",
+            "group": "catalog",
+            "table": {
+              "doc": "er_main",
+              "table": "room_type_amenities"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          },
+          {
+            "id": "e_rooms_available",
+            "method": "get",
+            "path": "/rooms/available",
+            "summary": "ค้นหาห้องว่าง (check_in, check_out, guests เป็น query)",
+            "group": "catalog",
+            "fields": [],
+            "responses": [
+              {
+                "status": 200,
+                "description": "รายการห้องว่างพร้อมราคารวม",
+                "example": "[{\"room_type_id\":1,\"name\":\"Standard\",\"available\":2,\"price_per_night\":1290.00},{\"room_type_id\":2,\"name\":\"Deluxe\",\"available\":2,\"price_per_night\":1890.00}]"
+              },
+              {
+                "status": 422,
+                "example": "{\"error\":\"invalid_dates\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_rooms_list",
+            "method": "get",
+            "path": "/admin/rooms",
+            "summary": "รายการห้องทั้งหมด",
+            "group": "admin",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "rooms"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          },
+          {
+            "id": "e_rooms_create",
+            "method": "post",
+            "path": "/admin/rooms",
+            "summary": "เพิ่มห้อง",
+            "group": "admin",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "rooms"
+            },
+            "fields": [
+              {
+                "id": "f7",
+                "name": "room_number",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "rooms",
+                  "column": "rooms_room_number"
+                }
+              },
+              {
+                "id": "f8",
+                "name": "room_type_id",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "rooms",
+                  "column": "rooms_room_type_id"
+                }
+              },
+              {
+                "id": "f9",
+                "name": "floor",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "rooms",
+                  "column": "rooms_floor"
+                }
+              },
+              {
+                "id": "f10",
+                "name": "status",
+                "type": "string",
+                "column": {
+                  "doc": "er_main",
+                  "table": "rooms",
+                  "column": "rooms_status"
+                }
+              }
+            ],
+            "responses": [
+              {
+                "status": 201
+              }
+            ]
+          },
+          {
+            "id": "e_rooms_update",
+            "method": "put",
+            "path": "/admin/rooms/{id}",
+            "summary": "แก้ไขห้อง",
+            "group": "admin",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "rooms"
+            },
+            "fields": [
+              {
+                "id": "f11",
+                "name": "room_number",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "rooms",
+                  "column": "rooms_room_number"
+                }
+              },
+              {
+                "id": "f12",
+                "name": "floor",
+                "type": "integer",
+                "column": {
+                  "doc": "er_main",
+                  "table": "rooms",
+                  "column": "rooms_floor"
+                }
+              },
+              {
+                "id": "f13",
+                "name": "status",
+                "type": "string",
+                "column": {
+                  "doc": "er_main",
+                  "table": "rooms",
+                  "column": "rooms_status"
+                }
+              }
+            ],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          },
+          {
+            "id": "e_rooms_delete",
+            "method": "delete",
+            "path": "/admin/rooms/{id}",
+            "summary": "ลบห้อง",
+            "group": "admin",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "rooms"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 204
+              }
+            ]
+          },
+          {
+            "id": "e_seasonal_list",
+            "method": "get",
+            "path": "/admin/seasonal-prices",
+            "summary": "ราคาตามฤดูกาล",
+            "group": "admin",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "seasonal_prices"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          },
+          {
+            "id": "e_seasonal_create",
+            "method": "post",
+            "path": "/admin/seasonal-prices",
+            "summary": "ตั้งราคาตามฤดูกาล",
+            "group": "admin",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "seasonal_prices"
+            },
+            "fields": [
+              {
+                "id": "f14",
+                "name": "room_type_id",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "seasonal_prices",
+                  "column": "seasonal_prices_room_type_id"
+                }
+              },
+              {
+                "id": "f15",
+                "name": "start_date",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "seasonal_prices",
+                  "column": "seasonal_prices_start_date"
+                }
+              },
+              {
+                "id": "f16",
+                "name": "end_date",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "seasonal_prices",
+                  "column": "seasonal_prices_end_date"
+                }
+              },
+              {
+                "id": "f17",
+                "name": "multiplier",
+                "type": "number",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "seasonal_prices",
+                  "column": "seasonal_prices_multiplier"
+                }
+              }
+            ],
+            "responses": [
+              {
+                "status": 201
+              }
+            ]
+          },
+          {
+            "id": "e_dashboard",
+            "method": "get",
+            "path": "/admin/dashboard",
+            "summary": "สรุปภาพรวมวันนี้",
+            "group": "admin",
+            "auth": true,
+            "fields": [],
+            "responses": [
+              {
+                "status": 200,
+                "example": "{\"occupancy_percent\":72,\"check_ins_today\":5,\"check_outs_today\":3,\"revenue_today\":18450.00}"
+              },
+              {
+                "status": 401,
+                "example": "{\"error\":\"unauthorized\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_booking_create",
+            "method": "post",
+            "path": "/bookings",
+            "summary": "สร้างการจอง",
+            "group": "bookings",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "bookings"
+            },
+            "fields": [
+              {
+                "id": "f18",
+                "name": "room_id",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "bookings",
+                  "column": "bookings_room_id"
+                }
+              },
+              {
+                "id": "f19",
+                "name": "check_in",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "bookings",
+                  "column": "bookings_check_in"
+                },
+                "description": "YYYY-MM-DD"
+              },
+              {
+                "id": "f20",
+                "name": "check_out",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "bookings",
+                  "column": "bookings_check_out"
+                },
+                "description": "YYYY-MM-DD"
+              },
+              {
+                "id": "f21",
+                "name": "guests",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "bookings",
+                  "column": "bookings_guests"
+                }
+              },
+              {
+                "id": "f22",
+                "name": "total_price",
+                "type": "number",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "bookings",
+                  "column": "bookings_total_price"
+                }
+              },
+              {
+                "id": "f23",
+                "name": "booking_code",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "bookings",
+                  "column": "bookings_booking_code"
+                }
+              },
+              {
+                "id": "f24",
+                "name": "user_id",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "bookings",
+                  "column": "bookings_user_id"
+                }
+              },
+              {
+                "id": "f25",
+                "name": "note",
+                "type": "string",
+                "column": {
+                  "doc": "er_main",
+                  "table": "bookings",
+                  "column": "bookings_note"
+                }
+              }
+            ],
+            "responses": [
+              {
+                "status": 201,
+                "description": "สร้างการจอง สถานะ pending"
+              },
+              {
+                "status": 401,
+                "example": "{\"error\":\"unauthorized\"}"
+              },
+              {
+                "status": 409,
+                "description": "ห้องไม่ว่างในช่วงวันนี้",
+                "example": "{\"error\":\"room_unavailable\"}"
+              },
+              {
+                "status": 422,
+                "example": "{\"error\":\"validation_failed\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_booking_list",
+            "method": "get",
+            "path": "/bookings",
+            "summary": "การจองของฉัน",
+            "group": "bookings",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "bookings"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          },
+          {
+            "id": "e_booking_get",
+            "method": "get",
+            "path": "/bookings/{id}",
+            "summary": "รายละเอียดการจอง",
+            "group": "bookings",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "bookings"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200
+              },
+              {
+                "status": 404,
+                "example": "{\"error\":\"not_found\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_booking_cancel",
+            "method": "patch",
+            "path": "/bookings/{id}",
+            "summary": "ยกเลิกการจอง (ส่ง status = cancelled)",
+            "group": "bookings",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "bookings"
+            },
+            "fields": [
+              {
+                "id": "f26",
+                "name": "status",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "bookings",
+                  "column": "bookings_status"
+                }
+              }
+            ],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          },
+          {
+            "id": "e_pay_create",
+            "method": "post",
+            "path": "/payments",
+            "summary": "ชำระเงินของการจอง",
+            "group": "payments",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "payments"
+            },
+            "fields": [
+              {
+                "id": "f27",
+                "name": "booking_id",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "payments",
+                  "column": "payments_booking_id"
+                }
+              },
+              {
+                "id": "f28",
+                "name": "amount",
+                "type": "number",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "payments",
+                  "column": "payments_amount"
+                }
+              },
+              {
+                "id": "f29",
+                "name": "method",
+                "type": "string",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "payments",
+                  "column": "payments_method"
+                },
+                "description": "card | promptpay | transfer"
+              }
+            ],
+            "responses": [
+              {
+                "status": 201,
+                "description": "ชำระสำเร็จ"
+              },
+              {
+                "status": 402,
+                "description": "ชำระไม่สำเร็จ",
+                "example": "{\"error\":\"payment_declined\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_pay_list",
+            "method": "get",
+            "path": "/payments",
+            "summary": "ประวัติการชำระเงิน",
+            "group": "payments",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "payments"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          },
+          {
+            "id": "e_review_create",
+            "method": "post",
+            "path": "/reviews",
+            "summary": "เขียนรีวิว (หลังเข้าพัก)",
+            "group": "reviews",
+            "auth": true,
+            "table": {
+              "doc": "er_main",
+              "table": "reviews"
+            },
+            "fields": [
+              {
+                "id": "f30",
+                "name": "booking_id",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "reviews",
+                  "column": "reviews_booking_id"
+                }
+              },
+              {
+                "id": "f31",
+                "name": "rating",
+                "type": "integer",
+                "required": true,
+                "column": {
+                  "doc": "er_main",
+                  "table": "reviews",
+                  "column": "reviews_rating"
+                },
+                "description": "1–5"
+              },
+              {
+                "id": "f32",
+                "name": "comment",
+                "type": "string",
+                "column": {
+                  "doc": "er_main",
+                  "table": "reviews",
+                  "column": "reviews_comment"
+                }
+              }
+            ],
+            "responses": [
+              {
+                "status": 201
+              },
+              {
+                "status": 409,
+                "description": "การจองนี้รีวิวแล้ว",
+                "example": "{\"error\":\"already_reviewed\"}"
+              }
+            ]
+          },
+          {
+            "id": "e_review_list",
+            "method": "get",
+            "path": "/reviews",
+            "summary": "รีวิวทั้งหมด",
+            "group": "reviews",
+            "table": {
+              "doc": "er_main",
+              "table": "reviews"
+            },
+            "fields": [],
+            "responses": [
+              {
+                "status": 200
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "links": []
+}
