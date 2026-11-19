@@ -89,6 +89,65 @@ dependency_overrides:
 
 แล้วรัน `flutter pub get` — ลบไฟล์นี้เมื่อต้องการกลับไปใช้ git ; **แก้ Core แล้วต้อง push Core ก่อน** แอปบนเครื่องอื่นถึงจะเห็นการเปลี่ยนแปลง
 
+## ใช้กับ Claude Code (CLI + MCP server)
+
+Nebular มีเครื่องมือบรรทัดคำสั่งและ MCP server ให้ Claude Code (หรือตัวคุณเอง) อ่าน ตรวจ ส่งออก และสร้างโค้ดจากไฟล์โปรเจกต์ได้โดยไม่ต้องเปิดโปรแกรม — **ออฟไลน์ล้วน ไม่มี host/บัญชี/พอร์ต** (MCP ใช้ stdio: Claude Code เปิดเป็นโปรเซสลูกในเครื่อง)
+
+**อ่านไฟล์โปรเจกต์อย่างเดียว ไม่แก้ไฟล์โปรเจกต์** (ปลอดภัยแม้เปิดไฟล์เดียวกันในโปรแกรมอยู่) ; เขียนได้เฉพาะปลายทางที่สั่ง (`export --out`, `codegen --out`) และการสร้างโค้ดจะไม่ทับไฟล์ที่ถูกแก้ด้วยมือ
+
+### สร้าง exe
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tool\build_cli.ps1
+# → build\cli\nebular\bundle\bin\nebular.exe          (CLI)
+# → build\cli\nebular-mcp\bundle\bin\nebular_mcp.exe  (MCP server)
+```
+
+ไม่อยากสร้าง exe ใช้ `dart run bin/nebular.dart …` / `dart run bin/nebular_mcp.dart` ได้ (เริ่มช้ากว่า ~2 วินาที)
+
+### CLI
+
+```
+nebular info      shop.nsln                       ภาพรวม (เอกสาร ตาราง endpoint ปัญหา)
+nebular docs      shop.nsln                       รายการเอกสาร (id ชนิด ชื่อ)
+nebular show      shop.nsln "Shop API"            เนื้อหาเอกสารเป็น JSON
+nebular validate  shop.nsln [--json] [--min-severity error|warning|info] [--lang en]
+                                                  ตรวจทั้งโปรเจกต์ — จบด้วยรหัส 1 ถ้าพบ error (ใช้ใน CI ได้)
+nebular export    shop.nsln --format markdown|html|sql|openapi [--out ไฟล์]
+nebular targets   [shop.nsln]                     เป้าหมายสร้างโค้ด (ใส่ไฟล์ = บอกว่าตัวไหนสร้างได้)
+nebular codegen   shop.nsln --targets sqlDdl,typescript|all --out โฟลเดอร์ [--dry-run] [--overwrite-edited]
+```
+
+รหัสจบ: `0` สำเร็จ · `1` validate พบ error · `2` ใช้ผิด/ผิดพลาด
+
+### MCP server (Claude Code)
+
+เพิ่มใน `.mcp.json` ของโฟลเดอร์โปรเจกต์ที่ใช้ Claude Code (หรือ `claude mcp add nebular -- <path>`):
+
+```json
+{
+  "mcpServers": {
+    "nebular": { "command": "D:\NSL Product\NSL-Nebular\build\cli\nebular-mcp\bundle\bin\nebular_mcp.exe" }
+  }
+}
+```
+
+เครื่องมือ (ทุกตัวรับ `path` ของไฟล์ `.nsln`; path สัมพัทธ์อิงโฟลเดอร์ที่เปิด Claude Code):
+
+| เครื่องมือ | ทำอะไร | เขียนไฟล์ |
+|---|---|---|
+| `nebular_project_info` | ภาพรวมโปรเจกต์ | ไม่ |
+| `nebular_list_documents` | รายการเอกสาร (id ชนิด ชื่อ) | ไม่ |
+| `nebular_read_document` | เนื้อหาเอกสารเป็น JSON | ไม่ |
+| `nebular_validate` | ตรวจปัญหาทั้งโปรเจกต์ | ไม่ |
+| `nebular_export` | ส่งออกเป็นข้อความ (markdown/html/sql/openapi) | ไม่ |
+| `nebular_export_to_file` | ส่งออกลงไฟล์ | ไฟล์ที่ระบุ |
+| `nebular_list_codegen_targets` | เป้าหมายสร้างโค้ดที่สร้างได้ | ไม่ |
+| `nebular_codegen_preview` | ดูไฟล์ที่จะสร้าง (ยังไม่เขียน) | ไม่ |
+| `nebular_codegen_write` | สร้างโค้ดลงโฟลเดอร์ (ไม่ทับไฟล์ที่แก้ด้วยมือ) | โฟลเดอร์ที่ระบุ |
+
+ข้อจำกัด: เครื่องมืออ่านได้เฉพาะไฟล์สกุลโปรเจกต์ (`.nsln` / `.nsld` / `.nslm` / `.erd`) ; **ยังแก้โปรเจกต์ผ่านเครื่องมือไม่ได้** (เพิ่มตาราง ฯลฯ ต้องทำในโปรแกรม) ; ผลลัพธ์ที่ยาวเกิน 60,000 ตัวอักษรถูกตัด (ปรับด้วย `max_chars`)
+
 ## โครงสร้างโปรเจกต์
 
 ```
@@ -97,6 +156,8 @@ lib/
                layout (วางตาราง/เส้น), export, validate, db (เชื่อมต่อ MySQL), l10n (ไทย/อังกฤษ)
   state/       ProjectController, DfdController, AppSettings (ChangeNotifier)
   ui/          หน้าจอทั้งหมด: canvas, dfd, panels, dialogs, ฯลฯ
+  cli/         แกนของ CLI และ MCP server (Dart ล้วน)
+bin/           nebular.dart (CLI) · nebular_mcp.dart (MCP server)
 windows/runner/  โค้ดฝั่ง Windows (แถบชื่อหน้าต่างแบบกำหนดเอง)
 design/        ดีไซน์หน้าตาโปรแกรม (สำเนา Artifact) — ดู design/README.md
 samples/       ไฟล์ SQL ตัวอย่างสำหรับทดสอบ
