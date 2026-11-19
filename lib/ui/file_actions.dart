@@ -141,9 +141,39 @@ class FileActions {
     );
   }
 
-  /// นำเข้าจากไฟล์ .sql (CREATE TABLE ฯลฯ) -> แทนที่โปรเจกต์ หลังพรีวิวและยืนยัน
+  /// พรีวิวผลนำเข้า + เลือกปลายทาง (ER ใหม่ / แทนที่ ER ที่เปิด / โปรเจกต์ใหม่) แล้วนำเข้า
+  /// โปรเจกต์ที่ยังไม่ถูกแตะ (ER ว่างอันเดียว ไม่มีไฟล์) = เปิดเป็นโปรเจกต์ใหม่ทันทีโดยไม่ต้องเลือก
+  static Future<void> _previewAndImport(BuildContext context, ProjectController c, ImportResult result, String label) async {
+    final wc = c.workspaceController;
+    final pristine = wc.isPristine;
+    final target = await showDialog<ImportTarget>(
+      context: context,
+      builder: (_) => ImportPreviewDialog(
+        result: result,
+        fileName: label,
+        currentErName: pristine ? null : wc.documentById(wc.currentEr.docId)?.name,
+      ),
+    );
+    if (target == null || !context.mounted) return;
+    final ProjectController er;
+    switch (target) {
+      case ImportTarget.newProject:
+        if (!await confirmDiscard(context, c) || !context.mounted) return;
+        wc.loadImported(result.project);
+        er = wc.currentEr;
+      case ImportTarget.newEr:
+        wc.importAsNewEr(result.project, name: result.project.name);
+        er = wc.currentEr;
+      case ImportTarget.replaceEr:
+        er = wc.importReplaceCurrentEr(result.project);
+    }
+    final cv = context.read<CanvasController>();
+    cv.fit(er.project);
+    if (result.notes.any((n) => n.warning)) cv.showDock(DockTab.issues);
+  }
+
+  /// นำเข้าจากไฟล์ .sql (CREATE TABLE ฯลฯ) -> ER ใหม่ / แทนที่ ER ที่เปิด / โปรเจกต์ใหม่ หลังพรีวิวและเลือก
   static Future<void> importSqlFile(BuildContext context, ProjectController c) async {
-    if (!await confirmDiscard(context, c)) return;
     final f = await FilePicker.pickFile(
       dialogTitle: tr('นำเข้าจากไฟล์ .sql'),
       type: FileType.custom,
@@ -157,16 +187,7 @@ class FileActions {
       final name = fileName.replaceFirst(RegExp(r'\.[^.]*$'), '');
       final result = importSql(sql, name: name);
       if (!context.mounted) return;
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (_) => ImportPreviewDialog(result: result, fileName: fileName),
-      );
-      if (ok != true) return;
-      c.workspaceController.loadImported(result.project);
-      if (!context.mounted) return;
-      final cv = context.read<CanvasController>();
-      cv.fit(c.project);
-      if (result.notes.any((n) => n.warning)) cv.showDock(DockTab.issues);
+      await _previewAndImport(context, c, result, fileName);
     } catch (e) {
       if (context.mounted) _toast(context, tr('นำเข้าไม่ได้: {0}', [e]));
     }
@@ -200,17 +221,7 @@ class FileActions {
       );
       return;
     }
-    if (!await confirmDiscard(context, c) || !context.mounted) return;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => ImportPreviewDialog(result: read.import, fileName: out.label),
-    );
-    if (ok != true) return;
-    c.workspaceController.loadImported(read.import.project);
-    if (!context.mounted) return;
-    final cv = context.read<CanvasController>();
-    cv.fit(c.project);
-    if (read.import.notes.any((n) => n.warning)) cv.showDock(DockTab.issues);
+    await _previewAndImport(context, c, read.import, out.label);
   }
 
   /// เลือกไฟล์โปรเจกต์เก่า (.nsln / .nslm / .erd) มาเทียบกับโปรเจกต์ปัจจุบัน -> หน้าต่างรายการเปลี่ยนแปลง + สคริปต์ migration

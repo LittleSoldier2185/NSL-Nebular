@@ -99,28 +99,44 @@ class StatusBar extends StatelessWidget {
         Text(appVersionLabel, key: const ValueKey('status-version'), style: small.copyWith(fontWeight: FontWeight.w600, color: C.text)),
         sep(),
         // หน้าต่างแคบ: ลิงก์นี้หดตัว (ตัดเป็น …) ก่อนรายการอื่น แทนที่แถบจะล้น
-        Flexible(child: InkWell(
-          key: const ValueKey('status-whats-new'),
-          borderRadius: BorderRadius.circular(4),
-          onTap: () => showWhatsNew(context),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Flexible(
-                child: Text(tr('มีอะไรใหม่'), maxLines: 1, overflow: TextOverflow.ellipsis, style: small.copyWith(color: C.primaryDark)),
+        // แคบจนข้อความไม่พอ (< 40px) = เหลือแค่จุด "ยังไม่ได้อ่าน" (หรือไม่แสดง) — ไม่ให้จุดล้นออกนอกช่อง
+        Flexible(child: LayoutBuilder(builder: (context, c) {
+          final unseen = settings.hasUnseenNotes(kAppVersion);
+          final dot = Container(
+            key: const ValueKey('status-unseen-dot'),
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: C.warnText, shape: BoxShape.circle),
+          );
+          if (c.maxWidth < 40) {
+            if (!unseen || c.maxWidth < 9) return const SizedBox.shrink();
+            return Tooltip(
+              message: tr('มีอะไรใหม่'),
+              child: InkWell(
+                key: const ValueKey('status-whats-new'),
+                onTap: () => showWhatsNew(context),
+                child: Padding(padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 4), child: dot),
               ),
-              if (settings.hasUnseenNotes(kAppVersion)) ...[
-                const SizedBox(width: 5),
-                Container(
-                  key: const ValueKey('status-unseen-dot'),
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(color: C.warnText, shape: BoxShape.circle),
+            );
+          }
+          return InkWell(
+            key: const ValueKey('status-whats-new'),
+            borderRadius: BorderRadius.circular(4),
+            onTap: () => showWhatsNew(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Flexible(
+                  child: Text(tr('มีอะไรใหม่'), maxLines: 1, overflow: TextOverflow.ellipsis, style: small.copyWith(color: C.primaryDark)),
                 ),
-              ],
-            ]),
-          ),
-        )),
+                if (unseen) ...[
+                  const SizedBox(width: 5),
+                  dot,
+                ],
+              ]),
+            ),
+          );
+        })),
         // หน้าต่างแคบ: ตัดส่วนนี้ออกก่อน ไม่บีบรายการอื่น (ปัญหา/ซูม/สถานะบันทึก)
         if (box.maxWidth >= kStatusDocsMinWidth) ...[
         sep(),

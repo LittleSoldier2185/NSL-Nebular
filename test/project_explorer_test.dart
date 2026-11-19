@@ -56,6 +56,40 @@ void main() {
     expect(row(d1.id), findsNothing);
   });
 
+  testWidgets('จุด "ยังไม่บันทึก" รายเอกสาร: แท็บ + ตัวสำรวจ ; บันทึกแล้วหาย ; แก้ ER = ขึ้นเฉพาะ ER', (tester) async {
+    await boot(tester);
+    final er = w.mainEr.docId;
+    Finder dot(String where, String id) => find.byKey(ValueKey('$where-dirty-$id'));
+    expect(dot('tab', er), findsNothing);
+    expect(dot('explorer', er), findsNothing);
+
+    final d = w.addDocument(DocType.dfd, name: 'Flow')!;
+    await tester.pump();
+    expect(w.documentDirty(d.id), true); // เอกสารใหม่
+    expect(w.documentDirty(er), false);
+    expect(dot('tab', d.id), findsOneWidget);
+    expect(dot('explorer', d.id), findsOneWidget);
+    expect(dot('tab', er), findsNothing);
+
+    w.markSaved('${Directory.systemTemp.path}/x.nsln');
+    await tester.pump();
+    expect(dot('tab', d.id), findsNothing);
+    expect(dot('explorer', d.id), findsNothing);
+
+    w.mainEr.addTable();
+    await tester.pump();
+    expect(w.documentDirty(er), true);
+    expect(w.documentDirty(d.id), false);
+    expect(dot('tab', er), findsOneWidget);
+    expect(dot('explorer', er), findsOneWidget);
+
+    w.markSaved('${Directory.systemTemp.path}/x.nsln');
+    expect(w.renameDocument(d.id, 'Flow 2'), true);
+    await tester.pump();
+    expect(w.documentDirty(d.id), true); // เปลี่ยนชื่อ
+    expect(w.documentDirty(er), false);
+  });
+
   testWidgets('คลิกแถว = เปิดเอกสารนั้น (DFD แล้วกลับ ER)', (tester) async {
     await boot(tester);
     final d = w.addDocument(DocType.dfd, name: 'Flow')!;

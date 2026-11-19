@@ -415,9 +415,32 @@ class WorkspaceController extends ChangeNotifier {
   /// โปรเจกต์ที่ได้จากการ import .sql — ยังไม่มีไฟล์โปรเจกต์ จึงถือว่ายังไม่ได้บันทึก
   void loadImported(Project p) => _replace(Workspace.single(p), null, dirty: true);
 
+  /// โปรเจกต์ยังไม่ถูกแตะเลย (ไม่มีไฟล์ ไม่มีการแก้ มีแต่ ER ว่างหนึ่งอัน) — นำเข้าแล้วเปิดเป็นโปรเจกต์ใหม่ได้โดยไม่เสียอะไร
+  bool get isPristine =>
+      _filePath == null &&
+      !dirty &&
+      _workspace.documents.length == 1 &&
+      (_workspace.documents.single.er?.tables.isEmpty ?? false);
+
+  /// นำเข้า ER (จาก .sql/ฐานข้อมูล) เป็นเอกสาร ER ใหม่ในโปรเจกต์นี้แล้วเปิดแท็บ — ชื่อเอกสารตาม [name] (ซ้ำต่อเลข) ;
+  /// ชื่อโปรเจกต์คงเดิม ; dialect/ขนาดกระดานตามที่นำเข้ามา
+  ProjectDocument importAsNewEr(Project p, {required String name}) {
+    p.name = _workspace.name;
+    return addDocument(DocType.er, name: name.trim().isEmpty ? 'ER' : name, er: p)!;
+  }
+
+  /// แทนเนื้อหา ER ที่ใช้งานอยู่ (ขณะอยู่แท็บอื่น = ER ที่เปิดล่าสุด) ด้วย [p] — undo ได้ขั้นเดียว ; เปิดแท็บ ER นั้น
+  ProjectController importReplaceCurrentEr(Project p) {
+    final er = currentEr;
+    openDocument(er.docId);
+    er.replaceContent(p);
+    return er;
+  }
+
   void markSaved(String path) {
     _filePath = path;
     _structureDirty = false;
+    _touched.clear();
     for (final c in _controllers.values) {
       c.markClean();
     }
@@ -448,6 +471,7 @@ class WorkspaceController extends ChangeNotifier {
     _startView = false;
     _filePath = path;
     _structureDirty = dirty;
+    _touched.clear();
     _resetTabs(er.id);
     notifyListeners();
   }
@@ -472,10 +496,19 @@ class WorkspaceController extends ChangeNotifier {
     if (_workspace.documentById(id)?.type == DocType.er) _lastErId = id;
   }
 
-  void _structureChanged() {
+  /// [docId] = เอกสารที่ถูกเพิ่ม/ทำสำเนา/เปลี่ยนชื่อ — นับว่าเอกสารนั้นยังไม่บันทึกด้วย ([documentDirty])
+  void _structureChanged([String? docId]) {
     _structureDirty = true;
+    if (docId != null) _touched.add(docId);
     notifyListeners();
   }
+
+  /// เอกสารที่ถูกเพิ่ม/ทำสำเนา/เปลี่ยนชื่อหลังบันทึกหรือเปิดครั้งล่าสุด
+  final Set<String> _touched = {};
+
+  /// เอกสาร [id] มีอะไรยังไม่บันทึก: เนื้อหาถูกแก้ หรือเพิ่งเพิ่ม/ทำสำเนา/เปลี่ยนชื่อ
+  /// (การเรียงลำดับ/ย้ายโฟลเดอร์/ลบเอกสารอื่น และข้อมูลระดับโปรเจกต์ ไม่นับเป็นของเอกสารใด — ดู [dirty])
+  bool documentDirty(String id) => _touched.contains(id) || (_controllers[id]?.docDirty ?? false);
 
 
   // ---------- เอกสาร ----------
@@ -558,7 +591,7 @@ class WorkspaceController extends ChangeNotifier {
     _workspace.documents.add(doc);
     _open.add(doc.id);
     _setActive(doc.id);
-    _structureChanged();
+    _structureChanged(doc.id);
     return doc;
   }
 
@@ -570,7 +603,7 @@ class WorkspaceController extends ChangeNotifier {
     if (_workspace.documents.any((d) => d.id != id && d.name.toLowerCase() == n.toLowerCase())) return false;
     if (t.name == n) return true;
     t.name = n;
-    _structureChanged();
+    _structureChanged(id);
     return true;
   }
 
@@ -630,7 +663,7 @@ class WorkspaceController extends ChangeNotifier {
     _workspace.documents.insert(_workspace.documents.indexOf(src) + 1, copy);
     _open.add(copy.id);
     _setActive(copy.id);
-    _structureChanged();
+    _structureChanged(copy.id);
     return copy;
   }
 

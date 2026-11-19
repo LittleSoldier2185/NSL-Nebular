@@ -63,19 +63,59 @@ void main() {
     });
   });
 
+  group('WorkspaceController: นำเข้าเป็น ER ใหม่ / แทนที่ ER ที่เปิด', () {
+    test('โปรเจกต์ใหม่ที่ยังไม่แตะ = pristine ; แก้แล้ว/มีไฟล์ = ไม่ใช่', () {
+      final c = ProjectController();
+      expect(c.workspaceController.isPristine, true);
+      c.addTable();
+      expect(c.workspaceController.isPristine, false);
+    });
+
+    test('ER ใหม่: เอกสารเดิมอยู่ครบ ชื่อตามที่นำเข้า (ซ้ำต่อเลข) เปิดแท็บใหม่ ชื่อโปรเจกต์ไม่เปลี่ยน', () {
+      final c = ProjectController();
+      c.addTable();
+      final wc = c.workspaceController;
+      final before = wc.workspace.name;
+      final r = importSql('CREATE TABLE a (id INT PRIMARY KEY);', name: 'shop');
+      final doc = wc.importAsNewEr(r.project, name: 'shop');
+      expect(wc.documents.length, 2);
+      expect(doc.name, 'shop');
+      expect(wc.activeId, doc.id);
+      expect(wc.currentEr.project.tables.single.name, 'a');
+      expect(c.project.tables.length, 1); // ER เดิมไม่ถูกแตะ
+      expect(wc.workspace.name, before);
+      expect(wc.dirty, true);
+      final again = wc.importAsNewEr(importSql('CREATE TABLE b (id INT);').project, name: 'shop');
+      expect(again.name, isNot('shop'));
+    });
+
+    test('แทนที่ ER ที่เปิด: undo ได้ขั้นเดียว ชื่อเอกสารคงเดิม', () {
+      final c = ProjectController();
+      c.addTable();
+      final wc = c.workspaceController;
+      final oldName = c.project.tables.single.name;
+      final er = wc.importReplaceCurrentEr(importSql('CREATE TABLE x (id INT PRIMARY KEY); CREATE TABLE y (id INT);').project);
+      expect(identical(er, c), true);
+      expect(wc.documents.length, 1);
+      expect(c.project.tables.map((t) => t.name), ['x', 'y']);
+      c.undo();
+      expect(c.project.tables.single.name, oldName);
+    });
+  });
+
   group('ImportPreviewDialog', () {
-    Future<bool?> open(WidgetTester tester, String sql) async {
+    Future<ImportTarget? Function()> open(WidgetTester tester, String sql, {String? erName}) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      bool? popped;
+      ImportTarget? popped;
       await tester.pumpWidget(MaterialApp(
         home: Builder(
           builder: (ctx) => Scaffold(
             body: TextButton(
-              onPressed: () async => popped = await showDialog<bool>(
+              onPressed: () async => popped = await showDialog<ImportTarget>(
                 context: ctx,
-                builder: (_) => ImportPreviewDialog(result: importSql(sql), fileName: 'x.sql'),
+                builder: (_) => ImportPreviewDialog(result: importSql(sql), fileName: 'x.sql', currentErName: erName),
               ),
               child: const Text('open'),
             ),
@@ -84,11 +124,27 @@ void main() {
       ));
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
-      return popped;
+      return () => popped;
     }
 
-    testWidgets('สรุปจำนวน + ปุ่มนำเข้าคืน true', (tester) async {
-      bool? result;
+    testWidgets('มี ER ที่เปิดอยู่: เลือกปลายทางได้ ค่าเริ่มต้น = ER ใหม่', (tester) async {
+      final result = await open(tester, 'CREATE TABLE a (id INT PRIMARY KEY);', erName: 'ร้านค้า');
+      expect(find.text('การนำเข้าจะแทนที่โปรเจกต์ที่เปิดอยู่'), findsNothing);
+      expect(find.text('แทนที่ ER ที่เปิดอยู่: ร้านค้า'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'นำเข้า'));
+      await tester.pumpAndSettle();
+      expect(result(), ImportTarget.newEr);
+
+      final r2 = await open(tester, 'CREATE TABLE a (id INT PRIMARY KEY);', erName: 'ร้านค้า');
+      await tester.tap(find.byKey(const ValueKey('import-target-replaceEr')));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'นำเข้า'));
+      await tester.pumpAndSettle();
+      expect(r2(), ImportTarget.replaceEr);
+    });
+
+    testWidgets('สรุปจำนวน + ไม่มี ER ที่เปิด = นำเข้าเป็นโปรเจกต์ใหม่', (tester) async {
+      ImportTarget? result;
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
@@ -96,7 +152,7 @@ void main() {
         home: Builder(
           builder: (ctx) => Scaffold(
             body: TextButton(
-              onPressed: () async => result = await showDialog<bool>(
+              onPressed: () async => result = await showDialog<ImportTarget>(
                 context: ctx,
                 builder: (_) => ImportPreviewDialog(
                   result: importSql('''
@@ -120,19 +176,22 @@ INSERT INTO a VALUES (1);
       expect(find.textContaining('GEOMETRY'), findsOneWidget); // คำเตือนชนิดที่ไม่รู้จัก
       expect(find.textContaining('INSERT'), findsOneWidget); // ข้อมูลเพิ่มเติม
 
+      expect(find.text('การนำเข้าจะแทนที่โปรเจกต์ที่เปิดอยู่'), findsOneWidget);
+      expect(find.byKey(const ValueKey('import-target-newEr')), findsNothing);
       await tester.tap(find.widgetWithText(FilledButton, 'นำเข้า'));
       await tester.pumpAndSettle();
-      expect(result, true);
+      expect(result, ImportTarget.newProject);
     });
 
-    testWidgets('ไม่พบตาราง: ปุ่มนำเข้ากดไม่ได้ ยกเลิกคืน false', (tester) async {
-      await open(tester, 'SELECT 1;');
+    testWidgets('ไม่พบตาราง: ปุ่มนำเข้ากดไม่ได้ ยกเลิกคืน null', (tester) async {
+      final result = await open(tester, 'SELECT 1;', erName: 'ER');
       expect(find.text('ไม่พบ CREATE TABLE ในไฟล์นี้'), findsOneWidget);
       final btn = tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'นำเข้า'));
       expect(btn.onPressed, isNull);
       await tester.tap(find.text('ยกเลิก'));
       await tester.pumpAndSettle();
       expect(find.byType(ImportPreviewDialog), findsNothing);
+      expect(result(), isNull);
     });
   });
 }

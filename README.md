@@ -5,20 +5,28 @@
 <h1 align="center">NSL Nebular</h1>
 
 <p align="center">
-  เครื่องมือออกแบบฐานข้อมูลและแผนภาพแบบลากวาง สำหรับ Windows<br>
-  <em>A drag-and-drop tool for designing databases and diagrams (Windows desktop)</em>
+  เครื่องมือออกแบบและวางแผนพัฒนาซอฟต์แวร์แบบลากวาง สำหรับ Windows<br>
+  <em>A drag-and-drop tool for designing and planning software projects (Windows desktop)</em>
 </p>
 
 <p align="center">
-  <strong>รุ่นปัจจุบัน: Altair 0.5.0</strong> · <a href="CHANGELOG.md">บันทึกการเปลี่ยนแปลง</a>
+  <strong>รุ่นปัจจุบัน: Capella 0.7.0</strong> · <a href="CHANGELOG.md">บันทึกการเปลี่ยนแปลง</a>
 </p>
 
 ---
 
-ออกแบบตาราง ความสัมพันธ์ และแผนภาพ DFD โดยลากวางบนแคนวาส แล้วสร้าง SQL สำหรับ **MySQL / MariaDB, PostgreSQL, SQLite และ SQL Server**
+ไฟล์โปรเจกต์ `.nsln` ไฟล์เดียวเก็บได้หลายเอกสาร: **ER, DFD, Flowchart, Wireframe, Screen Flow และ API** พร้อมความต้องการ (Requirements) โน้ต และประวัติเวอร์ชัน
+สร้าง SQL สำหรับ **MySQL / MariaDB, PostgreSQL, SQLite และ SQL Server** สร้างโค้ดหลายเป้าหมาย และรัน Mock Server บนเครื่อง
 ทำงานบนเครื่องของคุณทั้งหมด ไม่ต้องมีบัญชีหรืออินเทอร์เน็ต
 
 ## ความสามารถ
+
+### โปรเจกต์หลายเอกสาร
+- หน้าเริ่มต้น สร้างโปรเจกต์จากแม่แบบ ไฟล์ล่าสุด ; Project Home (ภาพรวม การ์ดเอกสาร ปัญหา) ; ตัวสำรวจโปรเจกต์พร้อมโฟลเดอร์ และจุดบอกเอกสารที่ยังไม่บันทึก
+- **Flowchart** แบบ draw.io (รูปทรงมาตรฐาน จุดต่อเส้น smart guide จัดกลุ่ม จัดวางอัตโนมัติ) · **Wireframe** (ชิ้นส่วน UI 45 ชนิด เลเยอร์ รูปแบบร่าง/เรียบร้อย ผูกตาราง/คอลัมน์ ER) · **Screen Flow** (หน้าจอผูก Wireframe และเส้นการเปลี่ยนหน้า)
+- **API Designer** (endpoint ผูกตาราง ER ส่งออก OpenAPI) · **Mock Server** บน localhost ตอบตามสัญญา API ด้วยข้อมูลจาก seed
+- **สร้างโค้ด** หลายเป้าหมาย (ไม่ทับไฟล์ที่แก้ด้วยมือ) · **พจนานุกรมข้อมูล** · **Requirements + Traceability** · **โน้ต/งานค้าง** ปักหมุดบนแคนวาส · **ประวัติเวอร์ชัน + Diff**
+- ตรวจปัญหาข้ามเอกสาร (เช่น ที่เก็บข้อมูล DFD หรือชิ้นส่วน Wireframe ชี้ตารางที่ไม่มีแล้ว) และ Export เอกสาร HTML/Markdown ทั้งโปรเจกต์
 
 ### แผนภาพ ER
 - ลากวางตาราง คอลัมน์ ความสัมพันธ์ FK (เส้นหักมุมฉากแบบ crow's foot) จัดวางอัตโนมัติ
@@ -37,7 +45,7 @@
 
 ### SQL และฐานข้อมูล
 - สร้าง SQL ทั้ง 4 dialect และสลับ dialect ได้ทันที
-- นำเข้าจากไฟล์ `.sql` (ดูตัวอย่างใน [`samples/`](samples/README.md))
+- นำเข้าจากไฟล์ `.sql` หรือฐานข้อมูล เป็น ER ใหม่ในโปรเจกต์ แทนที่ ER ที่เปิดอยู่ (เลิกทำได้) หรือเปิดเป็นโปรเจกต์ใหม่ (ดูตัวอย่างใน [`samples/`](samples/README.md) รวมโปรเจกต์ตัวอย่างครบทุกชนิดเอกสาร `hotel_booking.nsln`)
 - **Migration:** เปรียบเทียบกับไฟล์เก่าหรือกับฐานข้อมูลจริง แล้วสร้างสคริปต์แก้โครงสร้าง ห่อด้วย transaction และถามยืนยันก่อนทำสิ่งที่ลบข้อมูล
 - **เชื่อมต่อ MySQL / MariaDB หรือเปิดไฟล์ SQLite แบบอ่านอย่างเดียว** (เมนู ไฟล์ → เชื่อมต่อฐานข้อมูล…, `Ctrl+Shift+O`): นำโครงสร้างเข้ามาเป็นแผนภาพหรือเปรียบเทียบเพื่อสร้าง migration (ตารางที่เปลี่ยนชื่อจับคู่ด้วยมือได้ ข้อมูลจะไม่หาย) · บันทึกการเชื่อมต่อไว้ใช้ซ้ำได้
 - **รัน migration กับไฟล์ SQLite โดยตรง:** ยืนยันรายการที่ข้อมูลอาจหาย → สำรองไฟล์เดิมเป็น `.bak-วันเวลา` → รันในทรานแซกชัน (ผิดพลาดยกเลิกทั้งหมด) → อ่านกลับมาตรวจว่าตรงกับแผนภาพ
@@ -48,7 +56,7 @@
 - **แถบสถานะล่าง:** รุ่นของโปรแกรม จำนวนตาราง ปัญหาที่ตรวจพบ ซูม สถานะบันทึก และปุ่ม **มีอะไรใหม่**
 - Export ภาพ PNG/SVG (ธีมสว่าง/มืด, ทั้งกระดาน/เฉพาะส่วนที่มีตาราง/เฉพาะที่เลือก), Data dictionary (Markdown), Mermaid, DBML
 - ธีมสว่าง/มืด, ภาษาไทย/อังกฤษ, ฟอนต์ Noto Sans Thai ฝังในโปรแกรม
-- Auto-save และกู้คืนงานที่ค้างอยู่ ไฟล์โปรเจกต์ `.nsln` (JSON) — ไฟล์ `.nslm` และ `.erd` รุ่นเก่ายังเปิดได้ และเมื่อบันทึกจะได้ไฟล์ `.nslm` ใหม่ (ไฟล์เดิมไม่ถูกแก้) ; เปิดไฟล์ด้วย `nsl_nebular.exe <ไฟล์>` ได้ ; ผูกสกุล `.nslm` กับแอปใน Windows (ดับเบิลคลิกเปิดได้) ด้วย `powershell -ExecutionPolicy Bypass -File tool\register_file_association.ps1` (เฉพาะผู้ใช้ปัจจุบัน ไม่ต้องใช้สิทธิ์ผู้ดูแล ; `-ExePath` ระบุตำแหน่งแอป, `-IncludeLegacyErd` ผูก `.erd` ด้วย, `-Unregister` ถอนออก)
+- Auto-save และกู้คืนงานที่ค้างอยู่ ไฟล์โปรเจกต์ `.nsln` (JSON) — ไฟล์ `.nslm` และ `.erd` รุ่นเก่ายังเปิดได้ ไฟล์ `.nsld` ก็เช่นกัน และเมื่อบันทึกจะได้ไฟล์ `.nsln` ใหม่ (ไฟล์เดิมไม่ถูกแก้) ; เปิดไฟล์ด้วย `nsl_nebular.exe <ไฟล์>` ได้ ; ผูกสกุล `.nslm` กับแอปใน Windows (ดับเบิลคลิกเปิดได้) ด้วย `powershell -ExecutionPolicy Bypass -File tool\register_file_association.ps1` (เฉพาะผู้ใช้ปัจจุบัน ไม่ต้องใช้สิทธิ์ผู้ดูแล ; `-ExePath` ระบุตำแหน่งแอป, `-IncludeLegacyErd` ผูก `.erd` ด้วย, `-Unregister` ถอนออก)
 - กด `F1` เพื่อดูคีย์ลัดทั้งหมด (Redo = `Ctrl+Shift+Z`, `Ctrl+Y` หรือ `Alt+Z`)
 
 ## ติดตั้ง (ผู้ใช้ทั่วไป)
@@ -167,7 +175,7 @@ test/          เทสต์ (unit + widget)
 ## เลขรุ่นและชื่อรุ่น
 
 เลขรุ่นเป็น [SemVer](https://semver.org/) (`0.5.0`) ตามด้วยชื่อรุ่นเป็นดาว เรียงตามตัวอักษรทีละรุ่นที่เลขรองเพิ่ม:
-0.5 **Altair** → 0.6 Betelgeuse → 0.7 Capella → 0.8 Deneb → 0.9 Elnath → 1.0 Fomalhaut
+0.5 Altair → 0.6 Betelgeuse → 0.7 **Capella** → 0.8 Deneb → 0.9 Elnath → 1.0 Fomalhaut
 ขั้นตอนขึ้นรุ่นใหม่และสถานะงานปัจจุบันดูที่ [`progress.md`](progress.md)
 
 ## ความปลอดภัยของข้อมูล
@@ -185,11 +193,13 @@ test/          เทสต์ (unit + widget)
 
 ## English summary
 
-**NSL Nebular** is a Windows desktop app for designing databases by drag and drop. It generates SQL for MySQL/MariaDB, PostgreSQL, SQLite and SQL Server, and also draws DFD (Data Flow Diagram) diagrams in browser-style tabs.
+**NSL Nebular** is a Windows desktop app for designing and planning software by drag and drop. One `.nsln` project file holds ER, DFD, Flowchart, Wireframe, Screen Flow and API documents, plus requirements, notes and version history. It generates SQL for MySQL/MariaDB, PostgreSQL, SQLite and SQL Server, generates code for several targets, and runs a local mock server.
 
 - **ER diagrams:** tables, columns, FK relationships (orthogonal crow's-foot lines), groups, notes, auto-layout, schema validation, seed data
 - **DFD diagrams:** external entities, processes, data stores and labeled data flows with automatic rule checking
-- **SQL:** import `.sql`, migration scripts (transaction-wrapped, with confirmation before destructive steps), read-only MySQL/MariaDB connection
+- **More documents:** draw.io-style Flowchart, Wireframe (45 UI components, layers, ER binding), Screen Flow, API Designer with OpenAPI export and a localhost Mock Server; data dictionary, requirements/traceability, notes, version history and diff
+- **Claude Code:** an offline CLI and MCP server (stdio) to read, validate, export and generate code from a project
+- **SQL:** import `.sql` or a database as a new ER, replacing the open ER (undoable) or as a new project; migration scripts (transaction-wrapped, with confirmation before destructive steps), read-only MySQL/MariaDB connection
 - **Search:** a box in the title bar (`Ctrl+K`) that finds commands, tables, columns, DFD objects, notes, groups and issues across tabs (prefixes `@ # : ! > ~`)
 - Export PNG/SVG (light/dark), Markdown data dictionary, Mermaid, DBML; Thai/English UI; light/dark theme
 

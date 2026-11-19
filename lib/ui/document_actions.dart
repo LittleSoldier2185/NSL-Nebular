@@ -20,6 +20,21 @@ IconData docTypeIcon(DocType? t) => switch (t) {
       _ => Icons.account_tree_outlined,
     };
 
+/// จุดบอกว่าเอกสารมีการแก้ที่ยังไม่บันทึก (แท็บ / ตัวสำรวจ)
+class UnsavedDot extends StatelessWidget {
+  const UnsavedDot({super.key});
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: tr('ยังไม่บันทึก'),
+        child: Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: C.muted, shape: BoxShape.circle),
+        ),
+      );
+}
+
 /// ชื่อของวัตถุต้นทางของลิงก์ข้ามเอกสาร ([fromElement] ในเอกสาร [src]) : ชิ้นส่วน Wireframe / หน้าจอ Screen Flow / วัตถุ DFD
 String linkOriginTitle(ProjectDocument? src, String fromElement) {
   if (src?.wireframe != null) {

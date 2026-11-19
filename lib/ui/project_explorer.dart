@@ -263,6 +263,11 @@ class _ExplorerRowState extends State<_ExplorerRow> {
                   ),
                 ),
               ),
+              if (w.documentDirty(d.id))
+                Padding(
+                  padding: EdgeInsets.only(left: 6, right: total > 0 ? 6 : 0),
+                  child: UnsavedDot(key: ValueKey('explorer-dirty-${d.id}')),
+                ),
               if (total > 0)
                 Tooltip(
                   message: tr('ปัญหา {0} รายการ', [total]),

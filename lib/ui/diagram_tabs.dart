@@ -257,6 +257,10 @@ class _TabState extends State<_Tab> {
                         ),
                       ),
                     ),
+                    if (c.documentDirty(t.id)) ...[
+                      const SizedBox(width: 6),
+                      UnsavedDot(key: ValueKey('tab-dirty-${t.id}')),
+                    ],
                     if (closable) ...[
                       const SizedBox(width: 6),
                       InkResponse(
