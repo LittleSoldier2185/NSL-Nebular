@@ -294,8 +294,14 @@ class DfdScreenPainter extends CustomPainter {
     this.selectedBoundary,
     this.dropNode,
     this.dropPort,
+    this.apiBadges = const {},
+    this.tableBadges = const {},
     required this.repaint,
   }) : super(repaint: repaint);
+
+  /// ป้ายบนแคนวาส (ตามดีไซน์ Phase 15): กระบวนการ -> endpoint ที่เรียก ("POST /loans"), ที่เก็บข้อมูล -> ตาราง ER ที่ผูก
+  final Map<String, String> apiBadges;
+  final Map<String, String> tableBadges;
 
   /// กล่อง/จุดต่อที่ปลายเส้นที่กำลังลากจะไปวาง (null = ไม่ได้ลากปลายเส้น)
   final String? dropNode;
@@ -318,6 +324,7 @@ class DfdScreenPainter extends CustomPainter {
     canvas.scale(scale);
     paintDfd(canvas, diagram,
         selectedNodes: selectedNodes, selectedFlow: selectedFlow, linkSource: linkSource, selectedBoundary: selectedBoundary);
+    _paintBadges(canvas);
     final sb = selectedBoundary == null ? null : diagram.boundaryById(selectedBoundary!);
     if (sb != null) {
       final hs = 4.5 / scale;
@@ -373,6 +380,33 @@ class DfdScreenPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1
         ..color = C.primary);
+    }
+  }
+
+  /// ป้ายเล็กคร่อมขอบของวัตถุ: endpoint ที่ขอบล่างขวาของกระบวนการ, ชื่อตารางที่ขอบบนขวาของที่เก็บข้อมูล (ซ่อนเมื่อซูมเล็กมาก)
+  void _paintBadges(Canvas canvas) {
+    if (scale < 0.45 || (apiBadges.isEmpty && tableBadges.isEmpty)) return;
+    void chip(String text, double right, double cy, Color bg, Color fg) {
+      final tp = TextPainter(
+        text: TextSpan(text: text, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: fg, fontFamily: kMono, fontFamilyFallback: const ['Consolas'])),
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+        ellipsis: '…',
+      )..layout(maxWidth: 160);
+      final r = Rect.fromLTWH(right - tp.width - 12, cy - 8, tp.width + 12, 16);
+      canvas.drawRRect(RRect.fromRectAndRadius(r, const Radius.circular(8)), Paint()..color = bg);
+      canvas.drawRRect(RRect.fromRectAndRadius(r, const Radius.circular(8)), Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1 / scale
+        ..color = fg.withValues(alpha: 0.35));
+      tp.paint(canvas, Offset(r.left + 6, cy - tp.height / 2));
+    }
+
+    for (final n in diagram.nodes) {
+      final api = apiBadges[n.id];
+      if (api != null) chip(api, n.x + n.w - 8, n.y + n.h, C.palette.infoBg, C.palette.infoText);
+      final t = tableBadges[n.id];
+      if (t != null) chip(t, n.x + n.w - 8, n.y, C.primaryTint, C.primaryDark);
     }
   }
 

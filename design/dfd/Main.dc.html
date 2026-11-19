@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>ตัวแก้ไข DFD</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Noto Sans Thai',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+a{color:#1E3A6B}a:hover{color:#2F6FB5}
+.k{font-family:'JetBrains Mono',monospace;font-size:11px;color:#5B6778}
+.sec{font-size:11px;font-weight:600;color:#5B6778;letter-spacing:.04em}
+.row{display:flex;align-items:center;gap:8px;height:28px;padding:0 8px;border-radius:6px;font-size:12.5px}
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:11px;font-size:11.5px;font-weight:600}
+.fld{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#5B6778}
+.fld input{box-sizing:border-box;height:32px;border:1px solid #CBD3DE;border-radius:7px;padding:0 10px;font:inherit;font-size:13px;color:#1B2430;background:#fff}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; display: flex; flex-direction: column; background: #EEF1F5; color: #1B2430; font-size: 13px; line-height: 1.4">
+
+<!-- top bar -->
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 12px; background: #1F2A37; color: #E6EBF2">
+<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="#0F766E"></circle><circle cx="11" cy="11" r="4" fill="none" stroke="#fff" stroke-width="1.6"></circle></svg>
+<span style="font-weight: 700">NSL Nebular</span>
+<span style="color: #AEB9C8">ห้องสมุดเล็ก</span>
+<span style="display: flex; gap: 2px; margin-left: 8px; font-size: 13px; color: #D5DCE6"><span style="padding: 4px 9px">ไฟล์</span><span style="padding: 4px 9px">แก้ไข</span><span style="padding: 4px 9px">มุมมอง</span><span style="padding: 4px 9px">เครื่องมือ</span><span style="padding: 4px 9px">ช่วยเหลือ</span></span>
+<div style="flex: 1"></div>
+<span style="display: flex; align-items: center; gap: 6px; color: #AEB9C8; font-size: 12px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #34D399"></span>บันทึกแล้ว</span>
+</div>
+
+<!-- tabs -->
+<div style="height: 38px; flex: none; display: flex; align-items: flex-end; gap: 2px; padding: 0 12px; border-bottom: 1px solid #D8DEE6">
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px; color: #5B6778"><span style="width: 8px; height: 8px; border-radius: 2px; background: #0F766E"></span>ER — ห้องสมุด</div>
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px; color: #5B6778"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2F6FB5"></span>DFD ระดับ 0</div>
+<div style="display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 14px; background: #fff; border: 1px solid #D8DEE6; border-bottom: 0; border-radius: 8px 8px 0 0; box-shadow: inset 0 2px 0 #2F6FB5; font-weight: 600"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2F6FB5"></span>DFD ระดับ 1</div>
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px; color: #5B6778"><span style="width: 8px; height: 8px; background: #6D4FC2; transform: rotate(45deg)"></span>Flowchart — ยืมหนังสือ</div>
+</div>
+
+<!-- toolbar -->
+<div style="height: 44px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 12px; background: #fff; border-bottom: 1px solid #E6EAF0">
+<div style="display: flex; padding: 2px; border-radius: 9px; background: #F3F5F8; gap: 2px">
+<button type="button" style="height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: #fff; box-shadow: 0 1px 2px rgba(15,23,42,0.12); font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 2l9 5-4 1.5L6.5 13z"></path></svg>เลือก <span class="k">S</span></button>
+<button type="button" style="height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: none; font-size: 12px; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 8h11M9.5 4.5L13 8l-3.5 3.5"></path></svg>เส้นข้อมูล <span class="k">F</span></button>
+</div>
+<span style="width: 1px; height: 20px; background: #D8DEE6; margin: 0 6px"></span>
+<button type="button" style="height: 30px; padding: 0 10px; border: 0; border-radius: 7px; background: none; font-size: 12px; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.5 2" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2"></rect></svg>ครอบด้วยขอบเขตระบบ</button>
+<button type="button" style="height: 30px; padding: 0 12px; border: 1px solid #D8DEE6; border-radius: 8px; background: #fff; font-size: 12px; font-weight: 500">จัดวางอัตโนมัติ</button>
+<div style="flex: 1"></div>
+<span class="chip" style="background: #E2F3F1; color: #0B5A54"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 8.5l3 3 7-7"></path></svg>กฎ DFD ผ่านทั้งหมด</span>
+<label style="display: flex; align-items: center; gap: 6px; font-size: 12px; margin-left: 10px"><input type="checkbox" checked="checked">Snap กริด</label>
+<button type="button" style="height: 30px; padding: 0 12px; margin-left: 10px; border: 0; border-radius: 8px; background: #2F6FB5; color: #fff; font-size: 12px; font-weight: 600">ส่งออกภาพ</button>
+</div>
+
+<div style="flex: 1; display: flex; min-height: 0">
+
+<!-- left: palette + outline -->
+<div style="width: 248px; flex: none; background: #fff; border-right: 1px solid #D8DEE6; padding: 12px; display: flex; flex-direction: column; gap: 12px; overflow: hidden; box-sizing: border-box">
+<div style="display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; border-radius: 8px; background: #F3F5F8; color: #5B6778"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"></circle><path d="M10.5 10.5L14 14"></path></svg>ค้นหาวัตถุ / เส้นข้อมูล</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="sec">วางวัตถุ — คลิกแล้วคลิกบนแคนวาส หรือลากลงไป</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px">
+<button type="button" style="height: 58px; border: 1px solid #E6EAF0; border-radius: 8px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 12px"><span style="width: 34px; height: 18px; border: 1.6px solid #2F6FB5; box-shadow: 2px 2px 0 #E8EEF8"></span><span>ผู้ใช้ภายนอก <span class="k">E</span></span></button>
+<button type="button" style="height: 58px; border: 1px solid #E6EAF0; border-radius: 8px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 12px"><span style="width: 34px; height: 20px; border: 1.6px solid #2F6FB5; border-radius: 6px; background: linear-gradient(#E8EEF8 0 6px, #fff 6px)"></span><span>กระบวนการ <span class="k">P</span></span></button>
+<button type="button" style="height: 58px; border: 1px solid #E6EAF0; border-radius: 8px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 12px"><span style="width: 34px; height: 14px; border: 1.6px solid #2F6FB5; border-right: 0; background: linear-gradient(90deg, #E8EEF8 0 9px, #2F6FB5 9px 10.5px, #fff 10.5px)"></span><span>ที่เก็บข้อมูล <span class="k">D</span></span></button>
+<button type="button" style="height: 58px; border: 1px solid #E6EAF0; border-radius: 8px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 12px"><span style="width: 34px; height: 20px; border: 1.6px dashed #5B6778; border-radius: 4px"></span><span>ขอบเขตระบบ</span></button>
+</div>
+</div>
+
+<div style="height: 1px; background: #E6EAF0"></div>
+
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div class="sec" style="display: flex; margin-bottom: 2px">▾ กระบวนการ<span style="margin-left: auto; font-weight: 500">3</span></div>
+<div class="row" style="background: #E8EEF8; color: #1E3A6B; font-weight: 600"><span class="k" style="color: #1E3A6B">1.0</span>ยืมหนังสือ<span class="chip" style="margin-left: auto; height: 18px; padding: 0 6px; font-size: 10.5px; background: #fff; color: #1E3A6B">API</span></div>
+<div class="row"><span class="k">2.0</span>คืนและติดตามค้างคืน</div>
+<div class="row"><span class="k">3.0</span>จัดการหนังสือ</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div class="sec" style="display: flex; margin-bottom: 2px">▾ ผู้ใช้ภายนอก<span style="margin-left: auto; font-weight: 500">2</span></div>
+<div class="row">สมาชิก</div>
+<div class="row">บรรณารักษ์</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div class="sec" style="display: flex; margin-bottom: 2px">▾ ที่เก็บข้อมูล<span style="margin-left: auto; font-weight: 500">3</span></div>
+<div class="row"><span class="k">D1</span>สมาชิก<span style="margin-left: auto; font-size: 11px; color: #0B5A54">members</span></div>
+<div class="row"><span class="k">D2</span>หนังสือ<span style="margin-left: auto; font-size: 11px; color: #0B5A54">books</span></div>
+<div class="row"><span class="k">D3</span>การยืม<span style="margin-left: auto; font-size: 11px; color: #0B5A54">loans</span></div>
+</div>
+<div class="sec" style="display: flex">▸ เส้นข้อมูล<span style="margin-left: auto; font-weight: 500">10</span></div>
+</div>
+
+<!-- canvas -->
+<div style="flex: 1; position: relative; min-width: 0; overflow: hidden; background-color: #F6F8FB; background-image: radial-gradient(#C3CCD8 1px, transparent 1px); background-size: 20px 20px">
+
+<!-- breadcrumb ระดับ -->
+<div style="position: absolute; left: 16px; top: 14px; height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 10px; background: #fff; border: 1px solid #D8DEE6; border-radius: 8px; font-size: 12.5px">
+<a href="#" style="text-decoration: none">DFD ระดับ 0</a><span style="color: #5B6778">›</span><span class="k" style="color: #1E3A6B">0</span><span>ระบบห้องสมุด</span><span style="color: #5B6778">›</span><b>ระดับ 1</b>
+</div>
+<div class="chip" style="position: absolute; left: 330px; top: 18px; background: #E2F3F1; color: #0B5A54">สมดุลกับระดับ 0 · 4/4 เส้นข้อมูลภายนอก</div>
+
+<!-- arrows -->
+<svg role="img" aria-label="จาก สมาชิก ไป 1.0 ยืมหนังสือ: คำขอยืม" width="131" height="8" viewBox="0 0 131 8" preserveAspectRatio="none" style="position: absolute; left: 238px; top: 167px; width: 131px; height: 8px; overflow: visible; fill: none; stroke: #5B6778; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-1" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6778" stroke="none" style="stroke: none; fill: #5B6778; fill: context-stroke"></path></marker></defs><path d="M 0 4 L 127 4" marker-end="url(#dc-arrow-head-filled-1)"></path></svg>
+<svg role="img" aria-label="จาก 1.0 ยืมหนังสือ กลับไป สมาชิก: ผลการยืม" width="131" height="8" viewBox="0 0 131 8" preserveAspectRatio="none" style="position: absolute; left: 239px; top: 189px; width: 131px; height: 8px; overflow: visible; fill: none; stroke: #5B6778; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-2" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6778" stroke="none" style="stroke: none; fill: #5B6778; fill: context-stroke"></path></marker></defs><path d="M 131 4 L 4 4" marker-end="url(#dc-arrow-head-filled-2)"></path></svg>
+<svg role="img" aria-label="จาก D1 สมาชิก ไป 1.0 ยืมหนังสือ: ข้อมูลสมาชิก" width="99" height="8" viewBox="0 0 99 8" preserveAspectRatio="none" style="position: absolute; left: 541px; top: 154px; width: 99px; height: 8px; overflow: visible; fill: none; stroke: #5B6778; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-3" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6778" stroke="none" style="stroke: none; fill: #5B6778; fill: context-stroke"></path></marker></defs><path d="M 99 4 L 4 4" marker-end="url(#dc-arrow-head-filled-3)"></path></svg>
+<svg role="img" aria-label="จาก D2 หนังสือ ไป 1.0 ยืมหนังสือ: สถานะหนังสือ" width="99" height="8" viewBox="0 0 99 8" preserveAspectRatio="none" style="position: absolute; left: 541px; top: 210px; width: 99px; height: 8px; overflow: visible; fill: none; stroke: #5B6778; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-4" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6778" stroke="none" style="stroke: none; fill: #5B6778; fill: context-stroke"></path></marker></defs><path d="M 99 4 L 4 4" marker-end="url(#dc-arrow-head-filled-4)"></path></svg>
+<svg role="img" aria-label="จาก 1.0 ยืมหนังสือ ไป D3 การยืม: การยืมใหม่" width="8" height="59" viewBox="0 0 8 59" preserveAspectRatio="none" style="position: absolute; left: 451px; top: 270px; width: 8px; height: 59px; overflow: visible; fill: none; stroke: #5B6778; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-5" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6778" stroke="none" style="stroke: none; fill: #5B6778; fill: context-stroke"></path></marker></defs><path d="M 4 0 L 4 55" marker-end="url(#dc-arrow-head-filled-5)"></path></svg>
+<svg role="img" aria-label="จาก D3 การยืม ไป 2.0 คืนและติดตามค้างคืน: การยืมที่ค้าง" width="8" height="65" viewBox="0 0 8 65" preserveAspectRatio="none" style="position: absolute; left: 451px; top: 374px; width: 8px; height: 65px; overflow: visible; fill: none; stroke: #5B6778; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-6" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6778" stroke="none" style="stroke: none; fill: #5B6778; fill: context-stroke"></path></marker></defs><path d="M 4 0 L 4 61" marker-end="url(#dc-arrow-head-filled-6)"></path></svg>
+<svg role="img" aria-label="จาก 2.0 คืนและติดตามค้างคืน ไป บรรณารักษ์: รายงานค้างคืน" width="131" height="8" viewBox="0 0 131 8" preserveAspectRatio="none" style="position: absolute; left: 239px; top: 488px; width: 131px; height: 8px; overflow: visible; fill: none; stroke: #5B6778; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-7" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#5B6778" stroke="none" style="stroke: none; fill: #5B6778; fill: context-stroke"></path></marker></defs><path d="M 131 4 L 4 4" marker-end="url(#dc-arrow-head-filled-7)"></path></svg>
+
+<!-- cards -->
+<div style="position: absolute; left: 88px; top: 150px; width: 150px; height: 64px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; text-align: center; background: #fff; border: 2px solid #2F6FB5; box-shadow: 4px 4px 0 #D3DDEE; font-weight: 600">สมาชิก</div>
+<div style="position: absolute; left: 88px; top: 460px; width: 150px; height: 64px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; text-align: center; background: #fff; border: 2px solid #2F6FB5; box-shadow: 4px 4px 0 #D3DDEE; font-weight: 600">บรรณารักษ์</div>
+<div style="position: absolute; left: 370px; top: 130px; width: 170px; height: 140px; box-sizing: border-box; display: flex; align-items: flex-start; justify-content: center; text-align: center; padding: 0 10px; background: linear-gradient(#E8EEF8 0 32px, #2F6FB5 32px 34px, #fff 34px); border: 2px solid #2F6FB5; border-radius: 12px; box-shadow: 0 0 0 4px rgba(47,111,181,0.22)"><span><b style="display: block; height: 32px; line-height: 32px; font-family: 'JetBrains Mono', monospace; color: #1E3A6B">1.0</b><span style="display: block; padding-top: 26px; font-weight: 600">ยืมหนังสือ</span></span></div>
+<div style="position: absolute; left: 370px; top: 440px; width: 170px; height: 104px; box-sizing: border-box; display: flex; align-items: flex-start; justify-content: center; text-align: center; padding: 0 10px; background: linear-gradient(#E8EEF8 0 32px, #2F6FB5 32px 34px, #fff 34px); border: 2px solid #2F6FB5; border-radius: 12px"><span><b style="display: block; height: 32px; line-height: 32px; font-family: 'JetBrains Mono', monospace; color: #1E3A6B">2.0</b><span style="display: block; padding-top: 10px; font-weight: 600">คืนและติดตามค้างคืน</span></span></div>
+<div style="position: absolute; left: 640px; top: 136px; width: 200px; height: 44px; box-sizing: border-box; display: flex; align-items: center; padding-left: 12px; background: linear-gradient(90deg, #E8EEF8 0 44px, #2F6FB5 44px 46px, #fff 46px); border: 2px solid #2F6FB5; border-right: 0"><span><b style="display: inline-block; width: 34px; font-family: 'JetBrains Mono', monospace; color: #1E3A6B">D1</b><span style="padding-left: 10px">สมาชิก</span></span></div>
+<div style="position: absolute; left: 640px; top: 192px; width: 200px; height: 44px; box-sizing: border-box; display: flex; align-items: center; padding-left: 12px; background: linear-gradient(90deg, #E8EEF8 0 44px, #2F6FB5 44px 46px, #fff 46px); border: 2px solid #2F6FB5; border-right: 0"><span><b style="display: inline-block; width: 34px; font-family: 'JetBrains Mono', monospace; color: #1E3A6B">D2</b><span style="padding-left: 10px">หนังสือ</span></span></div>
+<div style="position: absolute; left: 355px; top: 330px; width: 200px; height: 44px; box-sizing: border-box; display: flex; align-items: center; padding-left: 12px; background: linear-gradient(90deg, #E8EEF8 0 44px, #2F6FB5 44px 46px, #fff 46px); border: 2px solid #2F6FB5; border-right: 0"><span><b style="display: inline-block; width: 34px; font-family: 'JetBrains Mono', monospace; color: #1E3A6B">D3</b><span style="padding-left: 10px">การยืม</span></span></div>
+
+<!-- selection handles + badges -->
+<span style="position: absolute; left: 365px; top: 125px; width: 8px; height: 8px; background: #fff; border: 1.5px solid #2F6FB5"></span>
+<span style="position: absolute; left: 537px; top: 125px; width: 8px; height: 8px; background: #fff; border: 1.5px solid #2F6FB5"></span>
+<span style="position: absolute; left: 365px; top: 265px; width: 8px; height: 8px; background: #fff; border: 1.5px solid #2F6FB5"></span>
+<span style="position: absolute; left: 537px; top: 265px; width: 8px; height: 8px; background: #fff; border: 1.5px solid #2F6FB5"></span>
+<span class="chip" style="position: absolute; left: 470px; top: 280px; height: 20px; font-size: 10.5px; background: #EDE7F8; color: #4B2E99; font-family: 'JetBrains Mono', monospace">POST /loans</span>
+<span role="img" aria-label="ผูกกับตาราง members ใน ER" style="position: absolute; left: 818px; top: 148px; width: 18px; height: 18px; border-radius: 50%; background: #E2F3F1; display: flex; align-items: center; justify-content: center"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#0B5A54" stroke-width="2" aria-hidden="true"><path d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2zM3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"></path></svg></span>
+<span role="img" aria-label="ผูกกับตาราง books ใน ER" style="position: absolute; left: 818px; top: 204px; width: 18px; height: 18px; border-radius: 50%; background: #E2F3F1; display: flex; align-items: center; justify-content: center"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#0B5A54" stroke-width="2" aria-hidden="true"><path d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2zM3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"></path></svg></span>
+<span role="img" aria-label="ผูกกับตาราง loans ใน ER" style="position: absolute; left: 533px; top: 342px; width: 18px; height: 18px; border-radius: 50%; background: #E2F3F1; display: flex; align-items: center; justify-content: center"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#0B5A54" stroke-width="2" aria-hidden="true"><path d="M3 4c0-1.1 2.2-2 5-2s5 .9 5 2-2.2 2-5 2-5-.9-5-2zM3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4"></path></svg></span>
+
+<!-- labels -->
+<div style="position: absolute; left: 272px; top: 143px; width: 64px; text-align: center; font-size: 12px; line-height: 16px; color: #1B2430">คำขอยืม</div>
+<div style="position: absolute; left: 270px; top: 205px; width: 68px; text-align: center; font-size: 12px; line-height: 16px; color: #1B2430">ผลการยืม</div>
+<div style="position: absolute; left: 546px; top: 126px; width: 88px; text-align: center; font-size: 12px; line-height: 16px; color: #1B2430">ข้อมูลสมาชิก</div>
+<div style="position: absolute; left: 546px; top: 226px; width: 88px; text-align: center; font-size: 12px; line-height: 16px; color: #1B2430">สถานะหนังสือ</div>
+<div style="position: absolute; left: 380px; top: 299px; width: 66px; text-align: right; font-size: 12px; line-height: 16px; color: #1B2430">การยืมใหม่</div>
+<div style="position: absolute; left: 467px; top: 399px; width: 90px; font-size: 12px; line-height: 16px; color: #1B2430">การยืมที่ค้าง</div>
+<div style="position: absolute; left: 258px; top: 464px; width: 92px; text-align: center; font-size: 12px; line-height: 16px; color: #1B2430">รายงานค้างคืน</div>
+
+<!-- minimap + zoom -->
+<div style="position: absolute; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end">
+<div style="width: 180px; height: 110px; background: #fff; border: 1px solid #D8DEE6; border-radius: 8px; position: relative; overflow: hidden">
+<span style="position: absolute; left: 22px; top: 30px; width: 18px; height: 8px; border: 1px solid #2F6FB5"></span>
+<span style="position: absolute; left: 62px; top: 26px; width: 22px; height: 18px; border: 1px solid #2F6FB5; border-radius: 3px"></span>
+<span style="position: absolute; left: 100px; top: 26px; width: 26px; height: 5px; background: #2F6FB5"></span>
+<span style="position: absolute; left: 100px; top: 36px; width: 26px; height: 5px; background: #2F6FB5"></span>
+<span style="position: absolute; left: 60px; top: 56px; width: 26px; height: 5px; background: #2F6FB5"></span>
+<span style="position: absolute; left: 62px; top: 70px; width: 22px; height: 14px; border: 1px solid #2F6FB5; border-radius: 3px"></span>
+<span style="position: absolute; left: 22px; top: 74px; width: 18px; height: 8px; border: 1px solid #2F6FB5"></span>
+<span style="position: absolute; left: 10px; top: 12px; width: 140px; height: 84px; border: 1.5px solid #2F6FB5; border-radius: 3px; background: rgba(47,111,181,0.06)"></span>
+</div>
+<div style="display: flex; align-items: center; gap: 2px; height: 32px; padding: 0 4px; background: #fff; border: 1px solid #D8DEE6; border-radius: 8px; font-size: 12px">
+<button type="button" aria-label="ย่อ" style="width: 26px; height: 26px; border: 0; background: none; font-size: 16px">−</button><span style="width: 44px; text-align: center">100%</span><button type="button" aria-label="ขยาย" style="width: 26px; height: 26px; border: 0; background: none; font-size: 16px">+</button><button type="button" aria-label="พอดีหน้าจอ" style="width: 26px; height: 26px; border: 0; background: none"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"></path></svg></button>
+</div>
+</div>
+</div>
+
+<!-- inspector: process -->
+<div style="width: 300px; flex: none; background: #fff; border-left: 1px solid #D8DEE6; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box">
+<div style="display: flex; gap: 10px; align-items: center; padding: 14px 16px; border-bottom: 1px solid #E6EAF0">
+<span style="width: 34px; height: 34px; border-radius: 9px; background: #E8EEF8; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#2F6FB5" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="3"></rect><path d="M2.5 8h15"></path></svg></span>
+<span style="flex: 1"><span style="display: block; font-weight: 600; font-size: 14px">กระบวนการ 1.0</span><span style="display: block; font-size: 12px; color: #5B6778">ข้อมูลเข้า 3 · ออก 2</span></span>
+<button type="button" aria-label="ลบกระบวนการ" style="width: 30px; height: 30px; border: 0; border-radius: 7px; background: none; color: #B42318"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2.5 4.5h11M6 4.5V2.5h4v2M4 4.5l.8 9h6.4l.8-9"></path></svg></button>
+</div>
+<div style="flex: 1; overflow: hidden; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px">
+<label class="fld">เลขลำดับ<input value="1.0"></label>
+<label class="fld">ชื่อ<input value="ยืมหนังสือ"></label>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="sec">ระดับถัดไป</div>
+<div style="border: 1px dashed #CBD3DE; border-radius: 9px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12.5px; color: #5B6778">ยังไม่ได้แตกรายละเอียดเป็นระดับ 2</span>
+<span style="display: flex; gap: 6px"><button type="button" style="height: 28px; padding: 0 10px; border: 0; border-radius: 7px; background: #2F6FB5; color: #fff; font-size: 12px; font-weight: 600">สร้าง DFD ระดับ 2</button><button type="button" style="height: 28px; padding: 0 10px; border: 1px solid #D8DEE6; border-radius: 7px; background: #fff; font-size: 12px">เลือกที่มีอยู่…</button></span>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="sec">เรียก API</div>
+<div style="display: flex; align-items: center; gap: 8px; border: 1px solid #E6EAF0; border-radius: 9px; padding: 8px 10px">
+<span class="chip" style="height: 20px; background: #EDE7F8; color: #4B2E99; font-family: 'JetBrains Mono', monospace; font-size: 10.5px">POST</span><span style="flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 12px">/loans</span><a href="#" style="font-size: 12px">เปลี่ยน</a>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="sec" style="display: flex">ข้อมูลเข้า<span style="margin-left: auto; font-weight: 500">3</span></div>
+<div class="row" style="background: #F3F5F8"><span style="color: #2F6FB5">←</span>คำขอยืม<span style="margin-left: auto; color: #5B6778; font-size: 12px">สมาชิก</span></div>
+<div class="row" style="background: #F3F5F8"><span style="color: #2F6FB5">←</span>ข้อมูลสมาชิก<span style="margin-left: auto; color: #5B6778; font-size: 12px">D1</span></div>
+<div class="row" style="background: #F3F5F8"><span style="color: #2F6FB5">←</span>สถานะหนังสือ<span style="margin-left: auto; color: #5B6778; font-size: 12px">D2</span></div>
+<div class="sec" style="display: flex; margin-top: 4px">ข้อมูลออก<span style="margin-left: auto; font-weight: 500">2</span></div>
+<div class="row" style="background: #F3F5F8"><span style="color: #2F6FB5">→</span>ผลการยืม<span style="margin-left: auto; color: #5B6778; font-size: 12px">สมาชิก</span></div>
+<div class="row" style="background: #F3F5F8"><span style="color: #2F6FB5">→</span>การยืมใหม่<span style="margin-left: auto; color: #5B6778; font-size: 12px">D3</span></div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div class="sec">สี</div>
+<div style="display: flex; gap: 8px; align-items: center">
+<span style="height: 24px; padding: 0 9px; border-radius: 12px; border: 1.5px solid #2F6FB5; color: #1E3A6B; font-size: 11.5px; display: flex; align-items: center">ตามชนิด</span>
+<span style="width: 22px; height: 22px; border-radius: 50%; background: #0F766E"></span>
+<span style="width: 22px; height: 22px; border-radius: 50%; background: #B7791F"></span>
+<span style="width: 22px; height: 22px; border-radius: 50%; background: #B83B6B"></span>
+<span style="width: 22px; height: 22px; border-radius: 50%; background: #6D4FC2"></span>
+<span style="width: 22px; height: 22px; border-radius: 50%; border: 1px dashed #5B6778; color: #5B6778; font-size: 14px; display: flex; align-items: center; justify-content: center">+</span>
+</div>
+</div>
+</div>
+<div style="padding: 10px 16px; border-top: 1px solid #E6EAF0; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #0B5A54; background: #F6FBFA"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 8.5l3 3 7-7"></path></svg>กระบวนการนี้ผ่านกฎ DFD (มีทั้งข้อมูลเข้าและออก)</div>
+</div>
+</div>
+
+<!-- status bar -->
+<div style="height: 28px; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 12px; background: #fff; border-top: 1px solid #D8DEE6; font-size: 11.5px; color: #5B6778">
+<span style="color: #1B2430; font-weight: 600">Capella 0.7.0</span><span>mini_library.nsln · DFD ระดับ 1 · 8 วัตถุ · 10 เส้นข้อมูล</span><span style="flex: 1"></span><span>ไม่พบปัญหา</span><span>100%</span><span>✓ บันทึกแล้ว</span>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

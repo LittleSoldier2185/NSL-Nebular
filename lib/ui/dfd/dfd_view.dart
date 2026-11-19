@@ -7,14 +7,20 @@ import 'package:provider/provider.dart';
 import '../../core/l10n/l10n.dart';
 import '../../core/layout/diagram_geometry.dart' show kGridSize;
 import '../../core/models/dfd_model.dart';
+import '../../core/validate/dfd_validator.dart';
+import '../../core/validate/issue.dart';
 import '../../state/app_settings.dart';
 import '../../state/dfd_controller.dart';
 import '../../state/project_controller.dart';
+import '../../state/workspace_controller.dart';
+import '../../core/models/workspace.dart';
+import '../workspace_issues_dialog.dart';
 import '../canvas/context_menu.dart';
 import '../canvas/dot_grid_painter.dart';
 import '../shortcuts.dart' show Cmd;
 import '../theme.dart';
 import 'dfd_actions.dart';
+import 'dfd_minimap.dart';
 import 'dfd_painter.dart';
 import '../note_pins.dart';
 
@@ -302,8 +308,26 @@ class _DfdCanvasState extends State<DfdCanvas> {
   Widget build(BuildContext context) {
     final d = context.watch<DfdController>();
     context.watch<ProjectController>(); // เนื้อหา/ชื่อเปลี่ยน -> วาดใหม่
+    final w = context.watch<WorkspaceController>();
     final marquee = _marqueeStart == null ? null : Rect.fromPoints(_marqueeStart!, _marqueeEnd ?? _marqueeStart!);
-    return LayoutBuilder(builder: (context, box) {
+    // ป้ายบนแคนวาส: endpoint ของกระบวนการ, ตาราง ER ของที่เก็บข้อมูล
+    final apiBadges = <String, String>{};
+    final tableBadges = <String, String>{};
+    for (final n in d.diagram.nodes) {
+      final a = n.api;
+      if (a != null) {
+        final e = w.documentById(a.docId)?.api?.endpointById(a.endpointId);
+        if (e != null) apiBadges[n.id] = '${e.method.name.toUpperCase()} ${e.path}';
+      }
+      final tid = n.tableId;
+      if (n.kind == DfdKind.store && tid != null) {
+        final t = w.erDocumentWithTable(n.tableDocId, tid)?.er?.tableById(tid);
+        if (t != null) tableBadges[n.id] = t.name;
+      }
+    }
+    return Column(children: [
+      LayoutBuilder(builder: (context, box) => _Toolbar(compact: box.maxWidth < 760, medium: box.maxWidth < 1000)),
+      Expanded(child: LayoutBuilder(builder: (context, box) {
       final size = Size(box.maxWidth, box.maxHeight);
       d.viewport = size;
       return Listener(
@@ -357,16 +381,28 @@ class _DfdCanvasState extends State<DfdCanvas> {
                     linkSource: d.linkSource,
                     linkCursor: _cursor.value,
                     marquee: marquee,
+                    apiBadges: apiBadges,
+                    tableBadges: tableBadges,
                     repaint: _cursor,
                   ),
                   child: const SizedBox.expand(),
                 ),
               ),
             ),
-            // แคนวาสแคบ: แถบเครื่องมือแสดงเฉพาะไอคอน (ชื่ออยู่ในทูลทิป) ไม่ให้ล้น
             Positioned.fill(child: NotePinsLayer(doc: d, view: d, scale: () => d.scale, offset: () => d.offset)),
-            Positioned(top: 12, left: 0, right: 0, child: Center(child: FittedBox(fit: BoxFit.scaleDown, child: _Toolbar(compact: size.width < 760)))),
-            Positioned(right: 14, bottom: 14, child: _ZoomBar(size: size)),
+            // ระดับของแผนภาพ (ตามดีไซน์ Phase 15): แผนภาพแม่ › กระบวนการ › แผนภาพนี้ + ป้ายสมดุล
+            Positioned(left: 12, top: 12, right: 12, child: Align(alignment: Alignment.centerLeft, child: _LevelBar(maxWidth: size.width - 24))),
+            Positioned(
+              right: 14,
+              bottom: 14,
+              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end, children: [
+                if (size.width >= kDfdMinimapMinCanvasWidth && size.height >= 360 && d.diagram.nodes.isNotEmpty) ...[
+                  DfdMinimap(canvas: size),
+                  const SizedBox(height: 8),
+                ],
+                _ZoomBar(size: size),
+              ]),
+            ),
             if (d.diagram.nodes.isEmpty)
               IgnorePointer(
                 child: Center(
@@ -375,42 +411,60 @@ class _DfdCanvasState extends State<DfdCanvas> {
                     const SizedBox(height: 10),
                     Text(tr('แผนภาพ DFD ว่างอยู่'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: C.muted)),
                     const SizedBox(height: 4),
-                    Text(tr('เลือกเครื่องมือด้านบน (E / P / D) แล้วคลิกบนพื้นที่ว่างเพื่อวางวัตถุ'), style: TextStyle(color: C.muted)),
+                    Text(tr('เลือกวัตถุจากแผงซ้าย (E / P / D) แล้วคลิกบนพื้นที่ว่างเพื่อวาง'), style: TextStyle(color: C.muted)),
                   ]),
                 ),
               ),
           ])),
         ),
       );
-    });
+      })),
+    ]);
   }
 }
 
+/// แถบเครื่องมือเต็มความกว้างเหนือแคนวาส (ตามดีไซน์ Phase 15):
+/// [เลือก S | เส้นข้อมูล F] · ขอบเขตระบบ · จัดวางอัตโนมัติ ······ ผลตรวจกฎ DFD · Snap · ส่งออกภาพ
+/// การวางวัตถุ (E / P / D) อยู่ที่แผงซ้าย ; [compact] = ไอคอนอย่างเดียว (ชื่ออยู่ในทูลทิป)
 class _Toolbar extends StatelessWidget {
-  const _Toolbar({this.compact = false});
-
-  /// true = ไอคอนอย่างเดียว
+  const _Toolbar({this.compact = false, this.medium = false});
   final bool compact;
+
+  /// แคนวาสกว้างปานกลาง: ป้ายผลตรวจแบบสั้น และ Snap เป็นไอคอน
+  final bool medium;
 
   @override
   Widget build(BuildContext context) {
     final d = context.watch<DfdController>();
-    Widget item(DfdTool t, String label, IconData icon, String key) {
+    final w = context.watch<WorkspaceController>();
+    final s = context.watch<AppSettings>();
+    final dc = C.doc(DocType.dfd);
+    final issues = validateDfd(d.diagram, workspace: w.workspace, diagramId: w.activeId);
+    final problems = issues.where((i) => i.severity != Severity.info).length;
+
+    Widget tool(DfdTool t, String label, String key, IconData icon, String shortcut) {
       final on = d.tool == t;
       return Tooltip(
-        message: label,
+        message: '$label ($shortcut)',
         child: InkWell(
           key: ValueKey('dfd-tool-$key'),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(7),
           onTap: () => d.setTool(t),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: compact ? 9 : 10, vertical: 6),
-            decoration: BoxDecoration(color: on ? C.primaryTint : Colors.transparent, borderRadius: BorderRadius.circular(6)),
+            height: 28,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: on ? C.surface : Colors.transparent,
+              borderRadius: BorderRadius.circular(7),
+              boxShadow: on ? [BoxShadow(color: C.palette.shadow.withValues(alpha: 0.12), blurRadius: 2, offset: const Offset(0, 1))] : null,
+            ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(icon, size: compact ? 17 : 15, color: on ? C.primaryDark : C.muted),
+              Icon(icon, size: 15, color: on ? dc.ink : C.muted),
               if (!compact) ...[
+                const SizedBox(width: 6),
+                Text(label, style: TextStyle(fontSize: 12, fontWeight: on ? FontWeight.w600 : FontWeight.w400, color: on ? C.text : C.text)),
                 const SizedBox(width: 5),
-                Text(label, style: TextStyle(fontSize: 12.5, color: on ? C.primaryDark : C.text, fontWeight: on ? FontWeight.w600 : FontWeight.w400)),
+                Text(shortcut, style: TextStyle(fontSize: 11, color: C.muted, fontFamily: kMono, fontFamilyFallback: const ['Consolas'])),
               ],
             ]),
           ),
@@ -418,20 +472,217 @@ class _Toolbar extends StatelessWidget {
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: C.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: C.border),
-        boxShadow: [BoxShadow(color: C.palette.shadow.withValues(alpha: 0.18), blurRadius: 10, offset: const Offset(0, 3))],
+    Widget button(String key, IconData icon, String label, VoidCallback? onTap, {bool outlined = false}) => Tooltip(
+          message: label,
+          child: InkWell(
+            key: ValueKey(key),
+            borderRadius: BorderRadius.circular(8),
+            onTap: onTap,
+            child: Container(
+              height: 30,
+              padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: outlined ? Border.all(color: C.border) : null,
+                color: outlined ? C.surface : null,
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(icon, size: 15, color: onTap == null ? C.muted.withValues(alpha: 0.5) : C.muted),
+                if (!compact) ...[
+                  const SizedBox(width: 6),
+                  Text(label, style: TextStyle(fontSize: 12, color: onTap == null ? C.muted : C.text)),
+                ],
+              ]),
+            ),
+          ),
+        );
+
+    final ok = problems == 0;
+    final rules = Tooltip(
+      message: ok ? tr('กฎ DFD ผ่านทั้งหมด') : tr('ดูปัญหาในแผนภาพนี้'),
+      child: InkWell(
+        key: const ValueKey('dfd-rules'),
+        borderRadius: BorderRadius.circular(11),
+        onTap: ok ? d.clearSelection : () => showWorkspaceIssues(context, docId: w.activeId),
+        child: Container(
+          height: 22,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: ok ? C.primaryTint : C.palette.warnBg,
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(ok ? Icons.check_rounded : Icons.warning_amber_rounded, size: 13, color: ok ? C.primaryDark : C.palette.warnText),
+            const SizedBox(width: 4),
+            Text(
+              ok ? (compact || medium ? tr('ผ่าน') : tr('กฎ DFD ผ่านทั้งหมด')) : tr('{0} ปัญหา', [problems]),
+              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: ok ? C.primaryDark : C.palette.warnText),
+            ),
+          ]),
+        ),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        item(DfdTool.select, tr('เลือก'), Icons.near_me_outlined, 'select'),
-        item(DfdTool.entity, tr('ผู้ใช้ภายนอก'), Icons.crop_square_rounded, 'entity'),
-        item(DfdTool.process, tr('กระบวนการ'), Icons.rounded_corner_rounded, 'process'),
-        item(DfdTool.store, tr('ที่เก็บข้อมูล'), Icons.storage_rounded, 'store'),
-        item(DfdTool.flow, tr('เส้นข้อมูล'), Icons.arrow_right_alt_rounded, 'flow'),
+    );
+
+    final snap = Tooltip(
+      message: tr('จัดแนวตามตาราง (Snap) — กด Alt ค้างตอนลากเพื่อข้ามชั่วคราว'),
+      child: InkWell(
+        key: const ValueKey('dfd-snap'),
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => s.setSnapToGrid(!s.snapToGrid),
+        child: Container(
+          height: 30,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: s.snapToGrid ? C.primaryTint : null,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.grid_4x4_rounded, size: 15, color: s.snapToGrid ? C.primaryDark : C.muted),
+            if (!compact && !medium) ...[
+              const SizedBox(width: 5),
+              Text('Snap', style: TextStyle(fontSize: 12, color: s.snapToGrid ? C.primaryDark : C.text)),
+            ],
+          ]),
+        ),
+      ),
+    );
+
+    final export = Tooltip(
+      message: tr('Export ภาพ PNG / SVG'),
+      child: Material(
+        color: dc.main,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          key: const ValueKey('dfd-export'),
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => DfdActions(context).run(Cmd.exportImage),
+          child: SizedBox(
+            height: 30,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 12),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.image_outlined, size: 15, color: Colors.white),
+                if (!compact) ...[
+                  const SizedBox(width: 6),
+                  Text(tr('ส่งออกภาพ'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                ],
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    return Container(
+      key: const ValueKey('dfd-toolbar'),
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(color: C.surface, border: Border(bottom: BorderSide(color: C.borderSoft))),
+      child: Row(children: [
+        // ส่วนซ้ายเลื่อนแนวนอนได้เมื่อแคนวาสแคบ (ไม่ล้น) ; ส่วนขวาอยู่ชิดขวาเสมอ
+        Flexible(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(color: C.palette.field, borderRadius: BorderRadius.circular(9)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  tool(DfdTool.select, tr('เลือก'), 'select', Icons.near_me_outlined, 'S'),
+                  const SizedBox(width: 2),
+                  tool(DfdTool.flow, tr('เส้นข้อมูล'), 'flow', Icons.arrow_right_alt_rounded, 'F'),
+                ]),
+              ),
+              Container(width: 1, height: 20, margin: const EdgeInsets.symmetric(horizontal: 8), color: C.border),
+              button('dfd-wrap-boundary', Icons.crop_free_rounded, tr('ครอบด้วยขอบเขตระบบ'),
+                  d.selectedNodeIds.isEmpty ? null : d.addBoundaryAround),
+              const SizedBox(width: 4),
+              button('dfd-autolayout', Icons.grid_view_rounded, tr('จัดวางอัตโนมัติ'), d.diagram.nodes.length < 2
+                  ? null
+                  : () {
+                      if (d.autoLayout()) d.fit(d.viewport);
+                    }, outlined: true),
+            ]),
+          ),
+        ),
+        const SizedBox(width: 8),
+        rules,
+        const SizedBox(width: 6),
+        snap,
+        const SizedBox(width: 6),
+        export,
+      ]),
+    );
+  }
+}
+
+/// ระดับของแผนภาพบนแคนวาส: แผนภาพแม่ (คลิก = กลับไป) › เลข+ชื่อกระบวนการ › แผนภาพนี้ + ป้ายสมดุล ; ไม่มีแม่ = ไม่แสดง
+class _LevelBar extends StatelessWidget {
+  const _LevelBar({required this.maxWidth});
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = context.watch<DfdController>();
+    final w = context.watch<WorkspaceController>();
+    final parents = d.parentsOf(w.activeId);
+    if (parents.isEmpty || maxWidth < 200) return const SizedBox.shrink();
+    final (tab, proc) = parents.first;
+    final dc = C.doc(DocType.dfd);
+    // สมดุล: ตัวตรวจรายงานที่กระบวนการของแผนภาพแม่
+    final unbalanced = validateDfd(tab.dfd!, workspace: w.workspace, diagramId: tab.id)
+        .any((i) => i.code == 'dfd_unbalanced' && i.tableId == proc.id);
+    final muted = TextStyle(fontSize: 12.5, color: C.muted);
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: Wrap(spacing: 8, runSpacing: 6, crossAxisAlignment: WrapCrossAlignment.center, children: [
+        Container(
+          key: const ValueKey('dfd-level-bar'),
+          height: 30,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(color: C.surface, border: Border.all(color: C.border), borderRadius: BorderRadius.circular(8)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            InkWell(
+              key: ValueKey('dfd-parent-${proc.id}'),
+              onTap: () {
+                w.openDocument(tab.id);
+                w.dfdController(tab.id)?.selectNode(proc.id);
+              },
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.subdirectory_arrow_left_rounded, size: 15, color: dc.ink),
+                const SizedBox(width: 4),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth * 0.35),
+                  child: Text(tab.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12.5, color: dc.ink)),
+                ),
+              ]),
+            ),
+            Text('  ›  ', style: muted),
+            if (proc.number.isNotEmpty) Text('${proc.number} ', style: TextStyle(fontSize: 12, fontFamily: kMono, fontFamilyFallback: const ['Consolas'], color: dc.ink)),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth * 0.3),
+              child: Text(proc.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600)),
+            ),
+          ]),
+        ),
+        Container(
+          key: const ValueKey('dfd-balance'),
+          height: 22,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: unbalanced ? C.palette.warnBg : C.primaryTint,
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(unbalanced ? Icons.warning_amber_rounded : Icons.balance_rounded, size: 13,
+                color: unbalanced ? C.palette.warnText : C.primaryDark),
+            const SizedBox(width: 4),
+            Text(
+              unbalanced ? tr('ไม่สมดุลกับแผนภาพแม่') : tr('สมดุลกับแผนภาพแม่'),
+              style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: unbalanced ? C.palette.warnText : C.primaryDark),
+            ),
+          ]),
+        ),
       ]),
     );
   }
