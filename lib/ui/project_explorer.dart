@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../core/l10n/l10n.dart';
 import '../core/models/workspace.dart';
 import '../core/validate/issue.dart';
+import '../state/app_settings.dart';
 import '../state/workspace_controller.dart';
 import 'canvas/context_menu.dart';
 import 'document_actions.dart';
@@ -69,6 +70,17 @@ class _ProjectExplorerState extends State<ProjectExplorer> {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
               ),
+            ),
+            IconButton(
+              key: const ValueKey('explorer-hide'),
+              tooltip: tr('พับเก็บตัวสำรวจ (Ctrl+B)'),
+              style: IconButton.styleFrom(
+                minimumSize: const Size(28, 28),
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: Icon(Icons.keyboard_double_arrow_left_rounded, size: 18, color: C.muted),
+              onPressed: () => context.read<AppSettings>().setShowExplorer(false),
             ),
             IconButton(
               key: const ValueKey('explorer-fold-all'),

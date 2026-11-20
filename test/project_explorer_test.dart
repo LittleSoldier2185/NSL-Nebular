@@ -33,6 +33,20 @@ void main() {
     await g.up();
     await tester.pumpAndSettle();
   }
+  testWidgets('พับเก็บทั้งแผง: ปุ่มบนแถบไอคอน + ปุ่ม « ในหัวแผง ; เปิดกลับได้', (tester) async {
+    await boot(tester);
+    expect(find.byKey(const ValueKey('project-explorer')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('explorer-hide')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('project-explorer')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('rail-explorer')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('project-explorer')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('rail-explorer')));
+    await tester.pump();
+    expect(find.byKey(const ValueKey('project-explorer')), findsNothing);
+  });
+
 
   testWidgets('ปิดไว้เป็นค่าเริ่มต้นของ AppSettings ในเทสต์: ไม่มีแผง', (tester) async {
     await boot(tester, settings: AppSettings(lang: Lang.th));

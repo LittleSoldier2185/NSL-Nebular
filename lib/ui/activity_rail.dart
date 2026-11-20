@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../core/l10n/l10n.dart';
 import '../core/models/workspace.dart';
+import '../state/app_settings.dart';
 import '../state/workspace_controller.dart';
 import 'document_actions.dart' show docTypeIcon;
 import 'theme.dart';
@@ -62,6 +63,11 @@ class ActivityRail extends StatelessWidget {
       ),
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Column(children: [
+        _ExplorerToggle(),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8, left: 8, right: 8),
+          child: Divider(height: 1, color: C.border),
+        ),
         for (final t in _railTypes)
           Padding(
             padding: const EdgeInsets.only(bottom: 6),
@@ -109,6 +115,36 @@ class _RailButton extends StatelessWidget {
               border: Border(left: BorderSide(color: active ? dc.main : Colors.transparent, width: 3)),
             ),
             child: Icon(docTypeIcon(type), size: 20, color: active ? dc.ink : dc.ink.withValues(alpha: 0.85)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ปุ่มพับ/แสดงตัวสำรวจโปรเจกต์ (แบบ VS Code) บนสุดของแถบ — ไฮไลต์เมื่อตัวสำรวจเปิดอยู่ ; เทียบเท่า Ctrl+B
+class _ExplorerToggle extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final s = context.watch<AppSettings>();
+    final on = s.showExplorer;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Tooltip(
+        message: '${tr('ตัวสำรวจโปรเจกต์')} · Ctrl+B',
+        child: InkWell(
+          key: const ValueKey('rail-explorer'),
+          onTap: () => s.setShowExplorer(!on),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: on ? C.primaryTint : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              border: Border(left: BorderSide(color: on ? C.primary : Colors.transparent, width: 3)),
+            ),
+            child: Icon(on ? Icons.folder_open_rounded : Icons.folder_outlined, size: 20, color: on ? C.primaryDark : C.muted),
           ),
         ),
       ),
