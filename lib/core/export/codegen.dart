@@ -172,6 +172,7 @@ String _dart(Project p) {
     b.writeln();
     for (final c in t.columns) {
       if (c.comment.isNotEmpty) b.writeln('  /// ${_lineComment(c.comment)}');
+      if (_allowedComment(c) case final a?) b.writeln('  /// ค่าที่อนุญาต: $a');
       b.writeln('  final ${_dartType(c)}${_nullable(c) ? '?' : ''} ${f[c.id]};');
     }
     b.writeln();
@@ -193,6 +194,30 @@ String _dart(Project p) {
 }
 
 String _esc(String s) => s.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+
+// ---------- ค่าที่อนุญาต (Phase 19) ----------
+
+/// ข้อความรายการค่าที่อนุญาตสำหรับคอมเมนต์ (`a | b | c`) ; ไม่มี = null
+String? _allowedComment(ColumnModel c) => c.hasAllowedValues ? c.allowedValues.map(_lineComment).join(' | ') : null;
+
+/// ชื่อ type/enum ของคอลัมน์ที่มีค่าที่อนุญาต (`<Entity><Field>`)
+String _enumTypeName(String entity, String field) => '$entity${_pascal(field, fallback: 'Value')}';
+
+/// ชื่อค่า enum ของ Prisma (ต้องเป็นตัวอักษร/ตัวเลข/_ และไม่ขึ้นต้นด้วยตัวเลข) — แปลงไม่ตรงต้นฉบับจะใส่ `@map("ค่าเดิม")`
+String _prismaEnumIdent(String v) {
+  var s = v.replaceAll(RegExp(r'[^A-Za-z0-9_]'), '_');
+  if (s.isEmpty) s = 'value';
+  if (RegExp(r'^[0-9]').hasMatch(s)) s = '_$s';
+  return s;
+}
+
+/// ค่าเริ่มต้นของคอลัมน์ enum ใน Prisma — ต้องอยู่ในรายการค่าที่อนุญาต ไม่งั้นไม่ใส่
+String? _prismaEnumDefault(ColumnModel c) {
+  final raw = c.defaultValue?.trim() ?? '';
+  if (raw.isEmpty) return null;
+  final v = raw.length >= 2 && raw.startsWith("'") && raw.endsWith("'") ? raw.substring(1, raw.length - 1) : raw;
+  return c.allowedValues.contains(v) ? '@default(${_prismaEnumIdent(v)})' : null;
+}
 
 // ---------- TypeScript ----------
 
@@ -219,12 +244,17 @@ String _typescript(Project p) {
     final f = _fieldNames(t);
     final out = [for (final r in p.relations) if (r.fromTableId == t.id) r];
     if (t.comment.isNotEmpty) b.writeln('/** ${_lineComment(t.comment).replaceAll('*/', '* /')} */');
+    for (final c in t.columns) {
+      if (!c.hasAllowedValues) continue;
+      b.writeln('export type ${_enumTypeName(cls[t.id]!, f[c.id]!)} = ${c.allowedValues.map((v) => "'${_esc(v)}'").join(' | ')};');
+    }
     b.writeln('export interface ${cls[t.id]} {');
     for (final c in t.columns) {
       if (c.comment.isNotEmpty) b.writeln('  /** ${_lineComment(c.comment).replaceAll('*/', '* /')} */');
       final fk = out.where((r) => r.fromColumnId == c.id).firstOrNull;
       final ref = fk == null ? '' : ' // → ${p.tableById(fk.toTableId)?.name}.${p.tableById(fk.toTableId)?.columnById(fk.toColumnId)?.name}';
-      b.writeln('  ${f[c.id]}${_nullable(c) ? '?' : ''}: ${_tsType(c)}${_nullable(c) ? ' | null' : ''};$ref');
+      final ty = c.hasAllowedValues ? _enumTypeName(cls[t.id]!, f[c.id]!) : _tsType(c);
+      b.writeln('  ${f[c.id]}${_nullable(c) ? '?' : ''}: $ty${_nullable(c) ? ' | null' : ''};$ref');
     }
     b.writeln('}');
   }
@@ -387,12 +417,13 @@ String _prisma(Project p) {
     for (final c in t.columns) {
       final attrs = <String>[
         if (pk.length == 1 && c.isPrimaryKey) '@id',
-        ?_prismaDefault(c),
+        if (c.hasAllowedValues) ?_prismaEnumDefault(c) else ?_prismaDefault(c),
         if (c.unique && !c.isPrimaryKey) '@unique',
-        ?_prismaNative(c),
+        if (!c.hasAllowedValues) ?_prismaNative(c),
         if (f[c.id] != c.name) '@map("${c.name.replaceAll('"', '\\"')}")',
       ];
-      lines.add((f[c.id]!, '${_prismaType(c)}${_nullable(c) ? '?' : ''}', attrs.join(' ')));
+      final pty = c.hasAllowedValues ? _enumTypeName(cls[t.id]!, f[c.id]!) : _prismaType(c);
+      lines.add((f[c.id]!, '$pty${_nullable(c) ? '?' : ''}', attrs.join(' ')));
     }
     final w1 = lines.fold<int>(0, (m, l) => l.$1.length > m ? l.$1.length : m);
     final w2 = lines.fold<int>(0, (m, l) => l.$2.length > m ? l.$2.length : m);
@@ -421,6 +452,20 @@ String _prisma(Project p) {
     }
     if (_pascal(t.name) != t.name || cls[t.id] != t.name) b.writeln('  @@map("${t.name.replaceAll('"', '\\"')}")');
     b.writeln('}');
+  }
+  // enum ของคอลัมน์ที่มีค่าที่อนุญาต (Phase 19)
+  for (final t in tables) {
+    for (final c in t.columns) {
+      if (!c.hasAllowedValues) continue;
+      b
+        ..writeln()
+        ..writeln('enum ${_enumTypeName(cls[t.id]!, fields[t.id]![c.id]!)} {');
+      for (final v in c.allowedValues) {
+        final id = _prismaEnumIdent(v);
+        b.writeln('  $id${id == v ? '' : ' @map("${v.replaceAll('"', '\\"')}")'}');
+      }
+      b.writeln('}');
+    }
   }
   return b.toString();
 }
@@ -466,6 +511,7 @@ String _java(Project p) {
     for (final c in t.columns) {
       b.writeln();
       if (c.comment.isNotEmpty) b.writeln('    /** ${_lineComment(c.comment).replaceAll('*/', '* /')} */');
+      if (_allowedComment(c) case final a?) b.writeln('    /** ค่าที่อนุญาต: ${a.replaceAll('*/', '* /')} */');
       if (c.isPrimaryKey) {
         b.writeln('    @Id');
         if (c.autoIncrement && pk.length == 1) b.writeln('    @GeneratedValue(strategy = GenerationType.IDENTITY)');
@@ -555,6 +601,7 @@ String _csharp(Project p) {
       final c = t.columns[i];
       if (i > 0) b.writeln();
       if (c.comment.isNotEmpty) b.writeln('    /// <summary>${_xml(_lineComment(c.comment))}</summary>');
+      if (_allowedComment(c) case final a?) b.writeln('    /// <remarks>ค่าที่อนุญาต: ${_xml(a)}</remarks>');
       if (c.isPrimaryKey) {
         b.writeln('    [Key]');
         if (pk.length > 1) b.writeln('    [Column(Order = ${pk.indexOf(c)})]');

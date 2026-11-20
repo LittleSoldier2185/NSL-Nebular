@@ -1164,7 +1164,9 @@ class ProjectController extends DocController {
         ..name = edited.name
         ..comment = edited.comment
         ..columns = edited.columns
-        ..indexes = edited.indexes;
+        ..indexes = edited.indexes
+        ..checks = edited.checks
+        ..seedRows = edited.seedRows;
     });
     _fixSelection();
     notifyListeners();

@@ -322,6 +322,26 @@ void _tables(StringBuffer b, Project p, String h) {
           '${_cell(_def(c))} | ${_cell(c.comment)} |');
     }
 
+    final enums = [for (final c in t.columns) if (c.hasAllowedValues) c];
+    if (enums.isNotEmpty) {
+      b.writeln();
+      b.writeln(tr('**ค่าที่อนุญาต**'));
+      b.writeln();
+      for (final c in enums) {
+        b.writeln('- `${c.name}`: ${c.allowedValues.map((v) => '`${v.replaceAll('`', "'")}`').join(', ')}');
+      }
+    }
+    final checks = [for (var i = 0; i < t.checks.length; i++) if (t.checks[i].expr.trim().isNotEmpty) i];
+    if (checks.isNotEmpty) {
+      b.writeln();
+      b.writeln('**CHECK**');
+      b.writeln();
+      for (final i in checks) {
+        final n = t.checks[i].name.trim().isEmpty ? 'chk_${t.name}_${i + 1}' : t.checks[i].name.trim();
+        b.writeln('- `$n`: `${t.checks[i].expr.trim().replaceAll('`', "'").replaceAll(RegExp(r'\s+'), ' ')}`');
+      }
+    }
+
     final out = [
       for (final r in p.relations)
         if (r.fromTableId == t.id) r

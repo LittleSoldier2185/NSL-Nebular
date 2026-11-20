@@ -392,6 +392,8 @@ class MockEngine {
       case ApiMethod.put:
       case ApiMethod.patch:
         if (!item) return _static(e, body);
+        final bad = _allowedViolation(table, body ?? const {});
+        if (bad != null) return _json(422, {'error': 'validation', 'message': bad});
         final r = find();
         if (r == null) return notFound();
         for (final c in table.columns) {
@@ -408,7 +410,22 @@ class MockEngine {
     }
   }
 
+  /// ค่าในคำขอที่ผิดกติกา "ค่าที่อนุญาต" ของคอลัมน์ (เหมือนฐานข้อมูลที่ปฏิเสธ ENUM/CHECK) — คืนข้อความ ไม่มีปัญหา = null
+  String? _allowedViolation(TableModel t, Map<String, Object?> body) {
+    for (final c in t.columns) {
+      if (!c.hasAllowedValues || !body.containsKey(c.name)) continue;
+      final v = body[c.name];
+      if (v == null) continue; // NULL ตรวจโดย NOT NULL (ไม่ใช่ที่นี่)
+      if (!c.allowedValues.contains('$v')) {
+        return '${c.name} must be one of: ${c.allowedValues.join(', ')} (got "$v")';
+      }
+    }
+    return null;
+  }
+
   MockReply _create(ApiEndpoint e, TableModel t, List<Map<String, Object?>> rows, Map<String, Object?> body, int status) {
+    final bad = _allowedViolation(t, body);
+    if (bad != null) return _json(422, {'error': 'validation', 'message': bad});
     final row = <String, Object?>{};
     for (final c in t.columns) {
       if (body.containsKey(c.name) && body[c.name] != null) {

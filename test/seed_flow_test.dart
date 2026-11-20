@@ -16,7 +16,7 @@ import 'package:nsl_nebular/state/app_settings.dart';
 import 'package:nsl_nebular/state/project_controller.dart';
 import 'package:nsl_nebular/ui/home_page.dart';
 import 'package:nsl_nebular/ui/migration_dialog.dart';
-import 'package:nsl_nebular/ui/seed_data_dialog.dart';
+import 'package:nsl_nebular/ui/create_table_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 
@@ -350,7 +350,7 @@ void main() {
       await boot(tester);
       expect(find.text('เพิ่มข้อมูลตั้งต้น…'), findsOneWidget);
       await openSeed(tester);
-      expect(find.byType(SeedDataDialog), findsOneWidget);
+      expect(find.byType(CreateTableDialog), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('seed-add-row')));
       await tester.pump();
       await tester.enterText(find.byKey(const ValueKey('seed-0-u2')), 'a@x.com');
@@ -358,7 +358,7 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('seed-0-u4')), '30');
       await tester.pump();
       expect(find.byKey(const ValueKey('seed-problems')), findsNothing);
-      await tester.tap(find.byKey(const ValueKey('seed-save')));
+      await tester.tap(find.byKey(const ValueKey('ct-save')));
       await tester.pumpAndSettle();
 
       final rows = tb(c.project, 'tu').seedRows;
@@ -394,7 +394,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('csv-ok')));
       await tester.pumpAndSettle();
       expect(find.textContaining('เพิ่ม 2 แถวจาก CSV'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('seed-save')));
+      await tester.tap(find.byKey(const ValueKey('ct-save')));
       await tester.pumpAndSettle();
       final rows = tb(c.project, 'tu').seedRows;
       expect(rows.length, 2);
@@ -413,7 +413,7 @@ void main() {
       expect(tester.widget<TextField>(find.byKey(const ValueKey('seed-1-u2'))).controller!.text, 'b@x.com');
       await tester.tap(find.byKey(const ValueKey('seed-remove-0')));
       await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('seed-save')));
+      await tester.tap(find.byKey(const ValueKey('ct-save')));
       await tester.pumpAndSettle();
       expect(tb(c.project, 'tu').seedRows.map((r) => r['u2']), ['b@x.com']);
     });

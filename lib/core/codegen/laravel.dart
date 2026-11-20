@@ -35,7 +35,9 @@ String _column(ColumnModel c, {required bool autoPk}) {
       _ => c.name == 'id' ? '\$table->id()' : '\$table->bigIncrements($n)',
     };
   } else {
-    base = switch (c.type) {
+    base = c.hasAllowedValues
+        ? '\$table->enum($n, [${c.allowedValues.map(singleQuoted).join(', ')}])'
+        : switch (c.type) {
       DataType.integer => '\$table->integer($n)',
       DataType.bigint => '\$table->bigInteger($n)',
       DataType.smallint => '\$table->smallInteger($n)',

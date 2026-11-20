@@ -338,6 +338,9 @@ void main() {
       await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pumpAndSettle();
+      // แถบตัวอย่าง SQL เปิดอยู่เมื่อหน้าต่างสูง (Phase 19) — พับเพื่อให้รายการคอลัมน์มีที่พอในเทสต์เดิม
+      await tester.tap(find.byKey(const ValueKey('ct-sql-toggle')));
+      await tester.pumpAndSettle();
     }
 
     testWidgets('Ctrl+Shift+T เปิดฟอร์ม: แถวแรกเป็น id INT PRIMARY A_I และมี 4 แถวตามค่าเริ่มต้น', (tester) async {

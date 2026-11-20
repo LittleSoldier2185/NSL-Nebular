@@ -18,7 +18,7 @@ import 'app_actions.dart';
 import 'issue_widgets.dart';
 import 'relation_card_editor.dart';
 import 'theme.dart';
-import 'seed_data_dialog.dart';
+import 'create_table_dialog.dart' show TableDialogTab;
 import 'style_actions.dart';
 import 'widgets.dart';
 import '../core/l10n/l10n.dart';
@@ -276,10 +276,8 @@ class _TableEditor extends StatelessWidget {
                 height: kFieldHeight,
                 child: OutlinedButton.icon(
                   key: const ValueKey('seed-open'),
-                  onPressed: () async {
-                    final rows = await showSeedDataDialog(context, project: c.project, table: table);
-                    if (rows != null) c.setSeedRows(table.id, rows);
-                  },
+                  // ข้อมูลตั้งต้นเป็นแท็บในกล่องแก้ตาราง (Phase 19) — เปิดที่แท็บนั้นเลย
+                  onPressed: () => AppActions(context).editTableStructure(table.id, TableDialogTab.seed),
                   icon: const Icon(Icons.dataset_outlined, size: 16),
                   label: Text(
                     table.seedRows.isEmpty ? tr('เพิ่มข้อมูลตั้งต้น…') : tr('{0} แถว — แก้ไข…', [table.seedRows.length]),

@@ -34,6 +34,8 @@ void main() {
     await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('ct-sql-toggle'))); // พับแถบตัวอย่าง SQL (Phase 19) ให้รายการคอลัมน์มีที่พอ
+    await tester.pumpAndSettle();
   }
 
   String text(WidgetTester tester, String key) => tester.widget<TextField>(find.byKey(ValueKey(key))).controller!.text;

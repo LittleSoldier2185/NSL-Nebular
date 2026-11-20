@@ -221,7 +221,7 @@ class AppActions {
 
   /// สร้างตารางแบบฟอร์มคอลัมน์ทั้งหมดในหน้าเดียว (เหมือน phpMyAdmin) แล้ววางกลางจอ
   Future<void> createTableFromForm() async {
-    final t = await showCreateTableDialog(context, newId: c.newId);
+    final t = await showCreateTableDialog(context, newId: c.newId, dialect: c.project.dialect, project: c.project);
     if (t == null) return;
     final center = cv.toWorld(cv.viewport.center(Offset.zero));
     final at = Offset(snapToGrid(center.dx - t.width / 2), snapToGrid(center.dy - tableHeight(t) / 2));
@@ -230,7 +230,7 @@ class AppActions {
   }
 
   /// แก้โครงสร้างตารางที่เลือกด้วยฟอร์มเดียวกับตอนสร้าง (เหมือนแท็บ Structure ของ phpMyAdmin)
-  Future<void> editTableStructure([String? tableId]) async {
+  Future<void> editTableStructure([String? tableId, TableDialogTab tab = TableDialogTab.columns]) async {
     final id = tableId ?? c.selectedTableId;
     final t = id == null ? null : c.project.tableById(id);
     if (t == null) {
@@ -243,6 +243,9 @@ class AppActions {
       newId: c.newId,
       relationCount: (col) => c.relationCountOfColumn(t.id, col),
       otherTableNames: [for (final o in c.project.tables) if (o.id != t.id) o.name],
+      dialect: c.project.dialect,
+      project: c.project,
+      initialTab: tab,
     );
     if (edited != null) c.applyTableEdit(t.id, edited);
   }

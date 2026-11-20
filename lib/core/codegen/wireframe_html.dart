@@ -70,6 +70,8 @@ class _WfHtml {
     final t = _table(c.ref);
     final colId = c.ref?.columnId;
     if (t == null || colId == null) return const [];
+    final col = t.columnById(colId);
+    if (col != null && col.hasAllowedValues) return [...col.allowedValues]; // ค่าที่อนุญาตของคอลัมน์ ก่อนข้อมูลตั้งต้น
     final seen = <String>{};
     return [
       for (final r in t.seedRows)

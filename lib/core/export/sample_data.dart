@@ -212,6 +212,8 @@ class _Sample {
   }
 
   String _text(ColumnModel c, String name, int i, bool unique) {
+    // ค่าที่อนุญาต (ENUM/CHECK IN) : เลือกจากรายการเท่านั้น ไม่งั้นข้อมูลตัวอย่างจะไม่ผ่านเงื่อนไขของตารางเอง
+    if (c.hasAllowedValues) return c.allowedValues[rng.below(c.allowedValues.length)];
     bool has(List<String> keys) => keys.any(name.contains);
     String s;
     if (has(['email', 'mail'])) {

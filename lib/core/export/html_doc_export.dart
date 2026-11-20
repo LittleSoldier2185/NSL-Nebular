@@ -411,6 +411,24 @@ void _table(StringBuffer b, Project p, TableModel t, String pre) {
   }
   b.writeln('</tbody></table>');
 
+  final enums = [for (final c in t.columns) if (c.hasAllowedValues) c];
+  if (enums.isNotEmpty) {
+    b.writeln('<h3>${_esc(tr('ค่าที่อนุญาต'))}</h3><ul>');
+    for (final c in enums) {
+      b.writeln('<li><code>${_esc(c.name)}</code>: ${c.allowedValues.map((v) => '<code>${_esc(v)}</code>').join(', ')}</li>');
+    }
+    b.writeln('</ul>');
+  }
+  final checks = [for (var i = 0; i < t.checks.length; i++) if (t.checks[i].expr.trim().isNotEmpty) i];
+  if (checks.isNotEmpty) {
+    b.writeln('<h3>CHECK</h3><ul>');
+    for (final i in checks) {
+      final n = t.checks[i].name.trim().isEmpty ? 'chk_${t.name}_${i + 1}' : t.checks[i].name.trim();
+      b.writeln('<li><code>${_esc(n)}</code>: <code>${_esc(t.checks[i].expr.trim().replaceAll(RegExp(r'\s+'), ' '))}</code></li>');
+    }
+    b.writeln('</ul>');
+  }
+
   final out = [for (final r in p.relations) if (r.fromTableId == t.id) r];
   if (out.isNotEmpty) {
     b.writeln('<h3>${_esc(tr('อ้างถึง (FK)'))}</h3><ul>');
