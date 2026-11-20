@@ -397,7 +397,34 @@ class _DataBrowserDialogState extends State<DataBrowserDialog> {
                       Expanded(child: _content()),
                     ]),
             ),
+            if (_editMode) _pendingSql(),
           ]),
+        ),
+      ),
+    );
+  }
+
+  /// แถบ SQL สดของการแก้ไขที่รอบันทึก (ดีไซน์ Phase 20 ข้อ 2 แบบ A) — เห็นคำสั่งก่อนกด "บันทึก"
+  Widget _pendingSql() {
+    final s = _session, t = _table;
+    if (s == null || t == null || _pending.isEmpty) return const SizedBox.shrink();
+    String text;
+    try {
+      text = [for (final e in _pending.toEdits()) '${buildEditStatement(s.dialect, t, e).preview()};'].join('\n');
+    } on DataSqlException catch (e) {
+      text = '-- ${e.message}';
+    }
+    return Container(
+      key: const ValueKey('data-pending-sql'),
+      width: double.infinity,
+      constraints: const BoxConstraints(maxHeight: 110),
+      margin: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(color: C.field, borderRadius: BorderRadius.circular(8)),
+      child: SingleChildScrollView(
+        child: SelectableText(
+          '${tr('SQL ที่จะรันเมื่อกดบันทึก (ทรานแซกชันเดียว)')}\n$text',
+          style: monoStyle.copyWith(fontSize: 12),
         ),
       ),
     );

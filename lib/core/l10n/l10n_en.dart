@@ -1942,4 +1942,9 @@ const Map<String, String> kEn = {
   '**ค่าที่อนุญาต**': '**Allowed values**',
   'ค่าที่อนุญาต': 'Allowed values',
   'กล่องสร้าง/แก้ตารางแบบ 4 แท็บ (คอลัมน์ ดัชนี CHECK ข้อมูลตั้งต้น) พร้อมตัวอย่าง SQL สด + ค่าที่อนุญาต (ENUM) ต่อคอลัมน์ และเงื่อนไข CHECK ของตาราง ใช้ได้ทั้ง 4 dialect นำเข้า/เทียบ/Migration/ตรวจ ER และส่งต่อไป Mock Server, สร้างโค้ด, OpenAPI, เอกสาร': 'New table dialog with 4 tabs (columns, indexes, CHECK, seed data) and a live SQL preview, plus per-column allowed values (ENUM) and table CHECK conditions across all 4 dialects — supported in import, compare/Migration, ER checks, Mock Server, code generation, OpenAPI and documents',
+  'SQL ที่จะรันเมื่อกดบันทึก (ทรานแซกชันเดียว)': 'SQL that will run when you press Save (single transaction)',
+  'ที่บันทึกไว้': 'Saved',
+  'ข้อมูลอาจหาย': 'Data may be lost',
+  'การเชื่อมต่อใหม่': 'New connection',
+  'กล่องเชื่อมต่อฐานข้อมูลแสดงรายการที่บันทึกไว้ทางซ้าย, กล่องดูข้อมูลมีแถบ SQL สดของการแก้ไขที่รอบันทึก, รายการความต่างของ Migration ติดป้าย "ข้อมูลอาจหาย"': 'DB connect box lists saved connections on the left, the data browser shows a live SQL strip of pending edits, and Migration changes carry a "Data may be lost" tag',
 };

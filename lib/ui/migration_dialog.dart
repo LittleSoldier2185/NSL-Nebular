@@ -302,6 +302,13 @@ class _MigrationDialogState extends State<MigrationDialog> {
                           color: l.destructive ? C.danger : C.text,
                           fontWeight: l.destructive ? FontWeight.w600 : FontWeight.w400)),
                 ),
+                if (l.destructive)
+                  Container(
+                    margin: const EdgeInsets.only(left: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(color: C.dangerBg, borderRadius: BorderRadius.circular(99)),
+                    child: Text(tr('ข้อมูลอาจหาย'), style: TextStyle(fontSize: 10.5, color: C.danger)),
+                  ),
               ]),
             );
           },

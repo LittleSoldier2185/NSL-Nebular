@@ -174,9 +174,7 @@ void main() {
       await openDialog(tester);
       expect(find.byKey(const ValueKey('db-saved')), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('db-saved')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('dev').last);
+      await tester.tap(find.byKey(const ValueKey('db-saved-item-dev')));
       await tester.pumpAndSettle();
       String t(String k) => tester.widget<TextField>(find.byKey(ValueKey(k))).controller!.text;
       expect((t('db-host'), t('db-port'), t('db-user'), t('db-name'), t('db-pass')), ('h1', '3310', 'u1', 'd1', ''));
@@ -192,9 +190,7 @@ void main() {
       final store = DbConnectDialog.store = SavedConnectionStore(file, _FakeCodec());
       store.upsert(const SavedConnection(name: 'prod', host: 'h', user: 'u', database: 'd'), password: 'pw-9');
       await openDialog(tester);
-      await tester.tap(find.byKey(const ValueKey('db-saved')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('prod').last);
+      await tester.tap(find.byKey(const ValueKey('db-saved-item-prod')));
       await tester.pumpAndSettle();
       expect(tester.widget<TextField>(find.byKey(const ValueKey('db-pass'))).controller!.text, 'pw-9');
       expect(tester.widget<CheckboxListTile>(find.byKey(const ValueKey('db-remember'))).value, true);

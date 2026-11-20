@@ -9,7 +9,6 @@ import '../core/db/sqlite_connector.dart';
 import '../core/l10n/l10n.dart';
 import '../core/models/enums.dart';
 import 'theme.dart';
-import 'widgets.dart' show Dropdown;
 
 enum DbAction { importAsDiagram, compare, browse }
 
@@ -262,6 +261,58 @@ class _DbConnectDialogState extends State<DbConnectDialog> {
     if (p != null && mounted) setState(() => _sqlitePath.text = p);
   }
 
+  /// รายการที่บันทึกไว้ (ซ้าย) — ดีไซน์ Phase 20 ข้อ 1 แบบ A
+  Widget _savedPanel() => Container(
+        width: 190,
+        margin: const EdgeInsets.only(right: 14),
+        padding: const EdgeInsets.fromLTRB(0, 0, 12, 0),
+        decoration: BoxDecoration(border: Border(right: BorderSide(color: C.border))),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Expanded(child: Text(tr('ที่บันทึกไว้'), key: const ValueKey('db-saved'), style: TextStyle(fontSize: 11.5, color: C.muted, fontWeight: FontWeight.w600))),
+            IconButton(
+              key: const ValueKey('db-saved-delete'),
+              tooltip: tr('ลบการเชื่อมต่อที่บันทึกไว้'),
+              visualDensity: VisualDensity.compact,
+              onPressed: _busy || _picked.isEmpty ? null : _deleteSaved,
+              icon: Icon(Icons.delete_outline, color: _picked.isEmpty ? C.muted : C.danger, size: 18),
+            ),
+          ]),
+          for (final c in _saved)
+            InkWell(
+              key: ValueKey('db-saved-item-${c.name}'),
+              borderRadius: BorderRadius.circular(6),
+              onTap: _busy ? null : () => _pick(c.name),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+                decoration: BoxDecoration(color: _picked == c.name ? C.primaryTint : null, borderRadius: BorderRadius.circular(6)),
+                child: Row(children: [
+                  Expanded(child: Text(c.name, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, fontWeight: _picked == c.name ? FontWeight.w600 : FontWeight.w400, color: _picked == c.name ? C.primaryDark : C.text))),
+                  Text(c.kind == DbKind.sqlite ? 'SQLite' : 'MySQL', style: TextStyle(fontSize: 10.5, color: C.muted)),
+                ]),
+              ),
+            ),
+          const SizedBox(height: 6),
+          TextButton.icon(
+            key: const ValueKey('db-new'),
+            onPressed: _busy ? null : _newConnection,
+            icon: const Icon(Icons.add, size: 16),
+            label: Text(tr('การเชื่อมต่อใหม่')),
+          ),
+        ]),
+      );
+
+  void _newConnection() => setState(() {
+        _picked = '';
+        _save = false;
+        _remember = false;
+        _error = null;
+        _status = null;
+        _pass.clear();
+        _saveName.clear();
+      });
+
   Widget _field(String label, TextEditingController c, {Key? key, bool obscure = false, double? width, TextInputType? type}) {
     final f = TextField(
       key: key,
@@ -283,7 +334,10 @@ class _DbConnectDialogState extends State<DbConnectDialog> {
     return AlertDialog(
       title: Text(tr('เชื่อมต่อฐานข้อมูล')),
       content: SizedBox(
-        width: 460,
+        width: _saved.isNotEmpty ? 740 : 460,
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (_saved.isNotEmpty) _savedPanel(),
+          Expanded(
         child: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Container(
@@ -300,28 +354,6 @@ class _DbConnectDialogState extends State<DbConnectDialog> {
                 ),
               ]),
             ),
-            if (_saved.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: KeyedSubtree(
-                    key: const ValueKey('db-saved'),
-                    child: Dropdown<String>(
-                      value: _saved.any((e) => e.name == _picked) ? _picked : '',
-                      items: ['', ..._saved.map((e) => e.name)],
-                      labelOf: (n) => n.isEmpty ? tr('— การเชื่อมต่อที่บันทึกไว้ —') : n,
-                      onChanged: _busy ? (_) {} : _pick,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  key: const ValueKey('db-saved-delete'),
-                  tooltip: tr('ลบการเชื่อมต่อที่บันทึกไว้'),
-                  onPressed: _busy || _picked.isEmpty ? null : _deleteSaved,
-                  icon: Icon(Icons.delete_outline, color: _picked.isEmpty ? C.muted : C.danger, size: 20),
-                ),
-              ]),
-            ],
             const SizedBox(height: 12),
             SegmentedButton<DbKind>(
               key: const ValueKey('db-kind'),
@@ -426,6 +458,8 @@ class _DbConnectDialogState extends State<DbConnectDialog> {
             ],
           ]),
         ),
+          ),
+        ]),
       ),
       actionsOverflowButtonSpacing: 6,
       actions: [

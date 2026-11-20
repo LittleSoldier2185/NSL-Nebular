@@ -156,7 +156,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('data-save')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('save-confirm')), findsOneWidget);
-    expect(find.textContaining('UPDATE "users" SET "name" = \'Annie\' WHERE "id" = \'1\''), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('save-confirm')), matching: find.textContaining('UPDATE "users" SET "name" = \'Annie\' WHERE "id" = \'1\'')), findsOneWidget);
+    expect(find.byKey(const ValueKey('data-pending-sql')), findsOneWidget); // แถบ SQL สดอยู่ใต้กริดด้วย
     expect(dbValue('SELECT name FROM users WHERE id = 1'), 'Ann'); // ดูคำสั่งอยู่ ยังไม่เขียน
 
     await tester.runAsync(() async {
@@ -222,8 +223,8 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('data-save')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('INSERT INTO "notes" ("body") VALUES (\'new note\')'), findsOneWidget);
-    expect(find.textContaining('DELETE FROM "notes" WHERE "id" = \'1\''), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('save-confirm')), matching: find.textContaining('INSERT INTO "notes" ("body") VALUES (\'new note\')')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const ValueKey('save-confirm')), matching: find.textContaining('DELETE FROM "notes" WHERE "id" = \'1\'')), findsOneWidget);
     await tester.runAsync(() async {
       await tester.tap(find.byKey(const ValueKey('save-ok')));
       await Future<void>.delayed(const Duration(milliseconds: 400));
