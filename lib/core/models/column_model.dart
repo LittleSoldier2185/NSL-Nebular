@@ -13,7 +13,8 @@ class ColumnModel {
     this.autoIncrement = false,
     this.defaultValue,
     this.comment = '',
-  });
+    List<String>? allowedValues,
+  }) : allowedValues = allowedValues ?? [];
 
   String id;
   String name;
@@ -31,6 +32,15 @@ class ColumnModel {
   String? defaultValue;
   String comment;
 
+  /// ค่าที่อนุญาต (Phase 19) — ว่าง = รับค่าอะไรก็ได้ ; ใช้ได้กับ varchar/text ([supportsAllowedValues]) ; MySQL/MariaDB = ENUM(...), dialect อื่น = CHECK (col IN (...))
+  List<String> allowedValues;
+
+  /// ชนิดที่กำหนดค่าที่อนุญาตได้
+  static bool supportsAllowedValues(DataType t) => t == DataType.varchar || t == DataType.text;
+
+  /// มีค่าที่อนุญาตที่ใช้งานได้จริง (ไม่ว่าง และชนิดรองรับ)
+  bool get hasAllowedValues => allowedValues.isNotEmpty && supportsAllowedValues(type);
+
   ColumnModel copy() => ColumnModel.fromJson(toJson());
 
   Map<String, dynamic> toJson() => {
@@ -45,6 +55,7 @@ class ColumnModel {
         'autoIncrement': autoIncrement,
         if (defaultValue != null) 'default': defaultValue,
         if (comment.isNotEmpty) 'comment': comment,
+        if (allowedValues.isNotEmpty) 'allowed': allowedValues,
       };
 
   factory ColumnModel.fromJson(Map<String, dynamic> j) => ColumnModel(
@@ -59,5 +70,9 @@ class ColumnModel {
         autoIncrement: j['autoIncrement'] as bool? ?? false,
         defaultValue: j['default'] as String?,
         comment: j['comment'] as String? ?? '',
+        allowedValues: [
+          for (final v in (j['allowed'] is List ? j['allowed'] as List : const []))
+            if (v is String) v,
+        ],
       );
 }

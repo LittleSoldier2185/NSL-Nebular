@@ -36,7 +36,35 @@ abstract class DdlGenerator {
 
   // ---------- จุดที่แต่ละ dialect ปรับ ----------
 
-  String columnType(ColumnModel c) => sqlType(c, dialect);
+  String columnType(ColumnModel c) => nativeEnum && c.hasAllowedValues ? enumType(c) : sqlType(c, dialect);
+
+  // ---------- ค่าที่อนุญาต / CHECK (Phase 19) ----------
+
+  /// dialect นี้มีชนิด ENUM ในตัว (MySQL/MariaDB) — ที่อื่นใช้ CHECK (col IN (...)) แทน
+  bool get nativeEnum => false;
+
+  /// ชนิด `ENUM('a', 'b')` ของคอลัมน์ที่มีค่าที่อนุญาต (ใช้เมื่อ [nativeEnum])
+  String enumType(ColumnModel c) => 'ENUM(${c.allowedValues.map(stringLiteral).join(', ')})';
+
+  /// ชื่อ constraint ของค่าที่อนุญาตในคอลัมน์ (dialect ที่ไม่มี ENUM) — ตั้งชื่อเสมอเพื่อให้ Migration ลบ/เพิ่มได้
+  String allowedCheckName(TableModel t, ColumnModel c) => 'chk_${t.name}_${c.name}';
+
+  /// `CONSTRAINT chk_t_c CHECK (col IN ('a', 'b'))` ต่อท้ายนิยามคอลัมน์
+  String allowedCheckClause(TableModel t, ColumnModel c) =>
+      'CONSTRAINT ${quote(allowedCheckName(t, c))} CHECK (${quote(c.name)} IN (${c.allowedValues.map(stringLiteral).join(', ')}))';
+
+  /// ชื่อของ CHECK ระดับตารางลำดับที่ [index] (0-based) — ชื่อว่าง = สร้างให้
+  String checkName(TableModel t, int index) {
+    final n = t.checks[index].name.trim();
+    return n.isEmpty ? 'chk_${t.name}_${index + 1}' : n;
+  }
+
+  /// `CONSTRAINT <ชื่อ> CHECK (<นิพจน์>)` ของ CHECK ระดับตารางลำดับที่ [index] — null ถ้านิพจน์ว่าง
+  String? checkConstraint(TableModel t, int index) {
+    final expr = flat(t.checks[index].expr);
+    if (expr.isEmpty) return null;
+    return 'CONSTRAINT ${quote(checkName(t, index))} CHECK ($expr)';
+  }
 
   /// คำสั่งหลังชนิดข้อมูล ก่อน NOT NULL (เช่น IDENTITY(1,1) ของ SQL Server)
   String? identityClause(ColumnModel c) => null;
@@ -133,6 +161,7 @@ abstract class DdlGenerator {
     final items = <String>[
       for (final c in t.columns) columnDef(t, c, pk),
       if (pk.isNotEmpty) primaryKeyLine(t, pk),
+      for (var i = 0; i < t.checks.length; i++) ?checkConstraint(t, i),
     ];
     if (fksInline) {
       for (final r in p.relations.where((r) => r.fromTableId == t.id)) {
@@ -157,6 +186,7 @@ abstract class DdlGenerator {
       if (!ai && c.defaultValue != null && c.defaultValue!.trim().isNotEmpty)
         'DEFAULT ${formatDefault(c.defaultValue!, c)}',
       if (c.unique && !soleKey) 'UNIQUE',
+      if (!nativeEnum && c.hasAllowedValues) allowedCheckClause(t, c),
       columnTrailer(c),
     ];
     return parts.whereType<String>().join(' ');

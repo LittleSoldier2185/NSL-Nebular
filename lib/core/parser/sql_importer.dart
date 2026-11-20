@@ -1,5 +1,6 @@
 import '../layout/auto_layout.dart';
 import '../models/column_model.dart';
+import '../models/check_model.dart';
 import '../models/enums.dart';
 import '../models/index_model.dart';
 import '../models/project.dart';
@@ -433,7 +434,11 @@ class _Importer {
   }
 
   void _constraint(TableModel t, _Cur c, String? cname, int line) {
-    if (c.eatWord('CHECK')) return; // ไม่เก็บ CHECK
+    if (c.eatWord('CHECK')) {
+      // CHECK ระดับตาราง: รูป col IN (...) = ค่าที่อนุญาตของคอลัมน์ ; อย่างอื่นเก็บเป็น CHECK ตามที่เขียน (Phase 19)
+      if (c.isSym('(')) _addCheck(t, _balanced(c), cname);
+      return;
+    }
     if (c.eatWords(['PRIMARY', 'KEY'])) {
       c.eatWord('CLUSTERED');
       c.eatWord('NONCLUSTERED');
@@ -503,6 +508,87 @@ class _Importer {
     t.indexes.add(IndexModel(id: id('i'), name: name, columnIds: ids, unique: unique));
   }
 
+  // ---------- CHECK / ENUM (Phase 19) ----------
+
+  /// ค่าของ ENUM(...) ที่เพิ่งอ่านจาก [_type] (รอ [_column] ผูกเข้าคอลัมน์)
+  List<String>? _pendingEnum;
+
+  /// ถอดรายการค่า 'a', 'b' ออกจากวงเล็บของ ENUM ; ค่าซ้ำถูกตัด
+  List<String> _enumValues(List<Tok> inner) {
+    final out = <String>[];
+    for (final part in _splitTop(inner)) {
+      final v = part.isNotEmpty ? part.first : null;
+      if (v != null && v.kind == Tk.string && !out.contains(v.text)) out.add(v.text);
+    }
+    return out;
+  }
+
+  /// ถอดวงเล็บที่ครอบทั้งนิพจน์ซ้อนกัน ((x)) -> x
+  List<Tok> _stripOuterParens(List<Tok> t) {
+    var cur = t;
+    while (cur.length >= 2 && cur.first.isSym('(') && cur.last.isSym(')')) {
+      var depth = 0;
+      var wraps = true;
+      for (var i = 0; i < cur.length; i++) {
+        if (cur[i].isSym('(')) depth++;
+        if (cur[i].isSym(')')) depth--;
+        if (depth == 0 && i < cur.length - 1) {
+          wraps = false;
+          break;
+        }
+      }
+      if (!wraps) break;
+      cur = cur.sublist(1, cur.length - 1);
+    }
+    return cur;
+  }
+
+  /// นิพจน์รูป `col IN ('a', 'b', ...)` ของคอลัมน์เดียว -> (ชื่อคอลัมน์, ค่า) ; รูปอื่น = null
+  ({String col, List<String> values})? _inList(List<Tok> raw) {
+    final t = _stripOuterParens(raw);
+    if (t.length < 5 || !t[0].isName || !t[1].isWord('IN') || !t[2].isSym('(') || !t.last.isSym(')')) return null;
+    final inner = t.sublist(3, t.length - 1);
+    final values = <String>[];
+    for (final part in _splitTop(inner)) {
+      if (part.length != 1 || part.first.kind != Tk.string) return null;
+      if (!values.contains(part.first.text)) values.add(part.first.text);
+    }
+    return values.isEmpty ? null : (col: t[0].text, values: values);
+  }
+
+  /// สร้างข้อความนิพจน์จากโทเค็น (สตริงใส่ '' กลับ ชื่อไม่มี quote วงเล็บ/จุลภาคชิดกัน)
+  String _exprText(List<Tok> toks) {
+    final b = StringBuffer();
+    for (var i = 0; i < toks.length; i++) {
+      final k = toks[i];
+      final s = k.kind == Tk.string ? "'${k.text.replaceAll("'", "''")}'" : k.text;
+      final prev = i == 0 ? null : toks[i - 1];
+      // เครื่องหมายที่ติดกันในต้นฉบับ (>=, <>, !=, ||) รวมเป็นตัวเดียว ไม่แยกด้วยช่องว่าง
+      final joined = prev != null && prev.kind == Tk.symbol && k.kind == Tk.symbol && prev.end == k.start && !prev.isSym('(') && !prev.isSym(')') && !k.isSym('(') && !k.isSym(')') && !k.isSym(',') && !prev.isSym(',');
+      final tight = joined || prev != null && (prev.isSym('(') || k.isSym(')') || k.isSym(',') || k.isSym('.') || prev.isSym('.') || (k.isSym('(') && prev.kind == Tk.word && !const {'IN', 'AND', 'OR', 'NOT'}.contains(prev.text.toUpperCase())));
+      if (i > 0 && !tight) b.write(' ');
+      b.write(s);
+    }
+    return b.toString();
+  }
+
+  /// CHECK ที่อ่านได้ : รูป IN-list ของคอลัมน์ที่มีอยู่ = ค่าที่อนุญาต (ถ้าคอลัมน์รองรับ) ; อย่างอื่นเก็บเป็น CHECK ระดับตารางตามที่เขียน
+  void _addCheck(TableModel t, List<Tok> inner, String? cname, {ColumnModel? onColumn}) {
+    final inl = _inList(inner);
+    if (inl != null) {
+      final target = onColumn ?? _findCol(t, inl.col);
+      if (target != null && target.name.toLowerCase() == inl.col.toLowerCase() && ColumnModel.supportsAllowedValues(target.type)) {
+        target.allowedValues = inl.values;
+        return;
+      }
+    }
+    final expr = _exprText(_stripOuterParens(inner));
+    if (expr.isEmpty) return;
+    final n = cname ?? 'chk_${t.name}_${t.checks.length + 1}';
+    if (t.checks.any((k) => k.expr == expr)) return;
+    t.checks.add(CheckModel(id: id('k'), name: n, expr: expr));
+  }
+
   ColumnModel? _findCol(TableModel t, String? name) {
     if (name == null) return null;
     final l = name.toLowerCase();
@@ -522,14 +608,21 @@ class _Importer {
     col.type = ty.type;
     col.length = ty.length;
     col.scale = ty.scale;
+    if (_pendingEnum != null) {
+      col.allowedValues = _pendingEnum!;
+      _pendingEnum = null;
+    }
     if (ty.ai) {
       col.autoIncrement = true;
       col.notNull = true;
     }
 
     _Ref? inlineRef;
+    String? constraintName;
+    final inlineChecks = <({String? name, List<Tok> toks})>[];
     while (!c.done) {
       if (c.eatWord('CONSTRAINT')) {
+        constraintName = c.at(0)?.isName == true ? c.at(0)!.text : null;
         c.next();
       } else if (c.eatWords(['NOT', 'NULL'])) {
         col.notNull = true;
@@ -575,7 +668,10 @@ class _Importer {
       } else if (c.eatWord('REFERENCES')) {
         inlineRef = _references(c);
       } else if (c.eatWord('CHECK')) {
-        if (c.isSym('(')) _balanced(c);
+        if (c.isSym('(')) {
+          inlineChecks.add((name: constraintName, toks: _balanced(c)));
+          constraintName = null;
+        }
       } else if (c.eatWord('COMMENT')) {
         c.eatSym('=');
         final s = c.at(0);
@@ -601,6 +697,9 @@ class _Importer {
       return;
     }
     t.columns.add(col);
+    for (final k in inlineChecks) {
+      _addCheck(t, k.toks, k.name, onColumn: col);
+    }
     if (inlineRef != null) _queueFk(line, t.name, [col.name], inlineRef, null);
   }
 
@@ -698,6 +797,13 @@ class _Importer {
       // ชนิดมี schema เช่น public.citext
       c.i++;
       base = c.next().text.toUpperCase();
+    }
+
+    if (base == 'ENUM' && c.isSym('(')) {
+      final values = _enumValues(_balanced(c));
+      _pendingEnum = values;
+      final maxLen = values.fold<int>(0, (m, v) => v.length > m ? v.length : m);
+      return (type: DataType.varchar, length: maxLen <= 20 ? 20 : (maxLen <= 50 ? 50 : 255), scale: null, ai: false);
     }
 
     final params = <int?>[];

@@ -10,6 +10,9 @@ class MySqlGenerator extends DdlGenerator {
   Dialect get dialect => Dialect.mysql;
 
   @override
+  bool get nativeEnum => true;
+
+  @override
   String quote(String id) => '`${id.replaceAll('`', '``')}`';
 
   // MySQL ถือ \ เป็นตัว escape ในสตริง

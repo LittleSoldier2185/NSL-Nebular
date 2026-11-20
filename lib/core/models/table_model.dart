@@ -1,4 +1,5 @@
 import 'color_utils.dart';
+import 'check_model.dart';
 import 'column_model.dart';
 import 'index_model.dart';
 
@@ -28,9 +29,11 @@ class TableModel {
     List<ColumnModel>? columns,
     List<Map<String, String?>>? seedRows,
     List<IndexModel>? indexes,
+    List<CheckModel>? checks,
   })  : seedRows = seedRows ?? [],
         columns = columns ?? [],
-        indexes = indexes ?? [];
+        indexes = indexes ?? [],
+        checks = checks ?? [];
 
   String id;
   String name;
@@ -73,6 +76,9 @@ class TableModel {
   }
   List<IndexModel> indexes;
 
+  /// CHECK constraint ระดับตาราง (Phase 19)
+  List<CheckModel> checks;
+
   ColumnModel? columnById(String id) {
     for (final c in columns) {
       if (c.id == id) return c;
@@ -93,6 +99,7 @@ class TableModel {
         if (seedRows.isNotEmpty) 'seed': [for (final r in seedRows) Map<String, String?>.of(r)],
         'columns': columns.map((c) => c.toJson()).toList(),
         'indexes': indexes.map((i) => i.toJson()).toList(),
+        if (checks.isNotEmpty) 'checks': [for (final k in checks) k.toJson()],
       };
 
   factory TableModel.fromJson(Map<String, dynamic> j) => TableModel(
@@ -122,5 +129,8 @@ class TableModel {
         indexes: (j['indexes'] as List? ?? [])
             .map((e) => IndexModel.fromJson(e as Map<String, dynamic>))
             .toList(),
+        checks: [
+          for (final k in (j['checks'] is List ? j['checks'] as List : const [])) ?CheckModel.tryFromJson(k),
+        ],
       );
 }
