@@ -182,6 +182,12 @@ void main() {
       // ลบรายการ
       await tester.tap(find.byKey(const ValueKey('db-saved-delete')));
       await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('typed-confirm')), findsOneWidget);
+      expect(tester.widget<FilledButton>(find.byKey(const ValueKey('typed-confirm-ok'))).onPressed, isNull); // ยังไม่พิมพ์ชื่อ
+      await tester.enterText(find.byKey(const ValueKey('typed-confirm-input')), 'dev');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('typed-confirm-ok')));
+      await tester.pumpAndSettle();
       expect(store.load(), isEmpty);
       expect(find.byKey(const ValueKey('db-saved')), findsNothing);
     });

@@ -8,6 +8,7 @@ import '../core/db/saved_connections.dart';
 import '../core/db/sqlite_connector.dart';
 import '../core/l10n/l10n.dart';
 import '../core/models/enums.dart';
+import 'confirm_dialog.dart';
 import 'theme.dart';
 
 enum DbAction { importAsDiagram, compare, browse }
@@ -184,9 +185,17 @@ class _DbConnectDialogState extends State<DbConnectDialog> {
     });
   }
 
-  void _deleteSaved() {
+  Future<void> _deleteSaved() async {
     final s = DbConnectDialog.store;
     if (s == null || _picked.isEmpty) return;
+    final ok = await confirmTyped(
+      context,
+      title: tr('ลบการเชื่อมต่อ {0}?', [_picked]),
+      message: tr('รายการที่บันทึกไว้และรหัสผ่านที่จำไว้จะถูกลบถาวร (ฐานข้อมูลจริงไม่ถูกแตะ)'),
+      phrase: _picked,
+      action: tr('ลบการเชื่อมต่อ'),
+    );
+    if (!ok || !mounted) return;
     s.remove(_picked);
     setState(() {
       _saved = s.load();

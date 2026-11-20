@@ -1954,4 +1954,9 @@ const Map<String, String> kEn = {
   'ใหม่กว่าไฟล์จริง {0} นาที': '{0} min newer than the saved file',
   'ไม่ใหม่กว่าไฟล์จริง': 'Not newer than the saved file',
   'ศูนย์ช่วยเหลือ: คีย์ลัด / มีอะไรใหม่ / เกี่ยวกับ สลับแท็บได้ในกล่องเดียว และค้นหาคีย์ลัดได้ ; กล่องกู้คืนไฟล์บอกว่าสำเนาใหม่กว่าไฟล์จริงกี่นาที': 'Help center: Shortcuts / What\'s new / About switch tabs in one box and shortcuts are searchable; the recovery box says how many minutes newer the copy is than the saved file',
+  'ลบการเชื่อมต่อ {0}?': 'Delete connection {0}?',
+  'รายการที่บันทึกไว้และรหัสผ่านที่จำไว้จะถูกลบถาวร (ฐานข้อมูลจริงไม่ถูกแตะ)': 'The saved entry and remembered password are deleted permanently (the real database is untouched)',
+  'พิมพ์ {0} เพื่อยืนยัน': 'Type {0} to confirm',
+  'ลบการเชื่อมต่อ': 'Delete connection',
+  'ลบการเชื่อมต่อฐานข้อมูลที่บันทึกไว้ต้องพิมพ์ชื่อยืนยัน (ลบแล้วกู้คืนไม่ได้)': 'Deleting a saved database connection now requires typing its name (it cannot be undone)',
 };
