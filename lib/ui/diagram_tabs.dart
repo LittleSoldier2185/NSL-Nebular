@@ -12,7 +12,8 @@ import 'theme.dart';
 export 'document_actions.dart' show brokenLinkLines, docTypeIcon, DocTypeDot;
 
 /// แท็บแผนภาพเหนือแคนวาส (แบบแท็บเอกสารของโปรแกรมกราฟิก): คลิกสลับ ลากเรียงลำดับ
-/// คลิกขวา = เปลี่ยนชื่อ/ทำสำเนา/ลบ, ปุ่ม + = สร้างแผนภาพใหม่ (ER หรือ DFD) — ER อันสุดท้ายลบไม่ได้
+/// ปุ่ม × / ปุ่มกลางเมาส์ = ปิดแท็บ (เอกสารยังอยู่ ; ยังไม่บันทึก = ถามก่อน) ;
+/// คลิกขวา = ปิด/เปลี่ยนชื่อ/ทำสำเนา/ลบ, ปุ่ม + = สร้างแผนภาพใหม่ — ER อันสุดท้ายลบไม่ได้
 class DiagramTabBar extends StatefulWidget {
   const DiagramTabBar({super.key});
 
@@ -179,20 +180,29 @@ class _TabState extends State<_Tab> {
 
   Future<void> _delete(BuildContext context) => deleteDocumentDialog(context, widget.tab.id);
 
+  Future<void> _close(BuildContext context) => closeTabWithPrompt(context, widget.tab.id);
+
   @override
   Widget build(BuildContext context) {
     final c = context.read<WorkspaceController>();
     final t = widget.tab;
-    final closable = c.canDeleteDocument(t.id);
+    final deletable = c.canDeleteDocument(t.id);
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => c.openDocument(t.id),
+        // ปุ่มกลางเมาส์ = ปิดแท็บ (แบบ VS Code)
+        onTertiaryTapUp: (_) => _close(context),
         onSecondaryTapDown: (d) {
           c.openDocument(t.id);
           showContextMenu(context, d.globalPosition, [
+            MenuSpec(
+              tr('ปิดแท็บ'),
+              Icons.close_rounded,
+              () => _close(context),
+            ),
             MenuSpec(
               tr('เปลี่ยนชื่อ…'),
               Icons.drive_file_rename_outline,
@@ -203,7 +213,7 @@ class _TabState extends State<_Tab> {
               Icons.copy_rounded,
               () => _duplicate(context),
             ),
-            if (closable)
+            if (deletable)
               MenuSpec(
                 tr('ลบแผนภาพ'),
                 Icons.delete_outline,
@@ -261,12 +271,14 @@ class _TabState extends State<_Tab> {
                       const SizedBox(width: 6),
                       UnsavedDot(key: ValueKey('tab-dirty-${t.id}')),
                     ],
-                    if (closable) ...[
-                      const SizedBox(width: 6),
-                      InkResponse(
-                        key: ValueKey('tab-close-${t.id}'),
-                        radius: 12,
-                        onTap: () => _delete(context),
+                    const SizedBox(width: 6),
+                    InkResponse(
+                      key: ValueKey('tab-close-${t.id}'),
+                      radius: 12,
+                      onTap: () => _close(context),
+                      child: Tooltip(
+                        message: tr('ปิดแท็บ'),
+                        waitDuration: const Duration(milliseconds: 600),
                         child: Icon(
                           Icons.close_rounded,
                           size: 14,
@@ -275,8 +287,7 @@ class _TabState extends State<_Tab> {
                               : Colors.transparent,
                         ),
                       ),
-                    ] else
-                      const SizedBox(width: 6),
+                    ),
                   ],
                 ),
               ),

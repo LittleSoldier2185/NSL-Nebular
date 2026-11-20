@@ -289,7 +289,7 @@ void main() {
       expect(er(tester).docId, id);
       expect(er(tester).project.tables, isEmpty);
       expect(find.byKey(ValueKey('er-canvas-$id')), findsOneWidget);
-      // ER มีสองอัน = มีปุ่ม × ทั้งคู่
+      // ทุกแท็บมีปุ่ม × (ปิดแท็บ)
       expect(find.byKey(ValueKey('tab-close-$id')), findsOneWidget);
       expect(find.byKey(const ValueKey('tab-close-$kErDiagramId')), findsOneWidget);
 
@@ -331,14 +331,19 @@ void main() {
       await tester.pumpAndSettle();
       expect(w.documentById(e2.id), isNotNull);
 
-      await tester.tap(find.byKey(ValueKey('tab-close-${e2.id}')));
+      await rightClickTab(tester, e2.id);
+      await tester.tap(find.text('ลบแผนภาพ'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('ลบ'));
       await tester.pumpAndSettle();
       expect(w.documentById(e2.id), isNull);
       expect(find.byKey(ValueKey('tab-${e2.id}')), findsNothing);
-      // เหลือ ER อันเดียว = ลบไม่ได้ (ไม่มีปุ่ม ×)
-      expect(find.byKey(const ValueKey('tab-close-$kErDiagramId')), findsNothing);
+      // เหลือ ER อันเดียว = ลบไม่ได้ (ไม่มี "ลบแผนภาพ" ในเมนู) แต่ยังมีปุ่ม × ไว้ปิดแท็บ
+      expect(find.byKey(const ValueKey('tab-close-$kErDiagramId')), findsOneWidget);
+      await rightClickTab(tester, kErDiagramId);
+      expect(find.text('ลบแผนภาพ'), findsNothing);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
     });
 
     testWidgets('ภาษาอังกฤษ: เมนูเพิ่ม ER / ทำสำเนา / กล่องลบที่มีลิงก์ แปลครบ', (tester) async {

@@ -254,22 +254,24 @@ void main() {
       expect(find.text('ชื่อว่างหรือซ้ำกับแผนภาพอื่น'), findsOneWidget);
     });
 
-    testWidgets('ปุ่ม × ลบแผนภาพ: ถามยืนยันก่อน ยกเลิก = ไม่ลบ; ER ไม่มีปุ่ม ×', (tester) async {
+    testWidgets('ปุ่ม × ปิดแท็บ (ไม่ลบแผนภาพ) ; ER ก็มีปุ่ม ×', (tester) async {
       await boot(tester);
       await addDfd(tester);
       final id = c.activeDiagramId;
-      expect(find.byKey(const ValueKey('tab-close-$kErDiagramId')), findsNothing);
+      expect(find.byKey(const ValueKey('tab-close-$kErDiagramId')), findsOneWidget);
+      // แผนภาพใหม่ยังไม่บันทึก = ถามก่อน ; ยกเลิก = ไม่ปิด
       await tester.tap(find.byKey(ValueKey('tab-close-$id')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('ยกเลิก'));
+      await tester.tap(find.byKey(const ValueKey('close-tab-cancel')));
       await tester.pumpAndSettle();
-      expect(c.documentById(id), isNotNull);
+      expect(find.byKey(ValueKey('tab-$id')), findsOneWidget);
 
       await tester.tap(find.byKey(ValueKey('tab-close-$id')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('ลบ'));
+      await tester.tap(find.byKey(const ValueKey('close-tab-discard')));
       await tester.pumpAndSettle();
-      expect(c.documentById(id), isNull);
+      expect(find.byKey(ValueKey('tab-$id')), findsNothing);
+      expect(c.documentById(id), isNotNull);
       expect(c.activeDiagram.type, DocType.er);
     });
 

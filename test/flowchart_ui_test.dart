@@ -92,8 +92,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(w.activeDocument.name, 'Flowchart 2');
       expect(w.activeDocument.type, DocType.flowchart);
-      // ปุ่ม × ลบได้ (ไม่มีลิงก์ข้ามเอกสาร)
-      await tester.tap(find.byKey(ValueKey('tab-close-${w.activeId}')));
+      // คลิกขวา > ลบแผนภาพ (ไม่มีลิงก์ข้ามเอกสาร)
+      final g2 = await tester.startGesture(tester.getCenter(find.byKey(ValueKey('tab-${w.activeId}'))),
+          kind: PointerDeviceKind.mouse, buttons: kSecondaryMouseButton);
+      await g2.up();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('ลบแผนภาพ'));
       await tester.pumpAndSettle();
       expect(find.textContaining('ลิงก์จากแผนภาพอื่น'), findsNothing);
       await tester.tap(find.text('ลบ'));

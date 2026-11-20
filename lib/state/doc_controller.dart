@@ -80,6 +80,7 @@ abstract class DocController extends ChangeNotifier {
     history.clear();
     _docDirty = false;
     _revision++;
+    captureSaved();
   }
 
   /// เนื้อหาเปลี่ยนและนับว่าแก้แล้ว
@@ -93,8 +94,33 @@ abstract class DocController extends ChangeNotifier {
   @protected
   void markLive() => _revision++;
 
-  /// บันทึกแล้ว / เปิดใหม่
-  void markClean() => _docDirty = false;
+  /// บันทึกแล้ว / เปิดใหม่ — จำเนื้อหาตอนนี้ไว้เป็น "ตอนบันทึกล่าสุด" ให้ [revertToSaved]
+  void markClean() {
+    _docDirty = false;
+    captureSaved();
+  }
+
+  String? _savedSnap;
+
+  /// จำเนื้อหาปัจจุบันเป็นสถานะ "บันทึกแล้ว" (เรียกตอนผูกกับ workspace และหลังบันทึก)
+  void captureSaved() => _savedSnap = historySnapshot();
+
+  /// ย้อนเนื้อหา (รวมโน้ต) กลับเป็นตอนบันทึกล่าสุด — เก็บเข้าประวัติจึง Ctrl+Z ย้อนได้ ; คืน false ถ้าไม่มีอะไรให้ย้อน
+  bool revertToSaved() {
+    final saved = _savedSnap;
+    if (saved == null || !_docDirty) return false;
+    if (history.gestureActive) endGesture();
+    final now = historySnapshot();
+    if (now != saved) {
+      history.push(now);
+      _restoreHistory(saved);
+      afterRestore();
+    }
+    _docDirty = false;
+    _revision++;
+    notifyListeners();
+    return true;
+  }
 
   /// แก้เนื้อหาแบบมีประวัติ (undo ขั้นเดียว)
   @protected

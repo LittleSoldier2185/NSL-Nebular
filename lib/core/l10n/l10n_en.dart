@@ -1965,4 +1965,8 @@ const Map<String, String> kEn = {
   'พับเก็บตัวสำรวจ (Ctrl+B)': 'Hide explorer (Ctrl+B)',
   'พับเก็บตัวสำรวจโปรเจกต์ได้แบบ VS Code: ปุ่มโฟลเดอร์บนสุดของแถบไอคอน และปุ่ม « ในหัวแผง (Ctrl+B)': 'Collapse the project explorer VS Code style: a folder button at the top of the icon rail and a « button in the panel header (Ctrl+B)',
   'ช่องกรอกข้อความทั่วทั้งแอปสูงขึ้นและมีระยะขอบในมากขึ้น กดและอ่านง่ายกว่าเดิม': 'Text fields across the app are taller with more inner padding, easier to click and read',
+  'ปุ่ม × บนแท็บเป็นการปิดแท็บแบบ VS Code (แผนภาพยังอยู่ในโปรเจกต์ เปิดใหม่จากตัวสำรวจได้) ถ้ายังไม่บันทึกจะถามก่อน ; ปุ่มกลางเมาส์ปิดแท็บได้ ; ลบแผนภาพย้ายไปเมนูคลิกขวา': 'The × on a tab now closes the tab VS Code style (the diagram stays in the project and reopens from the explorer), asking first if it has unsaved changes ; middle-click closes a tab ; deleting a diagram moved to the right-click menu',
+  'ปิดแท็บ': 'Close tab',
+  'บันทึกการแก้ไขใน "{0}" ไหม': 'Save changes to "{0}"?',
+  'ถ้าไม่บันทึก การแก้ไขในแผนภาพนี้จะย้อนกลับเป็นตอนบันทึกล่าสุด (กด Ctrl+Z ในแผนภาพนี้เพื่อเอาคืนได้) ; บันทึก = บันทึกทั้งไฟล์โปรเจกต์': "If you don't save, this diagram goes back to its last saved state (press Ctrl+Z in it to get the changes back) ; Save saves the whole project file",
 };

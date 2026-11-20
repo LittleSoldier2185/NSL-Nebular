@@ -7,6 +7,7 @@ import '../core/models/workspace.dart';
 import '../core/validate/screenflow_validator.dart' show sfNodeTitle;
 import '../core/validate/wireframe_validator.dart' show wfComponentTitle;
 import '../state/workspace_controller.dart';
+import 'file_actions.dart';
 import 'prompt_dialog.dart';
 import 'theme.dart';
 
@@ -106,6 +107,43 @@ Future<void> renameDocumentDialog(BuildContext context, String docId) async {
       SnackBar(content: Text(tr('ชื่อว่างหรือซ้ำกับแผนภาพอื่น'))),
     );
   }
+}
+
+/// ปิดแท็บของเอกสาร [docId] แบบ VS Code (เอกสารยังอยู่ในโปรเจกต์) — ยังไม่บันทึก = ถามก่อน :
+/// บันทึก (ทั้งไฟล์โปรเจกต์ แล้วปิด) / ไม่บันทึก (ย้อนเนื้อหาเอกสารนี้เป็นตอนบันทึกล่าสุด แล้วปิด) / ยกเลิก ; คืน true ถ้าปิดแล้ว
+Future<bool> closeTabWithPrompt(BuildContext context, String docId) async {
+  final c = context.read<WorkspaceController>();
+  final doc = c.documentById(docId);
+  if (doc == null || !c.isTabOpen(docId)) return false;
+  if (c.documentDirty(docId)) {
+    final r = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const ValueKey('close-tab-dialog'),
+        title: Text(tr('บันทึกการแก้ไขใน "{0}" ไหม', [doc.name])),
+        content: SizedBox(
+          width: 420,
+          child: Text(tr('ถ้าไม่บันทึก การแก้ไขในแผนภาพนี้จะย้อนกลับเป็นตอนบันทึกล่าสุด (กด Ctrl+Z ในแผนภาพนี้เพื่อเอาคืนได้) ; บันทึก = บันทึกทั้งไฟล์โปรเจกต์')),
+        ),
+        actions: [
+          TextButton(key: const ValueKey('close-tab-cancel'), onPressed: () => Navigator.pop(ctx, 'cancel'), child: Text(tr('ยกเลิก'))),
+          TextButton(key: const ValueKey('close-tab-discard'), onPressed: () => Navigator.pop(ctx, 'discard'), child: Text(tr('ไม่บันทึก'))),
+          FilledButton(key: const ValueKey('close-tab-save'), onPressed: () => Navigator.pop(ctx, 'save'), child: Text(tr('บันทึก'))),
+        ],
+      ),
+    );
+    if (!context.mounted) return false;
+    switch (r) {
+      case 'save':
+        if (!await FileActions.save(context, c.currentEr)) return false;
+      case 'discard':
+        c.revertDocument(docId);
+      default:
+        return false;
+    }
+  }
+  c.closeTab(docId);
+  return true;
 }
 
 /// กล่องยืนยันลบเอกสาร (แสดงลิงก์ข้ามเอกสารที่จะขาด) แล้วลบถ้ายืนยัน ; ลบไม่ได้ (ER อันสุดท้าย) = ไม่ทำอะไร

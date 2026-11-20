@@ -283,6 +283,8 @@ class WorkspaceController extends ChangeNotifier {
     final next = show ? p : (_page == p ? WorkspacePage.document : _page);
     if (next == _page) return;
     _page = next;
+    // กลับมาที่เอกสารหลังปิดแท็บหมด = เปิดแท็บของเอกสารที่ใช้งานกลับมา (ไม่ให้แสดงเอกสารที่ไม่มีแท็บ)
+    if (next == WorkspacePage.document) _open.add(activeId);
     notifyListeners();
   }
   String? get filePath => _filePath;
@@ -360,6 +362,7 @@ class WorkspaceController extends ChangeNotifier {
 
   void _register(DocController c) {
     _controllers[c.docId] = c;
+    if (!c.docDirty) c.captureSaved(); // สร้างเมื่อใช้ครั้งแรก = เนื้อหายังเป็นตามไฟล์ (ใช้กับ "ไม่บันทึก" ตอนปิดแท็บ)
     c.addListener(_onDocChanged);
   }
 
@@ -803,19 +806,29 @@ class WorkspaceController extends ChangeNotifier {
     return true;
   }
 
-  /// ปิดแท็บ (เอกสารยังอยู่ในโปรเจกต์) — ถ้าเป็นแท็บที่ใช้งาน จะย้ายไปแท็บข้างเคียง
+  /// ปิดแท็บ (เอกสารยังอยู่ในโปรเจกต์ เปิดใหม่จากตัวสำรวจได้) — ถ้าเป็นแท็บที่ใช้งาน จะย้ายไปแท็บข้างเคียง ;
+  /// ปิดแท็บสุดท้าย = แสดงหน้า Project Home ; ไม่ถามเรื่องยังไม่บันทึก (UI ถามก่อนเรียก — ดู `closeTabWithPrompt`)
   void closeTab(String id) {
     final tabs = openTabIds;
     final i = tabs.indexOf(id);
     if (i < 0) return;
     final wasActive = activeId == id;
     _open.remove(id);
-    if (wasActive) {
-      final rest = openTabIds;
-      _setActive(rest.isEmpty ? _mainEr.docId : rest[(i > 0 ? i - 1 : 0).clamp(0, rest.length - 1)]);
+    final rest = openTabIds;
+    if (rest.isEmpty) {
+      _setActive(_mainEr.docId);
+      _page = WorkspacePage.home;
+    } else if (wasActive) {
+      _setActive(rest[(i > 0 ? i - 1 : 0).clamp(0, rest.length - 1)]);
     }
     notifyListeners();
   }
+
+  /// แท็บของเอกสาร [id] เปิดอยู่หรือไม่
+  bool isTabOpen(String id) => _open.contains(id) && _workspace.documentById(id)?.type != null;
+
+  /// ย้อนเนื้อหาเอกสาร [id] กลับเป็นตอนบันทึกล่าสุด (Ctrl+Z ย้อนได้) — การเพิ่ม/เปลี่ยนชื่อเอกสารไม่ถูกย้อน
+  bool revertDocument(String id) => _controllers[id]?.revertToSaved() ?? false;
 
   /// ย้ายแท็บไปตำแหน่ง [toIndex] (ตำแหน่งในรายการแท็บหลังเอาแท็บนั้นออกแล้ว) — ลำดับเอกสารในไฟล์เปลี่ยนตาม
   /// เอกสารที่ไม่มีแท็บคงตำแหน่งสัมพัทธ์เดิมในไฟล์
