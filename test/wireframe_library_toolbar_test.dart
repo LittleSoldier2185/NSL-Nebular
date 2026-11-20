@@ -183,6 +183,21 @@ void main() {
       expect(find.textContaining('ไม่พบชิ้นส่วนที่ตรงกับ'), findsOneWidget);
     });
 
+    testWidgets('พับทุกหมวด: แผงซ้ายยังเต็มความสูง ไม่หดแล้วลอยกลางแนวตั้ง', (tester) async {
+      await boot(tester);
+      double panelH() => tester.getSize(find.byType(WireframeLeftPanel)).height;
+      // ความสูงพื้นที่ใต้แท็บ = แถบเครื่องมือ 44 + แคนวาส
+      final body = 44 + tester.getSize(find.byKey(const ValueKey('wf-canvas'))).height;
+      expect(panelH(), body);
+      for (final c in kWfCategories) {
+        await tester.tap(find.byKey(ValueKey('wf-cat-${c.id}')));
+        await tester.pumpAndSettle();
+      }
+      expect(find.byKey(const ValueKey('wf-kind-button')), findsNothing);
+      expect(panelH(), body);
+      expect(tester.getTopLeft(find.byType(WireframeLeftPanel)).dy, tester.getTopLeft(find.byKey(const ValueKey('wf-toolbar'))).dy);
+    });
+
     testWidgets('สลับมุมมองกริด/รายการ: ชิ้นส่วนเดิมครบ ลากและคลิกได้ และจำค่าไว้ในตั้งค่า', (tester) async {
       await boot(tester);
       final tileSize = tester.getSize(find.byKey(const ValueKey('wf-kind-button')));

@@ -186,6 +186,7 @@ class _HomePageState extends State<HomePage> {
             Row(children: [
               SizedBox(
                 width: leftW,
+                height: double.infinity, // เต็มความสูงเสมอ (Row ให้ความสูงแบบหลวม แผงที่เนื้อหาสั้นจะหดแล้วลอยกลางแนวตั้ง)
                 child: switch (type) {
                   DocType.api => _apiLeft,
                   DocType.flowchart => _fcLeft,
