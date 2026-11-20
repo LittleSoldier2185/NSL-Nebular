@@ -27,6 +27,7 @@ class ProjectExplorer extends StatefulWidget {
 }
 
 class _ProjectExplorerState extends State<ProjectExplorer> {
+
   final _collapsed = <DocType>{};
 
   @override
@@ -68,6 +69,23 @@ class _ProjectExplorerState extends State<ProjectExplorer> {
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
               ),
+            ),
+            IconButton(
+              key: const ValueKey('explorer-fold-all'),
+              tooltip: _collapsed.isEmpty ? tr('พับทุกกลุ่ม') : tr('ขยายทุกกลุ่ม'),
+              style: IconButton.styleFrom(
+                minimumSize: const Size(28, 28),
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: Icon(_collapsed.isEmpty ? Icons.unfold_less_rounded : Icons.unfold_more_rounded, size: 18, color: C.muted),
+              onPressed: () => setState(() {
+                if (_collapsed.isEmpty) {
+                  _collapsed.addAll(DocType.values);
+                } else {
+                  _collapsed.clear();
+                }
+              }),
             ),
             IconButton(
               key: const ValueKey('explorer-home'),

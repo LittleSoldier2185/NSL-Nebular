@@ -54,6 +54,17 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('explorer-group-dfd')));
     await tester.pump();
     expect(row(d1.id), findsNothing);
+    // ปุ่มพับ/ขยายทุกกลุ่ม
+    await tester.tap(find.byKey(const ValueKey('explorer-group-dfd')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('explorer-fold-all')));
+    await tester.pump();
+    expect(row(e2.id), findsNothing);
+    expect(row(d1.id), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('explorer-fold-all')));
+    await tester.pump();
+    expect(row(e2.id), findsOneWidget);
+    expect(row(d1.id), findsOneWidget);
   });
 
   testWidgets('จุด "ยังไม่บันทึก" รายเอกสาร: แท็บ + ตัวสำรวจ ; บันทึกแล้วหาย ; แก้ ER = ขึ้นเฉพาะ ER', (tester) async {

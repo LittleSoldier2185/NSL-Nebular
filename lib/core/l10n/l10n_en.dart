@@ -1959,4 +1959,7 @@ const Map<String, String> kEn = {
   'พิมพ์ {0} เพื่อยืนยัน': 'Type {0} to confirm',
   'ลบการเชื่อมต่อ': 'Delete connection',
   'ลบการเชื่อมต่อฐานข้อมูลที่บันทึกไว้ต้องพิมพ์ชื่อยืนยัน (ลบแล้วกู้คืนไม่ได้)': 'Deleting a saved database connection now requires typing its name (it cannot be undone)',
+  'พับทุกกลุ่ม': 'Collapse all',
+  'ขยายทุกกลุ่ม': 'Expand all',
+  'ตัวสำรวจโปรเจกต์มีปุ่มพับ/ขยายทุกกลุ่มในครั้งเดียว (แบบ VS Code)': 'The project explorer has a button to collapse/expand all groups at once (VS Code style)',
 };
