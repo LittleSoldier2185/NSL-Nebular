@@ -277,13 +277,16 @@ class _Palette extends StatelessWidget {
     final ink = dc.main;
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       _sec(tr('วางวัตถุ')),
-      GridView.count(
-        crossAxisCount: 2,
+      // ความสูงปุ่มคงที่ 56 (ไม่ใช้ childAspectRatio: ความสูงจะผันตามความกว้างแผง แผงแคบแล้วเนื้อหาล้น)
+      GridView(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 6,
-        crossAxisSpacing: 6,
-        childAspectRatio: 1.9,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 6,
+          crossAxisSpacing: 6,
+          mainAxisExtent: 56,
+        ),
         children: [
           tile('dfd-tool-entity', tr('ผู้ใช้ภายนอก'), 'E',
               Container(width: 32, height: 16, decoration: BoxDecoration(border: Border.all(color: ink, width: 1.5))),

@@ -153,4 +153,16 @@ void main() {
     // ชื่อเอกสาร/วัตถุที่ผู้ใช้ตั้งเป็นไทยได้ — ตัวอย่างนี้ใช้ชื่ออังกฤษทั้งหมด
     expect(leaked, isEmpty, reason: '$leaked');
   });
+
+  testWidgets('ปุ่มวางวัตถุไม่ล้นเมื่อแผงซ้ายแคบสุด (ความสูงปุ่มคงที่ ไม่ผันตามความกว้าง)', (tester) async {
+    await boot(tester);
+    final settings = tester.element(find.byType(HomePage)).read<AppSettings>();
+    settings.layout.setLeft(PanelLayout.kLeftMin);
+    await tester.pumpAndSettle();
+    // เทสต์ล้มเองถ้ามี RenderFlex overflow ; ตรวจเพิ่มว่าทุกปุ่มสูงเท่ากัน 56
+    for (final k in ['entity', 'process', 'store', 'boundary']) {
+      expect(tester.getSize(find.byKey(ValueKey('dfd-tool-$k'))).height, 56, reason: k);
+    }
+    expect(tester.takeException(), isNull);
+  });
 }
