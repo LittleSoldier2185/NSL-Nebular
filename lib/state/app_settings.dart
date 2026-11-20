@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../core/l10n/l10n.dart';
+import '../core/models/wireframe_model.dart' show WfKind;
 import '../core/storage/recent_files.dart';
 
 /// ขนาดแผงที่ผู้ใช้ลากปรับได้ (แผงซ้าย/ขวา กว้างกี่ px, แผง SQL ด้านล่างสูงกี่ px)
@@ -95,6 +96,8 @@ class AppSettings extends ChangeNotifier {
     bool flowAnimation = false,
     bool flowAlways = false,
     bool showExplorer = false,
+    List<String> wfRecent = const [],
+    bool wfLibraryList = false,
     FlowSpeed flowSpeed = FlowSpeed.normal,
     String? lastSeenVersion,
     PanelLayout? layout,
@@ -111,6 +114,8 @@ class AppSettings extends ChangeNotifier {
         _flowAlways = flowAlways,
         // ignore: prefer_initializing_formals
         _showExplorer = showExplorer,
+        _wfRecent = [...wfRecent],
+        _wfList = wfLibraryList,
         // ignore: prefer_initializing_formals
         _flowSpeed = flowSpeed,
         _lang = lang ?? Lang.th,
@@ -134,6 +139,8 @@ class AppSettings extends ChangeNotifier {
   bool _flowAnim;
   bool _flowAlways;
   bool _showExplorer;
+  List<String> _wfRecent;
+  bool _wfList;
   FlowSpeed _flowSpeed;
   String? _lastSeen;
   RecentFiles _recent;
@@ -218,6 +225,8 @@ class AppSettings extends ChangeNotifier {
           flowAnimation: m['flowAnim'] != false,
           flowAlways: m['flowAll'] != false,
           showExplorer: m['explorer'] != false,
+          wfRecent: [for (final x in (m['wfRecent'] is List ? m['wfRecent'] as List : const [])) if (x is String) x],
+          wfLibraryList: m['wfList'] == true,
           flowSpeed: FlowSpeed.fromName(m['flowSpeed']),
           lastSeenVersion: m['seen'] as String?,
           layout: PanelLayout.fromJson(m['layout']),
@@ -284,6 +293,32 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// ชิ้นส่วน Wireframe ที่ใช้ล่าสุด (ใหม่สุดก่อน ไม่เกิน [kWfRecentMax]) — เก็บในไฟล์ตั้งค่าของเครื่องนี้ ไม่ลงไฟล์โปรเจกต์ ; ชื่อที่ไม่รู้จัก (รุ่นอื่น) ถูกข้าม
+  List<WfKind> get wfRecentKinds => [
+        for (final n in _wfRecent)
+          for (final k in WfKind.values)
+            if (k.name == n) k,
+      ];
+
+  static const int kWfRecentMax = 6;
+
+  /// มุมมองคลังชิ้นส่วน Wireframe: false = กริดรูปย่อ (แบบ A) · true = รายการ (แบบ B)
+  bool get wfLibraryList => _wfList;
+
+  void setWfLibraryList(bool v) {
+    if (_wfList == v) return;
+    _wfList = v;
+    _save();
+    notifyListeners();
+  }
+
+  void addWfRecent(WfKind k) {
+    if (_wfRecent.isNotEmpty && _wfRecent.first == k.name) return;
+    _wfRecent = [k.name, ..._wfRecent.where((n) => n != k.name)].take(kWfRecentMax).toList();
+    _save();
+    notifyListeners();
+  }
+
   void setFlowSpeed(FlowSpeed v) {
     if (_flowSpeed == v) return;
     _flowSpeed = v;
@@ -304,6 +339,8 @@ class AppSettings extends ChangeNotifier {
         'flowAnim': _flowAnim,
         'flowAll': _flowAlways,
         'explorer': _showExplorer,
+        if (_wfRecent.isNotEmpty) 'wfRecent': _wfRecent,
+        if (_wfList) 'wfList': true,
         'flowSpeed': _flowSpeed.name,
         if (_lastSeen != null) 'seen': _lastSeen,
         'layout': layout.toJson(),

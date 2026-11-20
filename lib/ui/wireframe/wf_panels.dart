@@ -17,34 +17,62 @@ import '../issue_widgets.dart';
 import '../prompt_dialog.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import '../../state/app_settings.dart';
+import 'wf_library.dart';
 import 'wf_actions.dart';
 import 'wf_painter.dart';
 import 'wf_view.dart';
 import '../api/api_ref_picker.dart';
 
-/// แผงซ้ายของแท็บ Wireframe: คลังชิ้นส่วน (ค้นได้ คลิก = เลือกเครื่องมือ / ลากไปวาง) ; รายการชิ้นส่วนบนหน้าจอ (เลเยอร์) อยู่ล่างสุดของแผงขวา
+/// แผงซ้ายของแท็บ Wireframe (Phase 18, ดีไซน์แบบ A): ค้นหา · ใช้ล่าสุด · คลังชิ้นส่วน 6 หมวดพับได้ (ช่อง 3 คอลัมน์พร้อมรูปย่อ)
+/// คลิกช่อง = เลือกเครื่องมือวาง / ลากไปวางบนแคนวาส ; รายการชิ้นส่วนบนหน้าจอ (เลเยอร์) อยู่ล่างสุดของแผงขวา
 class WireframeLeftPanel extends StatefulWidget {
   const WireframeLeftPanel({super.key});
+
+  /// โฟกัสช่องค้นหาของแผงที่เปิดอยู่ (ปุ่ม "เพิ่มเติม" บนแถบเครื่องมือเรียก) — ไม่มีแผง = ไม่ทำอะไร
+  static void focusSearch() => _WireframeLeftPanelState._active?._focus.requestFocus();
 
   @override
   State<WireframeLeftPanel> createState() => _WireframeLeftPanelState();
 }
 
 class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
+  static _WireframeLeftPanelState? _active;
+
+  final _focus = FocusNode(debugLabel: 'wf-search');
   String _q = '';
+  final _closed = <String>{}; // หมวดที่พับอยู่ (ค่าเริ่มต้น: เปิดทุกหมวด ; ขณะค้นหาเปิดหมด)
+
+  @override
+  void initState() {
+    super.initState();
+    _active = this;
+  }
+
+  @override
+  void dispose() {
+    if (_active == this) _active = null;
+    _focus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     context.watch<WireframeController>(); // วาดใหม่เมื่อคลังเปลี่ยน
     final w = context.watch<WorkspaceController>();
+    final recent = context.select<AppSettings, List<WfKind>>((s) => s.wfRecentKinds);
+    final asList = context.select<AppSettings, bool>((s) => s.wfLibraryList);
     final q = _q.trim().toLowerCase();
-    bool match(String s) => q.isEmpty || s.toLowerCase().contains(q);
-    final kinds = [for (final k in kWfLibraryKinds) if (match('${wfKindLabel(k)} ${k.name}')) k];
-    Widget section(String title, int n) => Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+    bool match(WfKind k) => q.isEmpty || '${wfKindLabel(k)} ${k.name}'.toLowerCase().contains(q);
+    final cats = [
+      for (final c in kWfCategories)
+        if (c.kinds.any(match)) (c, [for (final k in c.kinds) if (match(k)) k]),
+    ];
+    Widget section(String title, {int? n}) => Padding(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
           child: Text.rich(TextSpan(children: [
-            TextSpan(text: title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5)),
-            TextSpan(text: ' ($n)', style: TextStyle(color: C.muted, fontSize: 12.5)),
+            TextSpan(text: title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11.5, color: C.muted)),
+            if (n != null) TextSpan(text: '   $n', style: TextStyle(fontSize: 11.5, color: C.muted)),
           ])),
         );
 
@@ -52,7 +80,9 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
       decoration: BoxDecoration(border: Border(right: BorderSide(color: C.border))),
       child: Material(
         color: C.surface,
-        child: ListView(padding: EdgeInsets.zero, children: [
+        child: SingleChildScrollView(
+          // ชิ้นส่วนมีไม่กี่สิบชิ้น สร้างพร้อมกันทั้งหมด (ไม่ใช้รายการแบบสร้างเมื่อเลื่อนถึง) เพื่อให้ทุกช่องมีอยู่ในต้นไม้วิดเจ็ตเสมอ
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
             child: Text(w.activeDocument.name,
@@ -60,35 +90,116 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
-            child: SizedBox(
-              height: kFieldHeight,
-              child: TextField(
-                key: const ValueKey('wf-search'),
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: tr('ค้นหาชิ้นส่วน'),
-                  prefixIcon: const Icon(Icons.search_rounded, size: 16),
+            child: Row(children: [
+              Expanded(
+                child: SizedBox(
+                  height: kFieldHeight,
+                  child: TextField(
+                    key: const ValueKey('wf-search'),
+                    focusNode: _focus,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: tr('ค้นหาชิ้นส่วน'),
+                      prefixIcon: const Icon(Icons.search_rounded, size: 16),
+                    ),
+                    onChanged: (v) => setState(() => _q = v),
+                  ),
                 ),
-                onChanged: (v) => setState(() => _q = v),
+              ),
+              const SizedBox(width: 6),
+              // สลับมุมมองคลัง: กริดรูปย่อ / รายการ
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(color: C.field, borderRadius: BorderRadius.circular(8)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  _viewBtn('wf-view-grid', Icons.grid_view_rounded, tr('มุมมองกริด'), !asList, () => context.read<AppSettings>().setWfLibraryList(false)),
+                  _viewBtn('wf-view-list', Icons.view_list_rounded, tr('มุมมองรายการ'), asList, () => context.read<AppSettings>().setWfLibraryList(true)),
+                ]),
+              ),
+            ]),
+          ),
+          if (q.isEmpty && recent.isNotEmpty) ...[
+            section(tr('ใช้ล่าสุด')),
+            _items(asList, [for (final k in recent.take(3)) k], recent: true),
+          ],
+          for (final (c, kinds) in cats) ...[
+            InkWell(
+              key: ValueKey('wf-cat-${c.id}'),
+              onTap: q.isNotEmpty ? null : () => setState(() => _closed.contains(c.id) ? _closed.remove(c.id) : _closed.add(c.id)),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 14, 4),
+                child: Row(children: [
+                  Icon(q.isEmpty && _closed.contains(c.id) ? Icons.chevron_right_rounded : Icons.expand_more_rounded, size: 16, color: C.muted),
+                  const SizedBox(width: 2),
+                  Expanded(child: Text(c.label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11.5, color: C.muted))),
+                  Text('${kinds.length}', style: TextStyle(fontSize: 11.5, color: C.muted)),
+                ]),
               ),
             ),
-          ),
-          section(tr('คลังชิ้นส่วน'), kinds.length),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 2, 10, 4),
-            child: Wrap(spacing: 6, runSpacing: 6, children: [for (final k in kinds) _KindTile(kind: k)]),
-          ),
+            if (q.isNotEmpty || !_closed.contains(c.id)) _items(asList, kinds),
+          ],
+          if (cats.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(tr('ไม่พบชิ้นส่วนที่ตรงกับ "{0}"', [_q.trim()]), textAlign: TextAlign.center, style: TextStyle(fontSize: 12.5, color: C.muted)),
+            ),
           const SizedBox(height: 16),
-        ]),
+          ]),
+        ),
       ),
     );
   }
+
+  Widget _viewBtn(String key, IconData icon, String tip, bool on, VoidCallback onTap) => Tooltip(
+        message: tip,
+        child: InkWell(
+          key: ValueKey(key),
+          borderRadius: BorderRadius.circular(6),
+          onTap: onTap,
+          child: Container(
+            width: 28,
+            height: kFieldHeight - 6,
+            decoration: BoxDecoration(
+              color: on ? C.surface : Colors.transparent,
+              borderRadius: BorderRadius.circular(6),
+              boxShadow: on ? [BoxShadow(color: C.palette.shadow.withValues(alpha: 0.12), blurRadius: 2, offset: const Offset(0, 1))] : null,
+            ),
+            child: Icon(icon, size: 16, color: on ? C.primaryDark : C.muted),
+          ),
+        ),
+      );
+
+  /// ชิ้นส่วนของหนึ่งหมวด (หรือแถว "ใช้ล่าสุด") ตามมุมมองที่เลือก : กริดรูปย่อ 3 คอลัมน์ / รายการ
+  Widget _items(bool asList, List<WfKind> kinds, {bool recent = false}) => asList
+      ? Padding(
+          padding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
+          child: Column(children: [for (final k in kinds) _KindRow(kind: k, recent: recent)]),
+        )
+      : _grid([for (final k in kinds) _KindTile(kind: k, recent: recent)]);
+
+  /// กริด 3 คอลัมน์ ความสูงช่องคงที่ (ไม่ผันตามความกว้างแผง)
+  Widget _grid(List<Widget> tiles) => Padding(
+        padding: const EdgeInsets.fromLTRB(10, 2, 10, 2),
+        child: GridView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            mainAxisSpacing: 6,
+            crossAxisSpacing: 6,
+            mainAxisExtent: 58,
+          ),
+          children: tiles,
+        ),
+      );
 }
 
-/// ช่องหนึ่งในคลังชิ้นส่วน: ไอคอน + ชื่อ — คลิก = เลือกเครื่องมือ, ลากไปวางบนแคนวาสได้
+/// ช่องหนึ่งในคลังชิ้นส่วน: รูปย่อ + ชื่อ — คลิก = เลือกเครื่องมือ, ลากไปวางบนแคนวาสได้ ; [recent] = ช่องในแถว "ใช้ล่าสุด" (key ต่างกันไม่ชนกับช่องในหมวด)
 class _KindTile extends StatelessWidget {
-  const _KindTile({required this.kind});
+  const _KindTile({required this.kind, this.recent = false});
   final WfKind kind;
+  final bool recent;
 
   @override
   Widget build(BuildContext context) {
@@ -96,29 +207,29 @@ class _KindTile extends StatelessWidget {
     final on = f.tool == WfTool.place && f.toolKind == kind;
     final k = wfKindShortcut(kind);
     final tile = Container(
-      width: 74,
-      height: 54,
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
       decoration: BoxDecoration(
-        color: on ? C.primaryTint : C.bg,
-        border: Border.all(color: on ? C.primary : C.border),
-        borderRadius: BorderRadius.circular(6),
+        color: on ? C.primaryTint : C.surface,
+        border: Border.all(color: on ? C.primary : C.borderSoft),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(wfKindIcon(kind), size: 18, color: on ? C.primaryDark : C.muted),
+        WfKindThumb(kind, color: on ? C.primaryDark : C.muted),
         const SizedBox(height: 3),
         Text(wfKindLabel(kind),
-            maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 10.5, color: on ? C.primaryDark : C.text)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10.5, color: on ? C.primaryDark : C.text, fontWeight: on ? FontWeight.w600 : FontWeight.w400)),
       ]),
     );
     return Tooltip(
       message: k.isEmpty ? wfKindLabel(kind) : '${wfKindLabel(kind)} ($k)',
       child: Draggable<Object>(
         data: kind,
-        feedback: Material(color: Colors.transparent, child: Opacity(opacity: 0.8, child: tile)),
+        feedback: Material(color: Colors.transparent, child: Opacity(opacity: 0.8, child: SizedBox(width: 74, height: 58, child: tile))),
         child: InkWell(
-          key: ValueKey('wf-kind-${kind.name}'),
-          borderRadius: BorderRadius.circular(6),
+          key: ValueKey(recent ? 'wf-recent-${kind.name}' : 'wf-kind-${kind.name}'),
+          borderRadius: BorderRadius.circular(8),
           onTap: () => f.setPlaceTool(kind),
           child: tile,
         ),
@@ -1226,4 +1337,62 @@ class _ThumbPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ThumbPainter old) => version == null || old.version != version || !identical(old.d, d);
+}
+
+/// แถวหนึ่งในคลังชิ้นส่วนมุมมองรายการ (แบบ B): รูปย่อ + ชื่อ + คีย์ลัด — คลิก/ลากเหมือนช่องในกริด
+class _KindRow extends StatelessWidget {
+  const _KindRow({required this.kind, this.recent = false});
+  final WfKind kind;
+  final bool recent;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = context.watch<WireframeController>();
+    final on = f.tool == WfTool.place && f.toolKind == kind;
+    final k = wfKindShortcut(kind);
+    final row = Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: on ? C.primaryTint : Colors.transparent,
+        border: Border.all(color: on ? C.primary : Colors.transparent),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(children: [
+        Container(
+          width: 44,
+          height: 28,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: C.canvas, border: Border.all(color: C.borderSoft), borderRadius: BorderRadius.circular(5)),
+          child: WfKindThumb(kind, width: 36, height: 22, color: on ? C.primaryDark : C.muted),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(wfKindLabel(kind),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12.5, color: on ? C.primaryDark : C.text, fontWeight: on ? FontWeight.w600 : FontWeight.w400)),
+        ),
+        if (k.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5),
+            decoration: BoxDecoration(border: Border.all(color: C.border), borderRadius: BorderRadius.circular(4)),
+            child: Text(k, style: TextStyle(fontSize: 10.5, color: C.muted, fontFamily: kMono, fontFamilyFallback: const ['Consolas'])),
+          ),
+      ]),
+    );
+    return Tooltip(
+      message: k.isEmpty ? wfKindLabel(kind) : '${wfKindLabel(kind)} ($k)',
+      child: Draggable<Object>(
+        data: kind,
+        feedback: Material(color: Colors.transparent, child: Opacity(opacity: 0.8, child: SizedBox(width: 210, child: Container(color: C.surface, child: row)))),
+        child: InkWell(
+          key: ValueKey(recent ? 'wf-recent-${kind.name}' : 'wf-kind-${kind.name}'),
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => f.setPlaceTool(kind),
+          child: row,
+        ),
+      ),
+    );
+  }
 }

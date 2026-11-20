@@ -20,6 +20,7 @@ import 'flowchart/fc_view.dart';
 import 'screenflow/sf_panels.dart';
 import 'screenflow/sf_view.dart';
 import 'wireframe/wf_panels.dart';
+import 'wireframe/wf_toolbar.dart';
 import 'wireframe/wf_view.dart';
 import 'diagram_tabs.dart';
 import 'project_explorer.dart';
@@ -219,7 +220,7 @@ class _HomePageState extends State<HomePage> {
                       : isFc
                       ? KeyedSubtree(key: ValueKey('fc-canvas-$docId'), child: _fcCanvas)
                       : type == DocType.wireframe
-                      ? KeyedSubtree(key: ValueKey('wf-canvas-$docId'), child: _wfCanvas)
+                      ? KeyedSubtree(key: ValueKey('wf-canvas-$docId'), child: Column(children: [const WireframeToolbar(), Expanded(child: _wfCanvas)]))
                       : type == DocType.screenflow
                       ? KeyedSubtree(key: ValueKey('sf-canvas-$docId'), child: Column(children: [const ScreenFlowToolbar(), Expanded(child: _sfCanvas)]))
                       : KeyedSubtree(key: ValueKey('dfd-canvas-$docId'), child: _dfdCanvas),

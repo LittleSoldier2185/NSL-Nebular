@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/l10n/l10n.dart';
 import '../../core/models/wireframe_model.dart';
 import '../../core/validate/wireframe_validator.dart';
+import '../../state/app_settings.dart';
 import '../../state/wireframe_controller.dart';
 import '../../state/workspace_controller.dart';
 import '../canvas/box_canvas.dart';
@@ -18,20 +19,6 @@ import 'wf_painter.dart';
 
 /// ชนิดชิ้นส่วนในคลัง ตามลำดับที่แสดง
 const List<WfKind> kWfLibraryKinds = WfKind.values;
-
-/// ชิ้นส่วนที่อยู่ในแถบเครื่องมือบนแคนวาส
-const List<WfKind> kWfToolbarKinds = [
-  WfKind.container,
-  WfKind.label,
-  WfKind.button,
-  WfKind.input,
-  WfKind.checkbox,
-  WfKind.select,
-  WfKind.image,
-  WfKind.table,
-  WfKind.card,
-  WfKind.navbar,
-];
 
 IconData wfKindIcon(WfKind k) => switch (k) {
       WfKind.container => Icons.crop_square_rounded,
@@ -148,6 +135,7 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
 
   void _place(WireframeController c, WfKind k, Offset world) {
     final n = c.addComponent(k, world.dx, world.dy, snap: snap);
+    if (n != null) context.read<AppSettings>().addWfRecent(k); // ใช้ล่าสุด (แถว "ใช้ล่าสุด" ของคลัง + ช่องที่ 5 ของแถบวางด่วน)
     if (n != null && _editable(k)) c.beginEdit(n.id);
   }
 
@@ -279,7 +267,6 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
           onCancel: c.cancelEditing,
           onDone: () => widget.focusNode?.requestFocus(),
         ),
-      Positioned(top: 12, left: 0, right: 0, child: Center(child: FittedBox(fit: BoxFit.scaleDown, child: _Toolbar(compact: size.width < 1000)))),
       Positioned(right: 14, bottom: 14, child: CanvasZoomBar(controller: c, size: size, keyPrefix: 'wf')),
       if (c.diagram.components.isEmpty)
         Positioned(
@@ -302,52 +289,6 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
     if (r.height < minH) r = Rect.fromLTWH(r.left, r.top, r.width, minH);
     if (r.width < 120) r = Rect.fromLTWH(r.left, r.top, 120, r.height);
     return r;
-  }
-}
-
-class _Toolbar extends StatelessWidget {
-  const _Toolbar({this.compact = false});
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
-    String tip(WfKind k) {
-      final s = wfKindShortcut(k);
-      return s.isEmpty ? wfKindLabel(k) : '${wfKindLabel(k)} ($s)';
-    }
-
-    final style = f.diagram.style;
-    return CanvasToolbarBox(children: [
-      canvasToolItem(
-          key: const ValueKey('wf-tool-pointer'),
-          label: tr('เลือก'),
-          icon: Icons.near_me_outlined,
-          on: f.tool == WfTool.select,
-          onTap: () => f.setTool(WfTool.select),
-          showLabel: !compact),
-      canvasToolDivider(),
-      for (final k in compact ? kWfToolbarKinds.take(6) : kWfToolbarKinds)
-        canvasToolItem(
-            key: ValueKey('wf-tool-${k.name}'),
-            label: tip(k),
-            icon: wfKindIcon(k),
-            on: f.tool == WfTool.place && f.toolKind == k,
-            onTap: () => f.setPlaceTool(k)),
-      canvasToolDivider(),
-      canvasToolItem(
-          key: const ValueKey('wf-style-sketch'),
-          label: wfStyleLabel(WfStyle.sketch),
-          icon: Icons.gesture_rounded,
-          on: style == WfStyle.sketch,
-          onTap: () => f.setStyle(WfStyle.sketch)),
-      canvasToolItem(
-          key: const ValueKey('wf-style-clean'),
-          label: wfStyleLabel(WfStyle.clean),
-          icon: Icons.auto_awesome_mosaic_outlined,
-          on: style == WfStyle.clean,
-          onTap: () => f.setStyle(WfStyle.clean)),
-    ]);
   }
 }
 

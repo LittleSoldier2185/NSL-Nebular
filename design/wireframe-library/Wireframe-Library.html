@@ -1,0 +1,270 @@
+<title>Wireframe Library Panel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: แถบเครื่องมือเต็มความกว้างอยู่บนสุด แล้ววางคลังชิ้นส่วน 3 แบบเทียบกันใต้แถบ ใช้สถานะเดียวกัน (ค้นหา ใช้ล่าสุด เครื่องมือที่เลือก) */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --field:#F3F5F8; --fg:#1B2430; --muted:#5B6778;
+  --line:#D8DEE6; --soft:#E6EAF0; --accent:#B7791F; --accent-ink:#8A5A12; --accent-tint:#FBF1DC;
+  --canvas:#F6F8FB; --on-accent:#FFFFFF;
+  --sans:'Noto Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171E; --surface:#1A212B; --field:#222B37; --fg:#E6EBF2; --muted:#9AA7B8;
+  --line:#2D3846; --soft:#263140; --accent:#E0A94A; --accent-ink:#F1C77E; --accent-tint:#3A2F18;
+  --canvas:#161C24; --on-accent:#1B1406; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171E; --surface:#1A212B; --field:#222B37; --fg:#E6EBF2; --muted:#9AA7B8;
+  --line:#2D3846; --soft:#263140; --accent:#E0A94A; --accent-ink:#F1C77E; --accent-tint:#3A2F18;
+  --canvas:#161C24; --on-accent:#1B1406; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+h1{font-size:22px;margin:0 0 4px;text-wrap:balance}
+h2{font-size:15px;margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* แถบเครื่องมือจำลอง */
+.tb{background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;gap:6px;padding:7px 12px;flex-wrap:wrap;min-height:44px}
+.tb .sep{width:1px;height:20px;background:var(--line);margin:0 6px}
+.segbox{display:flex;padding:2px;border-radius:9px;background:var(--field);gap:2px}
+.tbtn{height:30px;padding:0 10px;border:0;border-radius:7px;background:none;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--fg)}
+.tbtn svg{width:15px;height:15px;flex:none}
+.tbtn[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 2px rgba(15,23,42,.18);font-weight:600;color:var(--accent-ink)}
+.tbtn.solid[aria-pressed="true"]{background:var(--accent-tint);box-shadow:none}
+.more{border:1px dashed var(--line);border-radius:8px;height:30px;padding:0 10px;font-size:12px;background:none;cursor:pointer}
+.dd{height:30px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 10px;font-size:12px;display:flex;align-items:center;gap:8px}
+.dd .mono{font-family:var(--mono);color:var(--muted);font-size:11px}
+.grow{flex:1}
+.chipok{font-size:11.5px;padding:2px 9px;border-radius:99px;background:var(--accent-tint);color:var(--accent-ink);font-weight:600}
+.tb label{display:flex;gap:6px;align-items:center;font-size:12px}
+.tb input{accent-color:var(--accent)}
+.cta{height:30px;border:0;border-radius:8px;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:600;padding:0 12px}
+.state{font-size:12.5px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.state b{font-family:var(--mono);font-weight:500;background:var(--field);padding:1px 7px;border-radius:5px}
+
+/* คลัง */
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:start}
+@media (max-width:980px){.opts{grid-template-columns:minmax(0,1fr)}}
+.opt{display:flex;flex-direction:column;gap:10px;min-width:0}
+.opt-head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;background:var(--accent-tint);color:var(--accent-ink)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;width:100%;max-width:300px;height:640px;display:flex;flex-direction:column;overflow:hidden}
+.pscroll{overflow:auto;flex:1;padding:0 12px 12px;display:flex;flex-direction:column;gap:12px}
+.phead{padding:12px 12px 8px;display:flex;flex-direction:column;gap:8px}
+.pname{font-weight:600;font-size:14px}
+.search{display:flex;align-items:center;gap:8px;height:30px;border-radius:8px;background:var(--field);padding:0 10px;color:var(--muted)}
+.search input{border:0;background:none;flex:1;min-width:0;font:inherit;font-size:12.5px;color:var(--fg);outline:none}
+.search:focus-within{outline:2px solid var(--accent)}
+.sec{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;display:flex;align-items:center;gap:6px}
+.sec .n{margin-left:auto;font-weight:500}
+.fold{border:0;background:none;display:flex;width:100%;align-items:center;gap:6px;padding:4px 0;cursor:pointer;text-align:left}
+.fold svg{width:12px;height:12px;transition:transform .12s}
+.fold[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.grid{display:grid;gap:6px}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tile{border:1px solid var(--soft);border-radius:8px;background:var(--surface);height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-size:10.5px;padding:2px;min-width:0}
+.tile svg{width:30px;height:20px;color:var(--muted);flex:none}
+.tile span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile:hover{border-color:var(--line)}
+.tile[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-tint);color:var(--accent-ink);font-weight:600}
+.tile[aria-pressed="true"] svg{color:var(--accent-ink)}
+.row{display:flex;align-items:center;gap:10px;border:1px solid transparent;border-radius:8px;padding:5px 8px;cursor:pointer;background:none;width:100%;text-align:left;font-size:12.5px}
+.row svg{width:44px;height:28px;flex:none;color:var(--muted);background:var(--canvas);border:1px solid var(--soft);border-radius:5px}
+.row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .kb{font-family:var(--mono);font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+.row:hover{background:var(--field)}
+.row[aria-pressed="true"]{background:var(--accent-tint);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.row[aria-pressed="true"] svg{color:var(--accent-ink)}
+.pills{display:flex;gap:5px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:var(--surface);border-radius:99px;font-size:11.5px;padding:2px 9px;cursor:pointer}
+.pill[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.big{border:1px solid var(--soft);border-radius:10px;background:var(--surface);cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:8px;min-width:0;text-align:left}
+.big .pv{background:var(--canvas);border-radius:6px;height:54px;display:flex;align-items:center;justify-content:center}
+.big svg{width:76px;height:44px;color:var(--muted)}
+.big span{font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.big[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-tint)}
+.big[aria-pressed="true"] svg,.big[aria-pressed="true"] span{color:var(--accent-ink);font-weight:600}
+.empty{font-size:12.5px;color:var(--muted);padding:18px 4px;text-align:center}
+.recent{display:flex;gap:6px}
+.decide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:820px){.decide{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+ul{margin:8px 0 0;padding-left:18px}
+li{margin:3px 0}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Wireframe: แถบเครื่องมือและคลังชิ้นส่วน</h1>
+    <p class="muted">ตอนนี้คลังเป็นกระดานปุ่ม 45 ช่องเรียงต่อกันไม่แบ่งหมวด และแถบเครื่องมือลอยมีแค่ 10 ชิ้น ข้อเสนอคือ แถบเครื่องมือเต็มความกว้างเหมือน DFD / Screen Flow และคลังแบ่ง 6 หมวด ลองกดได้ทุกอย่าง สถานะ (ค้นหา ใช้ล่าสุด เครื่องมือที่เลือก) ใช้ร่วมกันทั้ง 3 แบบ</p>
+  </header>
+
+  <section>
+    <h2 style="margin-bottom:8px">แถบเครื่องมือ (ข้อเสนอเดียว ใช้กับทุกแบบ)</h2>
+    <div class="tb" id="toolbar"></div>
+    <div class="state" style="margin-top:10px"><span>เครื่องมือตอนนี้: <b id="curTool">เลือก</b></span><span class="note">ปุ่มวางด่วน 5 ชิ้นแรกคือชิ้นที่ใช้บ่อยสุด ปุ่ม "เพิ่มเติม" เปิดคลังเต็ม (หรือกด / เพื่อค้นหา) ชิ้นที่ใช้ล่าสุดสลับเข้ามาแทนช่องท้ายแถว</span></div>
+  </section>
+
+  <section class="opts" id="opts"></section>
+
+  <section class="decide">
+    <div class="card">
+      <h2>6 หมวดที่ใช้ (ครบ 45 ชิ้นที่มีอยู่)</h2>
+      <ul class="note" id="cats"></ul>
+    </div>
+    <div class="card">
+      <h2>ที่ต้องตัดสินใจ</h2>
+      <ul>
+        <li>เลือกคลังแบบ A, B หรือ C (หรือผสม เช่น C ที่สลับเป็นรายการได้)</li>
+        <li>แถบเครื่องมือ: เอาตามข้อเสนอ หรือคงแถบลอยเดิมบนแคนวาสไว้</li>
+        <li>ย้ายตัวเลือกอุปกรณ์ (Desktop / Tablet / Mobile) และ Sketch/Clean จากแผงขวามาอยู่แถบเครื่องมือ หรือคงที่เดิม</li>
+        <li>เพิ่มส่วน "ใช้ล่าสุด" ไหม (เก็บในเครื่อง ไม่ลงไฟล์โปรเจกต์)</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+var CATS = [
+  ['layout', 'โครงหน้า', ['container','card','navbar','sidebar','footer','modal','tabs','accordion','divider']],
+  ['text', 'ข้อความ', ['heading','label','paragraph','link','breadcrumb']],
+  ['form', 'ฟอร์ม', ['button','input','textarea','checkbox','radio','toggle','select','slider','search','datepicker','upload','rating']],
+  ['data', 'ข้อมูล', ['table','list','tree','chart','stat','calendar','pagination']],
+  ['media', 'สื่อ', ['image','icon','avatar','video','map']],
+  ['status', 'สถานะ', ['badge','chip','progress','alert','stepper','tooltip','skeleton']]
+];
+var NAMES = {container:'กล่อง',heading:'หัวข้อ',label:'ข้อความ',paragraph:'ย่อหน้า',button:'ปุ่ม',input:'ช่องกรอก',textarea:'ช่องหลายบรรทัด',checkbox:'ช่องติ๊ก',radio:'ปุ่มเลือก',toggle:'สวิตช์',select:'รายการเลือก',slider:'แถบเลื่อน',search:'ค้นหา',image:'รูปภาพ',icon:'ไอคอน',avatar:'อวตาร',table:'ตาราง',list:'รายการ',card:'การ์ด',tabs:'แท็บ',navbar:'แถบนำทาง',sidebar:'แถบข้าง',modal:'หน้าต่างย่อย',divider:'เส้นคั่น',badge:'ป้าย',pagination:'แบ่งหน้า',breadcrumb:'เส้นทาง',map:'แผนที่',chart:'กราฟ',link:'ลิงก์',chip:'ชิป',progress:'ความคืบหน้า',alert:'แจ้งเตือน',datepicker:'เลือกวันที่',upload:'อัปโหลด',stepper:'ขั้นตอน',rating:'ให้คะแนน',video:'วิดีโอ',accordion:'พับได้',footer:'ท้ายหน้า',tooltip:'คำแนะนำ',skeleton:'โครงโหลด',calendar:'ปฏิทิน',stat:'ตัวเลขสรุป',tree:'ต้นไม้'};
+var KEYS = {label:'T',button:'B',container:'R',image:'I',input:'F'};
+var QUICK = ['label','button','input','container','image'];
+
+var S = { q: '', tool: 'select', recent: [], open: { layout:true, text:true, form:true, data:false, media:false, status:false }, pill: 'all', view: 'grid' };
+var $ = function (id) { return document.getElementById(id); };
+
+/* ---- รูปย่อของแต่ละชิ้น (viewBox 44x28) ---- */
+function r(x,y,w,h,o){o=o||{};return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+(o.r||2)+'"'+(o.f?' fill="currentColor" fill-opacity=".22"':' fill="none"')+(o.d?' stroke-dasharray="3 2"':'')+'/>';}
+function l(a,b,c,d,w){return '<path d="M'+a+' '+b+'L'+c+' '+d+'"'+(w?' stroke-width="'+w+'"':'')+'/>';}
+function c(x,y,rad,f){return '<circle cx="'+x+'" cy="'+y+'" r="'+rad+'"'+(f?' fill="currentColor"':' fill="none"')+'/>';}
+function p(d){return '<path d="'+d+'" fill="none"/>';}
+var TH = {
+  container:r(3,3,38,22,{d:1}), heading:l(5,12,32,12,3.4)+l(5,19,20,19), label:l(5,14,28,14), paragraph:l(5,8,38,8)+l(5,14,38,14)+l(5,20,26,20),
+  button:r(8,8,28,12,{r:6,f:1}), input:r(3,8,38,12,{r:3})+l(7,14,18,14), textarea:r(3,3,38,22,{r:3})+l(7,9,30,9)+l(7,14,24,14),
+  checkbox:r(5,9,10,10,{r:2})+p('M7 14l2 2 4-4')+l(20,14,38,14), radio:c(10,14,5)+c(10,14,2,1)+l(20,14,38,14),
+  toggle:r(8,9,28,10,{r:5,f:1})+c(30,14,3.4,1), select:r(3,8,38,12,{r:3})+p('M30 12l3 3 3-3'), slider:l(4,14,40,14)+c(20,14,4,1),
+  search:r(3,8,38,12,{r:6})+c(12,14,3)+l(14,16,17,19), image:r(3,3,38,22)+p('M3 21l10-8 8 6 6-4 14 8')+c(12,9,2),
+  icon:p('M22 6l3 7 7 .6-5.4 4.6 1.8 7L22 21l-6.4 4.2 1.8-7L12 13.6 19 13z'), avatar:c(22,14,11)+c(22,11,3.4)+p('M14 22c2-5 14-5 16 0'),
+  table:r(3,3,38,22)+l(3,10,41,10)+l(3,17,41,17)+l(16,3,16,25), list:c(7,8,1.6,1)+l(12,8,38,8)+c(7,14,1.6,1)+l(12,14,38,14)+c(7,20,1.6,1)+l(12,20,38,20),
+  card:r(3,3,38,22,{r:3})+r(3,3,38,9,{f:1,r:3})+l(8,18,30,18), tabs:l(3,12,41,12)+r(5,5,12,7,{f:1})+l(22,8,30,8)+l(34,8,40,8),
+  navbar:r(2,3,40,8,{f:1})+l(6,7,12,7)+l(26,7,32,7)+l(35,7,40,7), sidebar:r(2,2,40,24)+r(2,2,12,24,{f:1}), modal:r(2,2,40,24,{d:1})+r(9,6,26,16,{r:3})+l(13,11,30,11),
+  divider:l(3,14,41,14), badge:r(12,9,20,10,{r:5,f:1}), pagination:r(4,9,8,10)+r(15,9,8,10,{f:1})+r(26,9,8,10)+l(36,14,40,14),
+  breadcrumb:l(4,14,12,14)+p('M15 11l3 3-3 3')+l(21,14,29,14)+p('M32 11l3 3-3 3')+l(37,14,40,14), map:p('M22 24s-8-7-8-13a8 8 0 0116 0c0 6-8 13-8 13z')+c(22,11,2.6),
+  chart:r(5,14,6,10,{f:1})+r(15,8,6,16,{f:1})+r(25,12,6,12,{f:1})+l(3,25,41,25), link:l(6,16,32,16)+l(6,11,26,11), chip:r(8,9,28,10,{r:5})+c(14,14,2,1)+l(19,14,31,14),
+  progress:r(3,11,38,6,{r:3})+r(3,11,22,6,{r:3,f:1}), alert:r(3,6,38,16,{r:3})+c(9,14,2,1)+l(15,14,36,14), datepicker:r(3,8,38,12,{r:3})+r(29,10,8,8)+l(29,13,37,13),
+  upload:r(3,4,38,20,{d:1,r:3})+p('M22 19v-8M18 14l4-4 4 4'), stepper:c(8,14,3.4,1)+l(11,14,19,14)+c(22,14,3.4)+l(25,14,33,14)+c(36,14,3.4),
+  rating:p('M6 11l1.5 3 3.3.4-2.4 2.3.6 3.3L6 18.4 3 20l.6-3.3-2.4-2.3 3.3-.4z').replace('M6','M7')+c(18,14,3)+c(26,14,3)+c(34,14,3), video:r(3,3,38,22,{r:3})+p('M19 9l9 5-9 5z'),
+  accordion:r(3,3,38,7)+r(3,12,38,13)+p('M33 5l2 2 2-2')+l(7,18,30,18), footer:r(2,3,40,22)+r(2,19,40,6,{f:1}), tooltip:r(5,4,34,14,{r:3,f:1})+p('M19 18l3 4 3-4')+l(10,11,34,11),
+  skeleton:r(4,5,12,12,{f:1,r:6})+l(20,8,38,8,3)+l(20,14,32,14,3)+l(4,22,38,22,3), calendar:r(3,3,38,22,{r:2})+l(3,9,41,9)+c(11,15,1,1)+c(18,15,1,1)+c(25,15,1,1)+c(32,15,1,1)+c(11,20,1,1)+c(18,20,1,1),
+  stat:r(3,3,38,22,{r:3})+l(8,12,24,12,4)+l(8,19,20,19), tree:c(6,6,1.6,1)+l(10,6,26,6)+l(12,12,12,20)+l(12,13,16,13)+l(16,13,32,13)+l(12,20,16,20)+l(16,20,30,20)
+};
+function thumb(k){return '<svg viewBox="0 0 44 28" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(TH[k]||'')+'</svg>';}
+
+/* ---- แถบเครื่องมือ ---- */
+var ICON_PTR = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2l9 5-4 1-1 4z"/></svg>';
+var ICON_HAND = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 8V4a1 1 0 012 0v3m0-3a1 1 0 012 0v3m0-2a1 1 0 012 0v5a4 4 0 01-4 4 4 4 0 01-3-1.5L3 9.5a1 1 0 011.5-1L5 9"/></svg>';
+function toolbar() {
+  var h = '<div class="segbox"><button class="tbtn" data-tool="select" aria-pressed="' + (S.tool === 'select') + '">' + ICON_PTR + 'เลือก</button>'
+    + '<button class="tbtn" data-tool="hand" aria-pressed="' + (S.tool === 'hand') + '">' + ICON_HAND + 'เลื่อน</button></div><span class="sep"></span>';
+  var quick = QUICK.slice(0, 4);
+  var rc = S.recent.filter(function (k) { return quick.indexOf(k) < 0; })[0];
+  quick.push(rc || QUICK[4]);
+  quick.forEach(function (k) {
+    h += '<button class="tbtn solid" data-tool="' + k + '" title="' + NAMES[k] + (KEYS[k] ? ' (' + KEYS[k] + ')' : '') + '" aria-pressed="' + (S.tool === k) + '">' + thumb(k) + NAMES[k] + '</button>';
+  });
+  h += '<button class="more" id="moreBtn">เพิ่มเติม ▾</button><span class="sep"></span>'
+    + '<div class="dd">Desktop <span class="mono">1440×900</span> ▾</div>'
+    + '<div class="segbox"><button class="tbtn" data-style="sketch" aria-pressed="' + (STY === 'sketch') + '">ร่าง</button><button class="tbtn" data-style="clean" aria-pressed="' + (STY === 'clean') + '">เรียบร้อย</button></div>'
+    + '<span class="grow"></span><span class="chipok">ผ่าน 0 ปัญหา</span><label><input type="checkbox" checked> Snap กริด</label><button class="cta">ส่งออกภาพ</button>';
+  return h;
+}
+var STY = 'sketch';
+
+/* ---- คลัง 3 แบบ ---- */
+function matches(k) { var q = S.q.trim().toLowerCase(); return !q || (NAMES[k] + ' ' + k).toLowerCase().indexOf(q) >= 0; }
+function tile(k) { return '<button class="tile" data-tool="' + k + '" title="' + NAMES[k] + (KEYS[k] ? ' (' + KEYS[k] + ')' : '') + '" aria-pressed="' + (S.tool === k) + '">' + thumb(k) + '<span>' + NAMES[k] + '</span></button>'; }
+function rowItem(k) { return '<button class="row" data-tool="' + k + '" aria-pressed="' + (S.tool === k) + '">' + thumb(k) + '<span class="nm">' + NAMES[k] + '</span>' + (KEYS[k] ? '<span class="kb">' + KEYS[k] + '</span>' : '') + '</button>'; }
+function bigItem(k) { return '<button class="big" data-tool="' + k + '" aria-pressed="' + (S.tool === k) + '"><div class="pv">' + thumb(k) + '</div><span>' + NAMES[k] + '</span></button>'; }
+function head(id) {
+  return '<div class="phead"><div class="pname">หน้าตะกร้า</div><label class="search"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>'
+    + '<input id="q-' + id + '" placeholder="ค้นหาชิ้นส่วน" value="' + S.q.replace(/"/g, '&quot;') + '" aria-label="ค้นหาชิ้นส่วน"></label></div>';
+}
+function recentBlock(fn) {
+  if (!S.recent.length || S.q) return '';
+  return '<div><div class="sec">ใช้ล่าสุด</div><div class="grid g3" style="margin-top:6px">' + S.recent.slice(0, 3).map(fn).join('') + '</div></div>';
+}
+function empty() { return '<div class="empty">ไม่พบชิ้นส่วนที่ตรงกับ "' + S.q + '"</div>'; }
+function panelA() {
+  var body = recentBlock(tile), any = false;
+  CATS.forEach(function (cat) {
+    var ks = cat[2].filter(matches); if (!ks.length) return; any = true;
+    var open = S.q ? true : S.open[cat[0]];
+    body += '<div><button class="fold sec" data-fold="' + cat[0] + '" aria-expanded="' + open + '"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4l4 4 4-4"/></svg>' + cat[1] + '<span class="n">' + ks.length + '</span></button>'
+      + (open ? '<div class="grid g3" style="margin-top:4px">' + ks.map(tile).join('') + '</div>' : '') + '</div>';
+  });
+  return '<div class="panel">' + head('A') + '<div class="pscroll">' + (any ? body : empty()) + '</div></div>';
+}
+function panelB() {
+  var body = recentBlock(function (k) { return rowItem(k); }).replace('grid g3', 'grid'), any = false;
+  CATS.forEach(function (cat) {
+    var ks = cat[2].filter(matches); if (!ks.length) return; any = true;
+    body += '<div><div class="sec" style="padding:4px 0">' + cat[1] + '<span class="n">' + ks.length + '</span></div><div style="display:flex;flex-direction:column;gap:2px">' + ks.map(rowItem).join('') + '</div></div>';
+  });
+  return '<div class="panel">' + head('B') + '<div class="pscroll">' + (any ? body : empty()) + '</div></div>';
+}
+function panelC() {
+  var pills = '<div class="pills"><button class="pill" data-pill="all" aria-pressed="' + (S.pill === 'all') + '">ทั้งหมด</button>' + CATS.map(function (cat) { return '<button class="pill" data-pill="' + cat[0] + '" aria-pressed="' + (S.pill === cat[0]) + '">' + cat[1] + '</button>'; }).join('') + '</div>';
+  var ks = [];
+  CATS.forEach(function (cat) { if (S.pill === 'all' || S.pill === cat[0]) ks = ks.concat(cat[2]); });
+  ks = ks.filter(matches);
+  var view = '<div class="segbox" style="align-self:flex-start"><button class="tbtn" data-view="grid" aria-pressed="' + (S.view === 'grid') + '">กริด</button><button class="tbtn" data-view="list" aria-pressed="' + (S.view === 'list') + '">รายการ</button></div>';
+  var items = !ks.length ? empty() : S.view === 'grid' ? '<div class="grid g2">' + ks.map(bigItem).join('') + '</div>' : '<div style="display:flex;flex-direction:column;gap:2px">' + ks.map(rowItem).join('') + '</div>';
+  return '<div class="panel">' + head('C') + '<div style="padding:0 12px 8px;display:flex;flex-direction:column;gap:8px">' + pills + view + '</div><div class="pscroll" style="padding-top:2px">' + items + '</div></div>';
+}
+var OPT = [
+  ['A', 'หมวดพับได้ + กริดเล็ก', 'กระชับสุด', 'ตอนนี้ทุกอย่างอยู่ในกริดเดียว แบบนี้แบ่ง 6 หมวดที่พับเก็บได้ ช่องเล็ก 3 คอลัมน์พร้อมรูปย่อ เห็นหลายชิ้นพร้อมกัน เหมาะคนที่รู้อยู่แล้วว่าหาอะไร', panelA],
+  ['B', 'รายการพร้อมรูปย่อ', 'ไล่หาง่าย', 'แถวละชิ้น มีรูปย่อ ชื่อ และคีย์ลัดอยู่ติดกัน อ่านชื่อชัดสุด แต่ใช้ที่แนวตั้งมาก ต้องเลื่อนเยอะ', panelB],
+  ['C', 'ตัวกรองหมวด + กริดใหญ่', 'เห็นหน้าตาชัด', 'กดหมวดเพื่อกรอง ช่องใหญ่แสดงรูปย่อชัด สลับเป็นรายการได้ เห็นทีละไม่กี่ชิ้น เหมาะคนที่เลือกจากหน้าตา', panelC]
+];
+function render() {
+  var keep = document.activeElement && document.activeElement.id, pos = document.activeElement && document.activeElement.selectionStart;
+  $('toolbar').innerHTML = toolbar();
+  $('curTool').textContent = S.tool === 'select' ? 'เลือก' : S.tool === 'hand' ? 'เลื่อน' : 'วาง · ' + NAMES[S.tool];
+  var h = '';
+  OPT.forEach(function (o) {
+    h += '<div class="opt"><div class="opt-head"><h2>แบบ ' + o[0] + ' · ' + o[1] + '</h2><span class="tag">' + o[2] + '</span></div><p class="note">' + o[3] + '</p>' + o[4]() + '</div>';
+  });
+  $('opts').innerHTML = h;
+  if (keep && $(keep)) { $(keep).focus(); try { $(keep).setSelectionRange(pos, pos); } catch (e) {} }
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.tool) {
+    S.tool = b.dataset.tool;
+    if (NAMES[S.tool]) { S.recent = [S.tool].concat(S.recent.filter(function (k) { return k !== S.tool; })).slice(0, 6); }
+  } else if (b.dataset.fold) { S.open[b.dataset.fold] = !S.open[b.dataset.fold]; }
+  else if (b.dataset.pill) { S.pill = b.dataset.pill; }
+  else if (b.dataset.view) { S.view = b.dataset.view; }
+  else if (b.dataset.style) { STY = b.dataset.style; }
+  else if (b.id === 'moreBtn') { var q = document.querySelector('.search input'); if (q) q.focus(); return; }
+  else return;
+  render();
+});
+document.addEventListener('input', function (e) { if (e.target.id && e.target.id.indexOf('q-') === 0) { S.q = e.target.value; render(); } });
+$('cats').innerHTML = CATS.map(function (cat) { return '<li><b>' + cat[1] + '</b> · ' + cat[2].map(function (k) { return NAMES[k]; }).join(' ') + '</li>'; }).join('');
+render();
+</script>
