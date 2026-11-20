@@ -272,8 +272,9 @@ CREATE TABLE `orders` (
       expect(users.indexes.single.name, 'idx_created');
 
       expect(colOf(r, 'orders', 'id').type, DataType.bigint);
-      expect(colOf(r, 'orders', 'status').type, DataType.text); // enum -> text (มีหมายเหตุ)
-      expect(r.notes.any((n) => n.message.contains('ENUM') || n.message.contains('enum')), true);
+      // Phase 19: enum อ่านเป็น varchar + ค่าที่อนุญาต (เดิมเป็น text พร้อมหมายเหตุ)
+      expect(colOf(r, 'orders', 'status').type, DataType.varchar);
+      expect(colOf(r, 'orders', 'status').allowedValues, ['new', 'paid']);
       expect(fkText(r.project, r.project.relations.single), 'orders.user_id->users.id del=cascade upd=noAction');
       // INSERT/LOCK/DROP ถูกข้ามและรวมเป็นยอด ไม่ใช่เตือนทีละคำสั่ง
       expect(r.notes.any((n) => !n.warning && n.message.contains('INSERT')), true);

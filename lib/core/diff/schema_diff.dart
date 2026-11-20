@@ -1,3 +1,4 @@
+import '../models/check_model.dart';
 import '../models/column_model.dart';
 import '../models/enums.dart';
 import '../models/index_model.dart';
@@ -27,9 +28,22 @@ class ColumnChange {
   bool get uniqueChanged => _unique(old) != _unique(neu);
   bool get commentChanged => old.comment != neu.comment;
 
+  /// ค่าที่อนุญาตเปลี่ยน (ลำดับก็นับ — ENUM ของ MySQL เก็บเป็นเลขลำดับ) ; นับเฉพาะที่ใช้งานได้จริง (varchar/text ที่มีค่า)
+  bool get allowedChanged => !_sameList(_allowed(old), _allowed(neu));
+
+  static List<String> _allowed(ColumnModel c) => c.hasAllowedValues ? c.allowedValues : const [];
+
+  static bool _sameList(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
   /// ต้อง ALTER ตัวคอลัมน์ (ไม่นับชื่อ / unique ซึ่งเป็นคนละคำสั่ง)
   bool get definitionChanged =>
-      typeChanged || nullChanged || defaultChanged || autoIncrementChanged || commentChanged;
+      typeChanged || nullChanged || defaultChanged || autoIncrementChanged || commentChanged || allowedChanged;
 
   bool get any => renamed || definitionChanged || uniqueChanged;
 
@@ -60,6 +74,8 @@ class TableDiff {
   final changedColumns = <ColumnChange>[];
   final addedIndexes = <IndexModel>[];
   final droppedIndexes = <IndexModel>[];
+  final addedChecks = <CheckModel>[];
+  final droppedChecks = <CheckModel>[];
   bool pkChanged = false;
 
   bool get renamed => old.name != neu.name;
@@ -73,7 +89,9 @@ class TableDiff {
       droppedColumns.isNotEmpty ||
       changedColumns.isNotEmpty ||
       addedIndexes.isNotEmpty ||
-      droppedIndexes.isNotEmpty;
+      droppedIndexes.isNotEmpty ||
+      addedChecks.isNotEmpty ||
+      droppedChecks.isNotEmpty;
 }
 
 enum ChangeKind { add, drop, change }
@@ -154,6 +172,14 @@ class SchemaDiff {
           out.add(ChangeLine(ChangeKind.change, tr('{0}: {1} UNIQUE', [col, c.neu.unique ? tr('เพิ่ม') : tr('เอา')])));
         }
         if (c.commentChanged) out.add(ChangeLine(ChangeKind.change, tr('{0}: แก้หมายเหตุ', [col])));
+        if (c.allowedChanged) {
+          final oldV = c.old.hasAllowedValues ? c.old.allowedValues.join(', ') : tr('(ไม่จำกัด)');
+          final newV = c.neu.hasAllowedValues ? c.neu.allowedValues.join(', ') : tr('(ไม่จำกัด)');
+          // เอาค่าออก/ใส่เงื่อนไขใหม่ = ข้อมูลเดิมอาจไม่ผ่าน จึงติดธงให้ระวัง
+          final removed = c.old.hasAllowedValues && c.old.allowedValues.any((v) => !c.neu.allowedValues.contains(v));
+          final newlyRestricted = !c.old.hasAllowedValues && c.neu.hasAllowedValues;
+          out.add(ChangeLine(ChangeKind.change, tr('{0}: ค่าที่อนุญาต {1} → {2}', [col, oldV, newV]), destructive: removed || newlyRestricted));
+        }
       }
       if (d.pkChanged) out.add(ChangeLine(ChangeKind.change, tr('{0}: เปลี่ยน Primary Key', [n])));
       for (final i in d.droppedIndexes) {
@@ -161,6 +187,12 @@ class SchemaDiff {
       }
       for (final i in d.addedIndexes) {
         out.add(ChangeLine(ChangeKind.add, tr('{0}: เพิ่ม {1}INDEX {2}', [n, i.unique ? 'UNIQUE ' : '', i.name])));
+      }
+      for (final k in d.droppedChecks) {
+        out.add(ChangeLine(ChangeKind.drop, tr('{0}: ลบ CHECK {1}', [n, k.name])));
+      }
+      for (final k in d.addedChecks) {
+        out.add(ChangeLine(ChangeKind.add, tr('{0}: เพิ่ม CHECK {1} ({2})', [n, k.name, k.expr.replaceAll(RegExp(r"s+"), " ").trim()])));
       }
     }
     for (final r in droppedRelations) {
@@ -240,6 +272,7 @@ SchemaDiff diffProjects(Project old, Project neu, {Map<String, String> manualTab
     }
     td.pkChanged = _pkKey(e.key, (id) => colMap[id] ?? id) != _pkKey(e.value, (id) => id);
     _diffIndexes(td, colMap);
+    _diffChecks(td);
     if (td.hasChanges) diff.modified.add(td);
   }
 
@@ -307,5 +340,21 @@ void _diffIndexes(TableDiff td, Map<String, String> colMap) {
   }
   for (final e in newSigs.entries) {
     if (!oldSigs.containsKey(e.key)) td.addedIndexes.add(e.value);
+  }
+}
+
+/// CHECK ระดับตารางที่ใช้งานได้ (นิพจน์ไม่ว่าง) -> ลายเซ็น "ชื่อ|นิพจน์" (ไม่สนช่องว่างซ้ำ/ตัวพิมพ์ของชื่อ)
+String _checkSig(CheckModel k) => '${k.name.trim().toLowerCase()}|${k.expr.replaceAll(RegExp(r'\s+'), ' ').trim()}';
+
+void _diffChecks(TableDiff td) {
+  final usable = [for (final k in td.neu.checks) if (k.expr.trim().isNotEmpty) k];
+  final oldUsable = [for (final k in td.old.checks) if (k.expr.trim().isNotEmpty) k];
+  final newSigs = {for (final k in usable) _checkSig(k): k};
+  final oldSigs = {for (final k in oldUsable) _checkSig(k): k};
+  for (final e in oldSigs.entries) {
+    if (!newSigs.containsKey(e.key)) td.droppedChecks.add(e.value);
+  }
+  for (final e in newSigs.entries) {
+    if (!oldSigs.containsKey(e.key)) td.addedChecks.add(e.value);
   }
 }

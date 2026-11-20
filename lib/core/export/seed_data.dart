@@ -133,6 +133,10 @@ List<SeedProblem> validateSeed(Project p) {
           continue;
         }
         final isNull = parsed.value == null;
+        if (!isNull && c.hasAllowedValues && !c.allowedValues.contains(parsed.value)) {
+          out.add(SeedProblem(t.id, i, c.id, 'ค่าไม่อยู่ในค่าที่อนุญาตของคอลัมน์'));
+          continue;
+        }
         final auto = c.autoIncrement;
         // NOT NULL ที่ไม่ได้ให้ค่า: ใช้ได้ถ้ามี DEFAULT หรือเป็น AUTO INCREMENT (ฐานข้อมูลใส่ให้)
         final mustHave = (c.notNull || c.isPrimaryKey) && !auto && (c.defaultValue == null || c.defaultValue!.isEmpty);

@@ -24,6 +24,7 @@ class _Validator {
     _tableNumberConsistency();
     _relations();
     _indexes();
+    _allowedAndChecks();
     if (d == Dialect.mssql) _mssqlCascadePaths();
 
     // เรียงแบบคงลำดับเดิมภายในระดับเดียวกัน
@@ -98,6 +99,88 @@ class _Validator {
         err('ai_multiple', tr('AUTO INCREMENT หลายคอลัมน์'),
             tr('{0} มีคอลัมน์ AUTO INCREMENT {1} คอลัมน์ แต่ {2} ใช้ได้ตารางละ 1 คอลัมน์', [label, aiCount, d.label]),
             table: t.id);
+      }
+    }
+  }
+
+  // ---------- ค่าที่อนุญาต / CHECK (Phase 19) ----------
+
+  /// คำในนิพจน์ SQL ที่ไม่ใช่ชื่อคอลัมน์ (ใช้ตรวจว่า CHECK อ้างคอลัมน์ที่ไม่มี)
+  static final _sqlWords = RegExp(
+    r'^(AND|OR|NOT|IN|IS|NULL|LIKE|ILIKE|BETWEEN|TRUE|FALSE|CASE|WHEN|THEN|ELSE|END|EXISTS|ANY|ALL|LIKE|ESCAPE|'
+    r'LENGTH|CHAR_LENGTH|LEN|LOWER|UPPER|TRIM|ABS|COALESCE|NULLIF|CAST|AS|DATE|INTERVAL|CURRENT_DATE|CURRENT_TIMESTAMP|NOW|'
+    r'INT|INTEGER|BIGINT|VARCHAR|TEXT|DECIMAL|NUMERIC|REGEXP|RLIKE|SIMILAR|TO|DAY|MONTH|YEAR|HOUR)$',
+    caseSensitive: false,
+  );
+
+  /// ชื่อที่น่าจะเป็นคอลัมน์ในนิพจน์ CHECK (ตัดสตริง '..' ออกก่อน แล้วเก็บคำที่ไม่ใช่คำ SQL/ตัวเลข/ชื่อฟังก์ชัน)
+  static List<String> checkIdentifiers(String expr) {
+    final noStrings = expr.replaceAll(RegExp(r"'(?:[^']|'')*'"), ' ');
+    final out = <String>[];
+    for (final m in RegExp(r'([A-Za-z_\u0E00-\u0E7F][A-Za-z0-9_\u0E00-\u0E7F]*)\s*(\()?').allMatches(noStrings)) {
+      if (m.group(2) != null) continue; // ชื่อฟังก์ชัน
+      final w = m.group(1)!;
+      if (_sqlWords.hasMatch(w)) continue;
+      if (!out.contains(w)) out.add(w);
+    }
+    return out;
+  }
+
+  void _allowedAndChecks() {
+    final checkNames = <String, String>{}; // ชื่อ constraint (ตัวพิมพ์เล็ก) -> ตารางที่ใช้ — ชื่อ CHECK ไม่ซ้ำกันทั้งโปรเจกต์ (SQL Server/PostgreSQL)
+    for (final t in p.tables) {
+      final tl = t.name.isEmpty ? tr('(ไม่มีชื่อ)') : t.name;
+      for (final c in t.columns) {
+        if (c.allowedValues.isEmpty) continue;
+        final cl = '$tl.${c.name.isEmpty ? tr('(ไม่มีชื่อ)') : c.name}';
+        if (!ColumnModel.supportsAllowedValues(c.type)) {
+          warn('allowed_type', tr('ค่าที่อนุญาตใช้กับชนิดนี้ไม่ได้'),
+              tr('{0}: ค่าที่อนุญาตใช้ได้กับ VARCHAR/TEXT เท่านั้น (ตอนนี้ไม่ถูกใส่ใน SQL)', [cl]),
+              table: t.id, column: c.id);
+          continue;
+        }
+        if (c.allowedValues.any((v) => v.trim().isEmpty)) {
+          err('allowed_empty', tr('ค่าที่อนุญาตว่าง'), tr('{0}: มีค่าที่อนุญาตที่เป็นข้อความว่าง', [cl]), table: t.id, column: c.id);
+        }
+        if (c.allowedValues.length != c.allowedValues.toSet().length) {
+          err('allowed_dup', tr('ค่าที่อนุญาตซ้ำ'), tr('{0}: มีค่าที่อนุญาตซ้ำกัน', [cl]), table: t.id, column: c.id);
+        }
+        final def = (c.defaultValue ?? '').trim();
+        if (def.isNotEmpty && def.toUpperCase() != 'NULL') {
+          final unq = def.length >= 2 && def.startsWith("'") && def.endsWith("'") ? def.substring(1, def.length - 1) : def;
+          if (!c.allowedValues.contains(unq)) {
+            err('default_not_allowed', tr('ค่าเริ่มต้นไม่อยู่ในค่าที่อนุญาต'),
+                tr('{0}: ค่าเริ่มต้น "{1}" ไม่อยู่ในรายการค่าที่อนุญาต', [cl, def]), table: t.id, column: c.id);
+          }
+        }
+        if (d == Dialect.mysql && c.type == DataType.varchar && c.length != null && c.allowedValues.any((v) => v.length > c.length!)) {
+          info('allowed_longer_than_length', tr('ค่าที่อนุญาตยาวกว่าความยาวคอลัมน์'),
+              tr('{0}: ค่าที่อนุญาตบางค่ายาวกว่า VARCHAR({1}) — MySQL ใช้ ENUM จึงไม่กระทบ แต่ dialect อื่นจะใส่ค่านั้นไม่ได้', [cl, c.length]),
+              table: t.id, column: c.id);
+        }
+      }
+      final colNames = {for (final c in t.columns) c.name.toLowerCase()};
+      for (var i = 0; i < t.checks.length; i++) {
+        final k = t.checks[i];
+        final kl = k.name.trim().isEmpty ? tr('CHECK ลำดับที่ {0} ของ {1}', [i + 1, tl]) : '${k.name.trim()} ($tl)';
+        if (k.expr.trim().isEmpty) {
+          warn('check_empty', tr('CHECK ไม่มีนิพจน์'), tr('{0}: ยังไม่ได้ใส่เงื่อนไข จึงไม่ถูกใส่ใน SQL', [kl]), table: t.id);
+          continue;
+        }
+        final name = k.name.trim().toLowerCase();
+        if (name.isNotEmpty) {
+          final prev = checkNames[name];
+          if (prev != null) {
+            err('check_dup_name', tr('ชื่อ CHECK ซ้ำ'), tr('ชื่อ "{0}" ใช้ซ้ำ (ตาราง {1} และ {2}) — ชื่อ constraint ต้องไม่ซ้ำกัน', [k.name.trim(), prev, tl]), table: t.id);
+          }
+          checkNames.putIfAbsent(name, () => tl);
+        }
+        for (final w in checkIdentifiers(k.expr)) {
+          if (!colNames.contains(w.toLowerCase())) {
+            warn('check_unknown_column', tr('CHECK อ้างคอลัมน์ที่ไม่มี'),
+                tr('{0}: นิพจน์อ้างถึง "{1}" ซึ่งไม่ใช่คอลัมน์ของตาราง {2}', [kl, w, tl]), table: t.id);
+          }
+        }
       }
     }
   }
@@ -393,3 +476,6 @@ class _Validator {
     return t.indexes.any((i) => i.columnIds.isNotEmpty && i.columnIds.first == c.id);
   }
 }
+
+/// ชื่อที่น่าจะเป็นคอลัมน์ในนิพจน์ CHECK (ข้ามสตริง ฟังก์ชัน คำ SQL ตัวเลข) — ใช้ตรวจ CHECK และในกล่องแก้ตาราง
+List<String> checkIdentifiers(String expr) => _Validator.checkIdentifiers(expr);

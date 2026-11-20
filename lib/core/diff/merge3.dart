@@ -114,6 +114,9 @@ String _keyLabel(String key) => switch (key) {
       'text' => tr('ข้อความ'),
       'columns' => tr('คอลัมน์'),
       'seed' => tr('ข้อมูลตั้งต้น'),
+      'allowed' => tr('ค่าที่อนุญาต'),
+      'checks' => 'CHECK',
+      'expr' => tr('นิพจน์ CHECK'),
       _ => key,
     };
 

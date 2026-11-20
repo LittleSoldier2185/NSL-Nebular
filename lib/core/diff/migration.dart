@@ -243,6 +243,8 @@ class _Migration {
       });
     }
 
+    out.addAll(_dropChecks(td));
+
     for (final c in td.droppedColumns) {
       out.add('${tr('-- ⚠ ลบคอลัมน์ {0}.{1} พร้อมข้อมูล', [DdlGenerator.flat(n.name), DdlGenerator.flat(c.name)])}\n'
           'ALTER TABLE $t DROP COLUMN ${q(c.name)};');
@@ -277,12 +279,72 @@ class _Migration {
       });
     }
 
+    out.addAll(_addChecks(td));
+
     if (td.pkChanged && pk.isNotEmpty) {
       final cols = pk.map((c) => q(c.name)).join(', ');
       out.add(switch (d) {
         Dialect.mssql => 'ALTER TABLE $t ADD CONSTRAINT ${q('PK_${n.name}')} PRIMARY KEY ($cols);',
         _ => 'ALTER TABLE $t ADD PRIMARY KEY ($cols);',
       });
+    }
+    return out;
+  }
+
+  // ---------- CHECK / ค่าที่อนุญาต (Phase 19) ----------
+
+  /// คอลัมน์ที่จับคู่แล้วซึ่งต้องลบ constraint ค่าที่อนุญาตเดิม (dialect ที่ไม่มี ENUM) : เดิมมี และ (ตอนนี้ไม่มี/ค่าเปลี่ยน/ชื่อ constraint เปลี่ยนจากการเปลี่ยนชื่อตาราง-คอลัมน์)
+  bool _allowedDrop(TableDiff td, ColumnModel o, ColumnModel n) {
+    if (d == Dialect.mysql || !o.hasAllowedValues) return false;
+    if (!n.hasAllowedValues) return true;
+    final sameValues = o.allowedValues.length == n.allowedValues.length &&
+        [for (var i = 0; i < o.allowedValues.length; i++) o.allowedValues[i] == n.allowedValues[i]].every((x) => x);
+    return !sameValues || gen.allowedCheckName(td.old, o) != gen.allowedCheckName(td.neu, n);
+  }
+
+  bool _allowedAdd(TableDiff td, ColumnModel o, ColumnModel n) {
+    if (d == Dialect.mysql || !n.hasAllowedValues) return false;
+    if (!o.hasAllowedValues) return true;
+    return _allowedDrop(td, o, n);
+  }
+
+  /// ลบ CHECK ก่อนแก้คอลัมน์ : CHECK ระดับตารางที่ตกไป + constraint ค่าที่อนุญาตที่ต้องเปลี่ยน/คอลัมน์ที่กำลังถูกลบ (SQL Server ลบคอลัมน์ที่มี CHECK ผูกอยู่ไม่ได้)
+  List<String> _dropChecks(TableDiff td) {
+    final t = q(td.old.name);
+    final out = <String>[];
+    for (final k in td.droppedChecks) {
+      final i = td.old.checks.indexOf(k);
+      final name = i < 0 ? k.name : gen.checkName(td.old, i);
+      out.add(d == Dialect.mysql ? 'ALTER TABLE $t DROP CHECK ${q(name)};' : 'ALTER TABLE $t DROP CONSTRAINT ${q(name)};');
+    }
+    for (final e in td.matched.entries) {
+      if (_allowedDrop(td, e.key, e.value)) out.add('ALTER TABLE $t DROP CONSTRAINT ${q(gen.allowedCheckName(td.old, e.key))};');
+    }
+    if (d == Dialect.mssql) {
+      for (final c in td.droppedColumns.where((c) => c.hasAllowedValues)) {
+        out.add('ALTER TABLE $t DROP CONSTRAINT ${q(gen.allowedCheckName(td.old, c))};');
+      }
+    }
+    return out;
+  }
+
+  /// เพิ่ม CHECK หลังแก้คอลัมน์ : constraint ค่าที่อนุญาตใหม่ + CHECK ระดับตารางที่เพิ่ม ; เตือนว่าข้อมูลเดิมต้องผ่านเงื่อนไข
+  List<String> _addChecks(TableDiff td) {
+    final n = td.neu;
+    final t = q(n.name);
+    final out = <String>[];
+    final add = <String>[];
+    for (final e in td.matched.entries) {
+      if (_allowedAdd(td, e.key, e.value)) add.add('ALTER TABLE $t ADD ${gen.allowedCheckClause(n, e.value)};');
+    }
+    for (final k in td.addedChecks) {
+      final i = n.checks.indexOf(k);
+      final line = i < 0 ? null : gen.checkConstraint(n, i);
+      if (line != null) add.add('ALTER TABLE $t ADD $line;');
+    }
+    if (add.isNotEmpty) {
+      out.add(tr('-- ⚠ เงื่อนไขใหม่: แถวเดิมที่ไม่ผ่าน CHECK จะทำให้คำสั่งนี้ error (ตรวจ/แก้ข้อมูลก่อน)'));
+      out.addAll(add);
     }
     return out;
   }
@@ -298,6 +360,9 @@ class _Migration {
         // MODIFY ต้องบอกนิยามเต็ม; UNIQUE จัดการแยกต่างหาก
         final copy = c.copy()..unique = false;
         if (ch.typeChanged) out.add(tr('-- ⚠ เปลี่ยนชนิด {0}.{1}: ข้อมูลเดิมอาจถูกตัด/แปลงไม่ได้', [t, col]));
+        if (ch.allowedChanged && c.hasAllowedValues) {
+          out.add(tr('-- ⚠ ค่าที่อนุญาตของ {0}.{1} เปลี่ยน: แถวเดิมที่ใช้ค่าที่ถูกเอาออกจะ error (โหมด strict) หรือกลายเป็นค่าว่าง', [t, col]));
+        }
         out.add('ALTER TABLE $t MODIFY COLUMN ${gen.columnDef(n, copy, pk)};');
       case Dialect.postgres:
         final noAi = c.copy()..autoIncrement = false;
@@ -346,9 +411,9 @@ class _Migration {
   Set<String> _rebuildSet() {
     final s = <String>{};
     for (final td in diff.modified) {
-      var need = td.pkChanged || td.droppedColumns.isNotEmpty;
+      var need = td.pkChanged || td.droppedColumns.isNotEmpty || td.addedChecks.isNotEmpty || td.droppedChecks.isNotEmpty;
       for (final c in td.changedColumns) {
-        if (c.typeChanged || c.nullChanged || c.defaultChanged || c.autoIncrementChanged || c.uniqueChanged) {
+        if (c.typeChanged || c.nullChanged || c.defaultChanged || c.autoIncrementChanged || c.uniqueChanged || c.allowedChanged) {
           need = true;
         }
       }
@@ -379,17 +444,8 @@ class _Migration {
     final out = <String>[
       tr('-- SQLite แก้โครงสร้างตารางตรง ๆ ไม่ได้: สร้างตารางใหม่ → คัดลอกข้อมูล → แทนที่ของเดิม'),
     ];
-    final copy = TableModel(
-      id: n.id,
-      name: tmp,
-      comment: n.comment,
-      x: n.x,
-      y: n.y,
-      width: n.width,
-      columns: n.columns,
-      indexes: const [],
-    );
-    out.add(gen.createTable(neu, copy, newNames));
+    // สร้างจากตารางจริง (ชื่อ constraint ของค่าที่อนุญาตอิงชื่อตารางจริง ไม่ใช่ชื่อชั่วคราว) แล้วค่อยเปลี่ยนชื่อที่ CREATE TABLE เป็นชื่อชั่วคราว
+    out.add(gen.createTable(neu, n, newNames).replaceFirst("CREATE TABLE ${q(n.name)} (", "CREATE TABLE ${q(tmp)} ("));
 
     // คอลัมน์ที่จับคู่กับของเดิมได้ -> คัดลอก; คอลัมน์ใหม่ใช้ DEFAULT
     final pairs = <(String neuName, String oldName)>[];
@@ -404,6 +460,9 @@ class _Migration {
         if ((c.notNull || c.isPrimaryKey) && !c.autoIncrement && (c.defaultValue ?? '').trim().isEmpty) {
           out.add(tr('-- ⚠ คอลัมน์ใหม่ {0} เป็น NOT NULL ไม่มี DEFAULT: ถ้าตารางมีข้อมูลอยู่ INSERT ด้านล่างจะ error', [DdlGenerator.flat(c.name)]));
         }
+      }
+      if (td.addedChecks.isNotEmpty || td.changedColumns.any((c) => c.allowedChanged && c.neu.hasAllowedValues)) {
+        out.add(tr('-- ⚠ เงื่อนไข CHECK/ค่าที่อนุญาตใหม่: ถ้าข้อมูลเดิมไม่ผ่าน INSERT ด้านล่างจะ error (ตรวจ/แก้ข้อมูลก่อน)'));
       }
       for (final c in td.changedColumns.where((c) => c.typeChanged)) {
         out.add(tr('-- ⚠ ชนิดของ {0} เปลี่ยน — SQLite จะเก็บค่าเดิมตามที่เป็น', [DdlGenerator.flat(c.neu.name)]));
