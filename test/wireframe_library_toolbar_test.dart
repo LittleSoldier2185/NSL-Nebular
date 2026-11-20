@@ -23,7 +23,7 @@ void main() {
       final all = [for (final c in kWfCategories) ...c.kinds];
       expect(all.toSet(), WfKind.values.toSet());
       expect(all.length, WfKind.values.length);
-      expect(kWfCategories.length, 6);
+      expect(kWfCategories.length, 7); // 6 หมวดเดิม + มือถือ (แม่แบบ/ของฉันเป็นหมวดพิเศษแยกจากชนิด)
     });
 
     test('แถบวางด่วน: สี่ตัวคงที่ + ช่องที่ 5 = ใช้ล่าสุดที่ไม่ซ้ำ ไม่มี = รูปภาพ', () {
@@ -157,21 +157,24 @@ void main() {
       expect(find.byKey(const ValueKey('wf-tool-chart')), findsOneWidget);
     });
 
-    testWidgets('คลัง: 6 หมวด พับ/ขยายได้ ; ค้นหาเปิดทุกหมวดที่มีผลและซ่อนที่ไม่มี ; ไม่พบ = ข้อความ', (tester) async {
+    testWidgets('คลัง: หมวดพับ/ขยายได้ ; ค้นหาเปิดทุกหมวดที่มีผลและซ่อนที่ไม่มี ; ไม่พบ = ข้อความ', (tester) async {
       await boot(tester);
       for (final c in kWfCategories) {
         expect(find.byKey(ValueKey('wf-cat-${c.id}')), findsOneWidget, reason: c.id);
       }
       expect(find.byKey(const ValueKey('wf-kind-table')), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const ValueKey('wf-cat-data')));
       await tester.tap(find.byKey(const ValueKey('wf-cat-data')));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('wf-kind-table')), findsNothing);
       expect(find.byKey(const ValueKey('wf-kind-button')), findsOneWidget); // หมวดอื่นไม่กระทบ
+      await tester.ensureVisible(find.byKey(const ValueKey('wf-cat-data')));
       await tester.tap(find.byKey(const ValueKey('wf-cat-data')));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('wf-kind-table')), findsOneWidget);
 
       // ค้นหา: หมวดที่พับอยู่ก็เปิดให้เห็นผล และหมวดที่ไม่มีผลหายไป
+      await tester.ensureVisible(find.byKey(const ValueKey('wf-cat-media')));
       await tester.tap(find.byKey(const ValueKey('wf-cat-media')));
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const ValueKey('wf-search')), 'image');
@@ -190,6 +193,7 @@ void main() {
       final body = 44 + tester.getSize(find.byKey(const ValueKey('wf-canvas'))).height;
       expect(panelH(), body);
       for (final c in kWfCategories) {
+        await tester.ensureVisible(find.byKey(ValueKey('wf-cat-${c.id}')));
         await tester.tap(find.byKey(ValueKey('wf-cat-${c.id}')));
         await tester.pumpAndSettle();
       }

@@ -663,6 +663,207 @@ void _component(_Builder b, WireframeDiagram d, WfComponent c) {
         b.text(raw[i].trim(), rx + 18, ry, math.max(0, x + w - rx - 22), rh, size: fs, color: ink, bold: parent, maxLines: 1);
         if (d0 > 0) b.line(x + 6 + (d0 - 1) * 18 + 7, ry, x + 6 + (d0 - 1) * 18 + 7, ry + rh / 2, stroke: border, width: 0.8);
       }
+    // ---- Phase 18b: มือถือ ----
+    case WfKind.statusBar:
+      final cy = y + h / 2, rx = x + w - 20;
+      b.text(c.text, x + 20, y, w * 0.4, h, size: fs, color: ink, bold: true, maxLines: 1);
+      // แบตเตอรี่ · wifi · สัญญาณ (เรียงจากขวา)
+      b.rect(rx - 24, cy - 5.5, 22, 11, stroke: ink, width: 1.2, r: 3);
+      b.rect(rx - 22, cy - 3.5, 15, 7, fill: ink, r: 1.5);
+      b.rect(rx - 1, cy - 2.5, 2, 5, fill: ink);
+      final wx = rx - 42;
+      for (final r0 in const [3.5, 6.5, 9.5]) {
+        b.poly([(wx - r0 * 0.7, cy + 5 - r0 * 0.7), (wx, cy + 5 - r0), (wx + r0 * 0.7, cy + 5 - r0 * 0.7)], stroke: ink, width: 1.3);
+      }
+      for (var i = 0; i < 4; i++) {
+        final bh = 4 + i * 2.5;
+        b.rect(rx - 78 + i * 5, cy + 5.5 - bh, 3, bh, fill: ink, r: 0.8);
+      }
+    case WfKind.appBar:
+      final cy = y + h / 2;
+      b.rect(x, y, w, h, fill: surface, stroke: border, width: sw);
+      b.poly([(x + 26, cy - 8), (x + 18, cy), (x + 26, cy + 8)], stroke: ink, width: 1.8);
+      b.text(c.text, x + 44, y, math.max(0, w - 44 - 92), h, size: fs, color: ink, bold: true, align: al == 1 ? 0 : al, maxLines: 1);
+      for (final dx in const [80.0, 44.0]) {
+        b.rect(x + w - dx, cy - 12, 24, 24, stroke: muted, width: 1.3, r: 7);
+        b.ellipse(x + w - dx + 12, cy, 2.8, 2.8, fill: muted);
+      }
+    case WfKind.bottomNav:
+      b.rect(x, y, w, h, fill: surface, stroke: border, width: sw);
+      final tabs = c.items.isEmpty ? [''] : c.items.take(5).toList();
+      final tw = w / tabs.length;
+      for (var i = 0; i < tabs.length; i++) {
+        final on = i == 0, cx = x + tw * i + tw / 2;
+        final top = y + math.max(4.0, (h - 46) / 2);
+        b.rect(cx - 11, top, 22, 22, fill: on ? (p.sketch ? 0xFFDADADA : accent) : null, stroke: on && !p.sketch ? accent : muted, width: 1.3, r: 6);
+        b.text(tabs[i], x + tw * i, top + 24, tw, 18, size: fs * 0.92, color: on ? (p.sketch ? ink : accent) : muted, bold: on, align: 1, maxLines: 1);
+      }
+    case WfKind.fab:
+      final r = math.min(w, h) / 2, cx = x + w / 2, cy = y + h / 2;
+      if (!p.sketch) b.ellipse(cx, cy + 3, r, r, fill: 0x22000000);
+      b.ellipse(cx, cy, r, r, fill: c.fill != null ? surface : (p.sketch ? 0xFFDADADA : accent), stroke: p.sketch ? border : null, width: sw * 1.2);
+      final glyph = c.textColor != null ? ink : (p.sketch ? p.text : p.onAccent);
+      final t = c.text.trim();
+      if (t.isEmpty || t == '+') {
+        b.line(cx - r * 0.36, cy, cx + r * 0.36, cy, stroke: glyph, width: 2.4);
+        b.line(cx, cy - r * 0.36, cx, cy + r * 0.36, stroke: glyph, width: 2.4);
+      } else {
+        b.text(t, x, y, w, h, size: fs, color: glyph, bold: true, align: 1, maxLines: 1);
+      }
+    case WfKind.bottomSheet:
+      final its = c.items;
+      b.rect(x, y, w, h, fill: surface, stroke: border, width: sw, r: 16);
+      b.bar(x + w / 2 - 18, y + 10, 36, 4, col(null, p.sketch ? 0xFFBDBDBD : 0xFFD0D5DD));
+      if (its.isEmpty) break;
+      b.text(its.first, x + 24, y + 24, w - 48, 30, size: fs * 1.15, color: ink, bold: true, maxLines: 1);
+      for (var i = 1; i < its.length; i++) {
+        final ry = y + 64 + (i - 1) * 58;
+        if (ry + 58 > y + h + 0.5) break;
+        b.line(x + 24, ry, x + w - 24, ry, stroke: border, width: 0.8);
+        final first = i == 1;
+        b.ellipse(x + 34, ry + 29, 9, 9, fill: first ? (p.sketch ? 0xFFDADADA : accent) : null, stroke: first && !p.sketch ? accent : muted, width: 1.4);
+        b.text(its[i], x + 56, ry, w - 80, 58, size: fs, color: ink, bold: first, maxLines: 1);
+      }
+    case WfKind.drawer:
+      final its = c.items;
+      b.rect(x, y, w, h, fill: surface, stroke: border, width: sw);
+      final hh = math.min(150.0, h * 0.25);
+      b.rect(x + 1, y + 1, w - 2, hh, fill: col(null, p.subtle));
+      final ar = math.min(26.0, hh * 0.17);
+      b.ellipse(x + 24 + ar, y + hh * 0.3 + ar, ar, ar, fill: surface, stroke: muted, width: 1.4);
+      if (its.isNotEmpty) b.text(its[0], x + 24, y + hh - 50, w - 48, 24, size: fs * 1.15, color: ink, bold: true, maxLines: 1);
+      if (its.length > 1) b.text(its[1], x + 24, y + hh - 26, w - 48, 20, size: fs * 0.85, color: muted, maxLines: 1);
+      for (var i = 2; i < its.length; i++) {
+        final ry = y + hh + 20 + (i - 2) * 54;
+        if (ry + 44 > y + h + 0.5) break;
+        final on = i == 2;
+        if (on) b.rect(x + 10, ry, w - 20, 44, fill: p.sketch ? 0xFFE2E2E2 : p.accentTint, r: 8);
+        b.rect(x + 24, ry + 11, 22, 22, fill: on && !p.sketch ? accent : null, stroke: on && !p.sketch ? accent : muted, width: 1.3, r: 6);
+        b.text(its[i], x + 58, ry, w - 76, 44, size: fs, color: on && !p.sketch ? accent : ink, bold: on, maxLines: 1);
+      }
+    // ---- Phase 18b: ฟอร์ม ----
+    case WfKind.segmented:
+      final its = c.items.isEmpty ? [''] : c.items.take(5).toList();
+      b.rect(x, y, w, h, fill: col(null, p.subtle), stroke: border, width: sw, r: math.min(9.0, h / 2));
+      final sgw = (w - 8) / its.length;
+      b.rect(x + 4, y + 4, sgw, h - 8, fill: surface, stroke: border, width: 1.1, r: math.min(6.0, h / 2));
+      for (var i = 0; i < its.length; i++) {
+        b.text(its[i], x + 4 + i * sgw, y, sgw, h, size: fs * 0.92, color: i == 0 ? ink : muted, bold: i == 0, align: 1, maxLines: 1);
+      }
+    case WfKind.optionGroup:
+      final its = c.items;
+      if (its.isEmpty) break;
+      b.text(its.first, x, y, w, lineH + 4, size: fs, color: ink, bold: true, top: true, maxLines: 1);
+      final opts = its.skip(1).toList();
+      final rh = opts.isEmpty ? 30.0 : math.min(36.0, (h - 30) / opts.length);
+      for (var i = 0; i < opts.length; i++) {
+        final cy = y + 30 + i * rh + rh / 2;
+        if (cy + rh / 2 > y + h + 0.5) break;
+        final sel = i == 0;
+        if (c.secondary) {
+          b.rect(x + 2, cy - 8, 16, 16, fill: sel && !p.sketch ? accent : surface, stroke: sel && !p.sketch ? accent : border, width: sw, r: 3);
+          if (sel) b.poly([(x + 5, cy), (x + 9, cy + 4), (x + 15, cy - 4)], stroke: p.sketch ? p.text : p.onAccent, width: 2);
+        } else {
+          b.ellipse(x + 10, cy, 8, 8, fill: surface, stroke: sel && !p.sketch ? accent : border, width: sw);
+          if (sel) b.ellipse(x + 10, cy, 4, 4, fill: p.sketch ? p.text : accent);
+        }
+        b.text(opts[i], x + 28, cy - rh / 2, w - 28, rh, size: fs, color: ink, maxLines: 1);
+      }
+    case WfKind.password:
+      b.rect(x, y, w, h, fill: c.disabled ? col(null, p.subtle) : surface, stroke: border, width: sw, r: 4);
+      final cy = y + h / 2, t = c.text.trim();
+      if (t.isEmpty) {
+        for (var i = 0; i < 8 && 16 + i * 10 + 20 < w - 40; i++) {
+          b.ellipse(x + 18 + i * 10, cy, 3, 3, fill: ink);
+        }
+      } else {
+        b.text(t, x + 10, y, w - 56, h, size: fs, color: muted, maxLines: 1);
+      }
+      b.ellipse(x + w - 24, cy, 9, 5.5, stroke: muted, width: 1.4);
+      b.ellipse(x + w - 24, cy, 2.4, 2.4, fill: muted);
+    case WfKind.numberInput:
+      b.rect(x, y, w, h, fill: c.disabled ? col(null, p.subtle) : surface, stroke: border, width: sw, r: 6);
+      final bw = math.min(40.0, w / 3), cy = y + h / 2;
+      b.line(x + bw, y + 4, x + bw, y + h - 4, stroke: border, width: 0.8);
+      b.line(x + w - bw, y + 4, x + w - bw, y + h - 4, stroke: border, width: 0.8);
+      b.line(x + bw / 2 - 6, cy, x + bw / 2 + 6, cy, stroke: ink, width: 1.8);
+      b.line(x + w - bw / 2 - 6, cy, x + w - bw / 2 + 6, cy, stroke: ink, width: 1.8);
+      b.line(x + w - bw / 2, cy - 6, x + w - bw / 2, cy + 6, stroke: ink, width: 1.8);
+      b.text(c.text, x + bw, y, w - 2 * bw, h, size: fs, color: ink, bold: true, align: 1, maxLines: 1);
+    case WfKind.timepicker:
+      b.rect(x, y, w, h, fill: c.disabled ? col(null, p.subtle) : surface, stroke: border, width: sw, r: 4);
+      final cy = y + h / 2;
+      b.ellipse(x + 22, cy, 9, 9, stroke: muted, width: 1.4);
+      b.poly([(x + 22, cy - 5), (x + 22, cy), (x + 25.5, cy + 2.5)], stroke: muted, width: 1.4);
+      b.text(c.text, x + 42, y, math.max(0, w - 80), h, size: fs, color: ink, align: al, maxLines: 1);
+      b.poly([(x + w - 23, cy - 2.5), (x + w - 18, cy + 2.5), (x + w - 13, cy - 2.5)], stroke: muted, width: 1.5);
+    // ---- Phase 18b: ข้อมูล / สถานะ ----
+    case WfKind.emptyState:
+      final its = c.items;
+      final cx = x + w / 2, rr = math.min(36.0, h * 0.15), cy0 = y + 8 + rr;
+      b.ellipse(cx, cy0, rr, rr, fill: c.fill != null ? surface : col(null, p.subtle), stroke: border, width: sw);
+      b.rect(cx - rr * 0.38, cy0 - rr * 0.38, rr * 0.76, rr * 0.76, stroke: muted, width: 1.3, r: rr * 0.22);
+      b.ellipse(cx, cy0, rr * 0.1, rr * 0.1, fill: muted);
+      if (its.isNotEmpty) b.text(its[0], x + 16, cy0 + rr + 14, w - 32, 28, size: fs * 1.2, color: ink, bold: true, align: 1, maxLines: 1);
+      if (its.length > 1) b.text(its[1], x + 16, cy0 + rr + 44, w - 32, 36, size: fs * 0.92, color: muted, align: 1, top: true, maxLines: 2);
+      if (its.length > 2) {
+        final bw = math.min(w - 48, 160.0), by = y + h - 56;
+        if (by > cy0 + rr + 70 && bw > 20) {
+          final fill = p.sketch ? 0xFFDADADA : accent;
+          b.rect(cx - bw / 2, by, bw, 40, fill: fill, stroke: p.sketch ? p.border : accent, width: p.sketch ? 2 : sw, r: 6);
+          b.text(its[2], cx - bw / 2 + 6, by, bw - 12, 40, size: fs, color: p.sketch ? p.text : p.onAccent, bold: true, align: 1, maxLines: 1);
+        }
+      }
+    case WfKind.toast:
+      final its = c.items;
+      final dark = c.fill != null ? surface : (p.sketch ? 0xFF4A4A4A : 0xFF1D2939);
+      final fg = c.textColor != null ? ink : 0xFFFFFFFF;
+      b.rect(x, y, w, h, fill: dark, stroke: p.sketch ? border : null, width: sw, r: 10);
+      final cy = y + h / 2;
+      b.ellipse(x + 26, cy, 9, 9, stroke: fg, width: 1.4);
+      b.poly([(x + 22, cy), (x + 25, cy + 3), (x + 30, cy - 3)], stroke: fg, width: 1.6);
+      final action = its.length > 1 ? its[1] : '';
+      b.text(its.isEmpty ? '' : its.first, x + 46, y, math.max(0, w - 46 - (action.isEmpty ? 16 : 92)), h, size: fs, color: fg, maxLines: 1);
+      if (action.isNotEmpty) {
+        b.text(action, x + w - 88, y, 72, h, size: fs * 0.95, color: p.sketch ? 0xFFD5DBE3 : 0xFF8FB4FF, bold: true, align: 2, maxLines: 1);
+      }
+    case WfKind.kanban:
+      final cols = c.items.isEmpty ? [''] : c.items.take(6).toList();
+      const gap = 15.0;
+      final cw = (w - gap * (cols.length - 1)) / cols.length;
+      final greyBar = col(null, p.sketch ? 0xFFBDBDBD : 0xFFD0D5DD);
+      final greyLight = col(null, p.sketch ? 0xFFD8D8D8 : 0xFFE4E7EC);
+      for (var i = 0; i < cols.length; i++) {
+        final cx0 = x + i * (cw + gap);
+        b.rect(cx0, y, cw, h, fill: col(null, p.subtle), stroke: border, width: sw, r: 10);
+        final cards = math.max(1, c.rows - i);
+        b.text(cols[i], cx0 + 14, y, math.max(0, cw - 50), 40, size: fs * 0.95, color: ink, bold: true, maxLines: 1);
+        b.text('$cards', cx0 + cw - 44, y, 30, 40, size: fs * 0.9, color: muted, align: 2, maxLines: 1);
+        for (var j = 0; j < cards; j++) {
+          final cy1 = y + 44 + j * 84;
+          if (cy1 + 72 > y + h + 0.5) break;
+          b.rect(cx0 + 10, cy1, cw - 20, 72, fill: surface, stroke: border, width: sw, r: 8);
+          b.bar(cx0 + 22, cy1 + 19, math.max(0, cw - 72), 6, greyBar);
+          b.bar(cx0 + 22, cy1 + 37, math.max(0, cw - 100), 6, greyLight);
+          b.rect(cx0 + 22, cy1 + 50, 44, 14, fill: p.sketch ? 0xFFE2E2E2 : p.accentTint, r: 7);
+          b.ellipse(cx0 + cw - 32, cy1 + 56, 9, 9, stroke: muted, width: 1.1);
+        }
+      }
+    case WfKind.timeline:
+      final its = c.items;
+      if (its.isEmpty) break;
+      final step = math.min(62.0, (h - 20) / its.length);
+      b.line(x + 16, y + 12, x + 16, y + h - 14, stroke: border, width: 2);
+      for (var i = 0; i < its.length; i++) {
+        final cy1 = y + 22 + i * step;
+        if (cy1 + 16 > y + h + 0.5) break;
+        final done = its.length == 1 || i < its.length - 1;
+        b.ellipse(x + 16, cy1, 8, 8, fill: done ? (p.sketch ? 0xFFBDBDBD : accent) : surface, stroke: done && !p.sketch ? accent : border, width: 1.6);
+        if (done) b.poly([(x + 12.5, cy1), (x + 15, cy1 + 2.5), (x + 19, cy1 - 2.5)], stroke: p.sketch ? p.text : p.onAccent, width: 1.5);
+        final (title, sub) = wfSplitPipe(its[i]);
+        b.text(title, x + 40, cy1 - 14, math.max(0, w - 48), 20, size: fs, color: done ? ink : muted, bold: true, maxLines: 1);
+        if (sub.isNotEmpty) b.text(sub, x + 40, cy1 + 4, math.max(0, w - 48), 18, size: fs * 0.85, color: muted, maxLines: 1);
+      }
   }
 }
 

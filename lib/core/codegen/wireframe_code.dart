@@ -26,6 +26,7 @@ List<(int, String)> _treeLines(WfComponent c) => [
       for (final l in c.text.split('\n'))
         if (l.trim().isNotEmpty) ((l.length - l.trimLeft().length) ~/ 2, l.trim()),
     ];
+/// "ชื่อ | รายละเอียด" ของบรรทัดไทม์ไลน์ (ไม่มี | = ไม่มีรายละเอียด)(String, String) _pipe(String s) {  final parts = s.split('|');  return (parts.first.trim(), parts.length > 1 ? parts.sublist(1).join('|').trim() : '');}
 
 String _one(WfComponent c, String fallback) {
   final t = c.text.trim().replaceAll(RegExp(r'\s+'), ' ');
@@ -76,6 +77,24 @@ String _flutterWidget(WfComponent c) {
     WfKind.calendar => 'CalendarDatePicker(initialDate: DateTime.now(), firstDate: DateTime(2000), lastDate: DateTime(2100), onDateChanged: (_) {})',
     WfKind.stat => 'Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(${_dartStr(items.length > 1 ? items.first : "")}), Text(${_dartStr(items.length > 1 ? items[1] : items.first)}, style: Theme.of(context).textTheme.headlineMedium)])))',
     WfKind.tree => 'Column(children: [${_treeLines(c).map((l) => "Padding(padding: EdgeInsets.only(left: ${l.$1 * 16.0}), child: ListTile(dense: true, title: Text(${_dartStr(l.$2)})))").join(", ")}])',
+    WfKind.statusBar => 'Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text($t), const Row(children: [Icon(Icons.signal_cellular_alt, size: 16), Icon(Icons.wifi, size: 16), Icon(Icons.battery_full, size: 16)])]))',
+    WfKind.appBar => 'AppBar(leading: const BackButton(), title: Text($t), actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.search)), IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert))])',
+    WfKind.bottomNav => 'NavigationBar(selectedIndex: 0, onDestinationSelected: (_) {}, destinations: [${(items.length < 2 ? [...items, c.kind.name] : items.take(5)).map((i) => 'NavigationDestination(icon: const Icon(Icons.circle_outlined), label: ${_dartStr(i)})').join(', ')}])',
+    WfKind.fab => 'FloatingActionButton(onPressed: () {}, child: const Icon(Icons.add))',
+    WfKind.bottomSheet => 'Card(child: Column(mainAxisSize: MainAxisSize.min, children: [ListTile(title: Text(${_dartStr(items.first)}, style: Theme.of(context).textTheme.titleMedium))${items.skip(1).map((i) => ', ListTile(title: Text(${_dartStr(i)}), onTap: () {})').join()}]))',
+    WfKind.drawer => 'SizedBox(height: ${c.h.round()}, child: Drawer(child: ListView(children: [UserAccountsDrawerHeader(accountName: Text(${_dartStr(items.first)}), accountEmail: Text(${_dartStr(items.length > 1 ? items[1] : '')}))${items.skip(2).map((i) => ', ListTile(leading: const Icon(Icons.circle_outlined), title: Text(${_dartStr(i)}), onTap: () {})').join()}])))',
+    WfKind.segmented => 'SegmentedButton<int>(segments: [${items.take(5).indexed.map((e) => 'ButtonSegment(value: ${e.$1}, label: Text(${_dartStr(e.$2)}))').join(', ')}], selected: const {0}, onSelectionChanged: (_) {})',
+    WfKind.optionGroup => 'Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(${_dartStr(items.first)}, style: Theme.of(context).textTheme.titleSmall)${items.skip(1).toList().indexed.map((e) => c.secondary ? ', CheckboxListTile(value: ${e.$1 == 0}, onChanged: (_) {}, title: Text(${_dartStr(e.$2)}))' : ', RadioListTile<int>(value: ${e.$1}, groupValue: 0, onChanged: (_) {}, title: Text(${_dartStr(e.$2)}))').join()}])',
+    WfKind.password => 'TextField(obscureText: true, decoration: InputDecoration(labelText: ${_dartStr(c.text.trim().isEmpty ? 'Password' : _one(c, 'Password'))}, suffixIcon: const Icon(Icons.visibility_outlined)))',
+    WfKind.numberInput => 'Row(mainAxisSize: MainAxisSize.min, children: [IconButton(onPressed: () {}, icon: const Icon(Icons.remove)), Text($t), IconButton(onPressed: () {}, icon: const Icon(Icons.add))])',
+    WfKind.timepicker => 'TextField(readOnly: true, decoration: InputDecoration(labelText: $t, suffixIcon: const Icon(Icons.access_time)), onTap: () {})',
+    WfKind.emptyState => 'Column(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.inbox_outlined, size: 64)${items.isNotEmpty ? ', Text(${_dartStr(items[0])}, style: Theme.of(context).textTheme.titleLarge)' : ''}${items.length > 1 ? ', Text(${_dartStr(items[1])}, textAlign: TextAlign.center)' : ''}${items.length > 2 ? ', FilledButton(onPressed: () {}, child: Text(${_dartStr(items[2])}))' : ''}])',
+    WfKind.toast => 'Card(color: Colors.black87, child: ListTile(leading: const Icon(Icons.check_circle_outline, color: Colors.white), title: Text(${_dartStr(items.first)}, style: const TextStyle(color: Colors.white))${items.length > 1 ? ', trailing: TextButton(onPressed: () {}, child: Text(${_dartStr(items[1])}))' : ''}))',
+    WfKind.kanban => 'SizedBox(height: ${c.h.round()}, child: ListView(scrollDirection: Axis.horizontal, children: [${items.take(6).map((i) => 'SizedBox(width: 200, child: Card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Padding(padding: const EdgeInsets.all(12), child: Text(${_dartStr(i)}, style: const TextStyle(fontWeight: FontWeight.bold))), const ListTile(title: Text(\'Task\'))])))').join(', ')}]))',
+    WfKind.timeline => 'Column(children: [${items.map((i) {
+          final (title, sub) = wfSplitPipe(i);
+          return 'ListTile(leading: const Icon(Icons.check_circle_outline), title: Text(${_dartStr(title)})${sub.isEmpty ? '' : ', subtitle: Text(${_dartStr(sub)})'})';
+        }).join(', ')}])',
   };
 }
 

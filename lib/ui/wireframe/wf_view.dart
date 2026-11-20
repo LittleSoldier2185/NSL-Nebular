@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/l10n/l10n.dart';
+import '../../core/models/wf_block.dart';
 import '../../core/models/wireframe_model.dart';
 import '../../core/validate/wireframe_validator.dart';
 import '../../state/app_settings.dart';
@@ -66,6 +67,21 @@ IconData wfKindIcon(WfKind k) => switch (k) {
       WfKind.calendar => Icons.calendar_month_outlined,
       WfKind.stat => Icons.analytics_outlined,
       WfKind.tree => Icons.account_tree_outlined,
+      WfKind.statusBar => Icons.signal_cellular_alt_rounded,
+      WfKind.appBar => Icons.view_headline_rounded,
+      WfKind.bottomNav => Icons.view_column_outlined,
+      WfKind.fab => Icons.add_circle_outline_rounded,
+      WfKind.bottomSheet => Icons.expand_less_rounded,
+      WfKind.drawer => Icons.menu_open_rounded,
+      WfKind.segmented => Icons.view_week_outlined,
+      WfKind.optionGroup => Icons.checklist_rounded,
+      WfKind.password => Icons.password_rounded,
+      WfKind.numberInput => Icons.exposure_rounded,
+      WfKind.timepicker => Icons.access_time_rounded,
+      WfKind.emptyState => Icons.inbox_outlined,
+      WfKind.toast => Icons.chat_bubble_outline_rounded,
+      WfKind.kanban => Icons.view_kanban_outlined,
+      WfKind.timeline => Icons.timeline_rounded,
     };
 
 /// คีย์ลัดของเครื่องมือวางชิ้นส่วน ("" = ไม่มี)
@@ -91,6 +107,15 @@ bool wfMultiline(WfKind k) => const {
       WfKind.accordion,
       WfKind.tree,
       WfKind.stat,
+      WfKind.bottomNav,
+      WfKind.bottomSheet,
+      WfKind.drawer,
+      WfKind.segmented,
+      WfKind.optionGroup,
+      WfKind.emptyState,
+      WfKind.toast,
+      WfKind.kanban,
+      WfKind.timeline,
     }.contains(k);
 
 /// ชื่อขนาดหน้าจอที่แสดงเหนือกรอบ
@@ -152,17 +177,30 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
         WfKind.rating,
         WfKind.video,
         WfKind.skeleton,
+        WfKind.fab,
       }.contains(k);
 
   @override
-  void toolTap(WireframeController c, Offset world, BoxHit hit) => _place(c, c.toolKind, world);
+  void toolTap(WireframeController c, Offset world, BoxHit hit) {
+    final block = c.toolBlock;
+    if (block != null) {
+      _placeBlock(c, block, world);
+    } else {
+      _place(c, c.toolKind, world);
+    }
+  }
+
+  void _placeBlock(WireframeController c, WfBlock block, Offset world) {
+    c.insertBlock(block, world.dx, world.dy, snap: snap);
+  }
 
   @override
-  bool acceptsDrop(Object? data) => data is WfKind;
+  bool acceptsDrop(Object? data) => data is WfKind || data is WfBlock;
 
   @override
   void drop(WireframeController c, Object data, Offset world) {
     if (data is WfKind) _place(c, data, world);
+    if (data is WfBlock) _placeBlock(c, data, world);
   }
 
   @override
@@ -180,6 +218,7 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
           MenuSpec(tr('ผูกกับข้อมูลใน ER…'), Icons.storage_rounded, () => a.bindData(id)),
         MenuSpec(tr('คัดลอก'), Icons.copy_rounded, a.copy, shortcut: 'Ctrl+C'),
         MenuSpec(tr('ทำสำเนา'), Icons.file_copy_outlined, c.duplicateSelection, shortcut: 'Ctrl+D'),
+        MenuSpec(tr('บันทึกเป็นบล็อกของฉัน…'), Icons.bookmark_add_outlined, a.saveSelectionAsBlock),
         MenuSpec(tr('นำขึ้นบนสุด'), Icons.flip_to_front_rounded, () => c.reorder(front: true)),
         MenuSpec(tr('นำลงล่างสุด'), Icons.flip_to_back_rounded, () => c.reorder(front: false)),
         null,

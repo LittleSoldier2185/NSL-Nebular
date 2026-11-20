@@ -8,11 +8,14 @@ import 'package:provider/provider.dart';
 import '../../core/export/workspace_summary.dart' show screensLinkingTo;
 import '../../core/l10n/l10n.dart';
 import '../../core/layout/box_ops.dart';
+import '../../core/models/wf_block.dart';
+import '../../core/models/wf_templates.dart';
 import '../../core/models/wireframe_model.dart';
 import '../../core/validate/wireframe_validator.dart';
 import '../../state/wireframe_controller.dart';
 import '../../state/workspace_controller.dart';
 import '../canvas/canvas_chrome.dart';
+import '../canvas/context_menu.dart';
 import '../issue_widgets.dart';
 import '../prompt_dialog.dart';
 import '../theme.dart';
@@ -62,8 +65,12 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
     final w = context.watch<WorkspaceController>();
     final recent = context.select<AppSettings, List<WfKind>>((s) => s.wfRecentKinds);
     final asList = context.select<AppSettings, bool>((s) => s.wfLibraryList);
+    final myAll = context.select<AppSettings, List<WfBlock>>((s) => s.wfMyBlocks);
     final q = _q.trim().toLowerCase();
     bool match(WfKind k) => q.isEmpty || '${wfKindLabel(k)} ${k.name}'.toLowerCase().contains(q);
+    bool matchBlock(WfBlock b) => q.isEmpty || b.name.toLowerCase().contains(q);
+    final blocks = [for (final b in wfTemplateBlocks()) if (matchBlock(b)) b];
+    final mine = [for (final b in myAll) if (matchBlock(b)) b];
     final cats = [
       for (final c in kWfCategories)
         if (c.kinds.any(match)) (c, [for (final k in c.kinds) if (match(k)) k]),
@@ -123,22 +130,27 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
             _items(asList, [for (final k in recent.take(3)) k], recent: true),
           ],
           for (final (c, kinds) in cats) ...[
-            InkWell(
-              key: ValueKey('wf-cat-${c.id}'),
-              onTap: q.isNotEmpty ? null : () => setState(() => _closed.contains(c.id) ? _closed.remove(c.id) : _closed.add(c.id)),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 14, 4),
-                child: Row(children: [
-                  Icon(q.isEmpty && _closed.contains(c.id) ? Icons.chevron_right_rounded : Icons.expand_more_rounded, size: 16, color: C.muted),
-                  const SizedBox(width: 2),
-                  Expanded(child: Text(c.label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11.5, color: C.muted))),
-                  Text('${kinds.length}', style: TextStyle(fontSize: 11.5, color: C.muted)),
-                ]),
-              ),
-            ),
+            _catHeader('wf-cat-${c.id}', c.id, c.label, kinds.length, q),
             if (q.isNotEmpty || !_closed.contains(c.id)) _items(asList, kinds),
           ],
-          if (cats.isEmpty)
+          // แม่แบบสำเร็จรูป (วางทีเดียวทั้งชุดเป็นกลุ่ม) และ "ของฉัน" (บล็อกที่ผู้ใช้บันทึกเอง)
+          if (blocks.isNotEmpty) ...[
+            _catHeader('wf-cat-blocks', 'blocks', tr('แม่แบบ'), blocks.length, q),
+            if (q.isNotEmpty || !_closed.contains('blocks')) _blocks(asList, blocks),
+          ],
+          if (mine.isNotEmpty || q.isEmpty) ...[
+            _catHeader('wf-cat-mine', 'mine', tr('ของฉัน'), mine.length, q),
+            if (q.isNotEmpty || !_closed.contains('mine'))
+              mine.isEmpty
+                  ? Padding(
+                      key: const ValueKey('wf-mine-empty'),
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                      child: Text(tr('ยังไม่มีบล็อกของคุณ เลือกหลายชิ้นบนแคนวาส คลิกขวา แล้วเลือก "บันทึกเป็นบล็อกของฉัน…"'),
+                          style: TextStyle(fontSize: 11.5, color: C.muted)),
+                    )
+                  : _blocks(asList, mine, mine: true),
+          ],
+          if (cats.isEmpty && blocks.isEmpty && mine.isEmpty)
             Padding(
               padding: const EdgeInsets.all(20),
               child: Text(tr('ไม่พบชิ้นส่วนที่ตรงกับ "{0}"', [_q.trim()]), textAlign: TextAlign.center, style: TextStyle(fontSize: 12.5, color: C.muted)),
@@ -149,6 +161,38 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
       ),
     );
   }
+
+  /// หัวหมวดที่พับ/ขยายได้ (ขณะค้นหาเปิดทุกหมวดที่มีผลและกดพับไม่ได้)
+  Widget _catHeader(String key, String id, String label, int n, String q) => InkWell(
+        key: ValueKey(key),
+        onTap: q.isNotEmpty ? null : () => setState(() => _closed.contains(id) ? _closed.remove(id) : _closed.add(id)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 10, 14, 4),
+          child: Row(children: [
+            Icon(q.isEmpty && _closed.contains(id) ? Icons.chevron_right_rounded : Icons.expand_more_rounded, size: 16, color: C.muted),
+            const SizedBox(width: 2),
+            Expanded(child: Text(label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 11.5, color: C.muted))),
+            Text('$n', style: TextStyle(fontSize: 11.5, color: C.muted)),
+          ]),
+        ),
+      );
+
+  /// บล็อกของหมวดแม่แบบ/ของฉัน: กริด 2 คอลัมน์ (รูปย่อจริงของบล็อก) หรือรายการ
+  Widget _blocks(bool asList, List<WfBlock> blocks, {bool mine = false}) => asList
+      ? Padding(
+          padding: const EdgeInsets.fromLTRB(8, 2, 8, 2),
+          child: Column(children: [for (final b in blocks) _BlockRow(block: b, mine: mine)]),
+        )
+      : Padding(
+          padding: const EdgeInsets.fromLTRB(10, 2, 10, 2),
+          child: GridView(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 6, crossAxisSpacing: 6, mainAxisExtent: 84),
+            children: [for (final b in blocks) _BlockTile(block: b, mine: mine)],
+          ),
+        );
 
   Widget _viewBtn(String key, IconData icon, String tip, bool on, VoidCallback onTap) => Tooltip(
         message: tip,
@@ -204,7 +248,7 @@ class _KindTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final f = context.watch<WireframeController>();
-    final on = f.tool == WfTool.place && f.toolKind == kind;
+    final on = f.tool == WfTool.place && f.toolBlock == null && f.toolKind == kind;
     final k = wfKindShortcut(kind);
     final tile = Container(
       padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
@@ -449,9 +493,9 @@ class _ComponentProps extends StatelessWidget {
         ),
         const SizedBox(height: 12),
       ],
-      if (c.kind == WfKind.table || c.kind == WfKind.list) ...[
+      if (c.kind == WfKind.table || c.kind == WfKind.list || c.kind == WfKind.kanban) ...[
         LabeledField(
-          label: tr('จำนวนแถวตัวอย่าง'),
+          label: c.kind == WfKind.kanban ? tr('จำนวนการ์ดตัวอย่าง (คอลัมน์แรก)') : tr('จำนวนแถวตัวอย่าง'),
           child: KeyedSubtree(
             key: const ValueKey('wf-rows'),
             child: Dropdown<int>(
@@ -465,6 +509,7 @@ class _ComponentProps extends StatelessWidget {
         const SizedBox(height: 8),
       ],
       if (c.kind == WfKind.button) _check('wf-secondary', tr('ปุ่มรอง (secondary)'), c.secondary, (v) => f.updateComponents([c.id], (x) => x.secondary = v)),
+      if (c.kind == WfKind.optionGroup) _check('wf-secondary', tr('เลือกได้หลายข้อ (ช่องทำเครื่องหมาย)'), c.secondary, (v) => f.updateComponents([c.id], (x) => x.secondary = v)),
       if (kWfCheckableKinds.contains(c.kind)) _check('wf-checked', tr('เลือกอยู่ (checked / on)'), c.checked, (v) => f.updateComponents([c.id], (x) => x.checked = v)),
       if (kWfBindableKinds.contains(c.kind)) ...[
         const SizedBox(height: 6),
@@ -1348,7 +1393,7 @@ class _KindRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final f = context.watch<WireframeController>();
-    final on = f.tool == WfTool.place && f.toolKind == kind;
+    final on = f.tool == WfTool.place && f.toolBlock == null && f.toolKind == kind;
     final k = wfKindShortcut(kind);
     final row = Container(
       height: 40,
@@ -1395,4 +1440,114 @@ class _KindRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// ช่องบล็อกในคลังมุมมองกริด (แม่แบบ/ของฉัน): รูปย่อจริงของบล็อก + ชื่อ — คลิก = เลือกเครื่องมือวางบล็อก, ลากไปวางได้ ;
+/// "ของฉัน" คลิกขวา = เปลี่ยนชื่อ / ลบ
+class _BlockTile extends StatelessWidget {
+  const _BlockTile({required this.block, required this.mine});
+  final WfBlock block;
+  final bool mine;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = context.watch<WireframeController>();
+    final on = f.tool == WfTool.place && f.toolBlock?.id == block.id;
+    final tile = Container(
+      padding: const EdgeInsets.fromLTRB(6, 6, 6, 4),
+      decoration: BoxDecoration(
+        color: on ? C.primaryTint : C.surface,
+        border: Border.all(color: on ? C.primary : C.borderSoft),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(children: [
+        Expanded(
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(color: C.canvas, borderRadius: BorderRadius.circular(5)),
+            padding: const EdgeInsets.all(2),
+            child: WireframeThumbnail(diagram: block.previewDiagram(), height: 48),
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(block.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 10.5, color: on ? C.primaryDark : C.text, fontWeight: on ? FontWeight.w600 : FontWeight.w400)),
+      ]),
+    );
+    return _blockInteractions(context, f, block, mine, tile, on, 'wf-block-${block.id}', feedbackW: 150);
+  }
+}
+
+/// แถวบล็อกในคลังมุมมองรายการ
+class _BlockRow extends StatelessWidget {
+  const _BlockRow({required this.block, required this.mine});
+  final WfBlock block;
+  final bool mine;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = context.watch<WireframeController>();
+    final on = f.tool == WfTool.place && f.toolBlock?.id == block.id;
+    final row = Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: on ? C.primaryTint : Colors.transparent,
+        border: Border.all(color: on ? C.primary : Colors.transparent),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(children: [
+        Container(
+          width: 44,
+          height: 28,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: C.canvas, border: Border.all(color: C.borderSoft), borderRadius: BorderRadius.circular(5)),
+          padding: const EdgeInsets.all(1),
+          child: WireframeThumbnail(diagram: block.previewDiagram(), height: 24),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(block.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12.5, color: on ? C.primaryDark : C.text, fontWeight: on ? FontWeight.w600 : FontWeight.w400)),
+        ),
+      ]),
+    );
+    return _blockInteractions(context, f, block, mine, row, on, 'wf-block-${block.id}', feedbackW: 210);
+  }
+}
+
+/// คลิก = วางเครื่องมือบล็อก · ลากไปวาง · (ของฉัน) คลิกขวา = เปลี่ยนชื่อ / ลบ
+Widget _blockInteractions(BuildContext context, WireframeController f, WfBlock block, bool mine, Widget child, bool on, String key,
+    {required double feedbackW}) {
+  return Tooltip(
+    message: block.name,
+    child: Draggable<Object>(
+      data: block,
+      feedback: Material(color: Colors.transparent, child: Opacity(opacity: 0.8, child: SizedBox(width: feedbackW, height: 84, child: child))),
+      child: GestureDetector(
+        onSecondaryTapDown: !mine
+            ? null
+            : (d) => showContextMenu(context, d.globalPosition, [
+                  MenuSpec(tr('เปลี่ยนชื่อ…'), Icons.edit_outlined, () async {
+                    final name = await promptText(context, title: tr('เปลี่ยนชื่อบล็อก'), initial: block.name, label: tr('ชื่อบล็อก'));
+                    if (name != null && context.mounted) context.read<AppSettings>().renameWfMyBlock(block.id, name);
+                  }),
+                  MenuSpec(tr('ลบบล็อก'), Icons.delete_outline, () {
+                    if (f.toolBlock?.id == block.id) f.setTool(WfTool.select);
+                    context.read<AppSettings>().removeWfMyBlock(block.id);
+                  }, danger: true),
+                ]),
+        child: InkWell(
+          key: ValueKey(key),
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => f.setPlaceBlockTool(block),
+          child: child,
+        ),
+      ),
+    ),
+  );
 }

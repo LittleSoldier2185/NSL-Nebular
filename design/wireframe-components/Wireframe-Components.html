@@ -1,0 +1,233 @@
+<title>Wireframe Components</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: สรุปขอบเขต แล้วชิ้นส่วนใหม่ 15 ชนิดเป็นการ์ดพรีวิว (สลับร่าง/เรียบร้อยได้) ต่อด้วยแม่แบบ 8 ชุด หน้ามือถือที่ประกอบกัน และคลังที่มีหมวดใหม่ */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --field:#F3F5F8; --fg:#1B2430; --muted:#5B6778;
+  --line:#D8DEE6; --soft:#E6EAF0; --accent:#B7791F; --accent-ink:#8A5A12; --accent-tint:#FBF1DC;
+  --on-accent:#FFFFFF; --paper:#FFFFFF; --paper-line:#E1E6ED; --stage:#F6F8FB;
+  --sans:'Noto Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171E; --surface:#1A212B; --field:#222B37; --fg:#E6EBF2; --muted:#9AA7B8;
+  --line:#2D3846; --soft:#263140; --accent:#E0A94A; --accent-ink:#F1C77E; --accent-tint:#3A2F18;
+  --on-accent:#1B1406; --paper:#FFFFFF; --paper-line:#3B4757; --stage:#161C24; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171E; --surface:#1A212B; --field:#222B37; --fg:#E6EBF2; --muted:#9AA7B8;
+  --line:#2D3846; --soft:#263140; --accent:#E0A94A; --accent-ink:#F1C77E; --accent-tint:#3A2F18;
+  --on-accent:#1B1406; --paper:#FFFFFF; --paper-line:#3B4757; --stage:#161C24; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-size:22px;margin:0 0 4px;text-wrap:balance}
+h2{font-size:16px;margin:0}
+h3{font-size:13.5px;margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.sumgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.sumgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.stat b{font-size:22px;display:block;font-variant-numeric:tabular-nums}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.segbox{display:flex;padding:2px;border-radius:9px;background:var(--field);gap:2px;border:1px solid var(--line)}
+.segbox button{height:28px;padding:0 14px;border:0;border-radius:7px;background:none;font-size:12.5px;cursor:pointer}
+.segbox button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 2px rgba(15,23,42,.18);font-weight:600;color:var(--accent-ink)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-top:12px}
+.cardx{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.cardx.wide{grid-column:span 2}
+@media (max-width:620px){.cardx.wide{grid-column:span 1}}
+.head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.head .id{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.size{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.stage{background:var(--stage);border:1px solid var(--soft);border-radius:8px;padding:10px;display:flex;align-items:center;justify-content:center;min-height:80px;overflow:auto}
+.stage svg{display:block;max-width:100%;height:auto}
+.tag{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;background:var(--accent-tint);color:var(--accent-ink)}
+.flex{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;width:290px;max-width:100%;display:flex;flex-direction:column;overflow:hidden}
+.panel .ph{padding:12px 12px 6px;font-weight:600}
+.cat{display:flex;align-items:center;gap:6px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--muted);border-top:1px solid var(--soft)}
+.cat .n{margin-left:auto;font-weight:500}
+.cat.new{color:var(--accent-ink);background:var(--accent-tint)}
+.cat.new .n{color:var(--accent-ink)}
+.ctx{background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 18px rgba(15,23,42,.18);width:230px;padding:4px;font-size:12.5px}
+.ctx div{padding:6px 10px;border-radius:6px}
+.ctx .on{background:var(--accent-tint);color:var(--accent-ink);font-weight:600}
+.dlg{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;width:290px;display:flex;flex-direction:column;gap:10px}
+.dlg .f{height:32px;border:1px solid var(--line);border-radius:8px;display:flex;align-items:center;padding:0 10px;font-size:13px;background:var(--field)}
+.dlg .row{display:flex;gap:8px;justify-content:flex-end}
+.dlg .b{height:30px;border-radius:8px;padding:0 12px;display:flex;align-items:center;font-size:12.5px;border:1px solid var(--line)}
+.dlg .b.p{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+ul{margin:8px 0 0;padding-left:18px}
+li{margin:3px 0}
+.decide{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Wireframe: ชิ้นส่วนใหม่และแม่แบบสำเร็จรูป</h1>
+    <p class="muted">ชิ้นส่วนใหม่ 15 ชนิด แม่แบบ 8 ชุด และหมวดใหม่ 3 หมวดในคลัง กด "ร่าง / เรียบร้อย" ด้านล่างเพื่อดูแต่ละชิ้นในทั้งสองสไตล์ ขนาดที่แสดงคือขนาดเริ่มต้นเมื่อวางลงแคนวาส</p>
+  </header>
+
+  <section class="sumgrid">
+    <div class="stat"><b>15</b><span class="note">ชนิดใหม่ (มือถือ 6 · ฟอร์ม 5 · ข้อมูล/สถานะ 4)</span></div>
+    <div class="stat"><b>8</b><span class="note">แม่แบบ ประกอบจากชิ้นส่วนที่มีอยู่ ไม่เพิ่มชนิดใหม่</span></div>
+    <div class="stat"><b>3</b><span class="note">หมวดใหม่ในคลัง: มือถือ · แม่แบบ · ของฉัน</span></div>
+    <div class="stat"><b>60</b><span class="note">ชนิดทั้งหมดหลังเพิ่ม (เดิม 45)</span></div>
+  </section>
+
+  <div class="bar">
+    <span class="note">สไตล์ที่แสดง</span>
+    <div class="segbox" role="group" aria-label="สไตล์"><button type="button" data-style="sketch" aria-pressed="true">ร่าง</button><button type="button" data-style="clean" aria-pressed="false">เรียบร้อย</button></div>
+    <span class="note">ร่าง = โทนเทา เส้นสั่นเล็กน้อย · เรียบร้อย = สีเน้นของหน้าจอ (ตัวอย่างใช้สีน้ำเงิน)</span>
+  </div>
+
+  <section><h2>1. มือถือ (หมวดใหม่ 6 ชิ้น)</h2><p class="note">มีขนาดอุปกรณ์มือถืออยู่แล้วแต่ยังไม่มีชิ้นเฉพาะ ชุดนี้ทำให้ภาพหน้าจอมือถือดูเป็นแอปจริง</p><div class="cards" id="g-mobile"></div></section>
+  <section><h2>2. ฟอร์ม (เพิ่ม 5 ชิ้น)</h2><div class="cards" id="g-form"></div></section>
+  <section><h2>3. ข้อมูลและสถานะ (เพิ่ม 4 ชิ้น)</h2><div class="cards" id="g-data"></div></section>
+
+  <section>
+    <h2>4. ประกอบกันเป็นหน้ามือถือ</h2>
+    <p class="note">แถบสถานะ + แถบหัวแอป + เนื้อหา + แถบแท็บล่าง + ปุ่มลอย + Toast ในกรอบมือถือ 390×844</p>
+    <div class="stage" style="margin-top:12px;padding:16px"><div id="phone"></div></div>
+  </section>
+
+  <section>
+    <h2>5. แม่แบบสำเร็จรูป (Blocks)</h2>
+    <p class="note">คลิกครั้งเดียววางทั้งชุดเป็นกลุ่ม (จัดกลุ่มไว้แล้ว ย้ายทีเดียวได้ เลิกจัดกลุ่มเพื่อแก้ทีละชิ้น) ประกอบจากชิ้นส่วนที่มีอยู่ ข้อความเป็นไทยแก้ได้ทั้งหมด</p>
+    <div class="cards" id="g-blocks"></div>
+  </section>
+
+  <section>
+    <h2>6. คลังชิ้นส่วนที่มีหมวดใหม่ และ "บันทึกเป็นของฉัน"</h2>
+    <div class="flex" style="margin-top:12px">
+      <div class="panel" aria-label="คลังหลังเพิ่มหมวด">
+        <div class="ph">คลังชิ้นส่วน</div>
+        <div class="cat">โครงหน้า<span class="n">9</span></div>
+        <div class="cat">ข้อความ<span class="n">5</span></div>
+        <div class="cat">ฟอร์ม<span class="n">17</span></div>
+        <div class="cat">ข้อมูล<span class="n">9</span></div>
+        <div class="cat">สื่อ<span class="n">5</span></div>
+        <div class="cat">สถานะ<span class="n">9</span></div>
+        <div class="cat new">มือถือ · ใหม่<span class="n">6</span></div>
+        <div class="cat new">แม่แบบ · ใหม่<span class="n">8</span></div>
+        <div class="cat new">ของฉัน · ใหม่<span class="n">0</span></div>
+        <div class="note" style="padding:8px 12px 12px">หมวด "ของฉัน" ว่างอยู่จนกว่าจะบันทึกชุดแรก จะมีข้อความบอกวิธีทำแทนรูปย่อ</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div><h3>ขั้นที่ 1 · เลือกหลายชิ้นบนแคนวาส แล้วคลิกขวา</h3>
+          <div class="ctx" style="margin-top:8px"><div>คัดลอก</div><div>ทำสำเนา</div><div>จัดกลุ่ม</div><div class="on">บันทึกเป็นบล็อกของฉัน…</div><div>ลบ 6 ชิ้นส่วน</div></div></div>
+        <div><h3>ขั้นที่ 2 · ตั้งชื่อ</h3>
+          <div class="dlg" style="margin-top:8px"><div class="muted" style="font-size:12px">บันทึก 6 ชิ้นส่วนเป็นบล็อก</div><div class="f">แบบฟอร์มค้นหาห้อง</div><div class="row"><span class="b">ยกเลิก</span><span class="b p">บันทึก</span></div></div></div>
+      </div>
+      <div style="flex:1;min-width:240px"><h3>พฤติกรรม</h3>
+        <ul class="note">
+          <li>บล็อกของฉันเก็บในไฟล์ตั้งค่าของเครื่องนี้ (เหมือน "ใช้ล่าสุด") ไม่ลงไฟล์โปรเจกต์</li>
+          <li>คลิกขวาที่บล็อกในคลัง: เปลี่ยนชื่อ / ลบ</li>
+          <li>วางแล้วเป็นกลุ่ม ตำแหน่งสัมพัทธ์เดิมครบ ผูกข้อมูล ER / endpoint ที่ตั้งไว้ติดไปด้วย</li>
+          <li>แม่แบบสำเร็จรูปและของฉันค้นหาได้ในช่องค้นหาเดียวกับชิ้นส่วน</li>
+        </ul></div>
+    </div>
+  </section>
+
+  <section class="decide">
+    <h2>ที่ต้องตัดสินใจ</h2>
+    <ul>
+      <li>หน้าตาของ 15 ชิ้นใหม่ (ทั้งสองสไตล์) ใช้ได้ไหม มีชิ้นไหนอยากให้ปรับ</li>
+      <li>แม่แบบทั้ง 8 ชุดตามนี้ หรืออยากเพิ่ม/ตัด</li>
+      <li>"ของฉัน" เก็บในเครื่องนี้ (ตามที่เสนอ) หรือเก็บไว้ในไฟล์โปรเจกต์ให้ติดไปกับไฟล์</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+/* ---- ตัววาด: สีของพื้นกระดาษจำลองหน้าจอ wireframe (ขาวเสมอ ไม่ตามธีม) ---- */
+var ST = {
+  sketch: { ink:'#3A4452', mut:'#7A8696', line:'#6B7685', paper:'#FFFFFF', soft:'#F1F3F6', acc:'#7A8696', accSoft:'#E6EAF0', onAcc:'#FFFFFF', dark:'#4A5563', sk:true },
+  clean:  { ink:'#1B2430', mut:'#6B7685', line:'#D2D9E2', paper:'#FFFFFF', soft:'#F3F5F8', acc:'#2563EB', accSoft:'#E3ECFD', onAcc:'#FFFFFF', dark:'#1F2A37', sk:false }
+};
+var S = ST.sketch, MODE = 'sketch';
+function R(x,y,w,h,r,fill,stroke,sw){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+(r||0)+'" fill="'+(fill||'none')+'" stroke="'+(stroke||'none')+'" stroke-width="'+(sw||1.2)+'"/>';}
+function T(x,y,s,size,o){o=o||{};return '<text x="'+x+'" y="'+y+'" font-size="'+(size||13)+'" font-weight="'+(o.w||400)+'" fill="'+(o.c||S.ink)+'" text-anchor="'+(o.a||'start')+'" font-family="Noto Sans Thai,system-ui,sans-serif">'+s+'</text>';}
+function L(x1,y1,x2,y2,c,sw){return '<path d="M'+x1+' '+y1+'L'+x2+' '+y2+'" stroke="'+(c||S.line)+'" stroke-width="'+(sw||1.2)+'" stroke-linecap="round" fill="none"/>';}
+function C(x,y,r,fill,stroke,sw){return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+(fill||'none')+'" stroke="'+(stroke||'none')+'" stroke-width="'+(sw||1.2)+'"/>';}
+function P(d,stroke,fill,sw){return '<path d="'+d+'" fill="'+(fill||'none')+'" stroke="'+(stroke||S.line)+'" stroke-width="'+(sw||1.4)+'" stroke-linecap="round" stroke-linejoin="round"/>';}
+function icon(x,y,s,on){return R(x,y,s,s,s*0.28,on?S.acc:'none',on?S.acc:S.mut,1.3)+(on?'':C(x+s/2,y+s/2,s*0.12,S.mut));}
+function btn(x,y,w,h,label,primary){return R(x,y,w,h,h/2>10?8:h/2,primary?S.acc:S.paper,primary?S.acc:S.line,1.2)+T(x+w/2,y+h/2+4.5,label,13,{a:'middle',w:primary?600:500,c:primary?S.onAcc:S.ink});}
+function inp(x,y,w,label,ph){return T(x,y,label,12,{c:S.mut,w:500})+R(x,y+6,w,38,6,S.paper,S.line,1.2)+T(x+12,y+30,ph,13,{c:S.mut});}
+function chk(x,y,label,on){return R(x,y,16,16,3,on?S.acc:S.paper,on?S.acc:S.line,1.3)+(on?P('M'+(x+4)+' '+(y+8.5)+'l3 3 5-6',S.onAcc,'none',1.6):'')+T(x+24,y+13,label,13);}
+function stars(x,y,n){var s='';for(var i=0;i<5;i++)s+=C(x+6+i*15,y,5,i<n?S.acc:'none',i<n?S.acc:S.mut,1.1);return s;}
+function img(x,y,w,h){return R(x,y,w,h,4,S.soft,S.line,1.1)+P('M'+x+' '+(y+h*0.78)+'l'+(w*0.28)+' -'+(h*0.3)+' '+(w*0.22)+' '+(h*0.2)+' '+(w*0.18)+' -'+(h*0.14)+' '+(w*0.32)+' '+(h*0.24),S.mut,'none',1.2)+C(x+w*0.2,y+h*0.25,Math.min(w,h)*0.07,'none',S.mut,1.2);}
+function wrapSvg(w,h,body){return '<svg viewBox="0 0 '+w+' '+h+'" width="'+w+'" height="'+h+'" role="img">'+(S.sk?'<defs><filter id="wob" x="-2%" y="-2%" width="104%" height="104%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.2"/></filter></defs><g filter="url(#wob)">'+body+'</g>':body)+'</svg>';}
+
+/* ---- ชิ้นส่วนใหม่ 15 ชนิด ---- */
+var KINDS = {
+  statusBar:{t:'แถบสถานะเครื่อง',w:390,h:28,use:'เวลา สัญญาณ แบตเตอรี่ ทำให้ภาพดูเป็นมือถือ',d:function(w,h){return T(24,19,'9:41',13,{w:600})+R(w-84,10,3,8,1,S.ink)+R(w-79,8,3,10,1,S.ink)+R(w-74,6,3,12,1,S.ink)+P('M'+(w-60)+' 13a8 8 0 0114 0M'+(w-57)+' 16a4 4 0 018 0',S.ink,'none',1.5)+R(w-40,8,24,11,3,'none',S.ink,1.3)+R(w-38,10,16,7,1.5,S.ink)+R(w-15,11,2,5,1,S.ink);}},
+  appBar:{t:'แถบหัวแอป',w:390,h:56,use:'ปุ่มย้อนกลับ ชื่อหน้า และปุ่มเสริม',d:function(w,h){return R(0,0,w,h,0,S.paper)+L(0,h,w,h)+P('M26 20l-8 8 8 8',S.ink,'none',1.8)+T(46,35,'ค้นหาห้องพัก',17,{w:600})+icon(w-80,16,24)+icon(w-44,16,24);}},
+  bottomNav:{t:'แถบแท็บล่าง',w:390,h:64,use:'นำทางหลัก 4-5 ปลายทางบนมือถือ',d:function(w,h){var tabs=['หน้าแรก','ค้นหา','การจอง','โปรไฟล์'],s=R(0,0,w,h,0,S.paper)+L(0,0.6,w,0.6),cw=w/4;for(var i=0;i<4;i++){var cx=cw*i+cw/2,on=i===0;s+=icon(cx-11,9,22,on)+T(cx,52,tabs[i],11,{a:'middle',c:on?S.acc:S.mut,w:on?600:400});}return s;}},
+  fab:{t:'ปุ่มลอย',w:56,h:56,use:'การกระทำหลักของหน้า (เพิ่ม/สร้าง)',d:function(w,h){return (S.sk?'':'<circle cx="28" cy="31" r="26" fill="#000" opacity=".12"/>')+C(28,28,26,S.acc)+L(18,28,38,28,S.onAcc,2.4)+L(28,18,28,38,S.onAcc,2.4);}},
+  bottomSheet:{t:'แผ่นล่าง',w:390,h:260,use:'เมนู/ตัวเลือกที่เลื่อนขึ้นจากด้านล่าง',d:function(w,h){var s=R(0.6,0.6,w-1.2,h+20,18,S.paper,S.line,1.3)+R(w/2-18,10,36,4,2,S.line)+T(24,46,'จัดเรียงตาม',16,{w:600}),rows=['ราคาต่ำสุดก่อน','คะแนนสูงสุด','ใกล้ฉันที่สุด'];for(var i=0;i<3;i++){var y=64+i*58;s+=L(24,y,w-24,y,S.line,1)+C(34,y+29,9,i===0?S.acc:'none',i===0?S.acc:S.mut,1.4)+T(56,y+34,rows[i],14,{w:i===0?600:400})}return s;}},
+  drawer:{t:'ลิ้นชักข้าง',w:280,h:600,use:'เมนูหลักที่เลื่อนจากขอบซ้าย',d:function(w,h){var s=R(0.6,0.6,w-1.2,h-1.2,0,S.paper,S.line,1.3)+R(1,1,w-2,150,0,S.soft)+C(48,64,26,S.paper,S.mut,1.4)+T(24,120,'สมชาย ใจดี',16,{w:600})+T(24,140,'somchai@example.com',12,{c:S.mut}),items=['หน้าแรก','การจองของฉัน','รายการโปรด','ประวัติ','ตั้งค่า'];for(var i=0;i<5;i++){var y=170+i*54;if(i===0)s+=R(10,y,w-20,44,8,S.accSoft);s+=icon(24,y+11,22,i===0)+T(58,y+28,items[i],14,{w:i===0?600:400,c:i===0?S.acc===S.mut?S.ink:S.acc:S.ink});if(i===2)s+=L(16,y+51,w-16,y+51,S.line,1);}return s;}},
+  segmented:{t:'ปุ่มสลับแบบแบ่งช่อง',w:260,h:36,use:'สลับมุมมอง/ตัวกรอง 2-4 ตัวเลือก',d:function(w,h){var s=R(0.6,0.6,w-1.2,h-1.2,9,S.soft,S.line,1.2),sw=(w-8)/3,lb=['รายวัน','รายสัปดาห์','รายเดือน'];for(var i=0;i<3;i++){if(i===0)s+=R(4+i*sw,4,sw,h-8,6,S.paper,S.line,1.1);s+=T(4+i*sw+sw/2,h/2+4.5,lb[i],12.5,{a:'middle',w:i===0?600:400,c:i===0?S.ink:S.mut});}return s;}},
+  optionGroup:{t:'กลุ่มตัวเลือก',w:260,h:150,use:'ชุดปุ่มเลือก/ช่องติ๊กพร้อมหัวข้อ (สลับเป็นเลือกหนึ่ง/หลายได้)',d:function(w,h){var s=T(0,16,'ประเภทห้อง',13,{w:600}),o=['ห้องเดี่ยว','ห้องคู่','ห้องครอบครัว'];for(var i=0;i<3;i++){var y=42+i*36;s+=C(10,y,8,'none',i===1?S.acc:S.line,1.4)+(i===1?C(10,y,4,S.acc):'')+T(28,y+5,o[i],14);}return s;}},
+  password:{t:'ช่องรหัสผ่าน',w:260,h:40,use:'ช่องกรอกที่ซ่อนอักขระ มีปุ่มแสดง/ซ่อน',d:function(w,h){return R(0.6,0.6,w-1.2,h-1.2,6,S.paper,S.line,1.2)+T(14,25,'••••••••',16,{c:S.ink})+P('M'+(w-38)+' 20c4-6 12-6 16 0-4 6-12 6-16 0',S.mut,'none',1.4)+C(w-30,20,2.5,S.mut);}},
+  numberInput:{t:'ช่องตัวเลข + / −',w:140,h:40,use:'จำนวน/ผู้เข้าพัก/ห้อง',d:function(w,h){return R(0.6,0.6,w-1.2,h-1.2,8,S.paper,S.line,1.2)+L(40,6,40,h-6)+L(w-40,6,w-40,h-6)+L(14,20,26,20,S.ink,1.8)+T(w/2,26,'2',15,{a:'middle',w:600})+L(w-26,20,w-14,20,S.ink,1.8)+L(w-20,14,w-20,26,S.ink,1.8);}},
+  timepicker:{t:'เลือกเวลา',w:240,h:40,use:'คู่กับเลือกวันที่ ใช้กับเวลาเช็คอิน/นัดหมาย',d:function(w,h){return R(0.6,0.6,w-1.2,h-1.2,6,S.paper,S.line,1.2)+C(24,20,9,'none',S.mut,1.4)+P('M24 15v5l3 2',S.mut,'none',1.4)+T(44,25,'14:00',14)+P('M'+(w-28)+' 17l5 5 5-5',S.mut,'none',1.5);}},
+  emptyState:{t:'หน้าว่าง',w:360,h:240,use:'ยังไม่มีข้อมูล ชวนให้เริ่มต้น',d:function(w,h){return C(w/2,56,36,S.soft,S.line,1.2)+icon(w/2-14,42,28)+T(w/2,128,'ยังไม่มีการจอง',17,{a:'middle',w:600})+T(w/2,152,'เมื่อคุณจองห้องพัก รายการจะแสดงที่นี่',13,{a:'middle',c:S.mut})+btn(w/2-70,176,140,40,'ค้นหาห้องพัก',true);}},
+  toast:{t:'Toast / Snackbar',w:340,h:52,use:'แจ้งผลสั้น ๆ พร้อมปุ่มเลิกทำ',d:function(w,h){return R(0,0,w,h,10,S.dark)+C(26,26,9,'none','#FFFFFF',1.4)+P('M22 26l3 3 5-6','#FFFFFF','none',1.6)+T(46,31,'บันทึกรายการโปรดแล้ว',13.5,{c:'#FFFFFF',w:500})+T(w-20,31,'เลิกทำ',13,{a:'end',c:S.sk?'#D5DBE3':'#8FB4FF',w:700});}},
+  kanban:{t:'Kanban',w:620,h:320,use:'บอร์ดสถานะงาน/คำสั่งซื้อ แบ่งเป็นคอลัมน์',d:function(w,h){var cols=[['รอดำเนินการ',3],['กำลังทำ',2],['เสร็จแล้ว',1]],s='',cw=190;for(var i=0;i<3;i++){var x=i*(cw+15);s+=R(x,0,cw,h,10,S.soft,S.line,1.1)+T(x+14,26,cols[i][0],13,{w:600})+T(x+cw-14,26,''+cols[i][1],12,{a:'end',c:S.mut});for(var j=0;j<cols[i][1];j++){var y=44+j*84;s+=R(x+10,y,cw-20,72,8,S.paper,S.line,1.1)+L(x+22,y+22,x+cw-50,y+22,S.ink,1.6)+L(x+22,y+40,x+cw-80,y+40,S.line,1.4)+R(x+22,y+50,44,14,7,S.accSoft)+C(x+cw-32,y+56,9,S.soft,S.mut,1.1);}}return s;}},
+  timeline:{t:'ไทม์ไลน์',w:300,h:260,use:'ลำดับเหตุการณ์ เช่น สถานะการส่งของ',d:function(w,h){var s=L(16,12,16,h-14,S.line,2),it=[['สั่งซื้อสำเร็จ','12 ธ.ค. 09:10'],['เตรียมสินค้า','12 ธ.ค. 13:40'],['กำลังจัดส่ง','13 ธ.ค. 08:05'],['ถึงผู้รับ','รอดำเนินการ']];for(var i=0;i<4;i++){var y=22+i*62;s+=C(16,y,8,i<3?S.acc:S.paper,i<3?S.acc:S.line,1.6)+(i<3?P('M12.5 '+y+'l2.5 2.5 4-5',S.onAcc,'none',1.5):'')+T(40,y-2,it[i][0],14,{w:600,c:i<3?S.ink:S.mut})+T(40,y+16,it[i][1],12,{c:S.mut});}return s;}}
+};
+
+/* ---- แม่แบบ 8 ชุด (ประกอบจากชิ้นส่วนที่มีอยู่) ---- */
+var BLOCKS = {
+  loginForm:{t:'ฟอร์มเข้าสู่ระบบ',w:360,h:440,n:11,use:'โลโก้ · อีเมล · รหัสผ่าน · จดจำฉัน · ปุ่มหลัก · เข้าด้วยบัญชีอื่น',d:function(w,h){return R(0.6,0.6,w-1.2,h-1.2,12,S.paper,S.line,1.3)+C(w/2,48,22,S.soft,S.line,1.2)+T(w/2,104,'เข้าสู่ระบบ',20,{a:'middle',w:700})+inp(28,134,w-56,'อีเมล','you@example.com')+inp(28,202,w-56,'รหัสผ่าน','••••••••')+chk(28,270,'จดจำฉัน',true)+T(w-28,283,'ลืมรหัสผ่าน?',12.5,{a:'end',c:S.acc})+btn(28,300,w-56,42,'เข้าสู่ระบบ',true)+L(28,366,w/2-18,366)+T(w/2,370,'หรือ',12,{a:'middle',c:S.mut})+L(w/2+18,366,w-28,366)+btn(28,380,w-56,40,'ต่อด้วย Google',false);}},
+  signupForm:{t:'ฟอร์มสมัครสมาชิก',w:360,h:500,n:12,use:'ชื่อ · อีเมล · รหัสผ่าน ×2 · ยอมรับเงื่อนไข · ปุ่มหลัก',d:function(w,h){return R(0.6,0.6,w-1.2,h-1.2,12,S.paper,S.line,1.3)+T(w/2,50,'สร้างบัญชีใหม่',20,{a:'middle',w:700})+inp(28,76,w-56,'ชื่อ-นามสกุล','สมชาย ใจดี')+inp(28,142,w-56,'อีเมล','you@example.com')+inp(28,208,w-56,'รหัสผ่าน','อย่างน้อย 8 ตัวอักษร')+inp(28,274,w-56,'ยืนยันรหัสผ่าน','••••••••')+chk(28,350,'ฉันยอมรับเงื่อนไขการใช้งาน',false)+btn(28,386,w-56,42,'สมัครสมาชิก',true)+T(w/2,462,'มีบัญชีอยู่แล้ว? เข้าสู่ระบบ',12.5,{a:'middle',c:S.mut});}},
+  profileHeader:{t:'หัวโปรไฟล์',w:480,h:180,n:8,use:'ภาพปก · อวตาร · ชื่อ · สถิติ 3 ช่อง · ปุ่ม',d:function(w,h){var s=R(0.6,0.6,w-1.2,h-1.2,12,S.paper,S.line,1.3)+R(1,1,w-2,70,11,S.soft)+C(62,76,36,S.paper,S.mut,2)+T(112,98,'สมชาย ใจดี',18,{w:700})+T(112,118,'@somchai · กรุงเทพฯ',12.5,{c:S.mut})+btn(w-122,84,98,34,'ติดตาม',true),st=[['128','โพสต์'],['2.4k','ผู้ติดตาม'],['310','กำลังติดตาม']];for(var i=0;i<3;i++)s+=T(112+i*92,152,st[i][0],15,{w:700})+T(112+i*92,168,st[i][1],11.5,{c:S.mut});return s;}},
+  productCard:{t:'การ์ดสินค้า',w:240,h:330,n:7,use:'รูป · ป้ายส่วนลด · ชื่อ · คะแนน · ราคา · ปุ่ม',d:function(w,h){return R(0.6,0.6,w-1.2,h-1.2,12,S.paper,S.line,1.3)+img(10,10,w-20,150)+R(18,18,58,20,10,S.acc)+T(47,32,'-20%',11.5,{a:'middle',c:S.onAcc,w:700})+T(14,188,'เก้าอี้ไม้โอ๊ค รุ่น Nara',14,{w:600})+stars(14,208,4)+T(w-14,212,'(86)',12,{a:'end',c:S.mut})+T(14,246,'฿2,490',18,{w:700})+T(88,246,'฿3,100',12.5,{c:S.mut})+L(88,242,132,242,S.mut,1)+btn(14,266,w-28,40,'ใส่ตะกร้า',true);}},
+  cartRow:{t:'แถวสินค้าในตะกร้า',w:560,h:100,n:7,use:'รูปย่อ · ชื่อ/ตัวเลือก · จำนวน · ราคา · ลบ',d:function(w,h){return R(0.6,0.6,w-1.2,h-1.2,10,S.paper,S.line,1.3)+img(12,12,76,76)+T(104,40,'เก้าอี้ไม้โอ๊ค รุ่น Nara',14.5,{w:600})+T(104,60,'สี: ธรรมชาติ · ขนาด: M',12.5,{c:S.mut})+R(104,68,110,22,6,S.paper,S.line,1.1)+L(132,70,132,88)+L(186,70,186,88)+T(159,84,'1',13,{a:'middle',w:600})+T(118,84,'−',14,{a:'middle'})+T(200,84,'+',14,{a:'middle'})+T(w-60,56,'฿2,490',16,{a:'end',w:700})+icon(w-44,38,24);}},
+  pricingCard:{t:'การ์ดราคา',w:280,h:390,n:9,use:'ชื่อแผน · ราคา · รายการสิทธิ์ · ปุ่ม',d:function(w,h){var s=R(0.6,0.6,w-1.2,h-1.2,14,S.paper,S.acc,S.sk?1.3:2)+R(w/2-40,-1,80,22,11,S.acc)+T(w/2,14,'ยอดนิยม',11.5,{a:'middle',c:S.onAcc,w:700})+T(w/2,60,'โปร',16,{a:'middle',w:700})+T(w/2,112,'฿299',38,{a:'middle',w:700})+T(w/2,134,'ต่อเดือน',12.5,{a:'middle',c:S.mut}),f=['โปรเจกต์ไม่จำกัด','ส่งออกทุกรูปแบบ','พื้นที่ 50 GB','สนับสนุนทางอีเมล'];for(var i=0;i<4;i++)s+=P('M30 '+(176+i*34)+'l4 4 8-9',S.acc,'none',1.8)+T(54,181+i*34,f[i],14);return s+btn(24,322,w-48,44,'เลือกแผนนี้',true);}},
+  hero:{t:'Hero + ปุ่ม CTA',w:640,h:300,n:5,use:'หัวข้อใหญ่ · คำอธิบาย · ปุ่มหลัก/รอง · รูป',d:function(w,h){return R(0.6,0.6,w-1.2,h-1.2,12,S.paper,S.line,1.3)+T(36,80,'ค้นหาห้องพักที่ใช่',30,{w:700})+T(36,108,'เปรียบเทียบราคาและรีวิวจริง',30,{w:700})+T(36,146,'จองง่าย ยกเลิกฟรีภายใน 24 ชั่วโมง',14,{c:S.mut})+btn(36,176,140,46,'เริ่มค้นหา',true)+btn(190,176,120,46,'ดูตัวอย่าง',false)+img(360,30,244,240);}},
+  pageHeader:{t:'หัวหน้า + ค้นหา + ตัวกรอง',w:640,h:130,n:9,use:'ชื่อหน้า · เส้นทาง · ช่องค้นหา · ชิปตัวกรอง',d:function(w,h){var s=T(0,18,'หน้าแรก / ค้นหาห้อง',12,{c:S.mut})+T(0,52,'ผลการค้นหา 42 รายการ',22,{w:700})+R(w-300,22,300,40,8,S.paper,S.line,1.2)+C(w-280,42,6,'none',S.mut,1.3)+L(w-276,46,w-270,52,S.mut,1.3)+T(w-262,47,'ค้นหาชื่อห้อง',13,{c:S.mut}),ch=['ทั้งหมด','ราคาไม่เกิน ฿2,000','มีอาหารเช้า','ใกล้ BTS'],x=0;for(var i=0;i<4;i++){var cw=ch[i].length*7.4+28;s+=R(x,84,cw,30,15,i===0?S.acc:S.paper,i===0?S.acc:S.line,1.2)+T(x+cw/2,103,ch[i],12.5,{a:'middle',c:i===0?S.onAcc:S.ink,w:i===0?600:400});x+=cw+8;}return s;}}
+};
+
+function card(id,k,cls){
+  return '<div class="cardx '+(cls||'')+'"><div class="head"><h3>'+k.t+'</h3><span class="id">'+id+'</span><span class="size">'+k.w+'×'+k.h+(k.n?' · '+k.n+' ชิ้น':'')+'</span></div>'
+    +'<div class="stage">'+wrapSvg(k.w,k.h,k.d(k.w,k.h))+'</div><p class="note">'+k.use+'</p></div>';
+}
+function group(el,ids,src,wideIds){
+  document.getElementById(el).innerHTML = ids.map(function (i) { return card(i, src[i], wideIds && wideIds.indexOf(i) >= 0 ? 'wide' : ''); }).join('');
+}
+function phone() {
+  var w = 390, h = 844, s = R(0.6, 0.6, w - 1.2, h - 1.2, 34, S.paper, S.ink, 2);
+  s += KINDS.statusBar.d(w, 28).replace(/^/, '');
+  s += '<g transform="translate(0 28)">' + KINDS.appBar.d(w, 56) + '</g>';
+  s += T(20, 132, 'พบ 42 ห้องพัก', 15, { w: 600 });
+  for (var i = 0; i < 3; i++) {
+    var y = 150 + i * 150;
+    s += R(16, y, w - 32, 136, 12, S.paper, S.line, 1.2) + img(24, y + 8, 120, 120) + T(158, y + 38, 'ห้อง Deluxe ' + (i + 1), 15, { w: 600 }) + stars(158, y + 56, 4 + (i % 2)) + T(158, y + 92, '฿' + (1890 + i * 300).toLocaleString(), 18, { w: 700 }) + T(158, y + 112, 'ต่อคืน', 12, { c: S.mut });
+  }
+  s += '<g transform="translate(0 780)">' + KINDS.bottomNav.d(w, 64) + '</g>';
+  s += '<g transform="translate(318 696)">' + KINDS.fab.d(56, 56) + '</g>';
+  s += '<g transform="translate(25 712)">' + KINDS.toast.d(340, 52).replace(/translate/g, 'translate') + '</g>';
+  return wrapSvg(w, h, s);
+}
+function render() {
+  S = ST[MODE];
+  group('g-mobile', ['statusBar', 'appBar', 'bottomNav', 'fab', 'bottomSheet', 'drawer'], KINDS, ['appBar', 'bottomNav', 'bottomSheet', 'statusBar']);
+  group('g-form', ['segmented', 'optionGroup', 'password', 'numberInput', 'timepicker'], KINDS);
+  group('g-data', ['emptyState', 'toast', 'kanban', 'timeline'], KINDS, ['kanban']);
+  group('g-blocks', ['loginForm', 'signupForm', 'profileHeader', 'productCard', 'cartRow', 'pricingCard', 'hero', 'pageHeader'], BLOCKS, ['profileHeader', 'cartRow', 'hero', 'pageHeader']);
+  document.getElementById('phone').innerHTML = phone();
+  Array.prototype.forEach.call(document.querySelectorAll('[data-style]'), function (b) { b.setAttribute('aria-pressed', b.dataset.style === MODE); });
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-style]'); if (!b) return;
+  MODE = b.dataset.style; render();
+});
+render();
+</script>

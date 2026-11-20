@@ -1,12 +1,15 @@
+import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/l10n/l10n.dart';
 import '../../core/models/wireframe_model.dart';
+import '../../state/app_settings.dart';
 import '../../state/project_controller.dart';
 import '../../state/wireframe_controller.dart';
 import '../color_picker_dialog.dart';
+import '../prompt_dialog.dart';
 import '../file_actions.dart';
 import '../shortcuts.dart';
 import '../shortcuts_help.dart';
@@ -165,5 +168,22 @@ class WireframeActions {
     if (comp == null) return;
     final r = await showErRefDialog(context, f.workspace.workspace, current: comp.ref);
     if (r != null) f.setRef(id, r.ref);
+  }
+
+  /// บันทึกชิ้นที่เลือก (รวมลูกในภาชนะ) เป็นบล็อกในหมวด "ของฉัน" — ถามชื่อก่อน ; เก็บในไฟล์ตั้งค่าของเครื่องนี้
+  /// คืน true เมื่อบันทึกแล้ว (ยกเลิก/ไม่ได้เลือกอะไร = false)
+  Future<bool> saveSelectionAsBlock() async {
+    final settings = context.read<AppSettings>();
+    final n = f.moveSet({for (final c in f.selectedBoxes) c.id}).length;
+    if (n == 0) return false;
+    final name = await promptText(context,
+        title: tr('บันทึก {0} ชิ้นส่วนเป็นบล็อกของฉัน', [n]),
+        initial: tr('บล็อกของฉัน {0}', [settings.wfMyBlocks.length + 1]),
+        label: tr('ชื่อบล็อก'));
+    if (name == null || name.trim().isEmpty) return false;
+    final block = f.blockFromSelection('my-${clock.now().microsecondsSinceEpoch}', name.trim());
+    if (block == null) return false;
+    settings.addWfMyBlock(block);
+    return true;
   }
 }

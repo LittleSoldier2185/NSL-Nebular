@@ -83,7 +83,7 @@ class _Body extends StatelessWidget {
         );
 
     Widget kindBtn(WfKind k) {
-      final on = f.tool == WfTool.place && f.toolKind == k;
+      final on = f.tool == WfTool.place && f.toolBlock == null && f.toolKind == k;
       final sc = wfKindShortcut(k);
       return seg('wf-tool-${k.name}', wfKindLabel(k), WfKindThumb(k, width: 22, height: 14, color: on ? dc.ink : C.muted), on,
           () => f.setPlaceTool(k),

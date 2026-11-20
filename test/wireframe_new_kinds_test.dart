@@ -66,10 +66,10 @@ void main() {
       WfComponent(id: 'c-${k.name}', kind: k, text: text ?? WireframeController.defaultText(k), x: 40, y: 40, w: w, h: h);
 
   group('ทุกชนิด (รวมชนิดใหม่) วาดได้ทั้งสองรูปแบบ', () {
-    test('มี 45 ชนิด ; ชนิดเดิม 29 ชนิดยังอยู่ลำดับเดิม (ชนิดใหม่ต่อท้าย)', () {
-      expect(WfKind.values.length, 45);
+    test('มี 60 ชนิด ; ชนิดเดิม 29 ชนิดแรกและ 16 ชนิดถัดมายังอยู่ลำดับเดิม (ชนิดใหม่ต่อท้าย)', () {
+      expect(WfKind.values.length, 60);
       expect(WfKind.values.sublist(0, 29).last, WfKind.chart);
-      expect(WfKind.values.sublist(29), kNew);
+      expect(WfKind.values.sublist(29, 45), kNew);
     });
 
     test('ทุกชนิด: วาดแล้วมีชิ้นวาด พิกัดเป็นตัวเลขจริง ไม่ล้นกรอบของชิ้นเกินเล็กน้อย ทั้งแบบร่างและแบบเรียบร้อย ; SVG ไม่มี NaN', () {
@@ -227,7 +227,7 @@ void main() {
       f = tester.element(find.byType(HomePage)).read<WireframeController>();
     }
 
-    testWidgets('คลังมีครบ 45 ชนิด ; ค้นหา "ปฏิทิน" เหลือชนิดเดียว ; คลิกแล้ววางลงแคนวาสได้ชิ้นที่มีข้อความเริ่มต้น', (tester) async {
+    testWidgets('คลังมีครบทุกชนิด ; ค้นหา "ปฏิทิน" เหลือชนิดเดียว ; คลิกแล้ววางลงแคนวาสได้ชิ้นที่มีข้อความเริ่มต้น', (tester) async {
       await boot(tester);
       for (final k in kNew) {
         expect(find.byKey(ValueKey('wf-kind-${k.name}'), skipOffstage: false), findsOneWidget, reason: k.name);

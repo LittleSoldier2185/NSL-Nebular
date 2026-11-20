@@ -2,6 +2,7 @@ import '../core/clipboard/wireframe_clipboard.dart';
 import '../core/l10n/l10n.dart';
 import '../core/layout/box_ops.dart';
 import '../core/layout/diagram_geometry.dart' show snapToGrid;
+import '../core/models/wf_block.dart';
 import '../core/models/wireframe_model.dart';
 import '../core/models/workspace.dart';
 import '../core/validate/issue.dart';
@@ -45,21 +46,35 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
   WfTool get tool => _tool;
   WfKind get toolKind => _toolKind;
 
+  /// บล็อกที่กำลังจะวาง (Phase 18b) — ไม่ null เมื่อเครื่องมือวางเป็นแบบบล็อก (คลิกบนแคนวาสแล้ววางทั้งชุดเป็นกลุ่ม)
+  WfBlock? _toolBlock;
+  WfBlock? get toolBlock => _toolBlock;
+
   void setTool(WfTool t, {WfKind? kind}) {
-    if (_tool == t && (kind == null || kind == _toolKind)) return;
+    final clearBlock = _toolBlock != null && (t != WfTool.place || kind != null);
+    if (_tool == t && (kind == null || kind == _toolKind) && !clearBlock) return;
     _tool = t;
     if (kind != null) _toolKind = kind;
+    if (clearBlock) _toolBlock = null;
     notifyListeners();
   }
 
   /// เครื่องมือวางชิ้นส่วน [k]
   void setPlaceTool(WfKind k) => setTool(WfTool.place, kind: k);
 
+  /// เครื่องมือวางบล็อก [b] (แม่แบบหรือของฉัน)
+  void setPlaceBlockTool(WfBlock b) {
+    _tool = WfTool.place;
+    _toolBlock = b;
+    notifyListeners();
+  }
+
   /// Esc: ยกเลิกการพิมพ์ -> ยกเลิกเครื่องมือ -> ล้างการเลือก
   void escape() {
     if (escapeEditing()) return;
     if (_tool != WfTool.select) {
       _tool = WfTool.select;
+      _toolBlock = null;
       notifyListeners();
       return;
     }
@@ -417,6 +432,20 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
         WfKind.calendar => tr('พฤศจิกายน 2569'),
         WfKind.stat => tr('ยอดขายวันนี้\n1,250'),
         WfKind.tree => tr('โฟลเดอร์\n  ไฟล์ 1\n  ไฟล์ 2\nโฟลเดอร์ 2'),
+        WfKind.statusBar => '9:41',
+        WfKind.appBar => tr('ชื่อหน้า'),
+        WfKind.bottomNav => tr('หน้าแรก\nค้นหา\nการจอง\nโปรไฟล์'),
+        WfKind.fab => '+',
+        WfKind.bottomSheet => tr('จัดเรียงตาม\nราคาต่ำสุดก่อน\nคะแนนสูงสุด\nใกล้ฉันที่สุด'),
+        WfKind.drawer => tr('สมชาย ใจดี\nsomchai@example.com\nหน้าแรก\nการจองของฉัน\nรายการโปรด\nตั้งค่า'),
+        WfKind.segmented => tr('รายวัน\nรายสัปดาห์\nรายเดือน'),
+        WfKind.optionGroup => tr('ประเภทห้อง\nห้องเดี่ยว\nห้องคู่\nห้องครอบครัว'),
+        WfKind.numberInput => '2',
+        WfKind.timepicker => '14:00',
+        WfKind.emptyState => tr('ยังไม่มีรายการ\nเริ่มต้นด้วยการเพิ่มรายการแรกของคุณ\nเพิ่มรายการ'),
+        WfKind.toast => tr('บันทึกแล้ว\nเลิกทำ'),
+        WfKind.kanban => tr('รอดำเนินการ\nกำลังทำ\nเสร็จแล้ว'),
+        WfKind.timeline => tr('สั่งซื้อสำเร็จ | 12 ธ.ค. 09:10\nเตรียมสินค้า | 12 ธ.ค. 13:40\nกำลังจัดส่ง | 13 ธ.ค. 08:05\nถึงผู้รับ | รอดำเนินการ'),
         _ => '',
       };
 
@@ -427,12 +456,24 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
     if (!active) return null;
     var (w, h) = wfDefaultSize(kind);
     // แถบนำทางบน: กว้างเต็มหน้าจอ
-    if (kind == WfKind.navbar) w = diagram.width;
+    final fullWidth = kWfFullWidthKinds.contains(kind);
+    if (fullWidth) w = diagram.width;
     var x = cx - w / 2, y = cy - h / 2;
-    if (kind == WfKind.navbar) x = 0;
+    if (fullWidth) x = 0;
     if (snap) {
       x = snapToGrid(x);
       y = snapToGrid(y);
+    }
+    // ชิ้นมือถือเกาะขอบ: แถบสถานะชิดบน · แถบแท็บล่างชิดล่าง · แถบหัวแอปใต้แถบสถานะ (เฉพาะวางใกล้ขอบบน)
+    switch (kind) {
+      case WfKind.statusBar:
+        y = 0;
+      case WfKind.bottomNav:
+        y = diagram.height - h;
+      case WfKind.appBar when y < 100:
+        final status = diagram.components.where((k) => k.kind == WfKind.statusBar && k.y <= 1).firstOrNull;
+        y = status == null ? 0 : status.y + status.h;
+      default:
     }
     late WfComponent c;
     edit((d) {
@@ -453,8 +494,45 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
     dropBoxSelection();
     setSelection([c.id]);
     _tool = WfTool.select;
+    _toolBlock = null;
     notifyListeners();
     return c;
+  }
+
+  /// วางบล็อก [block] ให้ศูนย์กลางอยู่ที่ ([cx],[cy]) — ทุกชิ้นได้ id ใหม่และเป็นกลุ่มเดียว (ชื่อกลุ่ม = ชื่อบล็อก) แล้วเลือกทั้งชุด ; undo ขั้นเดียว
+  /// ผูกข้อมูล ER / endpoint ที่ตั้งไว้ในบล็อกติดไปด้วย ; คืน id ของชิ้นที่วาง (ว่าง = ไม่ได้วาง)
+  List<String> insertBlock(WfBlock block, double cx, double cy, {bool snap = false}) {
+    if (!active || block.parts.isEmpty) return const [];
+    var x0 = cx - block.w / 2, y0 = cy - block.h / 2;
+    if (snap) {
+      x0 = snapToGrid(x0);
+      y0 = snapToGrid(y0);
+    }
+    final ids = <String>[];
+    final gid = workspace.newId('g');
+    edit((d) {
+      for (final p in block.parts) {
+        final id = workspace.newId('w');
+        ids.add(id);
+        d.components.add(WfComponent.tryFromJson({...p.toJson(), 'id': id, 'x': p.x + x0, 'y': p.y + y0, 'group': gid, 'locked': false, 'hidden': false})!);
+      }
+      d.groups.add(WfGroup(id: gid, name: block.name.trim().isEmpty ? d.nextGroupName(tr('กลุ่ม')) : block.name.trim()));
+    });
+    clearOtherSelection();
+    dropBoxSelection();
+    final parents = wfParentMap(diagram);
+    setSelection([for (final id in ids) if (!ids.contains(parents[id])) id]);
+    _tool = WfTool.select;
+    _toolBlock = null;
+    notifyListeners();
+    return ids;
+  }
+
+  /// สร้างบล็อกจากชิ้นที่เลือก (รวมลูกในภาชนะ) ; null = ไม่ได้เลือกอะไร
+  WfBlock? blockFromSelection(String id, String name) {
+    final ids = moveSet({for (final c in selectedBoxes) c.id});
+    if (ids.isEmpty) return null;
+    return WfBlock.fromComponents(id, name, [for (final c in diagram.components) if (ids.contains(c.id)) c]);
   }
 
   /// แก้ชิ้นส่วนหลายชิ้นพร้อมกัน — undo ขั้นเดียว ; ไม่มีอะไรเปลี่ยน = ไม่เข้าประวัติ

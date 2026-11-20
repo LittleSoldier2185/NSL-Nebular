@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../core/l10n/l10n.dart';
+import '../core/models/wf_block.dart';
 import '../core/models/wireframe_model.dart' show WfKind;
 import '../core/storage/recent_files.dart';
 
@@ -98,6 +99,7 @@ class AppSettings extends ChangeNotifier {
     bool showExplorer = false,
     List<String> wfRecent = const [],
     bool wfLibraryList = false,
+    List<WfBlock> wfBlocks = const [],
     FlowSpeed flowSpeed = FlowSpeed.normal,
     String? lastSeenVersion,
     PanelLayout? layout,
@@ -116,6 +118,7 @@ class AppSettings extends ChangeNotifier {
         _showExplorer = showExplorer,
         _wfRecent = [...wfRecent],
         _wfList = wfLibraryList,
+        _wfBlocks = [...wfBlocks],
         // ignore: prefer_initializing_formals
         _flowSpeed = flowSpeed,
         _lang = lang ?? Lang.th,
@@ -141,6 +144,7 @@ class AppSettings extends ChangeNotifier {
   bool _showExplorer;
   List<String> _wfRecent;
   bool _wfList;
+  List<WfBlock> _wfBlocks;
   FlowSpeed _flowSpeed;
   String? _lastSeen;
   RecentFiles _recent;
@@ -227,6 +231,7 @@ class AppSettings extends ChangeNotifier {
           showExplorer: m['explorer'] != false,
           wfRecent: [for (final x in (m['wfRecent'] is List ? m['wfRecent'] as List : const [])) if (x is String) x],
           wfLibraryList: m['wfList'] == true,
+          wfBlocks: [for (final x in (m['wfBlocks'] is List ? m['wfBlocks'] as List : const [])) ?WfBlock.tryFromJson(x)],
           flowSpeed: FlowSpeed.fromName(m['flowSpeed']),
           lastSeenVersion: m['seen'] as String?,
           layout: PanelLayout.fromJson(m['layout']),
@@ -302,6 +307,35 @@ class AppSettings extends ChangeNotifier {
 
   static const int kWfRecentMax = 6;
 
+  /// "ของฉัน": บล็อก Wireframe ที่ผู้ใช้บันทึกจากชิ้นที่เลือก (เก่าสุดก่อน) — เก็บในไฟล์ตั้งค่าของเครื่องนี้ ไม่ลงไฟล์โปรเจกต์
+  List<WfBlock> get wfMyBlocks => List.unmodifiable(_wfBlocks);
+
+  static const int kWfMyBlocksMax = 100;
+
+  void addWfMyBlock(WfBlock b) {
+    if (b.parts.isEmpty) return;
+    _wfBlocks = [..._wfBlocks.where((x) => x.id != b.id), b];
+    if (_wfBlocks.length > kWfMyBlocksMax) _wfBlocks = _wfBlocks.sublist(_wfBlocks.length - kWfMyBlocksMax);
+    _save();
+    notifyListeners();
+  }
+
+  void renameWfMyBlock(String id, String name) {
+    final n = name.trim();
+    final i = _wfBlocks.indexWhere((b) => b.id == id);
+    if (n.isEmpty || i < 0 || _wfBlocks[i].name == n) return;
+    _wfBlocks = [..._wfBlocks]..[i] = _wfBlocks[i].renamed(n);
+    _save();
+    notifyListeners();
+  }
+
+  void removeWfMyBlock(String id) {
+    if (!_wfBlocks.any((b) => b.id == id)) return;
+    _wfBlocks = [for (final b in _wfBlocks) if (b.id != id) b];
+    _save();
+    notifyListeners();
+  }
+
   /// มุมมองคลังชิ้นส่วน Wireframe: false = กริดรูปย่อ (แบบ A) · true = รายการ (แบบ B)
   bool get wfLibraryList => _wfList;
 
@@ -341,6 +375,7 @@ class AppSettings extends ChangeNotifier {
         'explorer': _showExplorer,
         if (_wfRecent.isNotEmpty) 'wfRecent': _wfRecent,
         if (_wfList) 'wfList': true,
+        if (_wfBlocks.isNotEmpty) 'wfBlocks': [for (final b in _wfBlocks) b.toJson()],
         'flowSpeed': _flowSpeed.name,
         if (_lastSeen != null) 'seen': _lastSeen,
         'layout': layout.toJson(),

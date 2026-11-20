@@ -15,6 +15,7 @@ class WfCategory {
         'form' => tr('ฟอร์ม'),
         'data' => tr('ข้อมูล'),
         'media' => tr('สื่อ'),
+        'mobile' => tr('มือถือ'),
         _ => tr('สถานะ'),
       };
 }
@@ -28,13 +29,19 @@ const List<WfCategory> kWfCategories = [
   WfCategory('form', [
     WfKind.button, WfKind.input, WfKind.textarea, WfKind.checkbox, WfKind.radio, WfKind.toggle,
     WfKind.select, WfKind.slider, WfKind.search, WfKind.datepicker, WfKind.upload, WfKind.rating,
+    WfKind.segmented, WfKind.optionGroup, WfKind.password, WfKind.numberInput, WfKind.timepicker,
   ]),
   WfCategory('data', [
     WfKind.table, WfKind.list, WfKind.tree, WfKind.chart, WfKind.stat, WfKind.calendar, WfKind.pagination,
+    WfKind.kanban, WfKind.timeline,
   ]),
   WfCategory('media', [WfKind.image, WfKind.icon, WfKind.avatar, WfKind.video, WfKind.map]),
   WfCategory('status', [
     WfKind.badge, WfKind.chip, WfKind.progress, WfKind.alert, WfKind.stepper, WfKind.tooltip, WfKind.skeleton,
+    WfKind.emptyState, WfKind.toast,
+  ]),
+  WfCategory('mobile', [
+    WfKind.statusBar, WfKind.appBar, WfKind.bottomNav, WfKind.fab, WfKind.bottomSheet, WfKind.drawer,
   ]),
 ];
 
@@ -283,6 +290,98 @@ class _ThumbPainter extends CustomPainter {
         l(16, 13, 32, 13);
         l(12, 20, 16, 20);
         l(16, 20, 30, 20);
+      case WfKind.statusBar:
+        l(5, 14, 14, 14, 2.6);
+        for (var i = 0; i < 3; i++) {
+          r(24 + i * 3.4, 17 - (2 + i * 2.0), 2, 2 + i * 2.0, rad: 0.5, fill: true);
+        }
+        r(35, 11, 7, 6, rad: 1.2);
+      case WfKind.appBar:
+        r(2, 6, 40, 16);
+        poly([9, 10.5, 6, 14, 9, 17.5]);
+        l(14, 14, 26, 14, 2.6);
+        r(31, 11, 4, 6, rad: 1.5);
+        r(37, 11, 4, 6, rad: 1.5);
+      case WfKind.bottomNav:
+        r(2, 15, 40, 10);
+        l(2, 8, 30, 8);
+        r(6, 17, 6, 6, rad: 1.5);
+        r(15, 17, 6, 6, rad: 1.5, fill: true);
+        r(24, 17, 6, 6, rad: 1.5);
+        r(33, 17, 6, 6, rad: 1.5);
+      case WfKind.fab:
+        c(22, 14, 10);
+        l(17, 14, 27, 14, 1.8);
+        l(22, 9, 22, 19, 1.8);
+      case WfKind.bottomSheet:
+        r(3, 8, 38, 19, rad: 4);
+        l(18, 11, 26, 11, 2.2);
+        l(8, 17, 36, 17);
+        l(8, 22, 30, 22);
+        l(8, 5, 20, 5);
+      case WfKind.drawer:
+        r(2, 2, 26, 24);
+        r(2, 2, 26, 8, fill: true);
+        l(6, 16, 22, 16);
+        l(6, 21, 18, 21);
+        r(31, 2, 11, 24, dash: true);
+      case WfKind.segmented:
+        r(3, 8, 38, 12, rad: 6);
+        r(5, 10, 12, 8, rad: 4, fill: true);
+        l(22, 14, 26, 14);
+        l(31, 14, 36, 14);
+      case WfKind.optionGroup:
+        for (var i = 0; i < 3; i++) {
+          final y = 6.0 + i * 8;
+          c(8, y, 3);
+          if (i == 0) c(8, y, 1.2, fill: true);
+          l(15, y, 36, y);
+        }
+      case WfKind.password:
+        r(3, 8, 38, 12, rad: 3);
+        for (var i = 0; i < 4; i++) {
+          c(10 + i * 4.5, 14, 1.2, fill: true);
+        }
+        c(35, 14, 3);
+      case WfKind.numberInput:
+        r(3, 8, 38, 12, rad: 4);
+        l(14, 8, 14, 20);
+        l(30, 8, 30, 20);
+        l(6, 14, 11, 14);
+        l(33, 14, 38, 14);
+        l(35.5, 11.5, 35.5, 16.5);
+        l(19, 14, 25, 14, 2.6);
+      case WfKind.timepicker:
+        r(3, 8, 38, 12, rad: 3);
+        c(11, 14, 3.5);
+        poly([11, 12, 11, 14, 12.8, 15.2]);
+        l(19, 14, 30, 14);
+        poly([33, 12.5, 35, 15, 37, 12.5]);
+      case WfKind.emptyState:
+        c(22, 9, 6);
+        l(12, 19, 32, 19, 2.6);
+        l(15, 24, 29, 24);
+      case WfKind.toast:
+        r(3, 8, 38, 12, rad: 5, fill: true);
+        c(10, 14, 2.4);
+        l(16, 14, 27, 14);
+        l(31, 14, 37, 14, 2.6);
+      case WfKind.kanban:
+        r(3, 3, 11, 22, rad: 2);
+        r(16.5, 3, 11, 22, rad: 2);
+        r(30, 3, 11, 22, rad: 2);
+        r(5, 7, 7, 5, rad: 1, fill: true);
+        r(5, 14, 7, 5, rad: 1, fill: true);
+        r(18.5, 7, 7, 5, rad: 1, fill: true);
+        r(32, 7, 7, 5, rad: 1, fill: true);
+      case WfKind.timeline:
+        l(10, 4, 10, 24);
+        c(10, 7, 2.2, fill: true);
+        c(10, 14, 2.2, fill: true);
+        c(10, 21, 2.2);
+        l(16, 7, 36, 7);
+        l(16, 14, 32, 14);
+        l(16, 21, 34, 21);
     }
     canvas.restore();
   }

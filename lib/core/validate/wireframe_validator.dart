@@ -156,6 +156,21 @@ String wfKindLabel(WfKind k) => switch (k) {
       WfKind.calendar => tr('ปฏิทิน'),
       WfKind.stat => tr('ตัวเลขสรุป (KPI)'),
       WfKind.tree => tr('โครงสร้างต้นไม้'),
+      WfKind.statusBar => tr('แถบสถานะเครื่อง'),
+      WfKind.appBar => tr('แถบหัวแอป'),
+      WfKind.bottomNav => tr('แถบแท็บล่าง'),
+      WfKind.fab => tr('ปุ่มลอย (FAB)'),
+      WfKind.bottomSheet => tr('แผ่นล่าง (bottom sheet)'),
+      WfKind.drawer => tr('ลิ้นชักข้าง (drawer)'),
+      WfKind.segmented => tr('ปุ่มสลับแบบแบ่งช่อง'),
+      WfKind.optionGroup => tr('กลุ่มตัวเลือก'),
+      WfKind.password => tr('ช่องรหัสผ่าน'),
+      WfKind.numberInput => tr('ช่องตัวเลข + / −'),
+      WfKind.timepicker => tr('ช่องเลือกเวลา'),
+      WfKind.emptyState => tr('หน้าว่าง (empty state)'),
+      WfKind.toast => tr('ข้อความแจ้งสั้น (toast)'),
+      WfKind.kanban => tr('บอร์ด Kanban'),
+      WfKind.timeline => tr('ไทม์ไลน์'),
     };
 
 /// ชื่อรูปแบบการแสดงผล

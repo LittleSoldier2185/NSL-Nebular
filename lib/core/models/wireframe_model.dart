@@ -54,6 +54,23 @@ enum WfKind {
   calendar,
   stat,
   tree,
+
+  // เพิ่มใน Phase 18b — มือถือ (6), ฟอร์ม (5), ข้อมูล/สถานะ (4)
+  statusBar,
+  appBar,
+  bottomNav,
+  fab,
+  bottomSheet,
+  drawer,
+  segmented,
+  optionGroup,
+  password,
+  numberInput,
+  timepicker,
+  emptyState,
+  toast,
+  kanban,
+  timeline,
 }
 
 /// ชิ้นส่วนที่เป็น "ภาชนะ" — ชิ้นอื่นที่อยู่ข้างในทั้งใบ (และอยู่เหนือมันในลำดับการซ้อน) เป็นลูก ย้ายตามกัน
@@ -70,6 +87,9 @@ const Set<WfKind> kWfBindableKinds = {
   WfKind.table,
   WfKind.list,
   WfKind.datepicker,
+  WfKind.password,
+  WfKind.numberInput,
+  WfKind.timepicker,
 };
 
 /// ชิ้นส่วนที่มีสถานะ "เลือกอยู่" (checked/on)
@@ -119,13 +139,30 @@ const Set<WfKind> kWfCheckableKinds = {WfKind.checkbox, WfKind.radio, WfKind.tog
       WfKind.calendar => (280, 260),
       WfKind.stat => (200, 96),
       WfKind.tree => (240, 150),
+      WfKind.statusBar => (390, 28),
+      WfKind.appBar => (390, 56),
+      WfKind.bottomNav => (390, 64),
+      WfKind.fab => (56, 56),
+      WfKind.bottomSheet => (390, 260),
+      WfKind.drawer => (280, 600),
+      WfKind.segmented => (260, 36),
+      WfKind.optionGroup => (260, 150),
+      WfKind.password => (260, 40),
+      WfKind.numberInput => (140, 40),
+      WfKind.timepicker => (240, 40),
+      WfKind.emptyState => (360, 240),
+      WfKind.toast => (340, 52),
+      WfKind.kanban => (620, 320),
+      WfKind.timeline => (300, 260),
     };
 
 /// ขนาดตัวอักษรเริ่มต้นของแต่ละชนิด
 double wfDefaultFontSize(WfKind k) => switch (k) {
       WfKind.heading => 22,
+      WfKind.appBar => 17,
+      WfKind.statusBar => 13,
       WfKind.navbar || WfKind.modal || WfKind.card => 15,
-      WfKind.badge || WfKind.breadcrumb || WfKind.chip || WfKind.tooltip || WfKind.footer => 12,
+      WfKind.badge || WfKind.breadcrumb || WfKind.chip || WfKind.tooltip || WfKind.footer || WfKind.bottomNav => 12,
       _ => 14,
     };
 
@@ -564,3 +601,12 @@ List<WfComponent> wfGroupMembers(WireframeDiagram d, String group) => [for (fina
   }
   return (left: l, top: t, right: r, bottom: b);
 }
+
+/// "ชื่อ | รายละเอียด" ของหนึ่งบรรทัด (ไทม์ไลน์) — ไม่มี | = ไม่มีรายละเอียด ; ใช้ร่วมกันระหว่างตัววาด/โค้ด Flutter/HTML
+(String, String) wfSplitPipe(String s) {
+  final parts = s.split('|');
+  return (parts.first.trim(), parts.length > 1 ? parts.sublist(1).join('|').trim() : '');
+}
+
+/// ชิ้นส่วนที่วางแล้วกว้างเต็มหน้าจอ (ชิดซ้าย x = 0): แถบนำทางบน + ชิ้นมือถือที่เป็นแถบ
+const Set<WfKind> kWfFullWidthKinds = {WfKind.navbar, WfKind.statusBar, WfKind.appBar, WfKind.bottomNav};

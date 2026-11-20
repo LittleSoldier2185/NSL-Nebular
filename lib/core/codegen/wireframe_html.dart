@@ -291,6 +291,73 @@ select.wf-field { appearance: none; padding-right: 28px; background-image: url("
 .wf-stat .v { position: absolute; left: 14px; right: 14px; bottom: 8px; font-size: 2.1em; font-weight: 700; }
 .wf-tree { list-style: none; margin: 0; padding: 0; }
 .wf-tree li { display: flex; align-items: center; gap: 6px; }
+.wf-status { justify-content: space-between; padding: 0 20px; font-weight: 700; }
+.wf-appbar { display: flex; align-items: center; gap: 12px; padding: 0 16px 0 14px; border: var(--wf-bw) solid var(--wf-border); background: var(--wf-surface); }
+.wf-appbar .wf-back { font-size: 28px; line-height: 1; }
+.wf-appbar .wf-ttl { flex: 1; font-weight: 700; }
+.wf-icons { display: flex; gap: 20px; }
+.wf-icons i { width: 24px; height: 24px; border: 1.3px solid var(--wf-muted); border-radius: 7px; }
+.wf-bnav { display: flex; border: var(--wf-bw) solid var(--wf-border); background: var(--wf-surface); }
+.wf-bnav a { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--wf-muted); text-decoration: none; font-size: .92em; }
+.wf-bnav .ic { width: 22px; height: 22px; border: 1.3px solid var(--wf-muted); border-radius: 6px; }
+.wf-bnav a.on { color: ${sketch ? 'inherit' : 'var(--wf-accent)'}; font-weight: 700; }
+.wf-bnav a.on .ic { background: ${sketch ? '#DADADA' : 'var(--wf-accent)'}; border-color: ${sketch ? 'var(--wf-border)' : 'var(--wf-accent)'}; }
+.wf-fab { justify-content: center; border-radius: 50%; border: var(--wf-bw) solid ${sketch ? 'var(--wf-border)' : 'var(--wf-accent)'}; background: $accentPrimaryFill; color: ${sketch ? 'var(--wf-text)' : 'var(--wf-on-accent)'}; font-size: 28px; line-height: 1; cursor: pointer; ${sketch ? '' : 'box-shadow: 0 3px 8px rgba(0,0,0,.22);'} }
+.wf-sheet { border: var(--wf-bw) solid var(--wf-border); border-radius: 16px; background: var(--wf-surface); padding-top: 24px; overflow: hidden; }
+.wf-sheet .grab { position: absolute; top: 10px; left: 50%; width: 36px; height: 4px; margin-left: -18px; border-radius: 2px; background: var(--wf-bar); }
+.wf-sheet h2 { margin: 0 24px 10px; height: 30px; display: flex; align-items: center; font-size: 1.15em; }
+.wf-sheet a { display: flex; align-items: center; gap: 12px; height: 58px; margin: 0 24px; border-top: .8px solid var(--wf-line); color: inherit; text-decoration: none; }
+.wf-sheet a i { width: 18px; height: 18px; border-radius: 50%; border: 1.4px solid var(--wf-muted); flex: none; }
+.wf-sheet a.on { font-weight: 700; }
+.wf-sheet a.on i { background: ${sketch ? '#DADADA' : 'var(--wf-accent)'}; border-color: ${sketch ? 'var(--wf-border)' : 'var(--wf-accent)'}; }
+.wf-drawer { border: var(--wf-bw) solid var(--wf-border); background: var(--wf-surface); overflow: hidden; }
+.wf-drawer .hd { position: relative; background: var(--wf-subtle); }
+.wf-drawer .av { position: absolute; left: 24px; top: 28%; width: 52px; height: 52px; border-radius: 50%; border: 1.4px solid var(--wf-muted); background: var(--wf-surface); }
+.wf-drawer .hd b { position: absolute; left: 24px; right: 24px; bottom: 26px; font-size: 1.15em; }
+.wf-drawer .hd small { position: absolute; left: 24px; right: 24px; bottom: 8px; color: var(--wf-muted); font-size: .85em; }
+.wf-drawer nav { padding: 20px 10px 0; }
+.wf-drawer nav a { display: flex; align-items: center; gap: 12px; height: 44px; margin-bottom: 10px; padding: 0 14px; border-radius: 8px; color: inherit; text-decoration: none; }
+.wf-drawer nav a i { width: 22px; height: 22px; border: 1.3px solid var(--wf-muted); border-radius: 6px; flex: none; }
+.wf-drawer nav a.on { background: ${sketch ? '#E2E2E2' : 'var(--wf-tint)'}; color: ${sketch ? 'inherit' : 'var(--wf-accent)'}; font-weight: 700; }
+.wf-seg { display: flex; padding: 4px; border: var(--wf-bw) solid var(--wf-border); border-radius: 9px; background: var(--wf-subtle); }
+.wf-seg a { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; border-radius: 6px; color: var(--wf-muted); text-decoration: none; font-size: .92em; }
+.wf-seg a.on { background: var(--wf-surface); border: 1.1px solid var(--wf-border); color: inherit; font-weight: 700; }
+.wf-opts { border: 0; margin: 0; padding: 0; min-width: 0; }
+.wf-opts legend { padding: 0; font-weight: 700; height: 30px; line-height: 24px; }
+.wf-opts .wf-check { height: 36px; position: static; }
+.wf-pw { display: flex; align-items: center; gap: 8px; }
+.wf-pw input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; color: inherit; }
+.wf-eye { width: 18px; height: 11px; border: 1.4px solid var(--wf-muted); border-radius: 50%; position: relative; flex: none; }
+.wf-eye::after { content: ""; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: var(--wf-muted); }
+.wf-num { display: flex; align-items: stretch; border: var(--wf-bw) solid var(--wf-border); border-radius: 6px; background: var(--wf-surface); overflow: hidden; }
+.wf-num button { width: 40px; border: 0; background: none; font: inherit; font-size: 18px; cursor: pointer; color: inherit; }
+.wf-num .v { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 700; border-left: .8px solid var(--wf-border); border-right: .8px solid var(--wf-border); }
+.wf-time { display: flex; align-items: center; gap: 10px; }
+.wf-time input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; color: inherit; }
+.wf-clock { width: 18px; height: 18px; border: 1.4px solid var(--wf-muted); border-radius: 50%; position: relative; flex: none; }
+.wf-clock::after { content: ""; position: absolute; left: 7px; top: 3px; width: 4px; height: 6px; border: solid var(--wf-muted); border-width: 0 0 1.4px 1.4px; }
+.wf-chev { width: 7px; height: 7px; border: solid var(--wf-muted); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); margin: -3px 2px 0 0; flex: none; }
+.wf-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 8px; }
+.wf-empty .ill { width: 72px; height: 72px; border-radius: 50%; border: var(--wf-bw) solid var(--wf-border); background: var(--wf-subtle); flex: none; }
+.wf-empty h3 { margin: 16px 16px 0; max-width: 100%; font-size: 1.2em; }
+.wf-empty p { margin: 6px 24px 0; color: var(--wf-muted); font-size: .92em; }
+.wf-empty .wf-btn { margin-top: auto; margin-bottom: 16px; width: 160px; max-width: 80%; height: 40px; }
+.wf-toast { gap: 12px; padding: 0 16px; border-radius: 10px; background: ${sketch ? '#4A4A4A' : '#1D2939'}; color: #FFFFFF; }
+.wf-toast .ok { flex: none; width: 18px; height: 18px; border: 1.4px solid #FFFFFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.wf-toast .msg { flex: 1; }
+.wf-toast .act { flex: none; margin-left: auto; color: ${sketch ? '#D5DBE3' : '#8FB4FF'}; }
+.wf-kan { display: flex; gap: 15px; }
+.wf-kan section { flex: 1; min-width: 0; padding: 0 10px; border: var(--wf-bw) solid var(--wf-border); border-radius: 10px; background: var(--wf-subtle); overflow: hidden; }
+.wf-kan header { display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 4px; }
+.wf-kan header span { color: var(--wf-muted); font-size: .9em; }
+.wf-kan .cd { height: 72px; margin-bottom: 12px; padding: 19px 12px 0; display: flex; flex-direction: column; gap: 12px; border: var(--wf-bw) solid var(--wf-border); border-radius: 8px; background: var(--wf-surface); }
+.wf-tl { list-style: none; margin: 0; padding: 0; position: relative; }
+.wf-tl::before { content: ""; position: absolute; left: 15px; top: 12px; bottom: 14px; width: 2px; background: var(--wf-border); }
+.wf-tl li { position: relative; padding-left: 40px; display: flex; flex-direction: column; justify-content: flex-start; padding-top: 6px; color: var(--wf-muted); }
+.wf-tl li.on { color: inherit; }
+.wf-tl .dot { position: absolute; left: 8px; top: 14px; width: 16px; height: 16px; border-radius: 50%; border: 1.6px solid var(--wf-border); background: var(--wf-surface); }
+.wf-tl li.on .dot { background: ${sketch ? '#BDBDBD' : 'var(--wf-accent)'}; border-color: ${sketch ? 'var(--wf-border)' : 'var(--wf-accent)'}; }
+.wf-tl small { color: var(--wf-muted); font-size: .85em; }
 ''';
   }
 
@@ -634,6 +701,93 @@ select.wf-field { appearance: none; padding-right: 28px; background-image: url("
         }
         b.write('</ul>');
         return ('div', '', '', b.toString(), false);
+      // ---- Phase 18b: มือถือ ----
+      case WfKind.statusBar:
+        return ('div', 'wf-t wf-status', '',
+            '<span class="wf-1">$t</span><svg width="64" height="14" viewBox="0 0 64 14" aria-hidden="true" fill="currentColor">'
+                '<rect x="0" y="9" width="3" height="4" rx=".8"/><rect x="5" y="7" width="3" height="6" rx=".8"/><rect x="10" y="5" width="3" height="8" rx=".8"/><rect x="15" y="2" width="3" height="11" rx=".8"/>'
+                '<path d="M26 8a6 6 0 018 0M23.5 5.5a9.5 9.5 0 0113 0M28.5 10.5a3 3 0 013 0" fill="none" stroke="currentColor" stroke-width="1.3"/>'
+                '<rect x="40" y="2.5" width="22" height="9" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="42" y="4.5" width="14" height="5" rx="1" /></svg>',
+            false);
+      case WfKind.appBar:
+        return ('header', 'wf-appbar', '',
+            '<span class="wf-back" aria-hidden="true">‹</span><span class="wf-ttl wf-1">$t</span><span class="wf-icons" aria-hidden="true"><i></i><i></i></span>', false);
+      case WfKind.bottomNav:
+        final tabs = c.items.isEmpty ? [''] : c.items.take(5).toList();
+        return ('nav', 'wf-bnav', '',
+            tabs.indexed.map((e) => '<a href="#"${e.$1 == 0 ? ' class="on"' : ''}><span class="ic"></span><span class="wf-1">${_h(e.$2)}</span></a>').join(), false);
+      case WfKind.fab:
+        final glyph = c.text.trim().isEmpty || c.text.trim() == '+' ? '+' : _h(c.text.trim());
+        return ('button', 'wf-t wf-fab', ' type="button" aria-label="${glyph == '+' ? 'add' : glyph}"$dis', '<span aria-hidden="true">$glyph</span>', false);
+      case WfKind.bottomSheet:
+        final its = c.items;
+        final rows = its.skip(1).indexed.map((e) => '<a href="#"${e.$1 == 0 ? ' class="on"' : ''}><i></i><span class="wf-1">${_h(e.$2)}</span></a>').join();
+        return ('div', 'wf-sheet', '', '<span class="grab"></span><h2 class="wf-1">${its.isEmpty ? '' : _h(its.first)}</h2>$rows', false);
+      case WfKind.drawer:
+        final its = c.items;
+        final hh = math.min(150.0, c.h * 0.25);
+        final links = its.skip(2).indexed.map((e) => '<a href="#"${e.$1 == 0 ? ' class="on"' : ''}><i></i><span class="wf-1">${_h(e.$2)}</span></a>').join();
+        return ('aside', 'wf-drawer', '',
+            '<div class="hd" style="height:${_px(hh)}"><span class="av"></span><b class="wf-1">${its.isEmpty ? '' : _h(its[0])}</b>'
+                '<small class="wf-1">${its.length > 1 ? _h(its[1]) : ''}</small></div><nav>$links</nav>',
+            false);
+      // ---- Phase 18b: ฟอร์ม ----
+      case WfKind.segmented:
+        final its = c.items.isEmpty ? [''] : c.items.take(5).toList();
+        return ('div', 'wf-seg', ' role="tablist"', its.indexed.map((e) => '<a href="#"${e.$1 == 0 ? ' class="on"' : ''} role="tab">${_h(e.$2)}</a>').join(), false);
+      case WfKind.optionGroup:
+        final its = c.items;
+        final type = c.secondary ? 'checkbox' : 'radio';
+        final opts = its.skip(1).indexed
+            .map((e) => '<label class="wf-t wf-check"><input type="$type" name="g-${_h(c.id)}"${e.$1 == 0 ? ' checked' : ''}$dis><span class="wf-1">${_h(e.$2)}</span></label>')
+            .join();
+        return ('fieldset', 'wf-opts', '', '<legend>${its.isEmpty ? '' : _h(its.first)}</legend>$opts', false);
+      case WfKind.password:
+        final hasText = c.text.trim().isNotEmpty;
+        return ('div', 'wf-field wf-pw', '',
+            '<input type="password" ${hasText ? 'placeholder="$t"' : 'value="password"'}${_nameAttr(c)}$dis aria-label="password"><span class="wf-eye" aria-hidden="true"></span>', false);
+      case WfKind.numberInput:
+        return ('div', 'wf-num', '', '<button type="button" aria-label="-"$dis>−</button><span class="v wf-1">$t</span><button type="button" aria-label="+"$dis>+</button>', false);
+      case WfKind.timepicker:
+        return ('label', 'wf-t wf-field wf-time', '',
+            '<span class="wf-clock" aria-hidden="true"></span><input type="text" value="$t" aria-label="time"${_nameAttr(c)}$dis><span class="wf-chev" aria-hidden="true"></span>', false);
+      // ---- Phase 18b: ข้อมูล / สถานะ ----
+      case WfKind.emptyState:
+        final its = c.items;
+        return ('div', 'wf-empty', '',
+            '<span class="ill" aria-hidden="true"></span>'
+                '${its.isNotEmpty ? '<h3 class="wf-1">${_h(its[0])}</h3>' : ''}${its.length > 1 ? '<p>${_h(its[1])}</p>' : ''}'
+                '${its.length > 2 ? '<button type="button" class="wf-t wf-btn">${_h(its[2])}</button>' : ''}',
+            false);
+      case WfKind.toast:
+        final its = c.items;
+        return ('div', 'wf-t wf-toast', ' role="status"',
+            '<span class="ok" aria-hidden="true">✓</span><span class="msg wf-1">${its.isEmpty ? '' : _h(its.first)}</span>'
+                '${its.length > 1 ? '<b class="act">${_h(its[1])}</b>' : ''}',
+            false);
+      case WfKind.kanban:
+        final cols = c.items.isEmpty ? [''] : c.items.take(6).toList();
+        final b = StringBuffer();
+        for (final (i, title) in cols.indexed) {
+          final cards = math.max(1, c.rows - i);
+          b.write('<section><header><b class="wf-1">${_h(title)}</b><span>$cards</span></header>');
+          for (var j = 0; j < cards && 44 + (j + 1) * 84 - 12 <= c.h + 0.5; j++) {
+            b.write('<div class="cd">${_bars([80])}${_bars([50])}</div>');
+          }
+          b.write('</section>');
+        }
+        return ('div', 'wf-kan', '', b.toString(), false);
+      case WfKind.timeline:
+        final its = c.items;
+        final step = its.isEmpty ? 62.0 : math.min(62.0, (c.h - 20) / its.length);
+        final b = StringBuffer();
+        for (final (i, it) in its.indexed) {
+          final (title, sub) = wfSplitPipe(it);
+          final done = its.length == 1 || i < its.length - 1;
+          b.write('<li${done ? ' class="on"' : ''} style="height:${_px(step)}"><span class="dot" aria-hidden="true"></span><b class="wf-1">${_h(title)}</b>'
+              '${sub.isEmpty ? '' : '<small class="wf-1">${_h(sub)}</small>'}</li>');
+        }
+        return ('ol', 'wf-tl', '', b.toString(), false);
     }
   }
 }
