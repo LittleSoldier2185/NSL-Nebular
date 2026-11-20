@@ -1964,4 +1964,5 @@ const Map<String, String> kEn = {
   'ตัวสำรวจโปรเจกต์มีปุ่มพับ/ขยายทุกกลุ่มในครั้งเดียว (แบบ VS Code)': 'The project explorer has a button to collapse/expand all groups at once (VS Code style)',
   'พับเก็บตัวสำรวจ (Ctrl+B)': 'Hide explorer (Ctrl+B)',
   'พับเก็บตัวสำรวจโปรเจกต์ได้แบบ VS Code: ปุ่มโฟลเดอร์บนสุดของแถบไอคอน และปุ่ม « ในหัวแผง (Ctrl+B)': 'Collapse the project explorer VS Code style: a folder button at the top of the icon rail and a « button in the panel header (Ctrl+B)',
+  'ช่องกรอกข้อความทั่วทั้งแอปสูงขึ้นและมีระยะขอบในมากขึ้น กดและอ่านง่ายกว่าเดิม': 'Text fields across the app are taller with more inner padding, easier to click and read',
 };
