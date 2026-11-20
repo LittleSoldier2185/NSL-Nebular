@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import '../../core/layout/diagram_geometry.dart';
 import '../../core/models/project.dart';
 import '../theme.dart';
+import 'relation_symbols.dart';
 
 /// วาดเส้น FK แบบ crow's foot: ปลาย "many" (คอลัมน์ FK) เป็นตีนกา, ปลาย "one" เป็นขีด
 /// ถ้าคอลัมน์ FK เป็น PK/UNIQUE จะเป็น 1:1 (ขีดทั้งสองปลาย)
-/// ปลายฝั่งลูกมีวงกลม "ศูนย์" เสมอ (0..N / 0..1) เพราะ FK ไม่บังคับให้แถวแม่ต้องมีแถวลูก
+/// ปลายฝั่งลูกมีวงกลม "ศูนย์" (0..N / 0..1) เว้นแต่ผู้ใช้กำหนด "อย่างน้อย 1" (ขีดแทน) เพราะ FK เองไม่บังคับให้แถวแม่ต้องมีแถวลูก
 /// เรขาคณิตมาจาก [relationGeometry] ซึ่ง SVG/PNG ใช้ตัวเดียวกัน
 class RelationPainter extends CustomPainter {
   RelationPainter(
@@ -90,14 +91,10 @@ class RelationPainter extends CustomPainter {
       if (flowPhase != null && (flowAll || active || focused) && !dimmed) _flowDashes(canvas, route, lineColor);
       if (flow) _flowMarker(canvas, route, lineColor, dimmed ? 0.3 : 1);
 
-      if (g.oneToOne) {
-        _bar(canvas, paint, g.fx, g.fy, g.d0);
-      } else {
-        _crow(canvas, paint, g.fx, g.fy, g.d0);
-      }
-      _childZero(canvas, paint, g.fx, g.fy, g.d0, oneToOne: g.oneToOne);
+      drawChildEnd(canvas, paint, g.fx, g.fy, g.d0, one: g.oneToOne, required: g.childRequired, knockout: C.canvas);
       final end = route.last;
-      _parentEnd(canvas, paint, end.$1, end.$2, g.d1, g.mandatory, crowded: (slots[r.id]?.count ?? 1) > 1);
+      drawParentEnd(canvas, paint, end.$1, end.$2, g.d1,
+          required: g.mandatory, knockout: C.canvas, crowded: (slots[r.id]?.count ?? 1) > 1);
       if (focused && handleScale > 0) {
         final h = relationBendHandleOf(route);
         if (h != null) {
@@ -174,39 +171,6 @@ class RelationPainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round
         ..color = stroke,
     );
-  }
-
-  /// ปลายฝั่งแม่: "หนึ่งเดียว" = ขีดคู่ ; "ศูนย์หรือหนึ่ง" = ขีดเดียวแล้ววงกลมถัดออกไป
-  /// [crowded] = มีเส้นอื่นเข้าคอลัมน์เดียวกัน -> ย่อสัญลักษณ์ลงไม่ให้ซ้อนกับของเส้นข้างเคียง
-  void _parentEnd(Canvas canvas, Paint p, double x, double y, double dir, bool mandatory, {bool crowded = false}) {
-    final s = crowded ? 0.6 : 1.0;
-    _bar(canvas, p, x, y, dir, half: 8 * s);
-    if (mandatory) {
-      _bar(canvas, p, x + dir * 5, y, dir, half: 8 * s);
-    } else {
-      final c = Offset(x + dir * (crowded ? 13 : 17), y);
-      canvas.drawCircle(c, 4.5 * s, Paint()..color = C.canvas);
-      canvas.drawCircle(c, 4.5 * s, p);
-    }
-  }
-
-  /// ปลายฝั่งลูก: วงกลม "ศูนย์" ถัดออกไปจากตีนกา/ขีด
-  void _childZero(Canvas canvas, Paint p, double x, double y, double dir, {required bool oneToOne}) {
-    final c = Offset(x + dir * childZeroOffset(oneToOne), y);
-    canvas.drawCircle(c, 4.5, Paint()..color = C.canvas);
-    canvas.drawCircle(c, 4.5, p);
-  }
-
-  void _crow(Canvas canvas, Paint p, double x, double y, double dir) {
-    final tip = x + dir * 14;
-    canvas.drawLine(Offset(tip, y), Offset(x, y - 8), p);
-    canvas.drawLine(Offset(tip, y), Offset(x, y), p);
-    canvas.drawLine(Offset(tip, y), Offset(x, y + 8), p);
-  }
-
-  void _bar(Canvas canvas, Paint p, double x, double y, double dir, {double half = 8}) {
-    final bx = x + dir * 8;
-    canvas.drawLine(Offset(bx, y - half), Offset(bx, y + half), p);
   }
 
   @override

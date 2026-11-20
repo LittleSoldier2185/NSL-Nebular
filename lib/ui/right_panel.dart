@@ -16,6 +16,7 @@ import '../core/models/workspace.dart' show ProjectDocument;
 import 'document_actions.dart' show DocTypeDot, linkOriginTitle;
 import 'app_actions.dart';
 import 'issue_widgets.dart';
+import 'relation_card_editor.dart';
 import 'theme.dart';
 import 'seed_data_dialog.dart';
 import 'style_actions.dart';
@@ -689,6 +690,8 @@ class _FkBox extends StatelessWidget {
         const SizedBox(height: 4),
         Text('→ ${to?.name ?? '?'} (${toCol?.name ?? '?'})',
             style: monoStyle.copyWith(fontSize: 12.5)),
+        const SizedBox(height: 10),
+        RelationCardEditor(relation: relation),
         const SizedBox(height: 10),
         Row(children: [
           Expanded(child: Text(tr('สีเส้น'), style: TextStyle(fontSize: 12, color: C.muted, fontWeight: FontWeight.w500))),

@@ -162,8 +162,12 @@ class _Svg {
       } else {
         _crow(g.fx, g.fy, g.d0);
       }
-      // ปลายฝั่งลูก: วงกลม "ศูนย์" (ตรงกับที่วาดบนจอ)
-      out.writeln('<circle cx="${n(g.fx + g.d0 * childZeroOffset(g.oneToOne))}" cy="${n(g.fy)}" r="4.5" fill="$canvasHex"/>');
+      // ปลายฝั่งลูก: วงกลม "ศูนย์" หรือขีด "อย่างน้อย 1" (ตรงกับที่วาดบนจอ)
+      if (g.childRequired) {
+        _bar(g.fx + g.d0 * (childZeroOffset(g.oneToOne) - 8), g.fy, g.d0);
+      } else {
+        out.writeln('<circle cx="${n(g.fx + g.d0 * childZeroOffset(g.oneToOne))}" cy="${n(g.fy)}" r="4.5" fill="$canvasHex"/>');
+      }
       // ปลายฝั่งแม่ของเส้นนี้เอง (เส้นที่เข้าคอลัมน์เดียวกันเข้าคนละระดับ ย่อสัญลักษณ์ไม่ให้ซ้อนกัน)
       final end = route.last;
       final s = (slots[r.id]?.count ?? 1) > 1 ? 0.6 : 1.0;

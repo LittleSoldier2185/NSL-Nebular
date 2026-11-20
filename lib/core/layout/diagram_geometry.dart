@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../models/column_model.dart';
+import '../models/enums.dart';
 import '../models/group_model.dart';
 import '../models/note_model.dart';
 import '../models/project.dart';
@@ -15,6 +16,38 @@ const double kCardRowHeight = 28;
 /// คอลัมน์ที่เป็นเพียงส่วนหนึ่งของ PK หลายคอลัมน์ (ตารางเชื่อม) ไม่นับ
 bool isUniqueAlone(TableModel t, ColumnModel c) =>
     c.unique || (c.isPrimaryKey && t.columns.where((x) => x.isPrimaryKey).length == 1);
+
+/// สัญลักษณ์ปลายเส้นของความสัมพันธ์หนึ่งเส้นหลังรวม "ค่าที่ผู้ใช้กำหนด" กับ "ค่าอนุมานจากสคีมา" (Phase 17b)
+/// canvas / SVG / PNG / Mermaid / DBML และแผงขวาใช้ตัวเดียวกัน
+class RelationCardinality {
+  const RelationCardinality({required this.parentRequired, required this.childOne, required this.childRequired});
+
+  /// ฝั่งแม่ "หนึ่งเดียว" (true) หรือ "ศูนย์หรือหนึ่ง" (false)
+  final bool parentRequired;
+
+  /// ฝั่งลูก "หนึ่ง" (true) หรือ "หลาย" (false)
+  final bool childOne;
+
+  /// แถวแม่ต้องมีลูกอย่างน้อย 1 (true) หรือไม่บังคับ (false)
+  final bool childRequired;
+}
+
+/// ค่าอนุมานจากสคีมาล้วน ๆ (ไม่สนค่าที่ผู้ใช้ตั้ง) : FK เป็น NOT NULL/PK -> แม่หนึ่งเดียว ; FK เป็น UNIQUE/PK เดี่ยว -> ลูกหนึ่ง ; ขั้นต่ำลูก = 0
+RelationCardinality autoCardinality(TableModel child, ColumnModel fk) => RelationCardinality(
+      parentRequired: fk.notNull || fk.isPrimaryKey,
+      childOne: isUniqueAlone(child, fk),
+      childRequired: false,
+    );
+
+/// สัญลักษณ์จริงของ [r]: ค่าที่ผู้ใช้ตั้งทับค่าอนุมานทีละส่วน (ส่วนที่เป็น null = อัตโนมัติ)
+RelationCardinality relationCardinality(RelationModel r, TableModel child, ColumnModel fk) {
+  final auto = autoCardinality(child, fk);
+  return RelationCardinality(
+    parentRequired: switch (r.parentCard) { ParentCard.one => true, ParentCard.zeroOne => false, null => auto.parentRequired },
+    childOne: switch (r.childMax) { ChildMax.one => true, ChildMax.many => false, null => auto.childOne },
+    childRequired: switch (r.childMin) { ChildMin.one => true, ChildMin.zero => false, null => auto.childRequired },
+  );
+}
 
 /// ป้ายของคอลัมน์บนการ์ดตาราง (ลำดับ PK, FK, UQ) — ตัวแรกอยู่ช่องหน้าชื่อ ตัวที่เหลืออยู่หน้าชนิดข้อมูล
 /// คอลัมน์ที่เป็นหลายอย่างพร้อมกันต้องเห็นครบ: PK+FK (ตารางเชื่อม), FK+UQ (ความสัมพันธ์ 1:1)
@@ -50,15 +83,19 @@ class RelationGeometry {
     required this.d1,
     required this.k,
     required this.oneToOne,
+    this.childRequired = false,
     this.mandatory = true,
   });
   final double fx, fy, tx, ty, d0, d1, k;
 
-  /// คอลัมน์ FK เป็น NOT NULL/PK -> ฝั่งแม่ต้องมีเสมอ ("หนึ่งเดียว" ขีดคู่); ถ้า NULL ได้ = "ศูนย์หรือหนึ่ง" (ขีด + วงกลม)
+  /// ฝั่งแม่ "หนึ่งเดียว" (ขีดคู่) หรือ "ศูนย์หรือหนึ่ง" (ขีด + วงกลม) — ค่าอนุมานจาก NOT NULL/PK แล้วถูกทับด้วยค่าที่ผู้ใช้กำหนด ([relationCardinality])
   final bool mandatory;
 
-  /// คอลัมน์ FK เป็น PK/UNIQUE -> ปลายลูกเป็นขีดแทนตีนกา
+  /// ปลายลูกเป็นขีด (หนึ่ง) แทนตีนกา — อนุมานจาก PK/UNIQUE แล้วถูกทับด้วยค่าที่ผู้ใช้กำหนด
   final bool oneToOne;
+
+  /// ผู้ใช้กำหนดว่าแม่ต้องมีลูกอย่างน้อย 1 -> ปลายลูกเป็นขีดแทนวงกลม "ศูนย์"
+  final bool childRequired;
 }
 
 RelationGeometry? relationGeometry(Project p, RelationModel r) {
@@ -69,6 +106,7 @@ RelationGeometry? relationGeometry(Project p, RelationModel r) {
   final ti = tt.columns.indexWhere((c) => c.id == r.toColumnId);
   if (fi < 0 || ti < 0) return null;
   final fcol = ft.columns[fi];
+  final card = relationCardinality(r, ft, fcol);
 
   final double fx, tx, d0, d1;
   if (ft.x + ft.width <= tt.x) {
@@ -96,8 +134,9 @@ RelationGeometry? relationGeometry(Project p, RelationModel r) {
     d0: d0,
     d1: d1,
     k: d0 == d1 ? 60.0 : math.max(40.0, (tx - fx).abs() / 2),
-    oneToOne: isUniqueAlone(ft, fcol),
-    mandatory: fcol.notNull || fcol.isPrimaryKey,
+    oneToOne: card.childOne,
+    childRequired: card.childRequired,
+    mandatory: card.parentRequired,
   );
 }
 

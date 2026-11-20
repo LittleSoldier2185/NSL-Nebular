@@ -327,6 +327,25 @@ class ProjectController extends DocController {
     _edit(() => r.color = argb);
   }
 
+  /// สัญลักษณ์ปลายเส้น ER ที่ผู้ใช้กำหนดเอง (Phase 17b) — null = อัตโนมัติ (อนุมานจากสคีมา) ; เป็นเอกสารล้วน ไม่เปลี่ยน DDL
+  void setRelationParentCard(String id, ParentCard? v) {
+    final r = _project.relations.where((r) => r.id == id).firstOrNull;
+    if (r == null || r.parentCard == v) return;
+    _edit(() => r.parentCard = v);
+  }
+
+  void setRelationChildMax(String id, ChildMax? v) {
+    final r = _project.relations.where((r) => r.id == id).firstOrNull;
+    if (r == null || r.childMax == v) return;
+    _edit(() => r.childMax = v);
+  }
+
+  void setRelationChildMin(String id, ChildMin? v) {
+    final r = _project.relations.where((r) => r.id == id).firstOrNull;
+    if (r == null || r.childMin == v) return;
+    _edit(() => r.childMin = v);
+  }
+
   /// สีเส้นเริ่มต้นของทั้งโปรเจกต์ (null = สีตามธีม)
   void setLineColor(int? argb) {
     if (_project.lineColor == argb) return;
@@ -1016,7 +1035,11 @@ class ProjectController extends DocController {
             onDelete: r.onDelete,
             onUpdate: r.onUpdate,
             name: null, // ชื่อ constraint เดิมจะชนกัน ให้สร้างใหม่ตอน export
-          ),
+            // สัญลักษณ์ที่ผู้ใช้กำหนดเองคัดลอกไปด้วย
+          )
+            ..parentCard = r.parentCard
+            ..childMax = r.childMax
+            ..childMin = r.childMin,
     ];
     _edit(() {
       _project.tables.addAll(tables);

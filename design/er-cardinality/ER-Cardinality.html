@@ -1,0 +1,311 @@
+<title>ER Cardinality Panel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ตัวเลือก 3 แบบของแผงขวา วางเทียบกัน ใช้สถานะเดียวกัน กดตัวไหนก็เปลี่ยนภาพตัวอย่างทุกแผง */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --field:#F3F5F8; --fg:#1B2430; --muted:#5B6778;
+  --line:#D8DEE6; --soft:#E6EAF0; --accent:#0F766E; --accent-ink:#0B5A54; --accent-tint:#E2F3F1;
+  --warn-bg:#FFF4D6; --warn-fg:#5C3D00; --ink-head:#1F2A37; --canvas:#F6F8FB;
+  --sans:'Noto Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12171E; --surface:#1A212B; --field:#222B37; --fg:#E6EBF2; --muted:#9AA7B8;
+  --line:#2D3846; --soft:#263140; --accent:#2DD4BF; --accent-ink:#7EE7D8; --accent-tint:#173A3A;
+  --warn-bg:#3A2F12; --warn-fg:#F6D58A; --ink-head:#2B3747; --canvas:#161C24; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171E; --surface:#1A212B; --field:#222B37; --fg:#E6EBF2; --muted:#9AA7B8;
+  --line:#2D3846; --soft:#263140; --accent:#2DD4BF; --accent-ink:#7EE7D8; --accent-tint:#173A3A;
+  --warn-bg:#3A2F12; --warn-fg:#F6D58A; --ink-head:#2B3747; --canvas:#161C24; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-size:22px;margin:0 0 4px;text-wrap:balance}
+h2{font-size:15px;margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono)}
+.intro{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px}
+@media (max-width:820px){.intro{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.sim{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+.sim label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.sim input{accent-color:var(--accent);width:16px;height:16px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--soft);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:12px}
+.scroll{overflow-x:auto}
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:start}
+@media (max-width:980px){.opts{grid-template-columns:minmax(0,1fr)}}
+.opt{display:flex;flex-direction:column;gap:10px;min-width:0}
+.opt-head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;background:var(--accent-tint);color:var(--accent-ink)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:340px;width:100%}
+.ptabs{display:flex;border-bottom:1px solid var(--soft)}
+.ptabs div{flex:1;text-align:center;padding:9px 0;color:var(--muted);font-size:13px}
+.ptabs .on{color:var(--accent-ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--accent)}
+.pbody{padding:12px;display:flex;flex-direction:column;gap:12px}
+.fk{background:var(--field);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.fk-top{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:500}
+.fk-top .del{color:#B42318}
+.fk-to{font-family:var(--mono);font-size:12.5px}
+.sec{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.prev{background:var(--canvas);border:1px solid var(--soft);border-radius:8px;padding:6px 4px 2px}
+.prev svg{display:block;width:100%;height:auto}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{flex:1;border:0;background:none;color:var(--fg);font:inherit;font-size:12px;padding:6px 4px;cursor:pointer;border-right:1px solid var(--soft);min-width:0}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent-tint);color:var(--accent-ink);font-weight:600}
+.seg button:focus-visible,.glyph:focus-visible,.chip button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.lbl{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;margin-bottom:4px}
+.lbl b{font-weight:500;color:var(--fg);font-family:var(--mono)}
+.autohint{font-size:11.5px;color:var(--muted)}
+.glyphs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.glyph{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 4px 5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font:inherit;color:var(--fg);min-width:0}
+.glyph svg{width:100%;height:26px}
+.glyph span{font-size:11px;color:var(--muted);text-align:center;line-height:1.25}
+.glyph[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-tint)}
+.glyph[aria-pressed="true"] span{color:var(--accent-ink);font-weight:600}
+.sentence{font-size:13px;line-height:1.9}
+.sentence select{font:inherit;font-size:12.5px;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px 4px;max-width:100%}
+.sentence .mono{background:var(--surface);border:1px solid var(--soft);border-radius:4px;padding:0 5px;font-size:12px}
+.chip{display:flex;gap:8px;align-items:flex-start;background:var(--warn-bg);color:var(--warn-fg);border-radius:8px;padding:8px 10px;font-size:12px}
+.chip button{margin-left:auto;flex:none;border:1px solid currentColor;background:none;color:inherit;border-radius:6px;font:inherit;font-size:11.5px;padding:2px 8px;cursor:pointer;white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted)}
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:820px){.why{grid-template-columns:minmax(0,1fr)}}
+.why h3{font-size:13px;margin:0 0 4px}
+.rec{border-left:3px solid var(--accent);padding:2px 0 2px 12px}
+.reset{border:0;background:none;color:var(--accent-ink);font:inherit;font-size:12px;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.seg button,.glyph{transition:background .12s,border-color .12s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>ให้ผู้ใช้กำหนดสัญลักษณ์ความสัมพันธ์ ER เองได้</h1>
+    <p class="muted">ออกแบบแผงขวาตอนคลิกเส้น FK หรือคอลัมน์ FK มี 3 แบบ ตัวอย่างด้านล่างเล่นได้ กดที่แบบไหนก็ได้ ภาพตัวอย่างในทุกแบบเปลี่ยนตามกัน</p>
+  </header>
+
+  <section class="intro">
+    <div class="card">
+      <h2>ตอนนี้โปรแกรมอนุมานเอง (ตัวเลือก "อัตโนมัติ")</h2>
+      <div class="scroll" style="margin-top:8px">
+        <table>
+          <thead><tr><th>ส่วนของเส้น</th><th>อ่านจาก</th><th>ผลที่วาด</th></tr></thead>
+          <tbody>
+            <tr><td>ฝั่งแม่</td><td>FK เป็น NOT NULL หรือ PK</td><td>ใช่ = หนึ่งเดียว · ไม่ใช่ = ศูนย์หรือหนึ่ง</td></tr>
+            <tr><td>ฝั่งลูก จำนวน</td><td>FK เป็น UNIQUE เดี่ยว ๆ</td><td>ใช่ = หนึ่ง (1:1) · ไม่ใช่ = หลาย (ตีนกา)</td></tr>
+            <tr><td>ฝั่งลูก ขั้นต่ำ</td><td>ไม่มีข้อมูลให้อ่าน</td><td>เป็นศูนย์เสมอ (0..N / 0..1)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note" style="margin-top:8px">ที่ผิดจากความจริงทางธุรกิจ เช่น "การจองต้องมีรายการอย่างน้อย 1" วาดไม่ได้ในตอนนี้ เพราะข้อมูลนี้ไม่อยู่ในสคีมา</p>
+    </div>
+    <div class="card">
+      <h2>ลองสมมุติ FK ตัวอย่าง <span class="mono muted" style="font-weight:400">orders.customer_id → customers.id</span></h2>
+      <div class="sim" style="margin-top:10px">
+        <label><input type="checkbox" id="simNN" checked> FK เป็น NOT NULL</label>
+        <label><input type="checkbox" id="simUQ"> FK เป็น UNIQUE</label>
+      </div>
+      <p class="note" style="margin-top:10px">ค่าสองช่องนี้คือสิ่งที่ "อัตโนมัติ" ใช้ตัดสิน ปรับดูว่าเมื่อผู้ใช้เลือกสัญลักษณ์ที่ขัดกับสคีมา แต่ละแบบเตือนอย่างไร</p>
+    </div>
+  </section>
+
+  <section class="opts" id="opts"></section>
+
+  <section class="card">
+    <h2>กติกาที่ใช้ร่วมกันทั้ง 3 แบบ</h2>
+    <div class="why" style="margin-top:10px">
+      <div><h3>เป็นเอกสาร ไม่แตะ SQL</h3><p class="note">ค่าที่ผู้ใช้เลือกบันทึกในความสัมพันธ์นั้น (ฟิลด์ใหม่ เข้ากันได้ย้อนหลัง ไฟล์เก่าอ่านเป็นอัตโนมัติ) ใช้กับแคนวาส PNG SVG พจนานุกรมข้อมูล และ HTML ส่วน DDL ไม่เปลี่ยน</p></div>
+      <div><h3>เตือนเมื่อขัดกับสคีมา</h3><p class="note">เลือก "หนึ่ง" ทั้งที่ FK ไม่ UNIQUE หรือ "หนึ่งเดียว" ทั้งที่ FK เป็น NULL ได้ จะขึ้นแถบเหลือง พร้อมปุ่มแก้สคีมาให้ตรง (ตั้ง UNIQUE / NOT NULL) ผู้ใช้เลือกเองว่าจะกด</p></div>
+      <div><h3>ขั้นต่ำของฝั่งลูกเป็นเอกสารล้วน</h3><p class="note">"ต้องมีลูกอย่างน้อย 1" ฐานข้อมูลบังคับด้วย FK ไม่ได้ จึงแสดงเป็นสัญลักษณ์และขึ้นข้อความว่าต้องบังคับที่ฝั่งแอปหรือทริกเกอร์ ไม่มีปุ่มแก้สคีมา</p></div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* สถานะร่วม: ค่าที่ผู้ใช้เลือก (auto = ให้โปรแกรมอนุมาน) */
+var S = { parent: 'auto', cmax: 'auto', cmin: 'auto' };
+var $ = function (id) { return document.getElementById(id); };
+
+function schema() { return { nn: $('simNN').checked, uq: $('simUQ').checked }; }
+function resolved() {
+  var sc = schema();
+  return {
+    parent: S.parent === 'auto' ? (sc.nn ? 'one' : 'zeroOne') : S.parent,
+    cmax:   S.cmax === 'auto' ? (sc.uq ? 'one' : 'many') : S.cmax,
+    cmin:   S.cmin === 'auto' ? 'zero' : S.cmin
+  };
+}
+
+/* ---- วาดสัญลักษณ์ปลายเส้น (หน่วย px ใน viewBox) ---- */
+function stroke() { return 'stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"'; }
+function parentSvg(kind, x) { // ปลายแม่ ยื่นไปทางขวา: x = ขอบการ์ด
+  var s = '';
+  if (kind === 'one') s += '<path d="M' + (x + 10) + ' -7V7M' + (x + 17) + ' -7V7" ' + stroke() + '/>';
+  else s += '<path d="M' + (x + 10) + ' -7V7" ' + stroke() + '/><circle cx="' + (x + 20) + '" cy="0" r="4.5" fill="var(--canvas)" ' + stroke() + '/>';
+  return s;
+}
+function childSvg(max, min, x) { // ปลายลูก ยื่นไปทางซ้าย: x = ขอบการ์ด
+  var s = '';
+  if (max === 'many') s += '<path d="M' + (x - 14) + ' 0L' + x + ' -8M' + (x - 14) + ' 0L' + x + ' 8M' + (x - 14) + ' 0H' + x + '" ' + stroke() + '/>';
+  else s += '<path d="M' + (x - 8) + ' -7V7" ' + stroke() + '/>';
+  var cx = x - (max === 'many' ? 20 : 17);
+  if (min === 'zero') s += '<circle cx="' + cx + '" cy="0" r="4.5" fill="var(--canvas)" ' + stroke() + '/>';
+  else s += '<path d="M' + (cx - 3) + ' -7V7" ' + stroke() + '/>';
+  return s;
+}
+function relSvg(p, cmax, cmin, w) {
+  w = w || 300;
+  return '<svg viewBox="0 0 ' + w + ' 70" role="img" aria-label="ตัวอย่างเส้นความสัมพันธ์">'
+    + '<rect x="6" y="14" width="64" height="42" rx="6" fill="var(--surface)" stroke="var(--line)"/>'
+    + '<rect x="' + (w - 70) + '" y="14" width="64" height="42" rx="6" fill="var(--surface)" stroke="var(--line)"/>'
+    + '<text x="38" y="39" text-anchor="middle" font-size="10" fill="currentColor" font-family="var(--mono)">customers</text>'
+    + '<text x="' + (w - 38) + '" y="39" text-anchor="middle" font-size="10" fill="currentColor" font-family="var(--mono)">orders</text>'
+    + '<g transform="translate(0 35)"><path d="M70 0H' + (w - 70) + '" ' + stroke() + '/>'
+    + parentSvg(p, 70) + childSvg(cmax, cmin, w - 70) + '</g></svg>';
+}
+/* ภาพย่อของปุ่มเลือกในแบบ B: แสดงเฉพาะปลายที่เกี่ยวข้อง */
+function glyphParent(kind) {
+  var s = '<svg viewBox="0 0 56 26"><g transform="translate(0 13)"><path d="M2 0H54" ' + stroke() + '/>';
+  if (kind === 'one') s += '<path d="M30 -7V7M37 -7V7" ' + stroke() + '/>';
+  else s += '<path d="M28 -7V7" ' + stroke() + '/><circle cx="38" cy="0" r="4.5" fill="var(--surface)" ' + stroke() + '/>';
+  return s + '</g></svg>';
+}
+function glyphChild(max, min) {
+  var s = '<svg viewBox="0 0 56 26"><g transform="translate(0 13)"><path d="M2 0H54" ' + stroke() + '/>';
+  var x = 54;
+  if (max === 'many') s += '<path d="M' + (x - 14) + ' 0L' + x + ' -8M' + (x - 14) + ' 0L' + x + ' 8" ' + stroke() + '/>';
+  else s += '<path d="M' + (x - 8) + ' -7V7" ' + stroke() + '/>';
+  var cx = x - (max === 'many' ? 20 : 17);
+  if (min === 'zero') s += '<circle cx="' + cx + '" cy="0" r="4.5" fill="var(--surface)" ' + stroke() + '/>';
+  else s += '<path d="M' + (cx - 3) + ' -7V7" ' + stroke() + '/>';
+  return s + '</g></svg>';
+}
+
+var PARENT_NAMES = { one: 'หนึ่งเดียว', zeroOne: 'ศูนย์หรือหนึ่ง' };
+var CMAX_NAMES = { one: 'หนึ่ง', many: 'หลาย' };
+var CMIN_NAMES = { zero: 'ไม่บังคับ (0)', one: 'อย่างน้อย 1' };
+
+/* ---- เตือนเมื่อขัดกับสคีมา ---- */
+function warnings() {
+  var sc = schema(), r = resolved(), out = [];
+  if (r.cmax === 'one' && !sc.uq) out.push({ key: 'uq', text: 'เลือก "หนึ่ง" แต่ FK ยังไม่ UNIQUE ฐานข้อมูลยังให้ลูกซ้ำได้', act: 'ตั้ง UNIQUE', fix: function () { $('simUQ').checked = true; } });
+  if (r.cmax === 'many' && sc.uq && S.cmax !== 'auto') out.push({ key: 'uqoff', text: 'เลือก "หลาย" แต่ FK เป็น UNIQUE ฐานข้อมูลไม่ให้ซ้ำ', act: 'เอา UNIQUE ออก', fix: function () { $('simUQ').checked = false; } });
+  if (r.parent === 'one' && !sc.nn) out.push({ key: 'nn', text: 'เลือก "หนึ่งเดียว" แต่ FK เป็น NULL ได้ ลูกบางแถวไม่มีแม่ได้', act: 'ตั้ง NOT NULL', fix: function () { $('simNN').checked = true; } });
+  if (r.parent === 'zeroOne' && sc.nn && S.parent !== 'auto') out.push({ key: 'nnoff', text: 'เลือก "ศูนย์หรือหนึ่ง" แต่ FK เป็น NOT NULL ลูกต้องมีแม่เสมอ', act: 'เอา NOT NULL ออก', fix: function () { $('simNN').checked = false; } });
+  return out;
+}
+function warnHtml(extra) {
+  var w = warnings(), h = '';
+  w.forEach(function (x, i) {
+    h += '<div class="chip" role="status"><span>' + x.text + '</span><button type="button" data-fix="' + i + '">' + x.act + '</button></div>';
+  });
+  if (resolved().cmin === 'one') h += '<div class="chip" role="status"><span>"ต้องมีลูกอย่างน้อย 1" ฐานข้อมูลบังคับให้ไม่ได้ บังคับที่ฝั่งแอปหรือทริกเกอร์ ค่านี้เป็นเอกสารอย่างเดียว</span></div>';
+  return h;
+}
+
+/* ---- ตัวควบคุมแต่ละแบบ ---- */
+function seg(group, items, cur) {
+  return '<div class="seg" role="group">' + items.map(function (it) {
+    return '<button type="button" data-g="' + group + '" data-v="' + it[0] + '" aria-pressed="' + (cur === it[0]) + '">' + it[1] + '</button>';
+  }).join('') + '</div>';
+}
+function autoHint(group) {
+  if (S[group] !== 'auto') return '<button type="button" class="reset" data-reset="' + group + '">กลับเป็นอัตโนมัติ</button>';
+  var r = resolved(), sc = schema();
+  if (group === 'parent') return '<span class="autohint">อัตโนมัติ: FK ' + (sc.nn ? 'เป็น NOT NULL' : 'เป็น NULL ได้') + '</span>';
+  if (group === 'cmax') return '<span class="autohint">อัตโนมัติ: FK ' + (sc.uq ? 'เป็น UNIQUE' : 'ไม่ UNIQUE') + '</span>';
+  return '<span class="autohint">อัตโนมัติ: ไม่มีข้อมูลในสคีมา จึงเป็น 0</span>';
+}
+function panelShell(inner) {
+  return '<div class="panel"><div class="ptabs"><div class="on">ตาราง</div><div>สไตล์</div><div>SQL</div></div>'
+    + '<div class="pbody"><div class="fk"><div class="fk-top"><span>Foreign Key</span><span class="del">ลบ FK</span></div>'
+    + '<div class="fk-to">→ customers (id)</div>'
+    + '<div class="sec">ความสัมพันธ์</div>' + inner + '</div></div></div>';
+}
+
+function optA() {
+  var r = resolved();
+  return panelShell(
+    '<div class="prev">' + relSvg(r.parent, r.cmax, r.cmin) + '</div>'
+    + '<div><div class="lbl"><span>ฝั่งแม่ <b>customers</b></span>' + autoHint('parent') + '</div>'
+    + seg('parent', [['auto', 'อัตโนมัติ'], ['zeroOne', 'ศูนย์หรือหนึ่ง'], ['one', 'หนึ่งเดียว']], S.parent) + '</div>'
+    + '<div><div class="lbl"><span>ฝั่งลูก จำนวน <b>orders</b></span>' + autoHint('cmax') + '</div>'
+    + seg('cmax', [['auto', 'อัตโนมัติ'], ['one', 'หนึ่ง'], ['many', 'หลาย']], S.cmax) + '</div>'
+    + '<div><div class="lbl"><span>ฝั่งลูก ขั้นต่ำ</span>' + autoHint('cmin') + '</div>'
+    + seg('cmin', [['auto', 'อัตโนมัติ'], ['zero', '0'], ['one', 'อย่างน้อย 1']], S.cmin) + '</div>'
+    + warnHtml());
+}
+
+function glyphBtn(group, val, svg, label, cur) {
+  return '<button type="button" class="glyph" data-g="' + group + '" data-v="' + val + '" aria-pressed="' + (cur === val) + '">' + svg + '<span>' + label + '</span></button>';
+}
+function optB() {
+  var r = resolved(), sc = schema();
+  var autoP = sc.nn ? 'one' : 'zeroOne', autoM = sc.uq ? 'one' : 'many';
+  return panelShell(
+    '<div class="prev">' + relSvg(r.parent, r.cmax, r.cmin) + '</div>'
+    + '<div><div class="lbl"><span>ปลายฝั่งแม่ <b>customers</b></span>' + autoHint('parent') + '</div><div class="glyphs">'
+    + glyphBtn('parent', 'auto', glyphParent(autoP), 'อัตโนมัติ', S.parent)
+    + glyphBtn('parent', 'zeroOne', glyphParent('zeroOne'), 'ศูนย์หรือหนึ่ง', S.parent)
+    + glyphBtn('parent', 'one', glyphParent('one'), 'หนึ่งเดียว', S.parent) + '</div></div>'
+    + '<div><div class="lbl"><span>ปลายฝั่งลูก <b>orders</b></span>' + autoHint('cmax') + '</div><div class="glyphs">'
+    + glyphBtn('cmax', 'auto', glyphChild(autoM, 'zero'), 'อัตโนมัติ', S.cmax)
+    + glyphBtn('cmax', 'one', glyphChild('one', 'zero'), 'หนึ่ง', S.cmax)
+    + glyphBtn('cmax', 'many', glyphChild('many', 'zero'), 'หลาย', S.cmax) + '</div></div>'
+    + '<div><div class="lbl"><span>ลูกขั้นต่ำ</span>' + autoHint('cmin') + '</div><div class="glyphs">'
+    + glyphBtn('cmin', 'auto', glyphChild(r.cmax, 'zero'), 'อัตโนมัติ', S.cmin)
+    + glyphBtn('cmin', 'zero', glyphChild(r.cmax, 'zero'), '0 (ไม่บังคับ)', S.cmin)
+    + glyphBtn('cmin', 'one', glyphChild(r.cmax, 'one'), 'อย่างน้อย 1', S.cmin) + '</div></div>'
+    + warnHtml());
+}
+
+function sel(group, items, cur) {
+  return '<select data-sel="' + group + '" aria-label="' + group + '">' + items.map(function (it) {
+    return '<option value="' + it[0] + '"' + (cur === it[0] ? ' selected' : '') + '>' + it[1] + '</option>';
+  }).join('') + '</select>';
+}
+function optC() {
+  var r = resolved(), sc = schema();
+  var aP = 'อัตโนมัติ (' + (sc.nn ? 'ต้องมี 1' : 'ไม่มีก็ได้') + ')';
+  var aM = 'อัตโนมัติ (' + (sc.uq ? 'ไม่เกิน 1' : 'หลายรายการ') + ')';
+  return panelShell(
+    '<div class="prev">' + relSvg(r.parent, r.cmax, r.cmin) + '</div>'
+    + '<p class="sentence"><span class="mono">orders</span> แต่ละแถวมี <span class="mono">customers</span> '
+    + sel('parent', [['auto', aP], ['one', 'ต้องมี 1 ราย'], ['zeroOne', 'ไม่มีก็ได้ หรือมี 1 ราย']], S.parent)
+    + '<br><span class="mono">customers</span> แต่ละแถวมี <span class="mono">orders</span> '
+    + sel('cmax', [['auto', aM], ['one', 'ไม่เกิน 1 รายการ'], ['many', 'หลายรายการ']], S.cmax)
+    + ' และ ' + sel('cmin', [['auto', 'อัตโนมัติ (ไม่บังคับ)'], ['zero', 'ไม่บังคับให้มี'], ['one', 'ต้องมีอย่างน้อย 1']], S.cmin) + '</p>'
+    + warnHtml());
+}
+
+var OPTS = [
+  { id: 'A', name: 'แถบเลือก 3 ช่อง', tag: 'กระชับ', fn: optA, desc: 'ปุ่มสลับแบบข้อความ 3 ชุด (แม่ / ลูกจำนวน / ลูกขั้นต่ำ) ใช้ที่น้อยที่สุด คุ้นมือจากช่อง ON DELETE ที่มีอยู่แล้ว แต่ต้องรู้ศัพท์ ER' },
+  { id: 'B', name: 'เลือกจากรูปสัญลักษณ์', tag: 'แนะนำ', fn: optB, desc: 'ปุ่มแสดงรูปปลายเส้นจริงพร้อมคำอธิบายใต้รูป เห็นผลก่อนกด ไม่ต้องจำศัพท์ ใช้ที่สูงกว่า A ราว 60px' },
+  { id: 'C', name: 'ประโยคภาษาคน', tag: 'อ่านง่ายสุด', fn: optC, desc: 'ตอบเป็นประโยค "orders แต่ละแถวมี customers ... " เหมาะคนไม่ถนัด ER แต่ประโยคยาวในแผงแคบ 292px จะขึ้นหลายบรรทัด' }
+];
+
+function render() {
+  var host = $('opts'), html = '';
+  OPTS.forEach(function (o) {
+    html += '<div class="opt" data-opt="' + o.id + '"><div class="opt-head"><h2>แบบ ' + o.id + ' · ' + o.name + '</h2>'
+      + '<span class="tag">' + o.tag + '</span></div><p class="note">' + o.desc + '</p>' + o.fn() + '</div>';
+  });
+  host.innerHTML = html;
+}
+
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('button');
+  if (!b) return;
+  if (b.dataset.g) { S[b.dataset.g] = b.dataset.v; render(); }
+  else if (b.dataset.reset) { S[b.dataset.reset] = 'auto'; render(); }
+  else if (b.dataset.fix !== undefined) { warnings()[+b.dataset.fix].fix(); render(); }
+});
+document.addEventListener('change', function (e) {
+  if (e.target.dataset && e.target.dataset.sel) { S[e.target.dataset.sel] = e.target.value; render(); }
+  else if (e.target.id === 'simNN' || e.target.id === 'simUQ') render();
+});
+render();
+</script>

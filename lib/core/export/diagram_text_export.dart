@@ -35,9 +35,11 @@ String exportMermaid(Project p) {
     final child = p.tableById(r.fromTableId), parent = p.tableById(r.toTableId);
     final col = child?.columnById(r.fromColumnId);
     if (child == null || parent == null || col == null) continue;
-    // ฝั่งลูก: หลายแถว (หรือ 0..1 ถ้า FK เป็น PK/UNIQUE) · ฝั่งแม่: 1 แถว (หรือ 0..1 ถ้า FK เป็น NULL ได้)
-    final left = isUniqueAlone(child, col) ? '|o' : '}o';
-    final right = (col.notNull || col.isPrimaryKey) ? '||' : 'o|';
+    // ฝั่งลูก: หลายแถว (หรือ 0..1 ถ้า FK เป็น PK/UNIQUE ; 1..N / 1..1 ถ้าผู้ใช้กำหนดอย่างน้อย 1) · ฝั่งแม่: 1 แถว (หรือ 0..1 ถ้า FK เป็น NULL ได้)
+    // ทั้งหมดรวมค่าที่ผู้ใช้กำหนดเองแล้ว (relationCardinality)
+    final card = relationCardinality(r, child, col);
+    final left = card.childOne ? (card.childRequired ? '||' : '|o') : (card.childRequired ? '}|' : '}o');
+    final right = card.parentRequired ? '||' : 'o|';
     b.writeln('    ${ids[child.id]} $left--$right ${ids[parent.id]} : "${col.name.replaceAll('"', "'")}"');
   }
   return b.toString();
@@ -140,7 +142,7 @@ String? _dbmlRef(Project p, RelationModel r) {
   final child = p.tableById(r.fromTableId), parent = p.tableById(r.toTableId);
   final cc = child?.columnById(r.fromColumnId), pc = parent?.columnById(r.toColumnId);
   if (child == null || parent == null || cc == null || pc == null) return null;
-  final op = isUniqueAlone(child, cc) ? '-' : '>'; // 1:1 หรือ หลาย:1
+  final op = relationCardinality(r, child, cc).childOne ? '-' : '>'; // 1:1 หรือ หลาย:1 (DBML ไม่มีที่ใส่ขั้นต่ำ)
   final opts = [
     if (r.onDelete != RefAction.noAction) 'delete: ${r.onDelete.sql.toLowerCase()}',
     if (r.onUpdate != RefAction.noAction) 'update: ${r.onUpdate.sql.toLowerCase()}',
