@@ -4,7 +4,7 @@
   "name": "ระบบจองห้องพัก Siam Residence",
   "meta": {
     "description": "เว็บจองห้องพักโรงแรม — ตัวอย่างโปรเจกต์ที่ใช้ครบทุกชนิดเอกสารของ NSL Nebular",
-    "createdAt": "2026-11-19T09:05:58.661534Z",
+    "createdAt": "2026-11-20T06:20:36.862191Z",
     "codegen": {
       "targets": [
         "sqlDdl",
@@ -911,7 +911,11 @@
                 "unique": false,
                 "autoIncrement": false,
                 "default": "'available'",
-                "comment": "available | maintenance"
+                "comment": "สถานะห้อง",
+                "allowed": [
+                  "available",
+                  "maintenance"
+                ]
               }
             ],
             "indexes": [
@@ -1180,7 +1184,7 @@
           {
             "id": "bookings",
             "name": "bookings",
-            "comment": "การจองห้อง",
+            "comment": "การจองห้อง (ดัชนี room+วันที่ ช่วยค้นหา แต่ไม่ได้กันการจองซ้อนทับ — ต้องตรวจในระบบ)",
             "x": 80.0,
             "y": 560.0,
             "width": 270.0,
@@ -1273,7 +1277,13 @@
                 "unique": false,
                 "autoIncrement": false,
                 "default": "'pending'",
-                "comment": "pending | confirmed | cancelled | completed"
+                "comment": "สถานะการจอง",
+                "allowed": [
+                  "pending",
+                  "confirmed",
+                  "cancelled",
+                  "completed"
+                ]
               },
               {
                 "id": "bookings_note",
@@ -1313,6 +1323,18 @@
                   "bookings_user_id"
                 ],
                 "unique": false
+              }
+            ],
+            "checks": [
+              {
+                "id": "chk_bookings_dates",
+                "name": "chk_bookings_dates",
+                "expr": "check_out > check_in"
+              },
+              {
+                "id": "chk_bookings_total",
+                "name": "chk_bookings_total",
+                "expr": "total_price >= 0"
               }
             ]
           },
@@ -1363,7 +1385,12 @@
                 "notNull": true,
                 "unique": false,
                 "autoIncrement": false,
-                "comment": "card | promptpay | transfer"
+                "comment": "วิธีชำระเงิน",
+                "allowed": [
+                  "card",
+                  "promptpay",
+                  "transfer"
+                ]
               },
               {
                 "id": "payments_status",
@@ -1374,7 +1401,13 @@
                 "notNull": true,
                 "unique": false,
                 "autoIncrement": false,
-                "default": "'pending'"
+                "default": "'pending'",
+                "allowed": [
+                  "pending",
+                  "paid",
+                  "failed",
+                  "refunded"
+                ]
               },
               {
                 "id": "payments_transaction_ref",
@@ -1383,17 +1416,27 @@
                 "length": 80,
                 "pk": false,
                 "notNull": false,
-                "unique": false,
+                "unique": true,
                 "autoIncrement": false
               },
               {
                 "id": "payments_paid_at",
                 "name": "paid_at",
-                "type": "datetime",
+                "type": "timestamp",
                 "pk": false,
                 "notNull": false,
                 "unique": false,
                 "autoIncrement": false
+              },
+              {
+                "id": "payments_created_at",
+                "name": "created_at",
+                "type": "timestamp",
+                "pk": false,
+                "notNull": true,
+                "unique": false,
+                "autoIncrement": false,
+                "default": "CURRENT_TIMESTAMP"
               }
             ],
             "indexes": [
@@ -1404,6 +1447,13 @@
                   "payments_booking_id"
                 ],
                 "unique": false
+              }
+            ],
+            "checks": [
+              {
+                "id": "chk_payments_amount",
+                "name": "chk_payments_amount",
+                "expr": "amount >= 0"
               }
             ]
           },

@@ -25,6 +25,7 @@
 | `dfd/` | ตัวแก้ไข DFD (หน้าต่างเต็ม + แผงขวาเมื่อเลือกที่เก็บข้อมูล/เส้นข้อมูล) — สำเนาของ Artifact "NSL Nebular — ตัวแก้ไข DFD" https://claude.ai/artifact/Kj5SkA4i5TTxpaF1pwPvyE | 15 |
 | `screenflow/` | ตัวแก้ไข Screen Flow (หน้าต่างเต็ม + แผงขวาเมื่อเลือกการเปลี่ยนหน้า / ภาพรวม) — สำเนาของ Artifact "NSL Nebular — ตัวแก้ไข Screen Flow" https://claude.ai/artifact/2RrVKvUKRQDVHhGadNRoQA | 16 |
 | `er-cardinality/` | ตัวเลือก 3 แบบของแผงขวากำหนดสัญลักษณ์ความสัมพันธ์ ER (เล่นได้ ใช้แบบ B) — สำเนาของ Artifact "ER Cardinality Panel" https://claude.ai/artifact/LVdBMMprMtrjMgCWJng1u8 | 17b |
+| `er-table-form/` | กล่องสร้าง/แก้ตาราง 4 แท็บ + แถบ SQL + ค่าที่อนุญาต/CHECK (เล่นได้ ใช้แบบ C) — สำเนาของ Artifact https://claude.ai/artifact/QPLeHKnAx5NZPaUrJ1ro5z | 19 |
 | `wireframe-library/` | ตัวเลือกแถบเครื่องมือเต็มความกว้าง + คลังชิ้นส่วน 6 หมวด 3 แบบของ Wireframe (ใช้แบบ A + มุมมองรายการแบบ B) — สำเนาของ Artifact "Wireframe Library Panel" https://claude.ai/artifact/73Ygw8uCen2XzVcpCSSyGr | 18 |
 | `wireframe-components/` | ชิ้นส่วน Wireframe ใหม่ 15 ชนิด + แม่แบบ 8 ชุด + หมวดใหม่ในคลัง (สไตล์ร่าง/เรียบร้อย) — สำเนาของ Artifact "Wireframe Components" https://claude.ai/artifact/DrdFBbFPPesG9w3oBi3tat | 18b |
 

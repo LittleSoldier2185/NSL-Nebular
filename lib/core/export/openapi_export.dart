@@ -83,7 +83,7 @@ Map<String, dynamic> openApiDocument(ApiDocument api, {Workspace? w, String fall
                     'type': f.type.name,
                     if (f.type == ApiType.array) 'items': <String, dynamic>{},
                     if (_description(w, f) case final d? when d.isNotEmpty) 'description': d,
-                    if (_allowedOf(w, f) case final v?) 'enum': v, // ค่าที่อนุญาตของคอลัมน์ ER (Phase 19)
+                    'enum': ?_allowedOf(w, f), // ค่าที่อนุญาตของคอลัมน์ ER (Phase 19)
                   },
               },
               if (named.any((f) => f.required)) 'required': [for (final f in named) if (f.required) f.name.trim()],

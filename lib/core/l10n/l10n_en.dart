@@ -1941,4 +1941,5 @@ const Map<String, String> kEn = {
   'ค่าไม่อยู่ในค่าที่อนุญาตของคอลัมน์': 'The value is not among the column\'s allowed values',
   '**ค่าที่อนุญาต**': '**Allowed values**',
   'ค่าที่อนุญาต': 'Allowed values',
+  'กล่องสร้าง/แก้ตารางแบบ 4 แท็บ (คอลัมน์ ดัชนี CHECK ข้อมูลตั้งต้น) พร้อมตัวอย่าง SQL สด + ค่าที่อนุญาต (ENUM) ต่อคอลัมน์ และเงื่อนไข CHECK ของตาราง ใช้ได้ทั้ง 4 dialect นำเข้า/เทียบ/Migration/ตรวจ ER และส่งต่อไป Mock Server, สร้างโค้ด, OpenAPI, เอกสาร': 'New table dialog with 4 tabs (columns, indexes, CHECK, seed data) and a live SQL preview, plus per-column allowed values (ENUM) and table CHECK conditions across all 4 dialects — supported in import, compare/Migration, ER checks, Mock Server, code generation, OpenAPI and documents',
 };

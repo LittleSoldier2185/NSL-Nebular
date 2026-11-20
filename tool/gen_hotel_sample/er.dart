@@ -1,3 +1,4 @@
+import 'package:nsl_nebular/core/models/check_model.dart';
 import 'package:nsl_nebular/core/models/column_model.dart';
 import 'package:nsl_nebular/core/models/enums.dart';
 import 'package:nsl_nebular/core/models/group_model.dart';
@@ -22,6 +23,7 @@ ColumnModel _col(
   bool ai = false,
   String? def,
   String comment = '',
+  List<String> allowed = const [],
 }) =>
     ColumnModel(
       id: c(table, name),
@@ -35,6 +37,7 @@ ColumnModel _col(
       autoIncrement: ai,
       defaultValue: def,
       comment: comment,
+      allowedValues: allowed,
     );
 
 Map<String, String?> _row(String table, Map<String, String> values) => {for (final e in values.entries) c(table, e.key): e.value};
@@ -75,7 +78,7 @@ Project buildEr() {
     _col('rooms', 'room_number', DataType.varchar, len: 10, nn: true, uq: true),
     _col('rooms', 'room_type_id', DataType.integer, nn: true),
     _col('rooms', 'floor', DataType.smallint, nn: true),
-    _col('rooms', 'status', DataType.varchar, len: 20, nn: true, def: "'available'", comment: 'available | maintenance'),
+    _col('rooms', 'status', DataType.varchar, len: 20, nn: true, def: "'available'", comment: 'สถานะห้อง', allowed: ['available', 'maintenance']),
   ], seedRows: [
     for (final r in const [
       ['1', '101', '1', '1'],
@@ -126,7 +129,7 @@ Project buildEr() {
     _row('seasonal_prices', {'id': '2', 'room_type_id': '2', 'start_date': '2026-12-20', 'end_date': '2027-01-05', 'multiplier': '1.50'}),
   ]);
 
-  final bookings = TableModel(id: 'bookings', name: 'bookings', comment: 'การจองห้อง', x: 80, y: 560, width: 270, colorIndex: 3, columns: [
+  final bookings = TableModel(id: 'bookings', name: 'bookings', comment: 'การจองห้อง (ดัชนี room+วันที่ ช่วยค้นหา แต่ไม่ได้กันการจองซ้อนทับ — ต้องตรวจในระบบ)', x: 80, y: 560, width: 270, colorIndex: 3, columns: [
     _col('bookings', 'id', DataType.bigint, pk: true, ai: true),
     _col('bookings', 'booking_code', DataType.varchar, len: 20, nn: true, uq: true, comment: 'รหัสที่แสดงให้ลูกค้า'),
     _col('bookings', 'user_id', DataType.bigint, nn: true),
@@ -135,21 +138,27 @@ Project buildEr() {
     _col('bookings', 'check_out', DataType.date, nn: true),
     _col('bookings', 'guests', DataType.smallint, nn: true, def: '1'),
     _col('bookings', 'total_price', DataType.decimal, len: 10, scale: 2, nn: true),
-    _col('bookings', 'status', DataType.varchar, len: 20, nn: true, def: "'pending'", comment: 'pending | confirmed | cancelled | completed'),
+    _col('bookings', 'status', DataType.varchar, len: 20, nn: true, def: "'pending'", comment: 'สถานะการจอง', allowed: ['pending', 'confirmed', 'cancelled', 'completed']),
     _col('bookings', 'note', DataType.text),
     _col('bookings', 'created_at', DataType.timestamp, nn: true, def: 'CURRENT_TIMESTAMP'),
   ])
+    ..checks.addAll([
+      CheckModel(id: 'chk_bookings_dates', name: 'chk_bookings_dates', expr: 'check_out > check_in'),
+      CheckModel(id: 'chk_bookings_total', name: 'chk_bookings_total', expr: 'total_price >= 0'),
+    ])
     ..indexes.add(IndexModel(id: 'idx_bookings_room_dates', name: 'idx_bookings_room_dates', columnIds: [c('bookings', 'room_id'), c('bookings', 'check_in'), c('bookings', 'check_out')]));
 
   final payments = TableModel(id: 'payments', name: 'payments', comment: 'การชำระเงิน', x: 480, y: 800, width: 260, colorIndex: 3, columns: [
     _col('payments', 'id', DataType.bigint, pk: true, ai: true),
     _col('payments', 'booking_id', DataType.bigint, nn: true),
     _col('payments', 'amount', DataType.decimal, len: 10, scale: 2, nn: true),
-    _col('payments', 'method', DataType.varchar, len: 30, nn: true, comment: 'card | promptpay | transfer'),
-    _col('payments', 'status', DataType.varchar, len: 20, nn: true, def: "'pending'"),
-    _col('payments', 'transaction_ref', DataType.varchar, len: 80),
-    _col('payments', 'paid_at', DataType.datetime),
-  ]);
+    _col('payments', 'method', DataType.varchar, len: 30, nn: true, comment: 'วิธีชำระเงิน', allowed: ['card', 'promptpay', 'transfer']),
+    _col('payments', 'status', DataType.varchar, len: 20, nn: true, def: "'pending'", allowed: ['pending', 'paid', 'failed', 'refunded']),
+    _col('payments', 'transaction_ref', DataType.varchar, len: 80, uq: true),
+    _col('payments', 'paid_at', DataType.timestamp),
+    _col('payments', 'created_at', DataType.timestamp, nn: true, def: 'CURRENT_TIMESTAMP'),
+  ])
+    ..checks.add(CheckModel(id: 'chk_payments_amount', name: 'chk_payments_amount', expr: 'amount >= 0'));
 
   final reviews = TableModel(id: 'reviews', name: 'reviews', comment: 'รีวิวหลังเข้าพัก (1 การจอง = 1 รีวิว)', x: 860, y: 640, width: 250, columns: [
     _col('reviews', 'id', DataType.bigint, pk: true, ai: true),
