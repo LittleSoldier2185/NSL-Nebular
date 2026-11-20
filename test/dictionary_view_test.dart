@@ -90,7 +90,7 @@ void main() {
   late WorkspaceController w;
   final view = find.byKey(const ValueKey('dictionary-view'));
 
-  Future<void> boot(WidgetTester tester, {Size size = const Size(1600, 950)}) async {
+  Future<void> boot(WidgetTester tester, {Size size = const Size(1900, 950)}) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);

@@ -172,12 +172,16 @@ void main() {
     final d = seed();
     w.openDocument(w.mainEr.docId);
     await openHome(tester);
+    await tester.ensureVisible(find.byKey(ValueKey('home-card-${d.id}')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(ValueKey('home-card-${d.id}')));
     await tester.pumpAndSettle();
     expect(home, findsNothing);
     expect(w.activeId, d.id);
 
     await openHome(tester);
+    await tester.ensureVisible(find.byKey(ValueKey('home-card-${d.id}')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(ValueKey('home-card-${d.id}'))); // ใช้งานอยู่แล้ว
     await tester.pumpAndSettle();
     expect(home, findsNothing);
@@ -215,6 +219,8 @@ void main() {
     expect(w.documents.length, 3);
 
     await openHome(tester);
+    await tester.ensureVisible(find.byKey(const ValueKey('home-issues')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('home-issues')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('workspace-issues')), findsOneWidget);

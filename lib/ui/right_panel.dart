@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../core/ddl/ddl_generator.dart';
 import '../core/models/column_model.dart';
+import '../core/models/project.dart';
+import 'sql_view.dart';
 import '../core/models/enums.dart';
 import '../core/models/relation_model.dart';
 import '../core/models/table_model.dart';
@@ -18,8 +22,52 @@ import 'style_actions.dart';
 import 'widgets.dart';
 import '../core/l10n/l10n.dart';
 
-class RightPanel extends StatelessWidget {
+/// แท็บของแผงขวา ER (ตามแบบ `Main`): ตาราง / สไตล์ / SQL ของตารางที่เลือก
+enum ErPanelTab { table, style, sql }
+
+class RightPanel extends StatefulWidget {
   const RightPanel({super.key});
+
+  @override
+  State<RightPanel> createState() => _RightPanelState();
+}
+
+class _RightPanelState extends State<RightPanel> {
+  ErPanelTab _tab = ErPanelTab.table;
+
+  String _label(ErPanelTab t) => switch (t) {
+    ErPanelTab.table => tr('ตาราง'),
+    ErPanelTab.style => tr('สไตล์'),
+    ErPanelTab.sql => 'SQL',
+  };
+
+  Widget _tabBar() => Container(
+    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: C.borderSoft))),
+    child: Row(children: [
+      for (final t in ErPanelTab.values)
+        Expanded(
+          child: InkWell(
+            key: ValueKey('er-tab-${t.name}'),
+            onTap: () => setState(() => _tab = t),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: _tab == t ? C.primary : Colors.transparent, width: 2)),
+              ),
+              child: Text(
+                _label(t),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: _tab == t ? FontWeight.w600 : FontWeight.w400,
+                  color: _tab == t ? C.primaryDark : C.muted,
+                ),
+              ),
+            ),
+          ),
+        ),
+    ]),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -42,24 +90,39 @@ class RightPanel extends StatelessWidget {
                 ),
               ),
             )
-          : _TableEditor(key: ValueKey(t.id), table: t),
+          : Column(children: [
+              _tabBar(),
+              Expanded(child: _TableEditor(key: ValueKey('${t.id}-${_tab.name}'), table: t, tab: _tab)),
+            ]),
     );
   }
 }
 
+/// SQL ของตารางเดียว: CREATE TABLE + INDEX + FK ที่ตารางนี้เป็นลูก (dialect ของ ER) — dialect ที่ใส่ FK แยกคำสั่งจึงได้ ALTER TABLE ต่อท้าย
+String tableSql(Project p, TableModel t) {
+  final g = DdlGenerator.forDialect(p.dialect);
+  final names = g.constraintNames(p);
+  final blocks = <String>[g.createTable(p, t, names)];
+  if (g.batchSeparator != null) blocks.add(g.batchSeparator!);
+  final idx = [for (final i in t.indexes) g.createIndexStatement(t, i)];
+  if (idx.isNotEmpty) blocks.add(idx.join('\n'));
+  if (!g.fksInline) {
+    final fks = <String>[
+      for (final r in p.relations)
+        if (r.fromTableId == t.id) g.addForeignKeyStatement(p, r, names) ?? tr('-- ข้าม FK: ไม่พบตารางหรือคอลัมน์ที่อ้างถึง'),
+    ];
+    if (fks.isNotEmpty) blocks.add(fks.join('\n'));
+  }
+  return '${blocks.join('\n\n')}\n';
+}
+
 class _TableEditor extends StatelessWidget {
-  const _TableEditor({super.key, required this.table});
+  const _TableEditor({super.key, required this.table, required this.tab});
   final TableModel table;
+  final ErPanelTab tab;
 
-  @override
-  Widget build(BuildContext context) {
-    final c = context.read<ProjectController>();
-    context.watch<ProjectController>();
-    final col = c.selectedColumn;
-
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: [
+  /// ส่วนหัว: แบนเนอร์เลือกหลายตาราง + ชื่อตาราง/ทำสำเนา/ลบ — แสดงทุกแท็บ
+  List<Widget> _head(BuildContext context, ProjectController c) => [
         if (c.selectionCount > 1)
           Container(
             margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
@@ -108,6 +171,80 @@ class _TableEditor extends StatelessWidget {
           ]),
         ),
         const Divider(height: 1),
+      ];
+
+  /// แท็บสไตล์: สีหัวตาราง + ฟอนต์ (ใช้กับทุกตารางที่เลือกอยู่)
+  Widget _styleTab(BuildContext context, ProjectController c) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(children: [
+          _ColorPicker(
+            selected: table.colorIndex,
+            custom: table.customColor,
+            onPick: (i) => c.setTablesColor(c.selectedTableIds, i),
+            onCustom: () => StyleActions.tableColor(context, c, c.selectedTableIds, current: table.colorValue),
+          ),
+          const SizedBox(height: 14),
+          LabeledField(
+            label: tr('ฟอนต์ตาราง'),
+            child: SizedBox(
+              width: double.infinity,
+              height: kFieldHeight,
+              child: OutlinedButton.icon(
+                key: const ValueKey('table-font'),
+                onPressed: () => StyleActions.tableFont(context, c, c.selectedTableIds, current: table.fontFamily),
+                icon: const Icon(Icons.font_download_outlined, size: 16),
+                label: Text(table.fontFamily ?? tr('ค่าเริ่มต้น (Noto Sans Thai)'),
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: tableFont(const TextStyle(fontSize: 13), table.fontFamily)),
+              ),
+            ),
+          ),
+        ]),
+      );
+
+  /// แท็บ SQL: DDL ของตารางนี้ตัวเดียว (ทั้ง ER อยู่ที่แผง SQL ด้านล่าง)
+  Widget _sqlTab(BuildContext context, ProjectController c) {
+    final sql = tableSql(c.project, table);
+    return Column(children: [
+      ..._head(context, c),
+      Expanded(
+        child: Container(
+          key: const ValueKey('er-table-sql'),
+          color: const Color(0xFF0F172A),
+          child: SqlCodeView(lines: SqlCodeView.splitLines(sql)),
+        ),
+      ),
+      Container(
+        color: const Color(0xFF0F172A),
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+        alignment: Alignment.centerRight,
+        child: OutlinedButton(
+          key: const ValueKey('er-table-sql-copy'),
+          onPressed: () => Clipboard.setData(ClipboardData(text: sql)),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFFE2E8F0),
+            side: const BorderSide(color: Color(0xFF334155)),
+            minimumSize: const Size(0, 30),
+            textStyle: const TextStyle(fontSize: 12.5),
+          ),
+          child: Text(tr('คัดลอก')),
+        ),
+      ),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.read<ProjectController>();
+    context.watch<ProjectController>();
+    final col = c.selectedColumn;
+    if (tab == ErPanelTab.sql) return _sqlTab(context, c);
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        ..._head(context, c),
+        if (tab == ErPanelTab.style) _styleTab(context, c),
+        if (tab == ErPanelTab.table) ...[
         Padding(
           padding: const EdgeInsets.all(16),
           child: Column(children: [
@@ -129,28 +266,6 @@ class _TableEditor extends StatelessWidget {
               maxLines: 10,
               hint: tr('อธิบายว่าตารางนี้เก็บอะไร (ใช้เป็น COMMENT ใน SQL)'),
               onCommit: (v) => c.setTableComment(table.id, v),
-            ),
-            const SizedBox(height: 14),
-            _ColorPicker(
-              selected: table.colorIndex,
-              custom: table.customColor,
-              onPick: (i) => c.setTablesColor(c.selectedTableIds, i),
-              onCustom: () => StyleActions.tableColor(context, c, c.selectedTableIds, current: table.colorValue),
-            ),
-            const SizedBox(height: 14),
-            LabeledField(
-              label: tr('ฟอนต์ตาราง'),
-              child: SizedBox(
-                width: double.infinity,
-                height: kFieldHeight,
-                child: OutlinedButton.icon(
-                  key: const ValueKey('table-font'),
-                  onPressed: () => StyleActions.tableFont(context, c, c.selectedTableIds, current: table.fontFamily),
-                  icon: const Icon(Icons.font_download_outlined, size: 16),
-                  label: Text(table.fontFamily ?? tr('ค่าเริ่มต้น (Noto Sans Thai)'),
-                      maxLines: 1, overflow: TextOverflow.ellipsis, style: tableFont(const TextStyle(fontSize: 13), table.fontFamily)),
-                ),
-              ),
             ),
             const SizedBox(height: 14),
             LabeledField(
@@ -219,6 +334,7 @@ class _TableEditor extends StatelessWidget {
         ],
         _TableIssues(table: table),
         _UsedAt(table: table),
+        ],
       ],
     );
   }

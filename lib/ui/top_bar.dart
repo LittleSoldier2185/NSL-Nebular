@@ -45,10 +45,12 @@ class TopBar extends StatelessWidget {
         right: controls ? 0 : 16,
       ),
       decoration: BoxDecoration(
-        color: C.surface,
+        color: C.barBg, // แถบบนพื้นเข้ม (Phase 17)
         border: Border(bottom: BorderSide(color: C.border)),
       ),
-      child: LayoutBuilder(
+      child: DefaultTextStyle.merge(
+        style: TextStyle(color: C.onBar),
+        child: LayoutBuilder(
         builder: (context, box) => Row(
           children: [
             // โลโก้แอป (ไฟล์เดียวกับไอคอนของโปรแกรม)
@@ -68,7 +70,7 @@ class TopBar extends StatelessWidget {
               ),
             ],
             const SizedBox(width: 14),
-            Container(width: 1, height: 22, color: C.border),
+            Container(width: 1, height: 22, color: C.barBorder),
             const SizedBox(width: 8),
             ..._menus(context, c, w),
             const SizedBox(width: 8),
@@ -136,8 +138,8 @@ class TopBar extends StatelessWidget {
                           icon: const Icon(Icons.grid_view_rounded, size: 16),
                           label: Text(tr('จัดวางอัตโนมัติ')),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: C.text,
-                            side: BorderSide(color: C.border),
+                            foregroundColor: C.onBar,
+                            side: BorderSide(color: C.barBorder),
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             textStyle: const TextStyle(fontSize: 13),
                             shape: RoundedRectangleBorder(
@@ -209,6 +211,7 @@ class TopBar extends StatelessWidget {
               const WindowControls(),
             ],
           ],
+        ),
         ),
       ),
     );
@@ -618,7 +621,7 @@ class _MenuButton extends StatelessWidget {
     itemBuilder: (_) => items(),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      child: Text(label, style: const TextStyle(fontSize: 13)),
+      child: Text(label, style: TextStyle(fontSize: 13, color: C.onBarMuted)),
     ),
   );
 }
@@ -639,8 +642,9 @@ class _IconBtn extends StatelessWidget {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           padding: EdgeInsets.zero,
-          foregroundColor: C.text,
-          side: BorderSide(color: C.border),
+          foregroundColor: C.onBar,
+          disabledForegroundColor: C.onBar.withValues(alpha: 0.35),
+          side: BorderSide(color: C.barBorder),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7)),
         ),
         child: Icon(icon, size: 17),

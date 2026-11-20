@@ -267,6 +267,9 @@ void main() {
       await boot(tester);
       c.selectTable('tu');
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('er-tab-style')));
+      await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
       final sw = find.byKey(const ValueKey('table-color-custom'));
       await tester.ensureVisible(sw);
       await tester.tap(sw);
@@ -282,6 +285,9 @@ void main() {
     testWidgets('กล่องเลือกสี: ลากในพื้นที่สี/แถบเฉดสี แล้วฮีกซ์เปลี่ยนตาม', (tester) async {
       await boot(tester);
       c.selectTable('tu');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('er-tab-style')));
+      await tester.pumpAndSettle();
       await tester.pumpAndSettle();
       final sw = find.byKey(const ValueKey('table-color-custom'));
       await tester.ensureVisible(sw);
@@ -313,6 +319,9 @@ void main() {
       c.setTablesCustomColor(['tu'], 0xFF336699);
       c.selectTable('tu');
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('er-tab-style')));
+      await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
       final sw = find.byKey(const ValueKey('table-color-custom'));
       await tester.ensureVisible(sw);
       await tester.tap(sw);
@@ -330,6 +339,9 @@ void main() {
     testWidgets('แผงขวา: เลือกฟอนต์จากรายการ ค้นหาได้ และกลับค่าเริ่มต้นได้', (tester) async {
       await boot(tester);
       c.selectTable('tu');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('er-tab-style')));
+      await tester.pumpAndSettle();
       await tester.pumpAndSettle();
       final btn = find.byKey(const ValueKey('table-font'));
       await tester.ensureVisible(btn);
@@ -431,6 +443,9 @@ void main() {
       settings.setLang(Lang.en);
       await tester.pumpAndSettle();
       c.selectTable('tu');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('er-tab-style')));
+      await tester.pumpAndSettle();
       await tester.pumpAndSettle();
       expect(find.text('Table font'), findsOneWidget);
       expect(find.text('Default (Noto Sans Thai)'), findsOneWidget);

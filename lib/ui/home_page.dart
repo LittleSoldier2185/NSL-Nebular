@@ -171,7 +171,6 @@ class _HomePageState extends State<HomePage> {
         builder: (context, _) {
           final (leftW, rightW) = layout.effectiveWidths(box.maxWidth);
           final dockH = layout.effectiveDock(box.maxHeight);
-          final showExplorer = context.select<AppSettings, bool>((s) => s.showExplorer);
           final collapsed = context.select<CanvasController, bool>((cv) => cv.dockCollapsed);
           // แท็บ DFD: แผงซ้าย/ขวาและพื้นที่วาดของแผนภาพนั้น (ไม่มีแผง SQL)
           final type = context.select<WorkspaceController, DocType?>((w) => w.activeDocument.type);
@@ -186,17 +185,14 @@ class _HomePageState extends State<HomePage> {
             Row(children: [
               SizedBox(
                 width: leftW,
-                child: Column(children: [
-                  if (showExplorer) ProjectExplorer(maxHeight: box.maxHeight * 0.4),
-                  Expanded(child: switch (type) {
-                    DocType.api => _apiLeft,
-                    DocType.flowchart => _fcLeft,
-                    DocType.wireframe => _wfLeft,
-                    DocType.screenflow => _sfLeft,
-                    DocType.dfd => _dfdLeft,
-                    _ => _leftPanel,
-                  }),
-                ]),
+                child: switch (type) {
+                  DocType.api => _apiLeft,
+                  DocType.flowchart => _fcLeft,
+                  DocType.wireframe => _wfLeft,
+                  DocType.screenflow => _sfLeft,
+                  DocType.dfd => _dfdLeft,
+                  _ => _leftPanel,
+                },
               ),
               Expanded(
                 child: CustomPaint(
@@ -315,7 +311,14 @@ class _HomePageState extends State<HomePage> {
               : Column(children: [
                   const TopBar(),
                   const DiagramTabBar(),
-                  Expanded(child: Row(children: [const ActivityRail(), Expanded(child: _body(context))])),
+                  Expanded(
+                    child: Row(children: [
+                      const ActivityRail(),
+                      // ตัวสำรวจโปรเจกต์: คอลัมน์กว้างคงที่ของตัวเอง (ไม่ผูกกับแถบลากของแผงซ้าย)
+                      if (context.select<AppSettings, bool>((s) => s.showExplorer)) const ProjectExplorer(),
+                      Expanded(child: _body(context)),
+                    ]),
+                  ),
                   const StatusBar(),
                 ]),
         ),

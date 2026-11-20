@@ -110,6 +110,8 @@ void main() {
       await boot(tester);
       c.selectTable('tu');
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('er-tab-style')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('table-color-2')));
       await tester.pumpAndSettle();
       expect(tb(c.project, 'tu').colorIndex, 2);
@@ -123,6 +125,8 @@ void main() {
     testWidgets('เลือกหลายตาราง: สีถูกตั้งให้ทุกตารางที่เลือก', (tester) async {
       await boot(tester);
       c.selectAllTables();
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('er-tab-style')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('table-color-5')));
       await tester.pumpAndSettle();
@@ -170,6 +174,9 @@ void main() {
       settings.setLang(Lang.en);
       await tester.pumpAndSettle();
       c.selectTable('tu');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('er-tab-style')));
+      await tester.pumpAndSettle();
       await tester.pumpAndSettle();
       expect(find.text('Table color'), findsOneWidget);
       currentLang = Lang.th;

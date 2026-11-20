@@ -208,8 +208,8 @@ class _CaptionButtonState extends State<_CaptionButton> {
 
   @override
   Widget build(BuildContext context) {
-    final bg = _hover ? (widget.danger ? const Color(0xFFE81123) : C.text.withValues(alpha: 0.09)) : Colors.transparent;
-    final fg = _hover && widget.danger ? Colors.white : C.text;
+    final bg = _hover ? (widget.danger ? const Color(0xFFE81123) : C.barHover) : Colors.transparent;
+    final fg = C.onBar; // อยู่บนแถบบนพื้นเข้ม
     return Tooltip(
       message: widget.tooltip,
       waitDuration: const Duration(milliseconds: 600),

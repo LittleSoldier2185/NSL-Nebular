@@ -11,13 +11,16 @@ import 'canvas/context_menu.dart';
 import 'document_actions.dart';
 import 'theme.dart';
 
-/// Project Explorer: รายการเอกสารทั้งโปรเจกต์จัดกลุ่มตามชนิด (ER / DFD) ตามลำดับในไฟล์ — วางเหนือแผงซ้าย
+/// ความกว้างคงที่ของคอลัมน์ตัวสำรวจโปรเจกต์ (ตามแบบ Main: 248)
+const double kExplorerWidth = 248;
+
+/// Project Explorer: รายการเอกสารทั้งโปรเจกต์จัดกลุ่มตามชนิด (ER / DFD) ตามลำดับในไฟล์ — เป็นคอลัมน์กว้างคงที่ถัดจากแถบกิจกรรม
 /// คลิก = เปิด ; ดับเบิลคลิก/F2 = เปลี่ยนชื่อ ; คลิกขวา = เปลี่ยนชื่อ·ทำสำเนา·ลบ ; ปุ่ม + = สร้างแผนภาพใหม่
 class ProjectExplorer extends StatefulWidget {
-  const ProjectExplorer({super.key, this.maxHeight = 260});
+  const ProjectExplorer({super.key, this.maxHeight});
 
-  /// ความสูงสูงสุดของแผง (เกินนี้เลื่อนดูได้)
-  final double maxHeight;
+  /// ความสูงสูงสุดของแผง (เกินนี้เลื่อนดูได้) ; null = เต็มความสูงที่ให้ เป็นคอลัมน์กว้างคงที่ [kExplorerWidth] (Phase 17)
+  final double? maxHeight;
 
   @override
   State<ProjectExplorer> createState() => _ProjectExplorerState();
@@ -48,12 +51,13 @@ class _ProjectExplorerState extends State<ProjectExplorer> {
     ];
     return Container(
       key: const ValueKey('project-explorer'),
-      constraints: BoxConstraints(maxHeight: widget.maxHeight),
+      width: widget.maxHeight == null ? kExplorerWidth : null,
+      constraints: BoxConstraints(maxHeight: widget.maxHeight ?? double.infinity),
       decoration: BoxDecoration(
         color: C.surface,
         border: Border(right: BorderSide(color: C.border), bottom: BorderSide(color: C.border)),
       ),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
+      child: Column(mainAxisSize: widget.maxHeight == null ? MainAxisSize.max : MainAxisSize.min, children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 8, 8, 4),
           child: Row(children: [

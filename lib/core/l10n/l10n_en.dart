@@ -1752,4 +1752,6 @@ const Map<String, String> kEn = {
   'ใช้ endpoint เดียวกัน': 'Use the same endpoint',
   'ไปต่อ': 'Goes to',
   'ไม่ผูก': 'Not linked',
+  'สไตล์': 'Style',
+  'หน้าต่างหลักตามดีไซน์ใหม่: แถบบนพื้นเข้ม ตัวสำรวจโปรเจกต์เป็นคอลัมน์กว้างคงที่ และแผงขวาของ ER แยกเป็นแท็บ ตาราง / สไตล์ / SQL (แท็บ SQL แสดง CREATE TABLE ของตารางที่เลือก)': 'Main window per the new design: dark top bar, the project explorer as a fixed-width column, and the ER right panel split into Table / Style / SQL tabs (the SQL tab shows the selected table\'s CREATE TABLE)',
 };

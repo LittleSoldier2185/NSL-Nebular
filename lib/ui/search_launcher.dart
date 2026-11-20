@@ -32,27 +32,27 @@ class _SearchLauncherState extends State<SearchLauncher> {
           height: 32,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: C.field,
+            color: C.barField,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: _hover ? C.primary.withValues(alpha: 0.6) : C.border),
+            border: Border.all(color: _hover ? C.onBarMuted : C.barBorder),
           ),
           child: Row(children: [
-            Icon(Icons.search_rounded, size: 16, color: C.muted),
+            Icon(Icons.search_rounded, size: 16, color: C.onBarMuted),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 tr('ค้นหาตาราง คำสั่ง วัตถุ DFD…'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12.5, color: C.muted),
+                style: TextStyle(fontSize: 12.5, color: C.onBarMuted),
               ),
             ),
             if (key.isNotEmpty) ...[
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                decoration: BoxDecoration(color: C.surface, borderRadius: BorderRadius.circular(4), border: Border.all(color: C.border)),
-                child: Text(key, style: monoStyle.copyWith(fontSize: 10.5, color: C.muted)),
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: C.barBorder)),
+                child: Text(key, style: monoStyle.copyWith(fontSize: 10.5, color: C.onBarMuted)),
               ),
             ],
           ]),

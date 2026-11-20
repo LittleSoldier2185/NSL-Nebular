@@ -185,6 +185,15 @@ class C {
   static Color get infoText => _p.infoText;
   static Color get field => _p.field;
 
+  /// แถบบนพื้นเข้ม (Phase 17): พื้นใช้โทเค็นหัวตาราง (`tableHead`) เหมือนหัวการ์ดตาราง ; ตัวอักษร/เส้นบนพื้นเข้มเป็นสีขาวโปร่งตามระดับ
+  /// (เหมือนข้อความบนหัวการ์ดตาราง จึงไม่ต้องมีโทเค็นใหม่ใน nsl_ui)
+  static Color get barBg => _p.tableHead;
+  static Color get onBar => Colors.white;
+  static Color get onBarMuted => Colors.white.withValues(alpha: 0.72);
+  static Color get barBorder => Colors.white.withValues(alpha: 0.22);
+  static Color get barField => Colors.black.withValues(alpha: 0.22);
+  static Color get barHover => Colors.white.withValues(alpha: 0.12);
+
   /// พื้นนอกกรอบกระดาน (เข้มกว่าพื้นกระดาน เพื่อให้เห็นขอบ)
   static Color get boardOutside => _p.boardOutside;
   static Color get boardEdge => _p.boardEdge;
