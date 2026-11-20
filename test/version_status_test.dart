@@ -147,7 +147,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(AboutAppDialog), findsOneWidget);
       expect(tester.widget<Text>(find.byKey(const ValueKey('about-version'))).data, appVersionLabel);
-      await tester.tap(find.descendant(of: find.byType(AboutAppDialog), matching: find.text('มีอะไรใหม่')));
+      await tester.tap(find.descendant(of: find.byType(AboutAppDialog), matching: find.byKey(const ValueKey('help-tab-1'))));
       await tester.pumpAndSettle();
       expect(find.byType(WhatsNewDialog), findsOneWidget);
     });

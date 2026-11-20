@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../core/models/workspace.dart';
@@ -37,6 +39,7 @@ class RecoveryDialog extends StatelessWidget {
               _row(tr('เนื้อหา'), tr('{0} ตาราง · {1} คอลัมน์ · {2} FK', [w.tableCount, cols, w.relationCount])),
               _row(tr('บันทึกอัตโนมัติเมื่อ'), formatDateTime(info.savedAt)),
               _row(tr('ไฟล์เดิม'), info.originalPath ?? tr('(ยังไม่เคยบันทึกเป็นไฟล์)')),
+              if (_newerThanFile() case final n?) _row(tr('เทียบกับไฟล์จริง'), n),
             ]),
           ),
           const SizedBox(height: 10),
@@ -49,6 +52,19 @@ class RecoveryDialog extends StatelessWidget {
         FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(tr('กู้คืน'))),
       ],
     );
+  }
+
+  /// สำเนานี้ใหม่กว่าไฟล์จริงกี่นาที (Phase 21 ข้อ 5) ; อ่านเวลาแก้ไขไฟล์ไม่ได้ = null
+  String? _newerThanFile() {
+    final p = info.originalPath;
+    if (p == null) return null;
+    try {
+      final m = File(p).lastModifiedSync();
+      final mins = info.savedAt.difference(m).inMinutes;
+      return mins > 0 ? tr('ใหม่กว่าไฟล์จริง {0} นาที', [mins]) : tr('ไม่ใหม่กว่าไฟล์จริง');
+    } catch (_) {
+      return null;
+    }
   }
 
   Widget _row(String k, String v) => Padding(

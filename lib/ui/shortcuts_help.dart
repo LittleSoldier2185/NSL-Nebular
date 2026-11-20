@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'shortcuts.dart';
+import 'whats_new_dialog.dart';
 import 'theme.dart';
 import '../core/l10n/l10n.dart';
 
@@ -25,6 +26,8 @@ class ShortcutsHelpDialog extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(22, 18, 22, 14),
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const HelpTabs(current: 0),
+            const SizedBox(height: 10),
             Text(tr('คีย์ลัดทั้งหมด'), style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             Text(tr('คีย์ที่เป็นตัวอักษรเดี่ยว/ลูกศร/Delete จะไม่ทำงานขณะพิมพ์ในช่องข้อความ'),
@@ -68,4 +71,51 @@ class ShortcutsHelpDialog extends StatelessWidget {
           ),
         ]),
       );
+}
+
+/// แถบสลับ "ศูนย์ช่วยเหลือ" (คีย์ลัด / มีอะไรใหม่ / เกี่ยวกับ) — Phase 21 ข้อ 8 ; กดแล้วปิดกล่องนี้และเปิดแท็บที่เลือก
+class HelpTabs extends StatelessWidget {
+  const HelpTabs({super.key, required this.current});
+
+  /// 0 = คีย์ลัด, 1 = มีอะไรใหม่, 2 = เกี่ยวกับ
+  final int current;
+
+  @override
+  Widget build(BuildContext context) {
+    final names = [tr('คีย์ลัด'), tr('มีอะไรใหม่'), tr('เกี่ยวกับ')];
+    return Wrap(runSpacing: 6, children: [
+      for (var i = 0; i < names.length; i++)
+        Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: InkWell(
+            key: ValueKey('help-tab-$i'),
+            borderRadius: BorderRadius.circular(99),
+            onTap: i == current
+                ? null
+                : () {
+                    final nav = Navigator.of(context);
+                    final host = nav.context;
+                    nav.pop();
+                    switch (i) {
+                      case 0:
+                        showShortcutsHelp(host);
+                      case 1:
+                        showWhatsNew(host);
+                      default:
+                        showAbout(host);
+                    }
+                  },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: i == current ? C.primaryTint : null,
+                border: Border.all(color: i == current ? C.primary : C.border),
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(names[i], style: TextStyle(fontSize: 12.5, fontWeight: i == current ? FontWeight.w600 : FontWeight.w400, color: i == current ? C.primaryDark : C.text)),
+            ),
+          ),
+        ),
+    ]);
+  }
 }

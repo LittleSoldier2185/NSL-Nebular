@@ -1947,4 +1947,11 @@ const Map<String, String> kEn = {
   'ข้อมูลอาจหาย': 'Data may be lost',
   'การเชื่อมต่อใหม่': 'New connection',
   'กล่องเชื่อมต่อฐานข้อมูลแสดงรายการที่บันทึกไว้ทางซ้าย, กล่องดูข้อมูลมีแถบ SQL สดของการแก้ไขที่รอบันทึก, รายการความต่างของ Migration ติดป้าย "ข้อมูลอาจหาย"': 'DB connect box lists saved connections on the left, the data browser shows a live SQL strip of pending edits, and Migration changes carry a "Data may be lost" tag',
+  'คีย์ลัด': 'Shortcuts',
+  'เกี่ยวกับ': 'About',
+  'ค้นหาคำสั่งหรือคีย์ลัด': 'Search commands or shortcuts',
+  'เทียบกับไฟล์จริง': 'Compared with the saved file',
+  'ใหม่กว่าไฟล์จริง {0} นาที': '{0} min newer than the saved file',
+  'ไม่ใหม่กว่าไฟล์จริง': 'Not newer than the saved file',
+  'ศูนย์ช่วยเหลือ: คีย์ลัด / มีอะไรใหม่ / เกี่ยวกับ สลับแท็บได้ในกล่องเดียว และค้นหาคีย์ลัดได้ ; กล่องกู้คืนไฟล์บอกว่าสำเนาใหม่กว่าไฟล์จริงกี่นาที': 'Help center: Shortcuts / What\'s new / About switch tabs in one box and shortcuts are searchable; the recovery box says how many minutes newer the copy is than the saved file',
 };

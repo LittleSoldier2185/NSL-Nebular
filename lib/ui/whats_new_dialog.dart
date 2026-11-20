@@ -5,6 +5,7 @@ import '../core/app_info.dart';
 import '../core/changelog.dart';
 import '../core/l10n/l10n.dart';
 import '../state/app_settings.dart';
+import 'shortcuts_help.dart' show HelpTabs;
 import 'theme.dart';
 
 /// เปิดหน้าต่าง "มีอะไรใหม่" (patch note ทุกรุ่น) และบันทึกว่าผู้ใช้เห็นรุ่นปัจจุบันแล้ว (จุดบนปุ่มหาย)
@@ -27,6 +28,8 @@ class WhatsNewDialog extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 14),
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const HelpTabs(current: 1),
+              const SizedBox(height: 12),
               Row(children: [
                 Icon(Icons.auto_awesome_rounded, size: 20, color: C.primary),
                 const SizedBox(width: 10),
@@ -103,6 +106,8 @@ class AboutAppDialog extends StatelessWidget {
         content: SizedBox(
           width: 360,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const HelpTabs(current: 2),
+            const SizedBox(height: 12),
             Image.asset('assets/icon/app_icon.png', width: 96, height: 96, filterQuality: FilterQuality.medium),
             const SizedBox(height: 8),
             const Text(kAppName, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
