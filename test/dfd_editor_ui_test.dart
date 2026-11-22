@@ -50,7 +50,7 @@ void main() {
     await tester.pump();
     d = ctx.read<DfdController>();
     d.setTool(DfdTool.select);
-    d.panBy(Offset.zero);
+    d.notifyListeners();
     await tester.pumpAndSettle();
   }
 

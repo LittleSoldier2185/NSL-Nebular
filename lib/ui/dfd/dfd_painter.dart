@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import '../../core/models/color_utils.dart';
 import '../../core/layout/dfd_resize.dart';
 import '../../core/models/dfd_model.dart';
 import '../theme.dart';
+import '../canvas/scene_cache.dart';
 
 /// สีประจำชนิดวัตถุ (ใช้เมื่อไม่ได้กำหนดสีเอง)
 const Map<DfdKind, int> kDfdKindColors = {
@@ -322,8 +324,12 @@ class DfdScreenPainter extends CustomPainter {
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
     canvas.scale(scale);
-    paintDfd(canvas, diagram,
-        selectedNodes: selectedNodes, selectedFlow: selectedFlow, linkSource: linkSource, selectedBoundary: selectedBoundary);
+    drawCachedScene(
+        canvas,
+        diagram,
+        '${jsonEncode(diagram.toContentJson())}|${setKey(selectedNodes)}|$selectedFlow|$linkSource|$selectedBoundary',
+        (c) => paintDfd(c, diagram,
+            selectedNodes: selectedNodes, selectedFlow: selectedFlow, linkSource: linkSource, selectedBoundary: selectedBoundary));
     _paintBadges(canvas);
     final sb = selectedBoundary == null ? null : diagram.boundaryById(selectedBoundary!);
     if (sb != null) {

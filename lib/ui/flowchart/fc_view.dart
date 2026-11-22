@@ -22,6 +22,7 @@ import 'fc_minimap.dart';
 import 'fc_painter.dart';
 import '../note_pins.dart';
 import '../../core/layout/route_edit.dart' show routeLabelPoint;
+import '../../state/doc_controller.dart';
 
 /// รูปทรงในแถบเครื่องมือ/คลังสัญลักษณ์ ตามลำดับที่แสดง
 const List<FcShape> kFcToolShapes = [
@@ -688,7 +689,7 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<FlowchartController>();
+    final f = context.watchContent<FlowchartController>();
     Widget item(String key, String label, IconData icon, bool on, VoidCallback tap, {bool showLabel = false}) => Tooltip(
           message: label,
           child: InkWell(

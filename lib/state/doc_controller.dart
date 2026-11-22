@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 
 import '../core/models/review_note.dart';
 import '../core/models/workspace.dart';
@@ -28,6 +29,33 @@ abstract class DocController extends ChangeNotifier {
 
   /// นับขึ้นทุกครั้งที่เนื้อหาเปลี่ยน (แก้/ลากสด/undo/redo) — ใช้เทียบว่าเนื้อหาเปลี่ยนหรือยัง
   int get revision => _revision;
+
+  int _stamp = 0;
+  bool _viewOnly = false;
+
+  /// นับขึ้นทุกครั้งที่แจ้งเตือน **ยกเว้น** การเปลี่ยนมุมมอง (แพน/ซูม) อย่างเดียว — แผง/รายการที่ไม่แสดงค่ามุมมอง
+  /// ฟังค่านี้แทนทั้ง controller (ดู [WatchDocContent]) จะไม่ถูกสร้างใหม่ทุกเฟรมตอนแพน
+  int get stamp => _stamp;
+
+  /// กำลังแจ้งเตือนเฉพาะการเปลี่ยนมุมมองอยู่ (ใช้ในตัวฟังที่ไม่สนมุมมอง เช่น [WorkspaceController] ไม่ส่งต่อ)
+  bool get notifyingViewOnly => _viewOnly;
+
+  /// แจ้งเตือนว่ามุมมองเปลี่ยน (ไม่นับเป็นการเปลี่ยนของ [stamp])
+  @protected
+  void notifyViewChanged() {
+    _viewOnly = true;
+    try {
+      notifyListeners();
+    } finally {
+      _viewOnly = false;
+    }
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_viewOnly) _stamp++;
+    super.notifyListeners();
+  }
 
   bool _docDirty = false;
 
@@ -249,5 +277,14 @@ abstract class DocController extends ChangeNotifier {
     if (_disposed) return;
     _disposed = true;
     super.dispose();
+  }
+}
+
+/// ฟัง controller ของเอกสารโดยไม่ rebuild ตอนแพน/ซูม — ใช้กับวิดเจ็ตที่ไม่แสดงค่ามุมมอง (offset/scale) ตอนสร้าง
+/// (อ่านมุมมองใน callback ตอนกดได้ตามปกติ)
+extension WatchDocContent on BuildContext {
+  T watchContent<T extends DocController>() {
+    select<T, int>((c) => c.stamp);
+    return read<T>();
   }
 }

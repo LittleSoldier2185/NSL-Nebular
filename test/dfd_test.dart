@@ -460,7 +460,7 @@ void main() {
       await tester.pump();
       d = ctx.read<DfdController>(); // controller ของแท็บ DFD ที่เพิ่งเปิด
       d.setTool(DfdTool.select);
-      d.panBy(Offset.zero);
+      d.notifyListeners();
       await tester.pump();
     }
 
@@ -527,7 +527,7 @@ void main() {
     testWidgets('ต่อเส้นข้อมูลด้วย Flow tool: คลิกสองวัตถุแล้วตั้งชื่อเส้น', (tester) async {
       await boot(tester);
       setDfd(c, c.activeDiagramId, DfdDiagram(nodes: [ent('e', 0, 0, name: 'Cust'), proc('p', 400, 0, name: 'Pay')]));
-      d.panBy(Offset.zero); // แจ้งหน้าจอว่าเนื้อหาเปลี่ยน
+      d.notifyListeners(); // แจ้งหน้าจอว่าเนื้อหาเปลี่ยน (แทนเนื้อหาตรง ๆ ในเทสต์)
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('dfd-tool-flow')));
       await tester.pump();
@@ -640,7 +640,7 @@ void main() {
     testWidgets('แผงขวา: ตั้งสีและเลขลำดับ; กล่องปัญหาแสดงเมื่อไม่ได้เลือกอะไร และคลิกปัญหาไปเลือกวัตถุ', (tester) async {
       await boot(tester);
       setDfd(c, c.activeDiagramId, DfdDiagram(nodes: [proc('p', 0, 0, name: 'Lonely')]));
-      d.panBy(Offset.zero); // แจ้งหน้าจอว่าเนื้อหาเปลี่ยน
+      d.notifyListeners(); // แจ้งหน้าจอว่าเนื้อหาเปลี่ยน (แทนเนื้อหาตรง ๆ ในเทสต์)
       await tester.pump();
       expect(find.byKey(const ValueKey('dfd-issue-dfd_process_isolated-p')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('dfd-issue-dfd_process_isolated-p')));
@@ -700,7 +700,7 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
 
       setDfd(c, c.activeDiagramId, sample());
-      d.panBy(Offset.zero); // แจ้งหน้าจอว่าเนื้อหาเปลี่ยน
+      d.notifyListeners(); // แจ้งหน้าจอว่าเนื้อหาเปลี่ยน (แทนเนื้อหาตรง ๆ ในเทสต์)
       await tester.pump();
       await tester.tap(find.text('ไฟล์'));
       await tester.pumpAndSettle();
@@ -717,7 +717,7 @@ void main() {
       expect(find.text('Data store'), findsWidgets);
       expect(find.text('The DFD diagram is empty'), findsOneWidget);
       setDfd(c, c.activeDiagramId, DfdDiagram(nodes: [proc('p', 0, 0, name: 'X')]));
-      d.panBy(Offset.zero); // แจ้งหน้าจอว่าเนื้อหาเปลี่ยน
+      d.notifyListeners(); // แจ้งหน้าจอว่าเนื้อหาเปลี่ยน (แทนเนื้อหาตรง ๆ ในเทสต์)
       await tester.pump();
       expect(find.text('Process is not connected'), findsOneWidget);
       currentLang = Lang.th;

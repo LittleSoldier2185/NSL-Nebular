@@ -23,6 +23,7 @@ import '../wireframe/wf_panels.dart' show WireframeThumbnail;
 import 'sf_actions.dart';
 import 'sf_view.dart';
 import '../api/api_ref_picker.dart';
+import '../../state/doc_controller.dart';
 
 const _kMonoFallback = ['Consolas'];
 
@@ -74,7 +75,7 @@ class _ScreenFlowLeftPanelState extends State<ScreenFlowLeftPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<ScreenFlowController>();
+    final f = context.watchContent<ScreenFlowController>();
     final w = context.watch<WorkspaceController>();
     final dc = C.doc(DocType.screenflow);
     final d = f.diagram;
@@ -210,7 +211,7 @@ class _Palette extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<ScreenFlowController>();
+    final f = context.watchContent<ScreenFlowController>();
     final w = context.watch<WorkspaceController>();
     final dc = C.doc(DocType.screenflow);
     Widget shape(SfKind k) => switch (k) {
@@ -328,7 +329,7 @@ class ScreenFlowRightPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<ScreenFlowController>();
+    final f = context.watchContent<ScreenFlowController>();
     context.watch<WorkspaceController>();
     final node = f.selectedNode;
     final edge = f.selectedEdge;
@@ -843,7 +844,7 @@ class _Overview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<ScreenFlowController>();
+    final f = context.watchContent<ScreenFlowController>();
     final w = context.watch<WorkspaceController>();
     final dc = C.doc(DocType.screenflow);
     final d = f.diagram;

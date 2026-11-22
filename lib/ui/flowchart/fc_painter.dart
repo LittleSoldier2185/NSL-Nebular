@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show ValueListenable;
@@ -12,6 +13,7 @@ import '../../core/models/flowchart_model.dart';
 import '../theme.dart';
 import '../../core/layout/route_edit.dart' show routeLabelPoint;
 import '../canvas/route_handles_painter.dart';
+import '../canvas/scene_cache.dart';
 
 /// สีสำเร็จรูปให้เลือกในแผงขวา
 const List<int> kFcPalette = [
@@ -317,8 +319,12 @@ class FlowchartScreenPainter extends CustomPainter {
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
     canvas.scale(scale);
-    paintFlowchart(canvas, diagram,
-        selectedNodes: selectedNodes, selectedEdge: selectedEdge, linkSource: linkSource, hideTextOf: hideTextOf);
+    drawCachedScene(
+        canvas,
+        diagram,
+        '${jsonEncode(diagram.toContentJson())}|${setKey(selectedNodes)}|$selectedEdge|$linkSource|$hideTextOf',
+        (c) => paintFlowchart(c, diagram,
+            selectedNodes: selectedNodes, selectedEdge: selectedEdge, linkSource: linkSource, hideTextOf: hideTextOf));
     if (selectedNodes.length == 1) {
       final n = diagram.nodeById(selectedNodes.first);
       if (n != null) {

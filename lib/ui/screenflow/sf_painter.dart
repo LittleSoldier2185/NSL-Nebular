@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ import '../theme.dart';
 import '../wireframe/wf_painter.dart' show paintWireframe;
 import '../../core/layout/route_edit.dart' show routeLabelPoint;
 import '../canvas/route_handles_painter.dart';
+import '../canvas/scene_cache.dart';
 
 const double kSfLabelSize = 12;
 
@@ -242,13 +244,24 @@ class ScreenFlowScreenPainter extends CustomPainter {
     canvas.save();
     canvas.translate(offset.dx, offset.dy);
     canvas.scale(scale);
-    paintScreenFlow(canvas, diagram,
-        wireframeOf: wireframeOf,
-        selectedNodes: selectedNodes,
-        selectedEdge: selectedEdge,
-        linkSource: linkSource,
-        hideTextOf: hideTextOf,
-        thumbnails: thumbnails);
+    // ภาพย่อ Wireframe ขึ้นกับเนื้อหาของเอกสาร Wireframe ที่ผูก จึงรวมไว้ใน key ด้วย
+    final wfKey = !thumbnails || wireframeOf == null
+        ? ''
+        : [
+            for (final n in diagram.nodes)
+              if (n.wireframeId != null) '${n.wireframeId}=${jsonEncode(wireframeOf!(n.wireframeId!)?.toContentJson())}',
+          ].join(';');
+    drawCachedScene(
+        canvas,
+        diagram,
+        '${jsonEncode(diagram.toContentJson())}|${setKey(selectedNodes)}|$selectedEdge|$linkSource|$hideTextOf|$thumbnails|$wfKey',
+        (c) => paintScreenFlow(c, diagram,
+            wireframeOf: wireframeOf,
+            selectedNodes: selectedNodes,
+            selectedEdge: selectedEdge,
+            linkSource: linkSource,
+            hideTextOf: hideTextOf,
+            thumbnails: thumbnails));
     _paintApiBadges(canvas);
     if (selectedNodes.length == 1) {
       final n = diagram.nodeById(selectedNodes.first);

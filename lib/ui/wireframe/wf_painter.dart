@@ -10,6 +10,7 @@ import '../../core/models/wireframe_model.dart';
 import '../canvas/box_canvas.dart' show paintMarquee, paintResizeHandles;
 import '../flowchart/fc_painter.dart' show fcPath;
 import '../theme.dart';
+import '../canvas/scene_cache.dart';
 
 /// สีสำเร็จรูปให้เลือกในแผงขวาของ Wireframe
 const List<int> kWfPalette = [
@@ -219,7 +220,8 @@ class WireframeScreenPainter extends CustomPainter {
         ..color = Colors.black.withValues(alpha: C.isDark ? 0.35 : 0.10)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
     );
-    paintWireframe(canvas, diagram, hideTextOf: hideTextOf, hidden: hidden);
+    drawCachedScene(canvas, diagram, '${jsonEncode(diagram.toContentJson())}|$hideTextOf|${setKey(hidden)}',
+        (c) => paintWireframe(c, diagram, hideTextOf: hideTextOf, hidden: hidden));
 
     final label = TextPainter(
       text: TextSpan(text: frameLabel, style: TextStyle(fontFamily: kThai, fontSize: 12 / scale, color: C.muted)),

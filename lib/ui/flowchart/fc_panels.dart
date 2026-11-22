@@ -16,6 +16,7 @@ import 'fc_library.dart';
 import 'fc_painter.dart';
 import 'fc_view.dart';
 import '../api/api_ref_picker.dart';
+import '../../state/doc_controller.dart';
 
 /// ข้อความแสดงของสัญลักษณ์ในรายการ (บรรทัดเดียว)
 String fcNodeTitle(FcNode n) {
@@ -36,7 +37,7 @@ class _FlowchartLeftPanelState extends State<FlowchartLeftPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<FlowchartController>();
+    final f = context.watchContent<FlowchartController>();
     final w = context.watch<WorkspaceController>();
     final d = f.diagram;
     final q = _q.trim().toLowerCase();
@@ -124,7 +125,7 @@ class FlowchartRightPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<FlowchartController>();
+    final f = context.watchContent<FlowchartController>();
     final node = f.selectedNode;
     final edge = f.selectedEdge;
     final Widget body;

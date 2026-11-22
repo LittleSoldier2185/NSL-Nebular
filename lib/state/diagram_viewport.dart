@@ -2,9 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
+import 'doc_controller.dart';
+
 /// มุมมอง (เลื่อน/ซูม) ของแคนวาสแผนภาพหนึ่งแท็บ — ใช้ร่วมกันได้กับ controller ของแผนภาพชนิดใดก็ได้
 /// (ตอนนี้ใช้กับ Flowchart ; DFD ยังมีโค้ดเดิมของตัวเองซึ่งทำงานเหมือนกัน ย้ายมาใช้ภายหลังได้)
-mixin DiagramViewport on ChangeNotifier {
+mixin DiagramViewport on DocController {
   static const minScale = 0.2, maxScale = 3.0;
 
   /// ขนาดพื้นที่แสดงแคนวาส (กำหนดโดย widget ตอน layout)
@@ -20,7 +22,7 @@ mixin DiagramViewport on ChangeNotifier {
   void setView(Offset o, double s) {
     _offset = o;
     _scale = s.clamp(minScale, maxScale).toDouble();
-    notifyListeners();
+    notifyViewChanged();
   }
 
   Offset toWorld(Offset screen) => (screen - offset) / scale;

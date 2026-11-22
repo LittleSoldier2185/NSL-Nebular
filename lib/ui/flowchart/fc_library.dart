@@ -8,6 +8,7 @@ import '../../state/flowchart_controller.dart';
 import '../theme.dart';
 import 'fc_painter.dart';
 import 'fc_view.dart';
+import '../../state/doc_controller.dart';
 
 /// หมวดของคลังรูปทรง (ตาม Artboard `Flowchart` ใน design/)
 enum FcShapeCategory { basic, data, operation, operator, general }
@@ -199,7 +200,7 @@ class _ShapeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<FlowchartController>();
+    final f = context.watchContent<FlowchartController>();
     final on = f.tool == FcTool.shape && f.toolShape == shape;
     final k = fcShapeShortcut(shape);
     return _draggable(
@@ -234,7 +235,7 @@ class _ShapeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<FlowchartController>();
+    final f = context.watchContent<FlowchartController>();
     final on = f.tool == FcTool.shape && f.toolShape == shape;
     final k = fcShapeShortcut(shape);
     return _draggable(

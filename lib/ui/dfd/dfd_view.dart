@@ -23,6 +23,7 @@ import 'dfd_actions.dart';
 import 'dfd_minimap.dart';
 import 'dfd_painter.dart';
 import '../note_pins.dart';
+import '../../state/doc_controller.dart';
 
 /// พื้นที่วาดของแท็บ DFD: เลื่อน/ซูม, วางวัตถุ, ลากย้าย, กรอบเลือก, ต่อเส้นข้อมูล, เมนูคลิกขวา
 class DfdCanvas extends StatefulWidget {
@@ -435,7 +436,7 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = context.watch<DfdController>();
+    final d = context.watchContent<DfdController>();
     final w = context.watch<WorkspaceController>();
     final s = context.watch<AppSettings>();
     final dc = C.doc(DocType.dfd);
@@ -623,7 +624,7 @@ class _LevelBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = context.watch<DfdController>();
+    final d = context.watchContent<DfdController>();
     final w = context.watch<WorkspaceController>();
     final parents = d.parentsOf(w.activeId);
     if (parents.isEmpty || maxWidth < 200) return const SizedBox.shrink();

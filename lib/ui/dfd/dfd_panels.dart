@@ -18,6 +18,7 @@ import '../widgets.dart';
 import 'dfd_actions.dart';
 import 'dfd_painter.dart';
 import '../api/api_ref_picker.dart';
+import '../../state/doc_controller.dart';
 
 IconData dfdKindIcon(DfdKind k) => switch (k) {
   DfdKind.entity => Icons.crop_square_rounded,
@@ -70,7 +71,7 @@ class _DfdLeftPanelState extends State<DfdLeftPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final d = context.watch<DfdController>();
+    final d = context.watchContent<DfdController>();
     final w = context.watch<WorkspaceController>();
     final dg = d.diagram;
     final dc = C.doc(DocType.dfd);
@@ -237,7 +238,7 @@ class _Palette extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = context.watch<DfdController>();
+    final d = context.watchContent<DfdController>();
     final dc = C.doc(DocType.dfd);
     Widget tile(String key, String label, String? shortcut, Widget shape, bool on, VoidCallback onTap) => Tooltip(
           message: shortcut == null ? label : '$label ($shortcut)',
@@ -323,7 +324,7 @@ class DfdRightPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = context.watch<DfdController>();
+    final d = context.watchContent<DfdController>();
     context.watch<ProjectController>();
     final node = d.selectedNode;
     final flow = d.selectedFlow;

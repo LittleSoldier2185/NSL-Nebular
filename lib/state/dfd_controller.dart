@@ -885,7 +885,7 @@ class DfdController extends DocController with RouteEditing {
   void _setView(Offset o, double s) {
     _offset = o;
     _scale = s.clamp(minScale, maxScale).toDouble();
-    notifyListeners();
+    notifyViewChanged();
   }
 
   Offset toWorld(Offset screen) => (screen - offset) / scale;

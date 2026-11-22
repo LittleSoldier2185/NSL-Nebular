@@ -373,7 +373,12 @@ class WorkspaceController extends ChangeNotifier {
     if (!identical(c, _mainEr)) c.dispose();
   }
 
-  void _onDocChanged() => notifyListeners();
+  /// ส่งต่อการเปลี่ยนของเอกสารให้ผู้ฟังระดับโปรเจกต์ (แท็บ, ตัวสำรวจ, ตัวให้ provider ทั้งแอป) —
+  /// ยกเว้นการแพน/ซูมอย่างเดียว ไม่งั้นทั้งแอปถูกสร้างใหม่ทุกเฟรมตอนเลื่อนมุมมอง
+  void _onDocChanged() {
+    if (_controllers.values.any((c) => c.notifyingViewOnly)) return;
+    notifyListeners();
+  }
 
   int _tick = 0;
 

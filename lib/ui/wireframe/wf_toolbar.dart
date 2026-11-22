@@ -14,6 +14,7 @@ import 'wf_library.dart';
 import 'wf_panels.dart' show WireframeLeftPanel;
 import '../../core/validate/wireframe_validator.dart' show wfKindLabel, wfStyleLabel;
 import 'wf_view.dart' show wfKindShortcut;
+import '../../state/doc_controller.dart';
 
 /// ชิ้นส่วนที่อยู่ในแถบวางด่วนเสมอ (ช่องที่ 5 สลับตามที่ใช้ล่าสุด — ไม่ซ้ำกับสี่ตัวนี้ ; ไม่มีประวัติ = รูปภาพ)
 const List<WfKind> kWfQuickKinds = [WfKind.label, WfKind.button, WfKind.input, WfKind.container];
@@ -41,7 +42,7 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
+    final f = context.watchContent<WireframeController>();
     final s = context.watch<AppSettings>();
     final dc = C.doc(DocType.wireframe);
     final problems = f.issues.where((i) => i.severity != Severity.info).length;

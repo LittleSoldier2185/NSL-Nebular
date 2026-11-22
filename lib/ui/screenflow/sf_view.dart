@@ -23,6 +23,7 @@ import 'sf_actions.dart';
 import 'sf_painter.dart';
 import '../../core/layout/route_edit.dart' show routeLabelPoint;
 import '../../core/layout/diagram_geometry.dart' show kGridSize;
+import '../../state/doc_controller.dart';
 
 IconData sfKindIcon(SfKind k) => switch (k) {
       SfKind.start => Icons.play_circle_outline_rounded,
@@ -367,7 +368,7 @@ class _ToolbarBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<ScreenFlowController>();
+    final f = context.watchContent<ScreenFlowController>();
     final w = context.watch<WorkspaceController>();
     final s = context.watch<AppSettings>();
     final dc = C.doc(DocType.screenflow);

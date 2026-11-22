@@ -26,6 +26,7 @@ import 'wf_actions.dart';
 import 'wf_painter.dart';
 import 'wf_view.dart';
 import '../api/api_ref_picker.dart';
+import '../../state/doc_controller.dart';
 
 /// แผงซ้ายของแท็บ Wireframe (Phase 18, ดีไซน์แบบ A): ค้นหา · ใช้ล่าสุด · คลังชิ้นส่วน 6 หมวดพับได้ (ช่อง 3 คอลัมน์พร้อมรูปย่อ)
 /// คลิกช่อง = เลือกเครื่องมือวาง / ลากไปวางบนแคนวาส ; รายการชิ้นส่วนบนหน้าจอ (เลเยอร์) อยู่ล่างสุดของแผงขวา
@@ -61,7 +62,7 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
 
   @override
   Widget build(BuildContext context) {
-    context.watch<WireframeController>(); // วาดใหม่เมื่อคลังเปลี่ยน
+    context.watchContent<WireframeController>(); // วาดใหม่เมื่อคลังเปลี่ยน
     final w = context.watch<WorkspaceController>();
     final recent = context.select<AppSettings, List<WfKind>>((s) => s.wfRecentKinds);
     final asList = context.select<AppSettings, bool>((s) => s.wfLibraryList);
@@ -247,7 +248,7 @@ class _KindTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
+    final f = context.watchContent<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock == null && f.toolKind == kind;
     final k = wfKindShortcut(kind);
     final tile = Container(
@@ -288,7 +289,7 @@ class WireframeRightPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
+    final f = context.watchContent<WireframeController>();
     context.watch<WorkspaceController>();
     final sel = f.selectedBox;
     final Widget body;
@@ -716,7 +717,7 @@ class _PanelHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
+    final f = context.watchContent<WireframeController>();
     final name = context.select<WorkspaceController, String>((w) => w.activeDocument.name);
     final d = f.diagram;
     return Container(
@@ -938,7 +939,7 @@ class _LayersFoldState extends State<_LayersFold> {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
+    final f = context.watchContent<WireframeController>();
     final d = f.diagram;
     final parents = f.parents;
     final hidden = f.hiddenIds;
@@ -1247,7 +1248,7 @@ class _PageProps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
+    final f = context.watchContent<WireframeController>();
     final w = context.watch<WorkspaceController>();
     final a = WireframeActions(context);
     final d = f.diagram;
@@ -1392,7 +1393,7 @@ class _KindRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
+    final f = context.watchContent<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock == null && f.toolKind == kind;
     final k = wfKindShortcut(kind);
     final row = Container(
@@ -1451,7 +1452,7 @@ class _BlockTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
+    final f = context.watchContent<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock?.id == block.id;
     final tile = Container(
       padding: const EdgeInsets.fromLTRB(6, 6, 6, 4),
@@ -1488,7 +1489,7 @@ class _BlockRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watch<WireframeController>();
+    final f = context.watchContent<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock?.id == block.id;
     final row = Container(
       height: 40,
