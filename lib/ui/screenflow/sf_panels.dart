@@ -85,9 +85,10 @@ class _ScreenFlowLeftPanelState extends State<ScreenFlowLeftPanel> {
     final nodes = [for (final n in d.nodes) if (match('${n.title} ${sfKindLabel(n.kind)}')) n];
     final edges = [for (final e in d.edges) if (match('${e.label} ${e.condition} ${name(e.fromId)} ${name(e.toId)}')) e];
 
-    Widget group(String id, String title, int count, List<Widget> rows) {
+    // คืนเป็นแถว ๆ (หัวหมวด + รายการ) ให้ ListView สร้างเฉพาะแถวที่มองเห็น — ห่อเป็น Column ก้อนเดียวจะสร้างทั้งหมวดทุกครั้ง
+    List<Widget> group(String id, String title, int count, List<Widget> rows) {
       final open = q.isNotEmpty || !_collapsed.contains(id);
-      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      return [
         InkWell(
           key: ValueKey('sf-group-$id'),
           onTap: () => setState(() => _collapsed.contains(id) ? _collapsed.remove(id) : _collapsed.add(id)),
@@ -102,7 +103,7 @@ class _ScreenFlowLeftPanelState extends State<ScreenFlowLeftPanel> {
           ),
         ),
         if (open) ...rows,
-      ]);
+      ];
     }
 
     Widget row({required Key key, required bool selected, required VoidCallback onTap, Widget? lead, required String title, Widget? trailing}) => Padding(
@@ -160,7 +161,7 @@ class _ScreenFlowLeftPanelState extends State<ScreenFlowLeftPanel> {
           ),
           const Padding(padding: EdgeInsets.fromLTRB(12, 2, 12, 0), child: _Palette()),
           Padding(padding: const EdgeInsets.only(top: 12), child: Divider(height: 1, color: C.borderSoft)),
-          group('screens', tr('หน้าจอ'), screens.length, [
+          ...group('screens', tr('หน้าจอ'), screens.length, [
             for (final n in screens)
               row(
                 key: ValueKey('sf-item-${n.id}'),
@@ -174,7 +175,7 @@ class _ScreenFlowLeftPanelState extends State<ScreenFlowLeftPanel> {
                 },
               ),
           ]),
-          group('others', tr('จุดเริ่ม / จบ / ภายนอก'), others.length, [
+          ...group('others', tr('จุดเริ่ม / จบ / ภายนอก'), others.length, [
             for (final n in others)
               row(
                 key: ValueKey('sf-item-${n.id}'),
@@ -188,7 +189,7 @@ class _ScreenFlowLeftPanelState extends State<ScreenFlowLeftPanel> {
                 },
               ),
           ]),
-          group('edges', tr('การเปลี่ยนหน้า'), edges.length, [
+          ...group('edges', tr('การเปลี่ยนหน้า'), edges.length, [
             for (final e in edges)
               row(
                 key: ValueKey('sf-edge-${e.id}'),
@@ -329,7 +330,7 @@ class ScreenFlowRightPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<ScreenFlowController>();
+    final f = context.watchContentIdle<ScreenFlowController>();
     context.watch<WorkspaceController>();
     final node = f.selectedNode;
     final edge = f.selectedEdge;

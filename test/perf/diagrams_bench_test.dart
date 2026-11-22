@@ -72,12 +72,17 @@ void main() {
       await tester.pump();
       ctl.beginMove();
       final drag = await measure(tester, 30, (i) => ctl.moveBy(i * 4.0, 0.0));
+      final sw = Stopwatch()..start();
+      for (var i = 0; i < 30; i++) {
+        ctl.moveBy(120.0 + i * 4.0, 0.0);
+      }
+      final moveOnly = sw.elapsedMicroseconds / 30 / 1000;
       ctl.endMove();
       final sel = await measure(tester, 20, (i) => select(i * 7 % count));
       await tester.pumpAndSettle();
       // ignore: avoid_print
       print('PERF $label  pan=${pan.toStringAsFixed(2)}ms  zoom=${zoom.toStringAsFixed(2)}ms  '
-          'drag=${drag.toStringAsFixed(2)}ms  select=${sel.toStringAsFixed(2)}ms');
+          'drag=${drag.toStringAsFixed(2)}ms (moveBy=${moveOnly.toStringAsFixed(2)}ms)  select=${sel.toStringAsFixed(2)}ms');
     }
 
     final d = w.dfdController('dfd')!;

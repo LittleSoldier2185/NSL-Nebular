@@ -62,7 +62,8 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
 
   @override
   Widget build(BuildContext context) {
-    context.watchContentIdle<WireframeController>(); // วาดใหม่เมื่อคลังเปลี่ยน
+    // วาดใหม่เมื่อคลังเปลี่ยน — ฟังเฉพาะเนื้อหาเปลี่ยน (ไม่ใช่การเลือก) และไม่ระหว่างลาก : แผงนี้มีรูปย่อชิ้นส่วนหลายสิบรูป
+    context.select<WireframeController, int>((c) => c.gestureActive ? -1 : c.revision);
     final w = context.watch<WorkspaceController>();
     final recent = context.select<AppSettings, List<WfKind>>((s) => s.wfRecentKinds);
     final asList = context.select<AppSettings, bool>((s) => s.wfLibraryList);
@@ -248,7 +249,9 @@ class _KindTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContentIdle<WireframeController>();
+    // ฟังเฉพาะเครื่องมือที่เลือก (ไม่ rebuild ตอนเลือก/แก้วัตถุบนแคนวาส)
+    context.select<WireframeController, Object>((c) => (c.tool, c.toolKind, c.toolBlock));
+    final f = context.read<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock == null && f.toolKind == kind;
     final k = wfKindShortcut(kind);
     final tile = Container(
@@ -283,13 +286,47 @@ class _KindTile extends StatelessWidget {
   }
 }
 
+/// ตำแหน่ง/ขนาด/มุมหมุนของชิ้นที่เลือก — ฟัง controller เอง จึงอัปเดตสดระหว่างลาก/ปรับขนาด/หมุน
+/// ขณะที่แผงขวาส่วนอื่นไม่ถูกสร้างใหม่ระหว่างลาก (ดู [WireframeRightPanel])
+class _GeometryRows extends StatelessWidget {
+  const _GeometryRows({required this.id});
+  final String id;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = context.watchContent<WireframeController>();
+    final c = f.diagram.componentById(id);
+    if (c == null) return const SizedBox.shrink();
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+      Row(children: [
+        _numField('wf-x', 'X', c.x, (v) => f.updateComponents([c.id], (x) => x.x = v)),
+        const SizedBox(width: 6),
+        _numField('wf-y', 'Y', c.y, (v) => f.updateComponents([c.id], (x) => x.y = v)),
+        const SizedBox(width: 6),
+        _numField('wf-w', tr('กว้าง'), c.w, (v) => f.updateComponents([c.id], (x) => x.w = v.clamp(kWfMinSide, kWfMaxSide).toDouble())),
+        const SizedBox(width: 6),
+        _numField('wf-h', tr('สูง'), c.h, (v) => f.updateComponents([c.id], (x) => x.h = v.clamp(kWfMinSide, kWfMaxSide).toDouble())),
+      ]),
+      const SizedBox(height: 8),
+      Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        _numField('wf-rotation', tr('หมุน (องศา)'), c.rotation, (v) => f.setRotation([c.id], v)),
+        const SizedBox(width: 4),
+        _toggle('wf-rot-ccw', Icons.rotate_left_rounded, tr('หมุน 90° ทวนเข็ม'), false, () => f.setRotation([c.id], -90, relative: true)),
+        _toggle('wf-rot-cw', Icons.rotate_right_rounded, tr('หมุน 90° ตามเข็ม'), false, () => f.setRotation([c.id], 90, relative: true)),
+        _toggle('wf-rot-reset', Icons.restart_alt_rounded, tr('ไม่หมุน (0°)'), false, () => f.setRotation([c.id], 0)),
+      ]),
+    ]);
+  }
+}
+
 /// แผงขวาของแท็บ Wireframe: คุณสมบัติชิ้นที่เลือก / จัดแนวหลายชิ้น / ตั้งค่าหน้าจอ + ผลตรวจเมื่อไม่ได้เลือกอะไร
 class WireframeRightPanel extends StatelessWidget {
   const WireframeRightPanel({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<WireframeController>();
+    // ไม่สร้างใหม่ระหว่างลาก (แผงนี้ใหญ่ — ปุ่ม/ช่องกรอกหลายสิบอัน) ; ตำแหน่ง/ขนาดอัปเดตสดใน [_GeometryRows]
+    final f = context.watchContentIdle<WireframeController>();
     context.watch<WorkspaceController>();
     final sel = f.selectedBox;
     final Widget body;
@@ -549,23 +586,7 @@ class _ComponentProps extends StatelessWidget {
         ),
       ],
       const SizedBox(height: 10),
-      Row(children: [
-        _numField('wf-x', 'X', c.x, (v) => f.updateComponents([c.id], (x) => x.x = v)),
-        const SizedBox(width: 6),
-        _numField('wf-y', 'Y', c.y, (v) => f.updateComponents([c.id], (x) => x.y = v)),
-        const SizedBox(width: 6),
-        _numField('wf-w', tr('กว้าง'), c.w, (v) => f.updateComponents([c.id], (x) => x.w = v.clamp(kWfMinSide, kWfMaxSide).toDouble())),
-        const SizedBox(width: 6),
-        _numField('wf-h', tr('สูง'), c.h, (v) => f.updateComponents([c.id], (x) => x.h = v.clamp(kWfMinSide, kWfMaxSide).toDouble())),
-      ]),
-      const SizedBox(height: 8),
-      Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        _numField('wf-rotation', tr('หมุน (องศา)'), c.rotation, (v) => f.setRotation([c.id], v)),
-        const SizedBox(width: 4),
-        _toggle('wf-rot-ccw', Icons.rotate_left_rounded, tr('หมุน 90° ทวนเข็ม'), false, () => f.setRotation([c.id], -90, relative: true)),
-        _toggle('wf-rot-cw', Icons.rotate_right_rounded, tr('หมุน 90° ตามเข็ม'), false, () => f.setRotation([c.id], 90, relative: true)),
-        _toggle('wf-rot-reset', Icons.restart_alt_rounded, tr('ไม่หมุน (0°)'), false, () => f.setRotation([c.id], 0)),
-      ]),
+      _GeometryRows(id: c.id),
       if (c.locked) ...[
         const SizedBox(height: 6),
         Row(children: [
@@ -1393,7 +1414,9 @@ class _KindRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContentIdle<WireframeController>();
+    // ฟังเฉพาะเครื่องมือที่เลือก (ไม่ rebuild ตอนเลือก/แก้วัตถุบนแคนวาส)
+    context.select<WireframeController, Object>((c) => (c.tool, c.toolKind, c.toolBlock));
+    final f = context.read<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock == null && f.toolKind == kind;
     final k = wfKindShortcut(kind);
     final row = Container(
@@ -1452,7 +1475,9 @@ class _BlockTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContentIdle<WireframeController>();
+    // ฟังเฉพาะเครื่องมือที่เลือก (ไม่ rebuild ตอนเลือก/แก้วัตถุบนแคนวาส)
+    context.select<WireframeController, Object>((c) => (c.tool, c.toolKind, c.toolBlock));
+    final f = context.read<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock?.id == block.id;
     final tile = Container(
       padding: const EdgeInsets.fromLTRB(6, 6, 6, 4),
@@ -1489,7 +1514,9 @@ class _BlockRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContentIdle<WireframeController>();
+    // ฟังเฉพาะเครื่องมือที่เลือก (ไม่ rebuild ตอนเลือก/แก้วัตถุบนแคนวาส)
+    context.select<WireframeController, Object>((c) => (c.tool, c.toolKind, c.toolBlock));
+    final f = context.read<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock?.id == block.id;
     final row = Container(
       height: 40,

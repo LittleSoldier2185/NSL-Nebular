@@ -125,7 +125,7 @@ class FlowchartRightPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<FlowchartController>();
+    final f = context.watchContentIdle<FlowchartController>();
     final node = f.selectedNode;
     final edge = f.selectedEdge;
     final Widget body;

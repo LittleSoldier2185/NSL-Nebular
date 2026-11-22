@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 
+import '../core/l10n/l10n.dart' show currentLang;
 import 'theme.dart';
 
 /// ความสูงมาตรฐานของช่องกรอก/ดรอปดาวน์ในแผงข้าง (ให้เรียงกันแล้วสมส่วน)
@@ -118,7 +120,9 @@ class LabeledField extends StatelessWidget {
       );
 }
 
-class Dropdown<T> extends StatelessWidget {
+/// กล่องเลือกค่าจากรายการ — จำวิดเจ็ตที่สร้างไว้ : แผงขวาถูกสร้างใหม่บ่อย (เช่น ทุกเฟรมตอนลากวัตถุ) และ
+/// [DropdownButton] สร้างทุกรายการทุกครั้ง (วัดความกว้าง) ; ค่า/รายการ/ธีม/ภาษาเดิม = ใช้ของเดิม (กดเลือกเรียก [onChanged] ล่าสุดเสมอ)
+class Dropdown<T> extends StatefulWidget {
   const Dropdown({
     super.key,
     required this.value,
@@ -135,34 +139,55 @@ class Dropdown<T> extends StatelessWidget {
   final double height;
 
   @override
-  Widget build(BuildContext context) => Container(
-        height: height,
-        padding: const EdgeInsets.only(left: 10, right: 6),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          border: Border.all(color: C.inputBorder),
-          borderRadius: BorderRadius.circular(6),
+  State<Dropdown<T>> createState() => _DropdownState<T>();
+}
+
+class _DropdownState<T> extends State<Dropdown<T>> {
+  List<Object?>? _key;
+  Widget? _built;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = widget;
+    final key = <Object?>[
+      w.value,
+      w.height,
+      identityHashCode(C.palette),
+      currentLang,
+      for (final i in w.items) ...[i, w.labelOf(i)],
+    ];
+    final old = _key;
+    if (_built != null && old != null && listEquals(old, key)) return _built!;
+    _key = key;
+    return _built = Container(
+      height: w.height,
+      padding: const EdgeInsets.only(left: 10, right: 6),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        border: Border.all(color: C.inputBorder),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: w.value,
+          isExpanded: true,
+          isDense: true,
+          style: TextStyle(fontSize: 13, color: C.text, fontFamily: kThai),
+          items: [
+            // บรรทัดเดียวเสมอ (เช่น NO ACTION ในแผงแคบ ย่อด้วย … ไม่ตัดขึ้นบรรทัดใหม่จนกล่องสูงไม่เท่ากัน)
+            for (final i in w.items)
+              DropdownMenuItem(
+                value: i,
+                child: Text(w.labelOf(i), maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
+              ),
+          ],
+          onChanged: (v) {
+            if (v != null) widget.onChanged(v); // widget ล่าสุด ไม่ใช่ตัวที่จับไว้ตอนสร้าง
+          },
         ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<T>(
-            value: value,
-            isExpanded: true,
-            isDense: true,
-            style: TextStyle(fontSize: 13, color: C.text, fontFamily: kThai),
-            items: [
-              // บรรทัดเดียวเสมอ (เช่น NO ACTION ในแผงแคบ ย่อด้วย … ไม่ตัดขึ้นบรรทัดใหม่จนกล่องสูงไม่เท่ากัน)
-              for (final i in items)
-                DropdownMenuItem(
-                  value: i,
-                  child: Text(labelOf(i), maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
-                ),
-            ],
-            onChanged: (v) {
-              if (v != null) onChanged(v);
-            },
-          ),
-        ),
-      );
+      ),
+    );
+  }
 }
 
 /// ปุ่มเล็กขอบบาง ใช้ซ้ำทั้งแอป

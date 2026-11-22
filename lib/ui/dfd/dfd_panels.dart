@@ -82,9 +82,10 @@ class _DfdLeftPanelState extends State<DfdLeftPanel> {
     final nodes = [for (final n in dg.nodes) if (match('${n.number} ${n.name}')) n];
     final flows = [for (final f in dg.flows) if (match('${f.label} ${nodeName(f.fromId)} ${nodeName(f.toId)}')) f];
 
-    Widget group(String id, String title, int count, List<Widget> rows) {
+    // คืนเป็นแถว ๆ (หัวหมวด + รายการ) ให้ ListView สร้างเฉพาะแถวที่มองเห็น — ห่อเป็น Column ก้อนเดียวจะสร้างทั้งหมวดทุกครั้ง
+    List<Widget> group(String id, String title, int count, List<Widget> rows) {
       final open = q.isNotEmpty || !_collapsed.contains(id);
-      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      return [
         InkWell(
           key: ValueKey('dfd-group-$id'),
           onTap: () => setState(() => _collapsed.contains(id) ? _collapsed.remove(id) : _collapsed.add(id)),
@@ -101,7 +102,7 @@ class _DfdLeftPanelState extends State<DfdLeftPanel> {
           ),
         ),
         if (open) ...rows,
-      ]);
+      ];
     }
 
     Widget row({required Key key, required bool selected, required VoidCallback onTap, String? number, required String title, Widget? trailing}) =>
@@ -193,7 +194,7 @@ class _DfdLeftPanelState extends State<DfdLeftPanel> {
             const Padding(padding: EdgeInsets.fromLTRB(12, 2, 12, 0), child: _Palette()),
             Padding(padding: const EdgeInsets.only(top: 12), child: Divider(height: 1, color: C.borderSoft)),
             for (final k in const [DfdKind.process, DfdKind.entity, DfdKind.store])
-              group(k.name, dfdKindName(k), nodes.where((n) => n.kind == k).length, [
+              ...group(k.name, dfdKindName(k), nodes.where((n) => n.kind == k).length, [
                 for (final n in nodes.where((n) => n.kind == k))
                   row(
                     key: ValueKey('dfd-item-${n.id}'),
@@ -207,7 +208,7 @@ class _DfdLeftPanelState extends State<DfdLeftPanel> {
                     },
                   ),
               ]),
-            group('flows', tr('เส้นข้อมูล'), flows.length, [
+            ...group('flows', tr('เส้นข้อมูล'), flows.length, [
               for (final f in flows)
                 row(
                   key: ValueKey('dfd-flow-${f.id}'),
@@ -324,7 +325,7 @@ class DfdRightPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = context.watchContent<DfdController>();
+    final d = context.watchContentIdle<DfdController>();
     context.watch<ProjectController>();
     final node = d.selectedNode;
     final flow = d.selectedFlow;

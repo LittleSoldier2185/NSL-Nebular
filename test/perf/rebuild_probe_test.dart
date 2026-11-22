@@ -13,7 +13,7 @@ import 'package:provider/provider.dart';
 import 'diagrams_bench_test.dart' show build;
 
 void main() {
-  testWidgets('นับ rebuild ตอนลาก', (tester) async {
+  testWidgets('นับ rebuild ตอนเลือก', (tester) async {
     tester.view.physicalSize = const Size(1600, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -22,15 +22,20 @@ void main() {
     final ws = tester.element(find.byType(HomePage)).read<WorkspaceController>();
     final dfd = ws.dfdController('dfd')!, wf = ws.wireframeController('wf')!, sf = ws.screenflowController('sf')!;
     final fc = ws.flowchartController('fc')!;
-    for (final (id, ctl, sel) in <(String, dynamic, void Function())>[
+    for (final (id, _, sel) in <(String, dynamic, void Function())>[
       ('dfd', dfd, () => dfd.selectNode('d150')),
       ('fc', fc, () => fc.selectNode('c150')),
       ('wf', wf, () => wf.selectBox('w500')),
       ('sf', sf, () => sf.selectBox('s150')),
     ]) {
       sel();
-      ctl.beginMove();
-      void act(int i) => ctl.moveBy(i * 4.0, 0.0);
+      void act(int i) => id == 'dfd'
+          ? dfd.selectNode('d${i * 7 + 3}')
+          : id == 'fc'
+              ? fc.selectNode('c${i * 7 + 3}')
+              : id == 'wf'
+                  ? wf.selectBox('w${i * 7 + 3}')
+                  : sf.selectBox('s${i * 7 + 3}');
       ws.openDocument(id);
       await tester.pumpAndSettle();
       final counts = <String, int>{};
@@ -43,10 +48,9 @@ void main() {
       }
       times[id] = sw.elapsedMilliseconds ~/ 5;
       w.debugOnRebuildDirtyWidget = null;
-      ctl.endMove();
       final top = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
       // ignore: avoid_print
-      print('PROBE $id ${times[id]}ms/frame : ${top.where((e) => RegExp(r'^_?(Dfd|Fc|Flowchart|Wf|Wireframe|Sf|ScreenFlow|Status|Issue|Note|Panel|Props|Fold|Num|Color|Section|Toolbar|Body|Kind|Block|Shape|Layer|Palette|Field|Dropdown|Zoom|Minimap|Rule|Level|Right|Left)').hasMatch(e.key)).take(40).map((e) => '${e.key}=${e.value ~/ 5}').join(' ')}');
+      print('PROBE $id ${times[id]}ms/frame : ${top.where((e) => !RegExp(r'^(_?Inherited|Text|Rich|Raw|Default|Focus|_Focus|Actions|_Actions|Builder|Gesture|_Ink|_Parent|InkWell|InkResponse|Container|Padding|SizedBox|Row|Column|Expanded|Flexible|Icon|Material|_Material|_Shape|Notification|Semantics|MouseRegion|Listener|Align|Center|ConstrainedBox|DecoratedBox|Positioned|Stack|KeyedSubtree|ExcludeFocus|_Visibility|Tooltip|OverlayPortal|Animated|IconTheme|Theme|_Selection|KeepAlive|AutomaticKeepAlive|Cupertino|ListenableBuilder|ValueListenableBuilder|LayoutBuilder|Opacity|ClipRRect|ClipRect|Transform|CustomPaint|Wrap|Spacer|Divider|ColoredBox|Scrollbar|_Scroll|Visibility|Offstage|IgnorePointer|AbsorbPointer|Draggable|DragTarget|Card|ListTile|Ink|Hero|Flex|Baseline|FittedBox|LimitedBox|IntrinsicHeight|IntrinsicWidth|Directionality|MediaQuery|PrimaryScrollController|Shortcuts|_Shortcuts|DefaultTextStyle|DropdownMenuItem|DropdownButton|DropdownButtonHideUnderline|IndexedStack|Checkbox|_Checkbox|Radio|Switch|Slider|TextField|EditableText|_Editable|UndoHistory|TextFieldTapRegion|TapRegion|CompositedTransformTarget|CompositedTransformFollower|RepaintBoundary|Scrollable|Viewport|SliverList|NotificationListener|ScrollConfiguration|GlowingOverscrollIndicator|StretchingOverscrollIndicator|ListView|SingleChildScrollView|SliverPadding|_Sliver|Ticker|_Effective|AnimatedBuilder|FadeTransition|ScaleTransition|_RenderTheaterMarker|_Overlay|Overlay|_Theater|ModalBarrier|Navigator|_Inline|Button|IconButton|_IconButton|TextButton|FilledButton|OutlinedButton|ElevatedButton|_Button|ButtonStyleButton|Tab|PhysicalModel|PhysicalShape|_Painted|Image|RawImage|SafeArea|Builder|StatefulBuilder|Form|FormField|_Form|_TextField|InputDecorator|_Decorator|_Helper|_Border|_Scribble|Scribble|Selectable|SelectionContainer|SelectionArea|Badge|Chip|_Chip|RawChip)').hasMatch(e.key)).take(20).map((e) => '${e.key}=${e.value ~/ 5}').join(' ')}');
     }
   });
 }
