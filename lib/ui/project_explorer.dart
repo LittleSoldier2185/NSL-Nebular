@@ -7,9 +7,11 @@ import '../core/l10n/l10n.dart';
 import '../core/models/workspace.dart';
 import '../core/validate/issue.dart';
 import '../state/app_settings.dart';
+import '../state/project_controller.dart';
 import '../state/workspace_controller.dart';
 import 'canvas/context_menu.dart';
 import 'document_actions.dart';
+import 'file_actions.dart';
 import 'theme.dart';
 
 /// ความกว้างคงที่ของคอลัมน์ตัวสำรวจโปรเจกต์ (ตามแบบ Main: 248)
@@ -268,6 +270,8 @@ class _ExplorerRowState extends State<_ExplorerRow> {
               MenuSpec(tr('เปลี่ยนชื่อ…'), Icons.drive_file_rename_outline, () => renameDocumentDialog(context, d.id),
                   shortcut: 'F2'),
               MenuSpec(tr('ทำสำเนาแผนภาพ'), Icons.copy_rounded, () => w.duplicateDocument(d.id)),
+              MenuSpec(tr('ส่งออกเอกสารนี้เป็นไฟล์…'), Icons.ios_share_rounded,
+                  () => FileActions.exportDocuments(context, context.read<ProjectController>(), docIds: {d.id})),
               if (w.canDeleteDocument(d.id))
                 MenuSpec(tr('ลบแผนภาพ'), Icons.delete_outline, () => deleteDocumentDialog(context, d.id), danger: true),
             ]);

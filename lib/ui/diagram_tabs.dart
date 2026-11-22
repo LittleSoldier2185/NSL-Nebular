@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 
 import '../core/l10n/l10n.dart';
 import '../core/models/workspace.dart';
+import '../state/project_controller.dart';
 import '../state/workspace_controller.dart';
+import 'file_actions.dart';
 import 'canvas/context_menu.dart';
 import 'document_actions.dart';
 import 'theme.dart';
@@ -212,6 +214,11 @@ class _TabState extends State<_Tab> {
               tr('ทำสำเนาแผนภาพ'),
               Icons.copy_rounded,
               () => _duplicate(context),
+            ),
+            MenuSpec(
+              tr('ส่งออกเอกสารนี้เป็นไฟล์…'),
+              Icons.ios_share_rounded,
+              () => FileActions.exportDocuments(context, context.read<ProjectController>(), docIds: {t.id}),
             ),
             if (deletable)
               MenuSpec(

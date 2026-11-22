@@ -39,6 +39,7 @@ import 'import_dialog.dart';
 import 'migration_dialog.dart';
 import '../core/models/enums.dart';
 import '../core/storage/project_file.dart';
+import '../core/storage/project_subset.dart';
 import '../core/validate/issue.dart';
 import 'canvas/canvas_controller.dart';
 import '../state/project_controller.dart';
@@ -566,6 +567,38 @@ class FileActions {
     final path = withProjectExt(uri.toFilePath());
     if (!context.mounted) return false;
     return _write(context, c, path);
+  }
+
+  /// ส่งออกเอกสาร [docIds] (และทุกเอกสารในโฟลเดอร์ [folderIds]) เป็นไฟล์ `.nsln` ใหม่ที่เปิดได้เอง — ไม่แตะโปรเจกต์ที่เปิดอยู่
+  /// ลิงก์ที่ชี้ไปเอกสารนอกชุดคงไว้ตามเดิม (ตัวตรวจแจ้งเป็นปัญหา) ; ลิงก์ไล่ตามความต้องการถูกตัดออก ; แจ้งผลทาง toast
+  static Future<void> exportDocuments(BuildContext context, ProjectController c,
+      {Set<String> docIds = const {}, Set<String> folderIds = const {}, String? suggestedName}) async {
+    final w = c.workspaceController.workspace;
+    final r = extractSubset(w, docIds: docIds, folderIds: folderIds);
+    if (r == null) return;
+    final base = safeName(suggestedName ?? (r.documentCount == 1 ? r.workspace.documents.single.name : w.name));
+    final uri = await FilePicker.saveFile(
+      dialogTitle: tr('ส่งออกเฉพาะที่เลือก'),
+      fileName: '$base.$kProjectExt',
+      bytes: utf8.encode(ProjectFile.encode(r.workspace)),
+    );
+    if (uri == null) return;
+    final path = withProjectExt(uri.toFilePath());
+    try {
+      await ProjectFile.save(r.workspace, path);
+    } catch (e) {
+      if (context.mounted) _toast(context, tr('บันทึกไม่ได้: {0}', [e]));
+      return;
+    }
+    if (!context.mounted) return;
+    final notes = [
+      if (r.brokenRefs > 0) tr('มีลิงก์ไปเอกสารนอกชุด {0} จุด', [r.brokenRefs]),
+      if (r.droppedTraceLinks > 0) tr('ตัดลิงก์ไล่ตามความต้องการ {0} รายการ', [r.droppedTraceLinks]),
+    ];
+    _toast(
+      context,
+      [tr('ส่งออก {0} เอกสารแล้ว', [r.documentCount]), ...notes].join(' · '),
+    );
   }
 
   /// ชื่อไฟล์ .sql จากชื่อโปรเจกต์ + dialect (ตัดอักขระที่ Windows ห้ามใช้ในชื่อไฟล์)
