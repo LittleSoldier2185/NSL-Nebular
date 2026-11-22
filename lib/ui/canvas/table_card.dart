@@ -127,7 +127,7 @@ class TableCard extends StatelessWidget {
                     blurRadius: 0,
                     offset: Offset.zero,
                   ),
-                ...(selected ? C.shadowLg : C.shadowMd),
+                ...(selected ? C.shadowLg : C.shadowCard),
               ],
             ),
             clipBehavior: Clip.antiAlias,

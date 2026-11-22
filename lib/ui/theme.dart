@@ -232,6 +232,11 @@ class C {
         BoxShadow(color: _sh(0.10), blurRadius: 14, offset: const Offset(0, 6)),
       ];
 
+  /// การ์ดตารางปกติบนกระดาน: เงาเบลอชั้นเดียว (กระดานมีการ์ดหลายสิบใบ เงาเบลอสองชั้นต่อใบหนักฝั่ง GPU ตอนแพน/ซูม)
+  static List<BoxShadow> get shadowCard => [
+        BoxShadow(color: _sh(0.11), blurRadius: 8, offset: const Offset(0, 3)),
+      ];
+
   /// ลอยสูง: ตารางที่เลือก/กำลังลาก, เมนู, dialog
   static List<BoxShadow> get shadowLg => [
         BoxShadow(color: _sh(0.10), blurRadius: 6, offset: const Offset(0, 2)),

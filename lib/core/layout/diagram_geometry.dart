@@ -252,6 +252,19 @@ Map<String, List<RoutePoint>> relationRoutes(Project p) {
   // เส้นที่ผู้ใช้ลากช่วงกลางเอง : ใช้ x ที่กำหนดตรง ๆ (ไม่เลี่ยงสิ่งกีดขวาง ไม่เข้าเลน)
   final manual = {for (final r in p.relations) if (r.bendX != null) r.id: r.bendX!};
 
+  // ผลขึ้นกับค่าข้างบนเท่านั้น (กรอบสิ่งกีดขวาง/กลุ่ม, ปลายเส้น, ช่องเข้าตารางแม่, จุดหักที่ลากเอง) :
+  // ค่าเหมือนเดิมทุกตัว = ใช้ผลเดิม (canvas วาดใหม่บ่อย เช่น ซูม/เลือก แต่เรขาคณิตไม่เปลี่ยน)
+  final cacheKey = <Object?>[
+    for (final b in boxes) ...[b.$1, b.$2, b.$3, b.$4, b.$5],
+    -1,
+    for (final e in edges) ...[e.$1, e.$2, e.$3, e.$4],
+    -2,
+    for (final it in items) ...[it.id, it.fromT, it.toT, it.g.fx, it.g.fy, it.g.tx, it.g.ty, it.g.d0, it.g.d1, slots[it.id]?.dy, manual[it.id]],
+  ];
+  for (final (k, v) in _routeCache) {
+    if (_sameKey(k, cacheKey)) return v;
+  }
+
   // ระยะเลื่อนระดับที่เส้นเข้าตารางแม่เพิ่มจากช่องปกติ (แก้เส้นแนวนอนที่ทับกัน — ดูด้านล่าง)
   final endNudge = List<double>.filled(items.length, 0);
 
@@ -374,7 +387,23 @@ Map<String, List<RoutePoint>> relationRoutes(Project p) {
     }
   }
 
-  return {for (var i = 0; i < items.length; i++) items[i].id: routes[i]};
+  final result = Map<String, List<RoutePoint>>.unmodifiable(
+      {for (var i = 0; i < items.length; i++) items[i].id: List<RoutePoint>.unmodifiable(routes[i])});
+  _routeCache.insert(0, (cacheKey, result));
+  if (_routeCache.length > _kRouteCacheSize) _routeCache.removeLast();
+  return result;
+}
+
+/// แคชผล [relationRoutes] ล่าสุดไม่กี่ชุด (หลายเอกสาร ER / SVG ส่งออก ใช้ร่วมกันได้) — ใหม่สุดอยู่หน้า
+final List<(List<Object?>, Map<String, List<RoutePoint>>)> _routeCache = [];
+const _kRouteCacheSize = 4;
+
+bool _sameKey(List<Object?> a, List<Object?> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
 }
 
 /// ระยะที่ self-reference ยื่นออกจากขอบการ์ด (ไกลกว่าเส้นทั่วไปให้เห็นเป็นห่วงชัด)

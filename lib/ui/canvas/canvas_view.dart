@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +10,7 @@ import '../../state/project_controller.dart';
 import '../theme.dart';
 import '../../core/layout/diagram_geometry.dart';
 import '../../core/models/project.dart';
+import '../../core/models/table_model.dart';
 import 'canvas_controller.dart';
 import 'context_menu.dart';
 import 'group_card.dart';
@@ -170,28 +173,8 @@ class CanvasView extends StatelessWidget {
                     cv.offset.dx - CanvasController.worldOrigin * cv.scale,
                     cv.offset.dy - CanvasController.worldOrigin * cv.scale, 0, 1,
                   ),
-                  child: SizedBox(
-                    width: CanvasController.worldSize,
-                    height: CanvasController.worldSize,
-                    child: Stack(clipBehavior: Clip.none, children: [
-                      // กลุ่มอยู่ล่างสุด (ใต้เส้น FK และตาราง)
-                      for (final g in c.project.groups) GroupCard(key: ValueKey('group-${g.id}'), group: g),
-                      Positioned.fill(
-                        child: _RelationLayer(
-                          project: c.project,
-                          selectedTableId: c.selectedTableId,
-                          focusRelationId: _focusRelation(c),
-                          handleScale: cv.scale,
-                          showFlow: context.select<AppSettings, bool>((s) => s.showFlow),
-                          animate: context.select<AppSettings, bool>((s) => s.flowAnimation),
-                          always: context.select<AppSettings, bool>((s) => s.flowAlways),
-                          speed: context.select<AppSettings, FlowSpeed>((s) => s.flowSpeed),
-                        ),
-                      ),
-                      for (final t in c.project.tables) TableCard(key: ValueKey('table-${t.id}'), table: t),
-                      for (final n in c.project.notes) NoteCard(key: ValueKey('note-${n.id}'), note: n),
-                    ]),
-                  ),
+                  // เนื้อหาโลกแยกเป็นวิดเจ็ต const + RepaintBoundary : แพน/ซูมเปลี่ยนแค่ Matrix ไม่สร้าง/วาดการ์ดใหม่
+                  child: const RepaintBoundary(child: _WorldContent()),
                 ),
               ),
             ),
@@ -231,7 +214,7 @@ class CanvasView extends StatelessWidget {
       : w;
 
   /// เส้นที่ควรเน้น (ดู [_RelationLayer]) คอลัมน์ FK ที่เลือกอยู่ (ฝั่งลูก) ชี้ไปที่ความสัมพันธ์ไหน
-  String? _focusRelation(ProjectController c) {
+  static String? _focusRelation(ProjectController c) {
     final col = c.selectedColumnId;
     final tid = c.selectedTableId;
     if (col == null || tid == null) return null;
@@ -267,6 +250,86 @@ class CanvasView extends StatelessWidget {
       case CanvasTool.fk:
         cv.clearFkSource();
     }
+  }
+}
+
+/// ตาราง/โน้ต/กลุ่ม/เส้น FK ในพิกัดโลก — ฟัง [ProjectController] และค่าใน [CanvasController] ที่การ์ดใช้ตอนสร้าง
+/// (เครื่องมือ, ต้นทาง FK, สถานะแพน) เท่านั้น จึงไม่สร้างใหม่ตอนเลื่อน/ซูมมุมมอง ([CanvasView] ห่อด้วย Transform)
+///
+/// การ์ดตารางถูกจำไว้ตาม "ลายเซ็น" ของข้อมูลที่การ์ดใช้ : โปรเจกต์เปลี่ยน (ลาก/เลือก/แก้) สร้างใหม่เฉพาะการ์ดที่ลายเซ็นเปลี่ยน
+class _WorldContent extends StatefulWidget {
+  const _WorldContent();
+
+  @override
+  State<_WorldContent> createState() => _WorldContentState();
+}
+
+class _WorldContentState extends State<_WorldContent> {
+  final Map<String, (String, Widget)> _cards = {};
+
+  /// ทุกอย่างที่ [TableCard] และแถวคอลัมน์อ่านตอนสร้าง — เพิ่มค่าที่การ์ดอ่านใหม่ต้องเพิ่มที่นี่ด้วย
+  String _signature(ProjectController c, CanvasController cv, TableModel t, Set<String> fkCols) {
+    final selected = c.isTableSelected(t.id);
+    final src = cv.fkSource;
+    return [
+      identityHashCode(t),
+      jsonEncode(t.toJson()),
+      selected,
+      selected && c.gestureActive && !cv.panning,
+      c.selectedTableId == t.id ? c.selectedColumnId : null,
+      src != null && src.tableId == t.id ? src.columnId : null,
+      cv.tool.name,
+      (fkCols.toList()..sort()).join(','),
+    ].join('');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.watch<ProjectController>();
+    final cv = context.read<CanvasController>();
+    // ค่าที่การ์ด/แถวคอลัมน์อ่านตอนสร้าง (เปลี่ยนไม่บ่อย)
+    context.select<CanvasController, bool>((v) => v.panning);
+    context.select<CanvasController, CanvasTool>((v) => v.tool);
+    context.select<CanvasController, ({String tableId, String columnId})?>((v) => v.fkSource);
+
+    final fkByTable = <String, Set<String>>{};
+    for (final r in c.project.relations) {
+      fkByTable.putIfAbsent(r.fromTableId, () => {}).add(r.fromColumnId);
+    }
+    final live = <String>{};
+    Widget card(TableModel t) {
+      live.add(t.id);
+      final sig = _signature(c, cv, t, fkByTable[t.id] ?? const {});
+      final hit = _cards[t.id];
+      if (hit != null && hit.$1 == sig) return hit.$2;
+      final w = TableCard(key: ValueKey('table-${t.id}'), table: t);
+      _cards[t.id] = (sig, w);
+      return w;
+    }
+
+    final tables = [for (final t in c.project.tables) card(t)];
+    _cards.removeWhere((id, _) => !live.contains(id));
+    return SizedBox(
+      width: CanvasController.worldSize,
+      height: CanvasController.worldSize,
+      child: Stack(clipBehavior: Clip.none, children: [
+        // กลุ่มอยู่ล่างสุด (ใต้เส้น FK และตาราง)
+        for (final g in c.project.groups) GroupCard(key: ValueKey('group-${g.id}'), group: g),
+        Positioned.fill(
+          child: _RelationLayer(
+            project: c.project,
+            selectedTableId: c.selectedTableId,
+            focusRelationId: CanvasView._focusRelation(c),
+            showFlow: context.select<AppSettings, bool>((s) => s.showFlow),
+            animate: context.select<AppSettings, bool>((s) => s.flowAnimation),
+            always: context.select<AppSettings, bool>((s) => s.flowAlways),
+            speed: context.select<AppSettings, FlowSpeed>((s) => s.flowSpeed),
+          ),
+        ),
+        ...tables,
+        for (final n in c.project.notes) NoteCard(key: ValueKey('note-${n.id}'), note: n),
+      ]),
+    );
   }
 }
 
@@ -471,7 +534,6 @@ class _RelationLayer extends StatefulWidget {
     required this.project,
     required this.selectedTableId,
     required this.focusRelationId,
-    this.handleScale = 0,
     required this.showFlow,
     required this.animate,
     this.always = false,
@@ -482,8 +544,6 @@ class _RelationLayer extends StatefulWidget {
   final String? selectedTableId;
   final String? focusRelationId;
 
-  /// ซูมปัจจุบัน (วาดจุดจับของเส้นที่เลือกขนาดคงที่บนจอ)
-  final double handleScale;
   final bool showFlow;
   final bool animate;
 
@@ -542,7 +602,8 @@ class _RelationLayerState extends State<_RelationLayer> with SingleTickerProvide
             widget.selectedTableId,
             origin: CanvasController.worldOrigin,
             focusRelationId: widget.focusRelationId,
-            handleScale: widget.handleScale,
+            // ซูมอ่านที่ชั้นนี้เท่านั้น — ซูมแล้ววาดเส้นใหม่ แต่ไม่สร้างการ์ดตารางใหม่
+            handleScale: context.select<CanvasController, double>((v) => v.scale),
             flow: widget.showFlow,
             flowPhase: _wantAnimation ? _ctl.value : null,
             flowAll: widget.always,
