@@ -327,7 +327,7 @@ class _HomePageState extends State<HomePage> {
       );
 }
 
-/// เงาขอบด้านในของพื้นที่ canvas: ตกจากแถบบนและแผงซ้าย/ขวา ทำให้แผงดูลอยเหนือพื้นงาน
+/// เงาขอบด้านในของพื้นที่ canvas: ตกจากแผงซ้าย/ขวา (ไม่มีเงาด้านบน — เคยพาดทับแถบเครื่องมือเป็นเส้นในธีมมืด) ทำให้แผงดูลอยเหนือพื้นงาน
 /// (วาดเป็น foreground เพราะแผงข้างเคียงถูกวาดก่อน canvas เงาของมันเองจึงถูกบัง; ไม่รับ pointer)
 class _EdgeShadow extends CustomPainter {
   const _EdgeShadow();
@@ -341,7 +341,6 @@ class _EdgeShadow extends CustomPainter {
     final c1 = C.palette.shadow.withValues(alpha: 0);
     Paint strip(Offset from, Offset to) => Paint()
       ..shader = LinearGradient(colors: [c0, c1]).createShader(Rect.fromPoints(from, to));
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, _depth), strip(Offset.zero, const Offset(0, _depth)));
     canvas.drawRect(Rect.fromLTWH(0, 0, _depth, size.height), strip(Offset.zero, const Offset(_depth, 0)));
     canvas.drawRect(Rect.fromLTWH(size.width - _depth, 0, _depth, size.height),
         Paint()..shader = LinearGradient(colors: [c1, c0]).createShader(Rect.fromLTWH(size.width - _depth, 0, _depth, 0)));
