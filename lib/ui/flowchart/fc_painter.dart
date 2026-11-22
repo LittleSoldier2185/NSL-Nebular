@@ -14,6 +14,7 @@ import '../theme.dart';
 import '../../core/layout/route_edit.dart' show routeLabelPoint;
 import '../canvas/route_handles_painter.dart';
 import '../canvas/scene_cache.dart';
+import '../canvas/text_layout_cache.dart';
 
 /// สีสำเร็จรูปให้เลือกในแผงขวา
 const List<int> kFcPalette = [
@@ -81,7 +82,7 @@ void _strokePath(Canvas canvas, Path path, Paint paint, FcDash dash) {
   }
 }
 
-TextPainter fcTextPainter(FcNode n, double maxWidth, {Color? color}) => TextPainter(
+TextPainter fcTextPainter(FcNode n, double maxWidth, {Color? color}) => layoutText(
       text: TextSpan(
         text: n.text,
         style: TextStyle(
@@ -101,10 +102,9 @@ TextPainter fcTextPainter(FcNode n, double maxWidth, {Color? color}) => TextPain
         FcAlign.right => TextAlign.right,
       },
       ellipsis: '…',
-      maxLines: math.max(1, (fcTextBox(n).height / (n.fontSize * 1.25)).floor()),
-    )..layout(maxWidth: math.max(4, maxWidth));
+      maxLines: math.max(1, (fcTextBox(n).height / (n.fontSize * 1.25)).floor()), maxWidth: math.max(4, maxWidth));
 
-TextPainter _labelPainter(String text, Color color) => TextPainter(
+TextPainter _labelPainter(String text, Color color) => layoutText(
       text: TextSpan(
         text: text,
         style: TextStyle(
@@ -112,8 +112,7 @@ TextPainter _labelPainter(String text, Color color) => TextPainter(
       ),
       textDirection: TextDirection.ltr,
       maxLines: 2,
-      ellipsis: '…',
-    )..layout(maxWidth: 200);
+      ellipsis: '…', maxWidth: 200);
 
 /// สี่เหลี่ยมของป้ายชื่อเส้น (ใช้ทั้งวาดและตรวจการคลิก) ; ไม่มีป้าย = null
 Rect? fcLabelRect(FcEdge e, List<RoutePoint> route) {

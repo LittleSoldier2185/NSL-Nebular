@@ -37,7 +37,7 @@ class _FlowchartLeftPanelState extends State<FlowchartLeftPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<FlowchartController>();
+    final f = context.watchContentIdle<FlowchartController>();
     final w = context.watch<WorkspaceController>();
     final d = f.diagram;
     final q = _q.trim().toLowerCase();

@@ -144,6 +144,117 @@ Map<String, List<RoutePoint>> orthogonalRoutes(
   bool preferVertical = false,
   bool avoidBoxes = false,
 }) {
+  // ผลขึ้นกับค่าเข้าเท่านั้น : เหมือนเดิมทุกตัว = ใช้ผลเดิม (แผนภาพถูกวาดใหม่บ่อยตอนเลือก/แก้สิ่งที่ไม่ใช่ตำแหน่ง
+  // และถูกเรียกหลายที่ต่อเฟรม — ตัววาด, ตัวหาเส้นที่คลิก, มินิแมป)
+  final draft = routeDraftActive;
+  final key = <Object?>[
+    draft, gutter, slotGap, preferVertical, avoidBoxes, -1,
+    for (final b in boxes.entries) ...[b.key, b.value.id, b.value.x, b.value.y, b.value.w, b.value.h, b.value.inset],
+    -2,
+    for (final f in links) ...[f.id, f.from, f.to, f.exit?.side, f.exit?.t, f.entry?.side, f.entry?.t, f.hints?.join(',')],
+  ];
+  for (final e in _cache) {
+    if (_sameKey(e.key, key)) return e.result;
+  }
+  Map<String, List<RoutePoint>>? result;
+  if (draft) result = _draftRoutes(boxes, links, gutter: gutter, slotGap: slotGap, preferVertical: preferVertical, avoidBoxes: avoidBoxes);
+  result ??= _orthogonalRoutesUncached(boxes, links,
+      gutter: gutter, slotGap: slotGap, preferVertical: preferVertical, avoidBoxes: avoidBoxes);
+  final frozen = Map<String, List<RoutePoint>>.unmodifiable(
+      {for (final e in result.entries) e.key: List<RoutePoint>.unmodifiable(e.value)});
+  _cache.insert(0, (key: key, boxes: Map.of(boxes), links: links, opts: (gutter, slotGap, preferVertical, avoidBoxes), result: frozen));
+  if (_cache.length > _kCacheSize) _cache.removeLast();
+  return frozen;
+}
+
+// ---------- โหมดร่างระหว่างลาก ----------
+
+int _draftDepth = 0;
+
+/// กำลังลากวัตถุบนแคนวาสอยู่ (ดู [beginRouteDraft]) — [orthogonalRoutes] คำนวณใหม่เฉพาะเส้นที่ต่อกับกล่องที่ขยับ
+bool get routeDraftActive => _draftDepth > 0;
+
+/// เริ่ม/จบช่วงลาก : ระหว่างนี้เส้นที่ไม่เกี่ยวกับกล่องที่ขยับใช้ทางเดิม (อาจซ้อนกับเส้นที่ขยับชั่วคราว)
+/// พอจบ ผลถูกคำนวณเต็มใหม่ (key ของแคชรวมสถานะร่าง ผลร่างจึงไม่ถูกใช้แทนผลเต็ม)
+void beginRouteDraft() => _draftDepth++;
+void endRouteDraft() {
+  if (_draftDepth > 0) _draftDepth--;
+}
+
+/// ผลร่าง: หาผลล่าสุดในแคชที่โครงเหมือนกัน (เส้นชุดเดิม, กล่องชุดเดิม, ตัวเลือกเดิม) แล้วคำนวณใหม่เฉพาะเส้นที่แตะกล่องที่ขยับ
+/// คืน null ถ้าใช้ไม่ได้ (ไม่มีผลเดิมที่เข้ากัน / กล่องขยับเกินครึ่ง) — ให้คำนวณเต็มแทน
+Map<String, List<RoutePoint>>? _draftRoutes(
+  Map<String, RouteBox> boxes,
+  List<RouteLink> links, {
+  required double gutter,
+  required double slotGap,
+  required bool preferVertical,
+  required bool avoidBoxes,
+}) {
+  for (final e in _cache) {
+    if (e.opts != (gutter, slotGap, preferVertical, avoidBoxes)) continue;
+    if (e.boxes.length != boxes.length || e.links.length != links.length) continue;
+    var sameLinks = true;
+    for (var i = 0; i < links.length && sameLinks; i++) {
+      final a = links[i], b = e.links[i];
+      sameLinks = a.id == b.id && a.from == b.from && a.to == b.to && a.exit == b.exit && a.entry == b.entry &&
+          (a.hints?.join(',') == b.hints?.join(','));
+    }
+    if (!sameLinks) continue;
+    final moved = <String>{};
+    var sameBoxes = true;
+    for (final b in boxes.entries) {
+      final o = e.boxes[b.key];
+      if (o == null) {
+        sameBoxes = false;
+        break;
+      }
+      final n = b.value;
+      if (o.x != n.x || o.y != n.y || o.w != n.w || o.h != n.h || o.inset != n.inset) moved.add(b.key);
+    }
+    if (!sameBoxes) continue;
+    if (moved.length * 2 > boxes.length) return null;
+    final touched = [for (final f in links) if (moved.contains(f.from) || moved.contains(f.to)) f];
+    final result = Map<String, List<RoutePoint>>.of(e.result);
+    if (touched.isNotEmpty) {
+      result.addAll(_orthogonalRoutesUncached(boxes, touched,
+          gutter: gutter, slotGap: slotGap, preferVertical: preferVertical, avoidBoxes: avoidBoxes));
+    }
+    return result;
+  }
+  return null;
+}
+
+/// แคชผล [orthogonalRoutes] ล่าสุดไม่กี่ชุด (หลายแท็บ/หลายชนิดแผนภาพใช้ร่วมกัน) — ใหม่สุดอยู่หน้า
+final List<
+    ({
+      List<Object?> key,
+      Map<String, RouteBox> boxes,
+      List<RouteLink> links,
+      (double, double, bool, bool) opts,
+      Map<String, List<RoutePoint>> result,
+    })> _cache = [];
+const _kCacheSize = 8;
+
+/// ล้างแคชเส้นทาง (ใช้ในเทสต์เทียบผลแคชกับคำนวณใหม่)
+void clearRouteCache() => _cache.clear();
+
+bool _sameKey(List<Object?> a, List<Object?> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
+Map<String, List<RoutePoint>> _orthogonalRoutesUncached(
+  Map<String, RouteBox> boxes,
+  List<RouteLink> links, {
+  required double gutter,
+  required double slotGap,
+  required bool preferVertical,
+  required bool avoidBoxes,
+}) {
   final routes = _orthogonalRoutes(boxes, links, gutter: gutter, slotGap: slotGap, preferVertical: preferVertical);
   if (!avoidBoxes) return routes;
 

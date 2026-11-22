@@ -200,7 +200,7 @@ class _ShapeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<FlowchartController>();
+    final f = context.watchContentIdle<FlowchartController>();
     final on = f.tool == FcTool.shape && f.toolShape == shape;
     final k = fcShapeShortcut(shape);
     return _draggable(
@@ -235,7 +235,7 @@ class _ShapeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<FlowchartController>();
+    final f = context.watchContentIdle<FlowchartController>();
     final on = f.tool == FcTool.shape && f.toolShape == shape;
     final k = fcShapeShortcut(shape);
     return _draggable(

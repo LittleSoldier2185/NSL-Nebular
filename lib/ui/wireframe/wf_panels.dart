@@ -62,7 +62,7 @@ class _WireframeLeftPanelState extends State<WireframeLeftPanel> {
 
   @override
   Widget build(BuildContext context) {
-    context.watchContent<WireframeController>(); // วาดใหม่เมื่อคลังเปลี่ยน
+    context.watchContentIdle<WireframeController>(); // วาดใหม่เมื่อคลังเปลี่ยน
     final w = context.watch<WorkspaceController>();
     final recent = context.select<AppSettings, List<WfKind>>((s) => s.wfRecentKinds);
     final asList = context.select<AppSettings, bool>((s) => s.wfLibraryList);
@@ -248,7 +248,7 @@ class _KindTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<WireframeController>();
+    final f = context.watchContentIdle<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock == null && f.toolKind == kind;
     final k = wfKindShortcut(kind);
     final tile = Container(
@@ -939,7 +939,7 @@ class _LayersFoldState extends State<_LayersFold> {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<WireframeController>();
+    final f = context.watchContentIdle<WireframeController>();
     final d = f.diagram;
     final parents = f.parents;
     final hidden = f.hiddenIds;
@@ -1393,7 +1393,7 @@ class _KindRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<WireframeController>();
+    final f = context.watchContentIdle<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock == null && f.toolKind == kind;
     final k = wfKindShortcut(kind);
     final row = Container(
@@ -1452,7 +1452,7 @@ class _BlockTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<WireframeController>();
+    final f = context.watchContentIdle<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock?.id == block.id;
     final tile = Container(
       padding: const EdgeInsets.fromLTRB(6, 6, 6, 4),
@@ -1489,7 +1489,7 @@ class _BlockRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<WireframeController>();
+    final f = context.watchContentIdle<WireframeController>();
     final on = f.tool == WfTool.place && f.toolBlock?.id == block.id;
     final row = Container(
       height: 40,

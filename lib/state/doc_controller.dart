@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../core/models/review_note.dart';
 import '../core/models/workspace.dart';
 import 'snapshot_history.dart';
+import '../core/layout/ortho_route.dart' show beginRouteDraft, endRouteDraft;
 
 /// controller ของเอกสารหนึ่งชิ้นใน workspace: ถือ [doc] + ประวัติ undo/redo (แบบ snapshot ของเนื้อหาเอกสารนี้เท่านั้น)
 /// + สถานะ "แก้แล้วยังไม่บันทึก" ของเอกสารนี้
@@ -186,10 +187,28 @@ abstract class DocController extends ChangeNotifier {
   void beginGesture() {
     if (history.gestureActive) return;
     history.beginGesture(historySnapshot());
+    if (!_draftHeld) {
+      _draftHeld = true;
+      beginRouteDraft();
+    }
+  }
+
+  /// ถือโหมดร่างของเส้นทางอยู่ (ระหว่างลาก — ดู [beginRouteDraft])
+  bool _draftHeld = false;
+
+  /// ปล่อยโหมดร่างของเส้นทาง — ชนิดย่อยที่เขียน [endGesture] เองโดยไม่เรียก super ต้องเรียกเมธอดนี้
+  @protected
+  void releaseRouteDraft() => _releaseDraft();
+
+  void _releaseDraft() {
+    if (!_draftHeld) return;
+    _draftHeld = false;
+    endRouteDraft();
   }
 
   /// จบการลาก — คืน true ถ้าเนื้อหาเปลี่ยน (เก็บเข้าประวัติแล้ว)
   bool endGesture() {
+    _releaseDraft(); // ก่อนแจ้งเตือน : ภาพหลังปล่อยใช้เส้นทางเต็ม
     if (!history.gestureActive) return false;
     final changed = history.endGesture(historySnapshot());
     if (changed) markEdited();
@@ -276,6 +295,7 @@ abstract class DocController extends ChangeNotifier {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _releaseDraft(); // ถูกทิ้งกลางการลาก: ไม่ค้างโหมดร่างไว้ทั้งแอป
     super.dispose();
   }
 }
@@ -285,6 +305,13 @@ abstract class DocController extends ChangeNotifier {
 extension WatchDocContent on BuildContext {
   T watchContent<T extends DocController>() {
     select<T, int>((c) => c.stamp);
+    return read<T>();
+  }
+
+  /// เหมือน [watchContent] แต่ไม่ rebuild ระหว่างลาก (สร้างใหม่ตอนเริ่มและตอนปล่อย) — ใช้กับแผงที่ไม่แสดงตำแหน่ง/ขนาด
+  /// เช่น แผงซ้าย (รายชื่อ, เครื่องมือ) และแถบเครื่องมือ (ผลตรวจกฎ) ; ลากของเยอะแล้วแผงพวกนี้กินเวลาทุกเฟรม
+  T watchContentIdle<T extends DocController>() {
+    select<T, int>((c) => c.gestureActive ? -1 : c.stamp);
     return read<T>();
   }
 }

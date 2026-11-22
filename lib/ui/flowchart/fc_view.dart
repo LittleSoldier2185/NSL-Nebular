@@ -689,7 +689,7 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<FlowchartController>();
+    final f = context.watchContentIdle<FlowchartController>();
     Widget item(String key, String label, IconData icon, bool on, VoidCallback tap, {bool showLabel = false}) => Tooltip(
           message: label,
           child: InkWell(

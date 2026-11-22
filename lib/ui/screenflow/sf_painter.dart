@@ -17,18 +17,18 @@ import '../wireframe/wf_painter.dart' show paintWireframe;
 import '../../core/layout/route_edit.dart' show routeLabelPoint;
 import '../canvas/route_handles_painter.dart';
 import '../canvas/scene_cache.dart';
+import '../canvas/text_layout_cache.dart';
 
 const double kSfLabelSize = 12;
 
-TextPainter _label(String text, Color color, {double max = 220}) => TextPainter(
+TextPainter _label(String text, Color color, {double max = 220}) => layoutText(
       text: TextSpan(
         text: text,
         style: TextStyle(fontFamily: kThai, fontFamilyFallback: kFontFallback, fontSize: kSfLabelSize, color: color, fontWeight: FontWeight.w500, height: 1.25),
       ),
       textDirection: TextDirection.ltr,
       maxLines: 2,
-      ellipsis: '…',
-    )..layout(maxWidth: max);
+      ellipsis: '…', maxWidth: max);
 
 /// สี่เหลี่ยมป้ายเส้น (ใช้ทั้งวาดและตรวจการคลิก) ; ไม่มีป้าย = null
 Rect? sfLabelRect(SfEdge e, List<RoutePoint> route) {
@@ -147,24 +147,22 @@ void _paintNode(Canvas canvas, SfNode n,
       ..color = accent.withValues(alpha: 0.5)
       ..strokeWidth = 1);
     if (!hideText && title.isNotEmpty) {
-      final tp = TextPainter(
+      final tp = layoutText(
         text: TextSpan(
             text: title,
             style: TextStyle(fontFamily: kThai, fontFamilyFallback: kFontFallback, fontSize: 13, fontWeight: FontWeight.w600, color: C.text)),
         textDirection: TextDirection.ltr,
         maxLines: 1,
-        ellipsis: '…',
-      )..layout(maxWidth: math.max(4, n.w - 16));
+        ellipsis: '…', maxWidth: math.max(4, n.w - 16));
       tp.paint(canvas, Offset(n.x + 8, n.y + (kSfTitleBar - tp.height) / 2));
     }
     final box = sfThumbBox(n);
     final wf = n.wireframeId == null ? null : wireframeOf?.call(n.wireframeId!);
     if (wf != null && !thumbnails) {
       // ปิดภาพย่อ: บอกขนาดหน้าจอแทน
-      final tp = TextPainter(
+      final tp = layoutText(
         text: TextSpan(text: '${wf.width.round()} × ${wf.height.round()}', style: TextStyle(fontFamily: kThai, fontSize: 12, color: C.muted)),
-        textDirection: TextDirection.ltr,
-      )..layout();
+        textDirection: TextDirection.ltr,);
       tp.paint(canvas, Offset(box.left + (box.width - tp.width) / 2, box.top + (box.height - tp.height) / 2));
     } else if (wf != null) {
       final f = sfThumbFit(box, wf.width, wf.height);
@@ -175,26 +173,24 @@ void _paintNode(Canvas canvas, SfNode n,
       paintWireframe(canvas, wf);
       canvas.restore();
     } else {
-      final tp = TextPainter(
+      final tp = layoutText(
         text: TextSpan(
             text: n.wireframeId == null ? '—' : '?',
             style: TextStyle(fontFamily: kThai, fontSize: 16, color: n.wireframeId == null ? C.muted : C.danger)),
-        textDirection: TextDirection.ltr,
-      )..layout();
+        textDirection: TextDirection.ltr,);
       tp.paint(canvas, Offset(box.left + (box.width - tp.width) / 2, box.top + (box.height - tp.height) / 2));
     }
     return;
   }
   if (hideText || title.isEmpty) return;
-  final tp = TextPainter(
+  final tp = layoutText(
     text: TextSpan(
         text: title,
         style: TextStyle(fontFamily: kThai, fontFamilyFallback: kFontFallback, fontSize: 13, fontWeight: FontWeight.w600, color: C.text, height: 1.25)),
     textDirection: TextDirection.ltr,
     textAlign: TextAlign.center,
     maxLines: 2,
-    ellipsis: '…',
-  )..layout(maxWidth: math.max(4, n.w - 20));
+    ellipsis: '…', maxWidth: math.max(4, n.w - 20));
   tp.paint(canvas, Offset(n.cx - tp.width / 2, n.cy - tp.height / 2));
 }
 
@@ -292,14 +288,13 @@ class ScreenFlowScreenPainter extends CustomPainter {
       if (text == null || r == null) continue;
       final (ax, ay) = routeLabelPoint(r, e);
       final below = sfLabelRect(e, r)?.bottom ?? ay;
-      final tp = TextPainter(
+      final tp = layoutText(
         text: TextSpan(
             text: text,
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: C.palette.infoText, fontFamily: kMono, fontFamilyFallback: const ['Consolas'])),
         textDirection: TextDirection.ltr,
         maxLines: 1,
-        ellipsis: '…',
-      )..layout(maxWidth: 160);
+        ellipsis: '…', maxWidth: 160);
       final rect = Rect.fromCenter(center: Offset(ax, below + 11), width: tp.width + 12, height: 16);
       canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), Paint()..color = C.palette.infoBg);
       tp.paint(canvas, Offset(rect.left + 6, rect.center.dy - tp.height / 2));

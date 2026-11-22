@@ -75,7 +75,7 @@ class _ScreenFlowLeftPanelState extends State<ScreenFlowLeftPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<ScreenFlowController>();
+    final f = context.watchContentIdle<ScreenFlowController>();
     final w = context.watch<WorkspaceController>();
     final dc = C.doc(DocType.screenflow);
     final d = f.diagram;
@@ -211,7 +211,7 @@ class _Palette extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<ScreenFlowController>();
+    final f = context.watchContentIdle<ScreenFlowController>();
     final w = context.watch<WorkspaceController>();
     final dc = C.doc(DocType.screenflow);
     Widget shape(SfKind k) => switch (k) {

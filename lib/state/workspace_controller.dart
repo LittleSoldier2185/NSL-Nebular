@@ -370,14 +370,29 @@ class WorkspaceController extends ChangeNotifier {
     final c = _controllers.remove(id);
     if (c == null) return;
     c.removeListener(_onDocChanged);
+    _relayed.remove(c);
     if (!identical(c, _mainEr)) c.dispose();
   }
 
-  /// ส่งต่อการเปลี่ยนของเอกสารให้ผู้ฟังระดับโปรเจกต์ (แท็บ, ตัวสำรวจ, ตัวให้ provider ทั้งแอป) —
-  /// ยกเว้นการแพน/ซูมอย่างเดียว ไม่งั้นทั้งแอปถูกสร้างใหม่ทุกเฟรมตอนเลื่อนมุมมอง
+  /// สถานะของแต่ละเอกสารที่ส่งต่อไปแล้วล่าสุด: (revision, ยังไม่บันทึก, กำลังลาก)
+  final Map<DocController, (int, bool, bool)> _relayed = {};
+
+  /// ส่งต่อการเปลี่ยนของเอกสารให้ผู้ฟังระดับโปรเจกต์ (แท็บ, ตัวสำรวจ, ป้ายปัญหา, ตัวให้ provider ทั้งแอป)
+  /// เฉพาะเมื่อสิ่งที่ระดับโปรเจกต์ใช้เปลี่ยน — เนื้อหา ([DocController.revision]), สถานะยังไม่บันทึก, เริ่ม/จบการลาก
+  /// - แพน/ซูม/เลือก/เปลี่ยนเครื่องมือ: ไม่ส่งต่อ (วิดเจ็ตที่ใช้ค่าพวกนี้ฟัง controller ของเอกสารเอง)
+  /// - ระหว่างลาก: เนื้อหาเปลี่ยนทุกเฟรม แต่ส่งต่อแค่ตอนเริ่มและตอนจบ ไม่งั้นทั้งแอปถูกสร้างใหม่ทุกเฟรม
   void _onDocChanged() {
-    if (_controllers.values.any((c) => c.notifyingViewOnly)) return;
-    notifyListeners();
+    var relay = false;
+    for (final c in _controllers.values) {
+      if (c.notifyingViewOnly) return;
+      final now = (c.revision, c.docDirty, c.gestureActive);
+      final was = _relayed[c];
+      if (was == now) continue;
+      _relayed[c] = now;
+      if (was != null && was.$3 && now.$3 && was.$2 == now.$2) continue; // ลากต่อเนื่อง
+      relay = true;
+    }
+    if (relay) notifyListeners();
   }
 
   int _tick = 0;

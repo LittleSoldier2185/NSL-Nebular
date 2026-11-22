@@ -13,7 +13,7 @@ import 'package:provider/provider.dart';
 import 'diagrams_bench_test.dart' show build;
 
 void main() {
-  testWidgets('นับ rebuild ตอนเลือก', (tester) async {
+  testWidgets('นับ rebuild ตอนลาก', (tester) async {
     tester.view.physicalSize = const Size(1600, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -22,12 +22,15 @@ void main() {
     final ws = tester.element(find.byType(HomePage)).read<WorkspaceController>();
     final dfd = ws.dfdController('dfd')!, wf = ws.wireframeController('wf')!, sf = ws.screenflowController('sf')!;
     final fc = ws.flowchartController('fc')!;
-    for (final (id, act) in <(String, void Function(int))>[
-      ('dfd', (i) => dfd.selectNode('d${i * 7}')),
-      ('fc', (i) => fc.selectNode('c${i * 7}')),
-      ('wf', (i) => wf.selectBox('w${i * 7}')),
-      ('sf', (i) => sf.selectBox('s${i * 7}')),
+    for (final (id, ctl, sel) in <(String, dynamic, void Function())>[
+      ('dfd', dfd, () => dfd.selectNode('d150')),
+      ('fc', fc, () => fc.selectNode('c150')),
+      ('wf', wf, () => wf.selectBox('w500')),
+      ('sf', sf, () => sf.selectBox('s150')),
     ]) {
+      sel();
+      ctl.beginMove();
+      void act(int i) => ctl.moveBy(i * 4.0, 0.0);
       ws.openDocument(id);
       await tester.pumpAndSettle();
       final counts = <String, int>{};
@@ -40,9 +43,10 @@ void main() {
       }
       times[id] = sw.elapsedMilliseconds ~/ 5;
       w.debugOnRebuildDirtyWidget = null;
+      ctl.endMove();
       final top = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
       // ignore: avoid_print
-      print('PROBE $id ${times[id]}ms/frame : ${top.where((e) => !e.key.startsWith('_Inherited')).take(30).map((e) => '${e.key}=${e.value ~/ 5}').join(' ')}');
+      print('PROBE $id ${times[id]}ms/frame : ${top.where((e) => RegExp(r'^_?(Dfd|Fc|Flowchart|Wf|Wireframe|Sf|ScreenFlow|Status|Issue|Note|Panel|Props|Fold|Num|Color|Section|Toolbar|Body|Kind|Block|Shape|Layer|Palette|Field|Dropdown|Zoom|Minimap|Rule|Level|Right|Left)').hasMatch(e.key)).take(40).map((e) => '${e.key}=${e.value ~/ 5}').join(' ')}');
     }
   });
 }

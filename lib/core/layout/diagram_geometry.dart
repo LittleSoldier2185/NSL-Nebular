@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'ortho_route.dart' show routeDraftActive;
+
 import '../models/column_model.dart';
 import '../models/enums.dart';
 import '../models/group_model.dart';
@@ -254,16 +256,23 @@ Map<String, List<RoutePoint>> relationRoutes(Project p) {
 
   // ผลขึ้นกับค่าข้างบนเท่านั้น (กรอบสิ่งกีดขวาง/กลุ่ม, ปลายเส้น, ช่องเข้าตารางแม่, จุดหักที่ลากเอง) :
   // ค่าเหมือนเดิมทุกตัว = ใช้ผลเดิม (canvas วาดใหม่บ่อย เช่น ซูม/เลือก แต่เรขาคณิตไม่เปลี่ยน)
+  final draft = routeDraftActive;
   final cacheKey = <Object?>[
+    draft,
     for (final b in boxes) ...[b.$1, b.$2, b.$3, b.$4, b.$5],
     -1,
     for (final e in edges) ...[e.$1, e.$2, e.$3, e.$4],
     -2,
     for (final it in items) ...[it.id, it.fromT, it.toT, it.g.fx, it.g.fy, it.g.tx, it.g.ty, it.g.d0, it.g.d1, slots[it.id]?.dy, manual[it.id]],
   ];
-  for (final (k, v) in _routeCache) {
-    if (_sameKey(k, cacheKey)) return v;
+  for (final e in _routeCache) {
+    if (_sameKey(e.key, cacheKey)) return e.result;
   }
+  // ลายเซ็นของแต่ละเส้น (ปลายเส้น/ช่องเข้าแม่/จุดหัก) — โหมดร่างใช้หาว่าเส้นไหนขยับ
+  final sigs = {
+    for (final it in items)
+      it.id: [it.fromT, it.toT, it.g.fx, it.g.fy, it.g.tx, it.g.ty, it.g.d0, it.g.d1, slots[it.id]?.dy, manual[it.id]],
+  };
 
   // ระยะเลื่อนระดับที่เส้นเข้าตารางแม่เพิ่มจากช่องปกติ (แก้เส้นแนวนอนที่ทับกัน — ดูด้านล่าง)
   final endNudge = List<double>.filled(items.length, 0);
@@ -284,6 +293,25 @@ Map<String, List<RoutePoint>> relationRoutes(Project p) {
       pts = _gutterRoute(g, it.base + lane[i] + extraLane, boxes, ignore, edges);
     }
     return _withEnd(pts, (slots[it.id]?.dy ?? 0) + endNudge[i]);
+  }
+
+  // ---- โหมดร่างระหว่างลาก (ดู [beginRouteDraft]) : เส้นที่ไม่ขยับใช้ทางเดิมจากผลล่าสุด ; เส้นที่ขยับวางทางพื้นฐาน
+  // (เลี่ยงสิ่งกีดขวาง + เลนปกติ แต่ไม่ดันเส้นทับกัน — ซึ่งเป็น O(n²)) ; ปล่อยเมาส์แล้วคำนวณเต็มใหม่
+  if (draft) {
+    for (final e in _routeCache) {
+      if (e.sigs.length != sigs.length || !sigs.keys.every(e.sigs.containsKey)) continue;
+      final out = <String, List<RoutePoint>>{};
+      for (var i = 0; i < items.length; i++) {
+        final id = items[i].id;
+        final old = e.result[id];
+        out[id] = old != null && _sameKey(e.sigs[id]!, sigs[id]!) ? old : build(i, 0);
+      }
+      final result = Map<String, List<RoutePoint>>.unmodifiable(
+          {for (final x in out.entries) x.key: List<RoutePoint>.unmodifiable(x.value)});
+      _routeCache.insert(0, (key: cacheKey, sigs: sigs, result: result));
+      if (_routeCache.length > _kRouteCacheSize) _routeCache.removeLast();
+      return result;
+    }
   }
 
   final routes = [for (var i = 0; i < items.length; i++) build(i, 0)];
@@ -389,14 +417,17 @@ Map<String, List<RoutePoint>> relationRoutes(Project p) {
 
   final result = Map<String, List<RoutePoint>>.unmodifiable(
       {for (var i = 0; i < items.length; i++) items[i].id: List<RoutePoint>.unmodifiable(routes[i])});
-  _routeCache.insert(0, (cacheKey, result));
+  _routeCache.insert(0, (key: cacheKey, sigs: sigs, result: result));
   if (_routeCache.length > _kRouteCacheSize) _routeCache.removeLast();
   return result;
 }
 
 /// แคชผล [relationRoutes] ล่าสุดไม่กี่ชุด (หลายเอกสาร ER / SVG ส่งออก ใช้ร่วมกันได้) — ใหม่สุดอยู่หน้า
-final List<(List<Object?>, Map<String, List<RoutePoint>>)> _routeCache = [];
+final List<({List<Object?> key, Map<String, List<Object?>> sigs, Map<String, List<RoutePoint>> result})> _routeCache = [];
 const _kRouteCacheSize = 4;
+
+/// ล้างแคชเส้นทาง FK (ใช้ในเทสต์เทียบผลแคชกับคำนวณใหม่)
+void clearRelationRouteCache() => _routeCache.clear();
 
 bool _sameKey(List<Object?> a, List<Object?> b) {
   if (a.length != b.length) return false;

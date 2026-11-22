@@ -42,7 +42,7 @@ class _Body extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<WireframeController>();
+    final f = context.watchContentIdle<WireframeController>();
     final s = context.watch<AppSettings>();
     final dc = C.doc(DocType.wireframe);
     final problems = f.issues.where((i) => i.severity != Severity.info).length;

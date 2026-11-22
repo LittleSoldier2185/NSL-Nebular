@@ -368,7 +368,7 @@ class _ToolbarBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final f = context.watchContent<ScreenFlowController>();
+    final f = context.watchContentIdle<ScreenFlowController>();
     final w = context.watch<WorkspaceController>();
     final s = context.watch<AppSettings>();
     final dc = C.doc(DocType.screenflow);

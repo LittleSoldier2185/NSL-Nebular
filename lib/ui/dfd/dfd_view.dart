@@ -436,7 +436,7 @@ class _Toolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = context.watchContent<DfdController>();
+    final d = context.watchContentIdle<DfdController>();
     final w = context.watch<WorkspaceController>();
     final s = context.watch<AppSettings>();
     final dc = C.doc(DocType.dfd);
@@ -624,7 +624,7 @@ class _LevelBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = context.watchContent<DfdController>();
+    final d = context.watchContentIdle<DfdController>();
     final w = context.watch<WorkspaceController>();
     final parents = d.parentsOf(w.activeId);
     if (parents.isEmpty || maxWidth < 200) return const SizedBox.shrink();

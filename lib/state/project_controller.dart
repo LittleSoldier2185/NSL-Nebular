@@ -228,6 +228,7 @@ class ProjectController extends DocController {
 
   @override
   bool endGesture() {
+    releaseRouteDraft(); // ก่อนแจ้งเตือน : ภาพหลังปล่อยใช้เส้นทางเต็ม
     final had = gestureActive;
     _dragOrigin = null;
     _attOrigin = null;

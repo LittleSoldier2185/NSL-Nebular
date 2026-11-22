@@ -71,7 +71,7 @@ class _DfdLeftPanelState extends State<DfdLeftPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final d = context.watchContent<DfdController>();
+    final d = context.watchContentIdle<DfdController>();
     final w = context.watch<WorkspaceController>();
     final dg = d.diagram;
     final dc = C.doc(DocType.dfd);
@@ -238,7 +238,7 @@ class _Palette extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = context.watchContent<DfdController>();
+    final d = context.watchContentIdle<DfdController>();
     final dc = C.doc(DocType.dfd);
     Widget tile(String key, String label, String? shortcut, Widget shape, bool on, VoidCallback onTap) => Tooltip(
           message: shortcut == null ? label : '$label ($shortcut)',

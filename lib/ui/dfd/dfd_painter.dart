@@ -11,6 +11,7 @@ import '../../core/layout/dfd_resize.dart';
 import '../../core/models/dfd_model.dart';
 import '../theme.dart';
 import '../canvas/scene_cache.dart';
+import '../canvas/text_layout_cache.dart';
 
 /// สีประจำชนิดวัตถุ (ใช้เมื่อไม่ได้กำหนดสีเอง)
 const Map<DfdKind, int> kDfdKindColors = {
@@ -34,7 +35,7 @@ int dfdNodeColor(DfdNode n) => n.color ?? kDfdKindColors[n.kind]!;
 
 TextPainter _tp(String text, double size, Color color,
     {FontWeight weight = FontWeight.w400, double maxWidth = double.infinity, int maxLines = 1, TextAlign align = TextAlign.left}) {
-  final tp = TextPainter(
+  final tp = layoutText(
     text: TextSpan(
       text: text,
       style: TextStyle(
@@ -49,8 +50,7 @@ TextPainter _tp(String text, double size, Color color,
     textDirection: TextDirection.ltr,
     textAlign: align,
     maxLines: maxLines,
-    ellipsis: '…',
-  )..layout(maxWidth: maxWidth);
+    ellipsis: '…', maxWidth: maxWidth);
   return tp;
 }
 
@@ -393,12 +393,11 @@ class DfdScreenPainter extends CustomPainter {
   void _paintBadges(Canvas canvas) {
     if (scale < 0.45 || (apiBadges.isEmpty && tableBadges.isEmpty)) return;
     void chip(String text, double right, double cy, Color bg, Color fg) {
-      final tp = TextPainter(
+      final tp = layoutText(
         text: TextSpan(text: text, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: fg, fontFamily: kMono, fontFamilyFallback: const ['Consolas'])),
         textDirection: TextDirection.ltr,
         maxLines: 1,
-        ellipsis: '…',
-      )..layout(maxWidth: 160);
+        ellipsis: '…', maxWidth: 160);
       final r = Rect.fromLTWH(right - tp.width - 12, cy - 8, tp.width + 12, 16);
       canvas.drawRRect(RRect.fromRectAndRadius(r, const Radius.circular(8)), Paint()..color = bg);
       canvas.drawRRect(RRect.fromRectAndRadius(r, const Radius.circular(8)), Paint()
