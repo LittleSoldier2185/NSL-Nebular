@@ -69,8 +69,16 @@ $ExePath = (Resolve-Path $ExePath).Path
 $progKey = Join-Path $classes $progId
 New-Item -Path $progKey -Force | Out-Null
 Set-ItemProperty -Path $progKey -Name '(default)' -Value 'NSL Nebular Project'
+# ไอคอนไฟล์โปรเจกต์: ใช้ nsln_file_icon.ico ข้าง exe (ตัวติดตั้งวางไว้) หรือในซอร์ส ; ไม่พบ = ใช้ไอคอนของ exe
+$iconValue = "`"$ExePath`",0"
+$iconCandidates = @(
+  (Join-Path (Split-Path -Parent $ExePath) 'nsln_file_icon.ico'),
+  (Join-Path (Split-Path -Parent $PSScriptRoot) 'windows\runner\resources\nsln_file_icon.ico')
+)
+$iconFile = $iconCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+if ($iconFile) { $iconValue = (Resolve-Path $iconFile).Path }
 New-Item -Path "$progKey\DefaultIcon" -Force | Out-Null
-Set-ItemProperty -Path "$progKey\DefaultIcon" -Name '(default)' -Value "`"$ExePath`",0"
+Set-ItemProperty -Path "$progKey\DefaultIcon" -Name '(default)' -Value $iconValue
 New-Item -Path "$progKey\shell\open\command" -Force | Out-Null
 Set-ItemProperty -Path "$progKey\shell\open\command" -Name '(default)' -Value "`"$ExePath`" `"%1`""
 
