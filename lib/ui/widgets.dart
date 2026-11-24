@@ -70,20 +70,21 @@ class _CommitFieldState extends State<CommitField> {
   @override
   Widget build(BuildContext context) {
     final multi = widget.minLines != null;
-    // ความสูงช่องบรรทัดเดียวกำหนดผ่าน InputDecoration.constraints (SizedBox ครอบ TextField ไม่ทำให้กรอบสูงตาม
-    // ช่องจึงเตี้ยกว่าดรอปดาวน์ข้างเคียง)
+    // ช่องบรรทัดเดียว: SizedBox สูงคงที่ + expands ให้ตัวแก้ไขเต็มความสูง กรอบจึงสูงเท่าดรอปดาวน์ข้างเคียง
+    // (InputDecoration.constraints ขยายแค่กล่อง กรอบที่วาดยังเตี้ยเท่าตัวอักษร)
     final field = SizedBox(
+      height: multi ? null : widget.height,
       child: TextField(
         controller: _ctl,
         focusNode: _focus,
         onSubmitted: multi ? null : (_) => _commit(),
         minLines: multi ? widget.minLines : null,
-        maxLines: multi ? widget.maxLines : 1,
-        keyboardType: multi ? TextInputType.multiline : null,
+        maxLines: multi ? widget.maxLines : null,
+        expands: !multi,
+        keyboardType: multi ? TextInputType.multiline : TextInputType.text,
         textAlignVertical: multi ? TextAlignVertical.top : TextAlignVertical.center,
         style: (widget.mono ? monoStyle : const TextStyle()).copyWith(fontSize: widget.fontSize, color: C.text),
         decoration: InputDecoration(
-          constraints: multi ? null : BoxConstraints.tightFor(height: widget.height),
           hintText: widget.hint,
           hintStyle: TextStyle(fontSize: widget.fontSize, color: C.muted),
           isDense: true,

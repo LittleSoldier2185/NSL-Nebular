@@ -265,6 +265,8 @@ void main() {
     testWidgets('แผงขวา: เลือกสัญลักษณ์แก้สีพื้น/รูปทรง ; หลายชิ้นจัดแนว ; เส้นแก้หัวลูกศร ; ไม่เลือก = ผลตรวจ', (tester) async {
       await boot(tester);
       final f = await addFlow(tester, two());
+      await tester.tap(find.byKey(const ValueKey('fc-tab-check'))); // ผลตรวจอยู่แท็บ "ตรวจ" (ไม่เลือกอะไรก็เปิดได้)
+      await tester.pump();
       expect(find.byKey(const ValueKey('fc-issue-fc_no_end-null')), findsOneWidget);
       f.selectNode('b');
       await tester.pump();
@@ -359,6 +361,7 @@ void main() {
       await tester.pumpAndSettle();
       w.showHome();
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const ValueKey('home-issues')));
       await tester.tap(find.byKey(const ValueKey('home-issues')));
       await tester.pumpAndSettle();
       await tester.tap(find.textContaining('Work ไม่ใช่จุดสิ้นสุด'));

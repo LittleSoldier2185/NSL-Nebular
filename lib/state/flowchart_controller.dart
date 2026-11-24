@@ -306,6 +306,19 @@ class FlowchartController extends DocController with DiagramViewport, RouteEditi
     updateNode(id, (n) => n.text = text);
   }
 
+  /// ตั้งความกว้าง/สูงของสัญลักษณ์ (จากแผงขวา) — จำกัด [kFcMinSide]–[kFcMaxSide] ; ไม่เปลี่ยน = ไม่เข้าประวัติ
+  void setSize(String id, {double? w, double? h}) {
+    final n = diagram.nodeById(id);
+    if (n == null) return;
+    final nw = w == null ? n.w : w.clamp(kFcMinSide, kFcMaxSide).toDouble();
+    final nh = h == null ? n.h : h.clamp(kFcMinSide, kFcMaxSide).toDouble();
+    if (nw == n.w && nh == n.h) return;
+    updateNode(id, (n) {
+      n.w = nw;
+      n.h = nh;
+    });
+  }
+
   /// เปลี่ยนรูปทรงของสัญลักษณ์ที่เลือก (คงตำแหน่ง/ขนาด/ข้อความ)
   void setShape(Iterable<String> ids, FcShape shape) => setNodesStyle(ids, (n) => n.shape = shape);
 

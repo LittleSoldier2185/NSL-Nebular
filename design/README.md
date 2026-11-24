@@ -27,6 +27,9 @@
 | `er-cardinality/` | ตัวเลือก 3 แบบของแผงขวากำหนดสัญลักษณ์ความสัมพันธ์ ER (เล่นได้ ใช้แบบ B) — สำเนาของ Artifact "ER Cardinality Panel" https://claude.ai/artifact/LVdBMMprMtrjMgCWJng1u8 | 17b |
 | `er-table-form/` | กล่องสร้าง/แก้ตาราง 4 แท็บ + แถบ SQL + ค่าที่อนุญาต/CHECK (เล่นได้ ใช้แบบ C) — สำเนาของ Artifact https://claude.ai/artifact/QPLeHKnAx5NZPaUrJ1ro5z | 19 |
 | `wireframe-library/` | ตัวเลือกแถบเครื่องมือเต็มความกว้าง + คลังชิ้นส่วน 6 หมวด 3 แบบของ Wireframe (ใช้แบบ A + มุมมองรายการแบบ B) — สำเนาของ Artifact "Wireframe Library Panel" https://claude.ai/artifact/73Ygw8uCen2XzVcpCSSyGr | 18 |
+| `use-case/` | Use Case 3 แนวทาง (รวม A+B+C : สเปก / แผนภาพ / เอกสาร ; รอบ 1 ทำสเปก+เอกสาร) — สำเนาของ Artifact "Use Case Designer" https://claude.ai/artifact/PUN4uJvV2h9fnKxyT9GrHQ | 27 |
+| `project-home/` | หน้า Project Home 3 แบบ (ใช้แบบ A: ปรับของเดิม) — สำเนาของ Artifact "Project Home" https://claude.ai/artifact/5cPyrDfXRPZgsFsDpiuCeE | 26 |
+| `flowchart-panel/` | แผงขวา Flowchart 3 แบบ (ใช้แบบ A: 3 แท็บ รูปทรง / เส้น / ตรวจ) — สำเนาของ Artifact "Flowchart Panel" https://claude.ai/artifact/Gy8NzyEygyNDMeJkp4HPne | 25 |
 | `wireframe-components/` | ชิ้นส่วน Wireframe ใหม่ 15 ชนิด + แม่แบบ 8 ชุด + หมวดใหม่ในคลัง (สไตล์ร่าง/เรียบร้อย) — สำเนาของ Artifact "Wireframe Components" https://claude.ai/artifact/DrdFBbFPPesG9w3oBi3tat | 18b |
 
 ## วิธีดู

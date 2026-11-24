@@ -6,6 +6,7 @@ import 'project.dart';
 import 'screenflow_model.dart';
 import 'wireframe_model.dart';
 import 'requirement.dart';
+import 'use_case.dart';
 import 'review_note.dart';
 
 /// ชนิดเอกสารที่โปรแกรมรู้จัก (ชนิดอื่นจากไฟล์รุ่นใหม่กว่าเก็บเป็น [RawDocContent] และเขียนกลับไม่เปลี่ยน)
@@ -150,14 +151,19 @@ class Workspace {
     List<ProjectDocument>? documents,
     List<Object?>? links,
     List<Requirement>? requirements,
+    List<UseCase>? useCases,
   })  : meta = meta ?? WorkspaceMeta(),
         folders = folders ?? [],
         documents = documents ?? [],
         links = links ?? [],
-        requirements = requirements ?? [];
+        requirements = requirements ?? [],
+        useCases = useCases ?? [];
 
   /// ความต้องการและการไล่ตาม (Phase 9) — เก็บในไฟล์ที่ `meta.requirements` (รุ่นเก่าเก็บ meta ที่ไม่รู้จักกลับครบ)
   final List<Requirement> requirements;
+
+  /// Use Case ของโปรเจกต์ (Phase 27) — เก็บในไฟล์ที่ `meta.useCases` (รุ่นเก่าเก็บ meta ที่ไม่รู้จักกลับครบ)
+  final List<UseCase> useCases;
 
   String name;
   final WorkspaceMeta meta;

@@ -163,6 +163,7 @@ List<PaletteEntry> buildPaletteEntries(BuildContext context) {
     cmd(tr('สร้างโค้ด'), 'code generation codegen laravel prisma typescript dart flutter html migration สร้างโค้ด', () => w.showCodegen()),
     cmd(tr('Mock Server'), 'mock server api localhost fake backend test จำลอง เซิร์ฟเวอร์ ทดสอบ', () => w.showMock()),
     cmd(tr('ความต้องการและการไล่ตาม'), 'requirements traceability matrix coverage ความต้องการ ไล่ตาม ครอบคลุม', () => w.showTrace()),
+    cmd(tr('Use Case'), 'use case usecase actor scenario flow steps requirement ผู้กระทำ สถานการณ์ ขั้นตอน ความต้องการ', () => w.showUseCases()),
     cmd(tr('ประวัติเวอร์ชันและ Diff'), 'history version diff compare migration restore ประวัติ เวอร์ชัน เปรียบเทียบ ย้อน', () => w.showHistory()),
     cmd(tr('แผงโน้ตและงานค้าง'), 'notes todo review question memo โน้ต งานค้าง ต้องทำ คำถาม', () => w.showNotesPanel(true)),
     byCmd(tr('ซ่อน/แสดงหมุดโน้ตและงานค้าง'), 'notes pins show hide หมุด โน้ต ซ่อน แสดง', Cmd.toggleNotePins),

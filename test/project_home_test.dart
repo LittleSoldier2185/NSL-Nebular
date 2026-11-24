@@ -144,6 +144,7 @@ void main() {
     // ปัญหาในเอกสารเดียว (กระบวนการไม่มีชื่อ) ไม่อยู่ในแผงนี้
     expect(find.byKey(const ValueKey('home-cross-1')), findsNothing);
 
+    await tester.ensureVisible(find.byKey(const ValueKey('home-cross-0')));
     await tester.tap(find.byKey(const ValueKey('home-cross-0')));
     await tester.pumpAndSettle();
     expect(home, findsNothing);
@@ -269,5 +270,62 @@ void main() {
     ));
     expect(home, findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('การ์ดชนิดเอกสารทุกใบสูงเท่ากัน และปุ่มอยู่ระดับเดียวกัน (สรุปยาว/สั้น/ว่างต่างกัน)', (tester) async {
+    await boot(tester);
+    seed();
+    await openHome(tester);
+    final cards = [for (final t in DocType.values) find.byKey(ValueKey('home-type-${t.name}'))];
+    final hs = [for (final c in cards) tester.getSize(c).height];
+    expect(hs.toSet().length, 1, reason: 'ความสูงการ์ดต้องเท่ากันทุกใบ: $hs');
+    final off = [
+      for (final t in DocType.values)
+        tester.getTopLeft(find.byKey(ValueKey('home-type-open-${t.name}'))).dy - tester.getTopLeft(find.byKey(ValueKey('home-type-${t.name}'))).dy,
+    ];
+    expect(off.toSet().length, 1, reason: 'ปุ่มอยู่ตำแหน่งเดียวกันในการ์ด: $off');
+  });
+
+  testWidgets('หัวหน้า Home: ปุ่มหลัก = ส่งออก + เอกสารใหม่ ; เครื่องมือ 5 ปุ่มอยู่แถวเล็กแยก', (tester) async {
+    await boot(tester);
+    await openHome(tester);
+    for (final k in ['home-dictionary', 'home-history', 'home-trace', 'home-codegen', 'home-mock', 'home-export', 'home-new']) {
+      expect(find.byKey(ValueKey(k)), findsOneWidget, reason: k);
+    }
+    final toolY = tester.getTopLeft(find.byKey(const ValueKey('home-dictionary'))).dy;
+    final primaryY = tester.getTopLeft(find.byKey(const ValueKey('home-export'))).dy;
+    expect(toolY, greaterThan(primaryY), reason: 'แถวเครื่องมืออยู่ใต้ปุ่มหลัก');
+    expect(tester.getSize(find.byKey(const ValueKey('home-dictionary'))).height, lessThan(tester.getSize(find.byKey(const ValueKey('home-export'))).height));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('เอกสารล่าสุด: โปรเจกต์ใหญ่พับเอกสารที่ยังไม่เคยเปิด กดดูได้ ; โปรเจกต์เล็กแสดงครบ', (tester) async {
+    await boot(tester);
+    final ids = [for (var i = 0; i < kHomeCollapseUnopenedOver + 2; i++) w.addDocument(DocType.wireframe, name: 'WF $i')!.id];
+    w.loadWorkspace(w.workspace, null); // โหลดไฟล์ = ล้างประวัติการเปิด เหลือเฉพาะ ER ที่เปิดอยู่
+    await tester.pump();
+    await openHome(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(ValueKey('home-card-${w.mainEr.docId}')), findsOneWidget);
+    expect(find.byKey(ValueKey('home-card-${ids.first}')), findsNothing, reason: 'ที่ยังไม่เคยเปิดถูกพับ');
+    expect(find.text('ยังไม่เคยเปิดอีก ${ids.length} เอกสาร'), findsOneWidget);
+    await tester.ensureVisible(find.byKey(const ValueKey('home-unopened-toggle')));
+    await tester.tap(find.byKey(const ValueKey('home-unopened-toggle')));
+    await tester.pump();
+    for (final id in ids) {
+      expect(find.byKey(ValueKey('home-card-$id')), findsOneWidget);
+    }
+  });
+
+  testWidgets('เอกสารล่าสุด: โปรเจกต์เล็กที่ยังไม่เคยเปิดเลยก็แสดงครบ ไม่มีปุ่มพับ', (tester) async {
+    await boot(tester);
+    final ids = [for (var i = 0; i < 3; i++) w.addDocument(DocType.wireframe, name: 'WF $i')!.id];
+    w.loadWorkspace(w.workspace, null);
+    await tester.pump();
+    await openHome(tester);
+    for (final id in ids) {
+      expect(find.byKey(ValueKey('home-card-$id')), findsOneWidget);
+    }
+    expect(find.byKey(const ValueKey('home-unopened-toggle')), findsNothing);
   });
 }

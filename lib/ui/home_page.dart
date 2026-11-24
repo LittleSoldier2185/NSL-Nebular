@@ -43,6 +43,7 @@ import 'dictionary_view.dart';
 import 'history_view.dart';
 import 'api/api_view.dart';
 import 'trace_view.dart';
+import 'usecase_view.dart';
 import 'codegen_view.dart';
 import 'mock_view.dart';
 
@@ -207,6 +208,8 @@ class _HomePageState extends State<HomePage> {
                       ? const HistoryView()
                       : page == WorkspacePage.trace
                       ? const TraceView()
+                      : page == WorkspacePage.useCases
+                      ? const UseCaseView()
                       : page == WorkspacePage.mock
                       ? const MockView()
                       : page == WorkspacePage.codegen

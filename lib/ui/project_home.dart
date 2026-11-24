@@ -174,99 +174,65 @@ class _Header extends StatelessWidget {
         ],
       ]),
     ]);
-    final buttons = Wrap(spacing: 10, runSpacing: 8, alignment: WrapAlignment.end, children: [
-      OutlinedButton(
-        key: const ValueKey('home-dictionary'),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 38),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          foregroundColor: C.text,
-          backgroundColor: C.surface,
-          side: BorderSide(color: C.inputBorder),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        onPressed: w.showDictionary,
-        child: Text(tr('พจนานุกรมข้อมูล'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-      ),
-      OutlinedButton(
-        key: const ValueKey('home-history'),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 38),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          foregroundColor: C.text,
-          backgroundColor: C.surface,
-          side: BorderSide(color: C.inputBorder),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        onPressed: w.showHistory,
-        child: Text(tr('ประวัติเวอร์ชัน'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-      ),
-      OutlinedButton(
-        key: const ValueKey('home-trace'),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 38),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          foregroundColor: C.text,
-          backgroundColor: C.surface,
-          side: BorderSide(color: C.inputBorder),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        onPressed: w.showTrace,
-        child: Text(tr('ความต้องการ'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-      ),
-      OutlinedButton(
-        key: const ValueKey('home-codegen'),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 38),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          foregroundColor: C.text,
-          backgroundColor: C.surface,
-          side: BorderSide(color: C.inputBorder),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        onPressed: w.showCodegen,
-        child: Text(tr('สร้างโค้ด'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-      ),
-      OutlinedButton(
-        key: const ValueKey('home-mock'),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 38),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          foregroundColor: C.text,
-          backgroundColor: C.surface,
-          side: BorderSide(color: C.inputBorder),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-        onPressed: w.showMock,
-        child: Text(tr('Mock Server'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-      ),
-      OutlinedButton(
+    // ปุ่มหลัก 2 ปุ่ม (ส่งออก, เอกสารใหม่) ; เครื่องมือของโปรเจกต์เป็นแถวเล็กใต้ชื่อ (แบบ A ของ `design/project-home`)
+    final primary = Wrap(spacing: 10, runSpacing: 8, alignment: WrapAlignment.end, children: [
+      _HomeButton(
         key: const ValueKey('home-export'),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(0, 38),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          foregroundColor: C.text,
-          backgroundColor: C.surface,
-          side: BorderSide(color: C.inputBorder),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+        icon: Icons.ios_share_rounded,
+        label: tr('ส่งออกทั้งโปรเจกต์'),
         onPressed: () => AppActions(context).run(Cmd.exportText),
-        child: Text(tr('ส่งออกทั้งโปรเจกต์'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
       ),
       _NewDocButton(w: w),
     ]);
-    return LayoutBuilder(builder: (context, c) {
-      // ปุ่มหลายปุ่ม (พจนานุกรม/ประวัติ/ความต้องการ/ส่งออก/เอกสารใหม่): แคบ = ใต้ชื่อ ; กว้าง = ทางขวาและขึ้นบรรทัดใหม่ได้
-      if (c.maxWidth < 900) {
-        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 12), buttons]);
-      }
-      return Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Expanded(flex: 5, child: title),
-        const SizedBox(width: 16),
-        Flexible(flex: 6, child: Align(alignment: Alignment.bottomRight, child: buttons)),
-      ]);
-    });
+    final tools = Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+      Text(tr('เครื่องมือของโปรเจกต์'), style: TextStyle(fontSize: 12, color: C.muted, letterSpacing: 0.4)),
+      _HomeButton(key: const ValueKey('home-dictionary'), small: true, icon: Icons.menu_book_outlined, label: tr('พจนานุกรมข้อมูล'), onPressed: w.showDictionary),
+      _HomeButton(key: const ValueKey('home-history'), small: true, icon: Icons.history_rounded, label: tr('ประวัติเวอร์ชัน'), onPressed: w.showHistory),
+      _HomeButton(key: const ValueKey('home-trace'), small: true, icon: Icons.checklist_rounded, label: tr('ความต้องการ'), onPressed: w.showTrace),
+      _HomeButton(key: const ValueKey('home-usecase'), small: true, icon: Icons.account_tree_outlined, label: 'Use Case', onPressed: w.showUseCases),
+      _HomeButton(key: const ValueKey('home-codegen'), small: true, icon: Icons.code_rounded, label: tr('สร้างโค้ด'), onPressed: w.showCodegen),
+      _HomeButton(key: const ValueKey('home-mock'), small: true, icon: Icons.dns_outlined, label: tr('Mock Server'), onPressed: w.showMock),
+    ]);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      LayoutBuilder(builder: (context, c) {
+        if (c.maxWidth < 700) {
+          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [title, const SizedBox(height: 12), primary]);
+        }
+        return Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Expanded(child: title),
+          const SizedBox(width: 16),
+          primary,
+        ]);
+      }),
+      const SizedBox(height: 16),
+      tools,
+    ]);
   }
+}
+
+/// ปุ่มขอบบางของหัวหน้า Home : [small] = ปุ่มเครื่องมือในแถวเล็ก, ไม่ใช่ = ปุ่มหลัก
+class _HomeButton extends StatelessWidget {
+  const _HomeButton({super.key, required this.icon, required this.label, required this.onPressed, this.small = false});
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  final bool small;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: small ? 15 : 17),
+        label: Text(label, style: TextStyle(fontSize: small ? 12.5 : 13, fontWeight: small ? FontWeight.w500 : FontWeight.w600)),
+        style: OutlinedButton.styleFrom(
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap, // ไม่ขยายพื้นที่กดเป็น 48 : แถวเครื่องมือเตี้ยกว่าปุ่มหลักจริง
+          minimumSize: Size(0, small ? 32 : 38),
+          padding: EdgeInsets.symmetric(horizontal: small ? 10 : 16),
+          foregroundColor: C.text,
+          backgroundColor: C.surface,
+          side: BorderSide(color: C.inputBorder),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(small ? 8 : 10)),
+        ),
+      );
 }
 
 class _NewDocButton extends StatelessWidget {
@@ -357,11 +323,18 @@ class _TypeCard extends StatelessWidget {
                 key: ValueKey('home-type-count-${type.name}'),
                 style: TextStyle(fontSize: 28, height: 1, fontWeight: FontWeight.w700, color: empty ? C.muted : C.text)),
             const SizedBox(height: 10),
-            Text(homeTypeDetail(type, docs),
-                key: ValueKey('home-type-detail-${type.name}'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, color: C.muted)),
+            // สูงคงที่ 2 บรรทัด : การ์ดทุกใบสูงเท่ากันและปุ่มอยู่ระดับเดียวกัน ไม่ว่าสรุปจะยาวกี่บรรทัด
+            SizedBox(
+              height: 38,
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(homeTypeDetail(type, docs),
+                    key: ValueKey('home-type-detail-${type.name}'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, color: C.muted)),
+              ),
+            ),
             const SizedBox(height: 10),
             OutlinedButton(
               key: ValueKey('home-type-open-${type.name}'),
@@ -419,20 +392,56 @@ class _Panel extends StatelessWidget {
   }
 }
 
-class _RecentPanel extends StatelessWidget {
+/// โปรเจกต์ที่มีเอกสารเกินนี้ : ที่ยังไม่เคยเปิดพับเก็บ (เล็กกว่านี้แสดงครบ)
+const int kHomeCollapseUnopenedOver = 8;
+
+class _RecentPanel extends StatefulWidget {
   const _RecentPanel({required this.w, required this.perDoc});
   final WorkspaceController w;
   final Map<String, _DocIssues> perDoc;
 
   @override
+  State<_RecentPanel> createState() => _RecentPanelState();
+}
+
+class _RecentPanelState extends State<_RecentPanel> {
+  bool _showUnopened = false;
+
+  @override
   Widget build(BuildContext context) {
+    final w = widget.w;
     final docs = w.recentDocuments;
     final now = DateTime.now();
+    final opened = [for (final d in docs) if (w.openedAt(d.id) != null) d];
+    final unopened = [for (final d in docs) if (w.openedAt(d.id) == null) d];
+    // พับเฉพาะโปรเจกต์ใหญ่ และต้องมีที่เคยเปิดอย่างน้อย 1 ชิ้น (ไม่งั้นรายการจะว่างเปล่า)
+    final collapse = docs.length > kHomeCollapseUnopenedOver && opened.isNotEmpty && unopened.isNotEmpty;
+    Widget row(ProjectDocument d) =>
+        _RecentRow(doc: d, issues: widget.perDoc[d.id], opened: w.openedAt(d.id), now: now, onOpen: () => w.openDocument(d.id));
     return _Panel(
       key: const ValueKey('home-recent'),
       title: tr('เอกสารล่าสุด'),
       children: [
-        for (final d in docs) _RecentRow(doc: d, issues: perDoc[d.id], opened: w.openedAt(d.id), now: now, onOpen: () => w.openDocument(d.id)),
+        for (final d in collapse ? opened : docs) row(d),
+        if (collapse) ...[
+          InkWell(
+            key: const ValueKey('home-unopened-toggle'),
+            onTap: () => setState(() => _showUnopened = !_showUnopened),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              child: Row(children: [
+                Expanded(
+                  child: Text(
+                    _showUnopened ? tr('ซ่อนเอกสารที่ยังไม่เคยเปิด') : tr('ยังไม่เคยเปิดอีก {0} เอกสาร', [unopened.length]),
+                    style: TextStyle(fontSize: 12.5, color: C.muted),
+                  ),
+                ),
+                Icon(_showUnopened ? Icons.expand_less_rounded : Icons.expand_more_rounded, size: 18, color: C.muted),
+              ]),
+            ),
+          ),
+          if (_showUnopened) for (final d in unopened) row(d),
+        ],
       ],
     );
   }

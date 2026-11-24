@@ -78,5 +78,14 @@ SubsetResult? extractSubset(Workspace w, {Set<String> docIds = const {}, Set<Str
     }
   }
 
+  // ขั้นตอนของ Use Case ที่ลิงก์ไปเอกสารที่ไม่ได้เลือก = ตัดลิงก์ออก (นับรวมกับลิงก์ไล่ตาม)
+  for (final u in copy.useCases) {
+    for (final s in u.steps) {
+      final before = s.links.length;
+      s.links.removeWhere((l) => !keep.contains(l.docId));
+      dropped += before - s.links.length;
+    }
+  }
+
   return SubsetResult(copy, documentCount: keep.length, brokenRefs: brokenRefs, droppedTraceLinks: dropped);
 }

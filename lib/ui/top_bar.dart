@@ -467,6 +467,8 @@ class TopBar extends StatelessWidget {
       cmd(tr('ประวัติเวอร์ชันและ Diff'), Cmd.showHistory, icon: Icons.history_rounded, checked: w.page == WorkspacePage.history),
       _item(tr('ความต้องการและการไล่ตาม'), '', () => w.showTrace(w.page != WorkspacePage.trace),
           icon: Icons.link_rounded, checked: w.page == WorkspacePage.trace),
+      _item('Use Case', '', () => w.showUseCases(w.page != WorkspacePage.useCases),
+          icon: Icons.account_tree_outlined, checked: w.page == WorkspacePage.useCases),
       if (canvas) ...[
         div,
         _section(tr('แคนวาส'), tag: _docShort(type)),

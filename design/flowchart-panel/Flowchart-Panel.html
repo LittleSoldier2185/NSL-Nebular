@@ -1,0 +1,222 @@
+<title>Flowchart Panel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: คอลัมน์ควบคุม (เลือกแบบ/สิ่งที่เลือก/คำอธิบาย) ข้างแผงขวาจริงกว้าง 296px */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --surface2:#F5F7FA; --border:#D8DEE6; --border2:#E6EAF0; --input:#CBD3DE;
+  --text:#1B2430; --muted:#5B6778; --primary:#6D4FC2; --primary-dark:#553BA0; --tint:#F3F0FC;
+  --danger:#C0392B; --warn:#B7791F; --ok:#0F766E;
+  --sans:'Noto Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141B24; --surface:#1B2430; --surface2:#222D3B; --border:#33414F; --border2:#2A3646; --input:#3B4859;
+  --text:#E6EBF2; --muted:#9AA7B8; --primary:#9B82E6; --primary-dark:#B9A6FF; --tint:#2B2650;
+  --danger:#F07A6C; --warn:#E5B24D; --ok:#4FD1B5; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141B24; --surface:#1B2430; --surface2:#222D3B; --border:#33414F; --border2:#2A3646; --input:#3B4859;
+  --text:#E6EBF2; --muted:#9AA7B8; --primary:#9B82E6; --primary-dark:#B9A6FF; --tint:#2B2650;
+  --danger:#F07A6C; --warn:#E5B24D; --ok:#4FD1B5; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.wrap{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 296px;gap:28px;align-items:start}
+@media(max-width:760px){.wrap{grid-template-columns:minmax(0,1fr)}}
+h1{font-size:20px;margin:0 0 4px;text-wrap:balance}
+.lead{color:var(--muted);margin:0 0 18px;max-width:60ch}
+.ctl{display:flex;flex-direction:column;gap:14px}
+.grp>.lbl{font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{height:34px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--surface)}
+.seg button[aria-pressed=true]{border-color:var(--primary);background:var(--tint);color:var(--primary-dark);font-weight:600}
+.note{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.note h2{font-size:14px;margin:0 0 6px}
+.note ul{margin:6px 0 0;padding-left:18px;color:var(--muted)}
+.note li{margin:2px 0}
+.pick{margin-top:10px;font-size:12px;color:var(--muted)}
+/* ---------- แผงขวาจำลอง ---------- */
+.panel{width:296px;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-height:560px}
+.tabs{display:flex;border-bottom:1px solid var(--border2)}
+.tabs button{flex:1;border:0;background:none;padding:11px 0;color:var(--muted);border-bottom:2px solid transparent;font-size:13px}
+.tabs button[aria-selected=true]{color:var(--primary-dark);font-weight:600;border-bottom-color:var(--primary)}
+.body{padding:14px;display:flex;flex-direction:column;gap:14px;flex:1}
+.dense .body{padding:12px;gap:10px}
+.f>.l{font-size:11px;color:var(--muted);margin-bottom:4px}
+.hd{display:flex;align-items:center;gap:8px}
+.hd b{flex:1;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ib{width:30px;height:30px;border:0;background:none;border-radius:6px;color:var(--muted);display:grid;place-items:center}
+.ib:hover{background:var(--surface2)}
+.ib.del{color:var(--danger)}
+.ib[aria-pressed=true]{background:var(--tint);color:var(--primary-dark)}
+.field,.sel,textarea{width:100%;height:36px;border:1px solid var(--input);border-radius:6px;background:var(--surface);color:var(--text);padding:0 10px;font:inherit;font-size:13px}
+textarea{height:auto;padding:8px 10px;resize:none}
+.mono{font-family:var(--mono)}
+.sel{display:flex;align-items:center;gap:8px}
+.sel .car{margin-left:auto;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw i{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);display:block}
+.sw i.on{border:2px solid var(--primary)}
+.sw i.plus{border:1px dashed var(--input);display:grid;place-items:center;color:var(--muted);font-style:normal}
+.row{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
+.row .sel{width:70px;height:32px;margin-right:6px}
+.btn{height:34px;border:1px solid var(--border);border-radius:6px;background:var(--surface);padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px}
+.btn.full{width:100%;justify-content:center}
+.btn.dash{border-style:dashed;color:var(--muted)}
+.link{display:flex;gap:8px;align-items:center;border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.link .t{flex:1;min-width:0}
+.link .t b{display:block;font-size:12.5px;font-family:var(--mono);font-weight:500}
+.link .t span{font-size:11px;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--primary);flex:none}
+.muted{color:var(--muted);font-size:12.5px}
+.edgeitem{display:block;width:100%;text-align:left;border:0;background:none;padding:5px 0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.edgeitem:hover{color:var(--primary-dark)}
+.issue{border:1px solid var(--border);border-left-width:3px;border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:12.5px;background:var(--surface)}
+.issue.e{border-left-color:var(--danger)} .issue.w{border-left-color:var(--warn)}
+.issue small{display:block;color:var(--muted);font-size:11px}
+.ok{color:var(--ok)}
+/* B: accordion */
+details.sec{border-bottom:1px solid var(--border2)}
+details.sec>summary{list-style:none;cursor:pointer;padding:11px 14px;font-weight:600;font-size:13px;display:flex;align-items:center;gap:8px}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary::after{content:"▾";margin-left:auto;color:var(--muted);transition:transform .15s}
+details.sec:not([open])>summary::after{transform:rotate(-90deg)}
+details.sec>.in{padding:0 14px 14px;display:flex;flex-direction:column;gap:12px}
+.badge{font-size:11px;background:var(--tint);color:var(--primary-dark);border-radius:10px;padding:0 7px;font-weight:600}
+.badge.bad{background:color-mix(in srgb,var(--danger) 18%,transparent);color:var(--danger)}
+/* C: dense + drawer */
+.drawer{border-top:1px solid var(--border2);margin-top:auto}
+.drawer>button{width:100%;border:0;background:var(--surface2);padding:9px 14px;display:flex;align-items:center;gap:8px;font-size:12.5px;text-align:left}
+.drawer .list{padding:10px 14px;max-height:190px;overflow:auto}
+.drawer .car{margin-left:auto;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <main>
+    <h1>แผงขวา Flowchart</h1>
+    <p class="lead">ตอนนี้แผงเป็นแถบยาวแถบเดียว (รูปทรง สี ตัวอักษร เส้นที่ต่อ ผูก endpoint ผลตรวจ ปะปนกัน) และยังไม่มีช่องกว้าง/สูง กดเลือกแบบ แล้วสลับ "สิ่งที่เลือก" เพื่อดูแผงในแต่ละกรณี</p>
+    <div class="ctl">
+      <div class="grp"><div class="lbl">แบบ</div>
+        <div class="seg" id="optSeg">
+          <button data-v="A">A · 3 แท็บ (ตามดีไซน์เดิม)</button>
+          <button data-v="B">B · หัวข้อพับได้</button>
+          <button data-v="C">C · กะทัดรัด + ลิ้นชักผลตรวจ</button>
+        </div></div>
+      <div class="grp"><div class="lbl">สิ่งที่เลือกบนแผนภาพ</div>
+        <div class="seg" id="selSeg">
+          <button data-v="node">สัญลักษณ์ 1 ชิ้น</button>
+          <button data-v="edge">เส้นเชื่อม</button>
+          <button data-v="multi">หลายชิ้น</button>
+          <button data-v="none">ไม่เลือก</button>
+        </div></div>
+      <div class="note" id="note"></div>
+      <div class="pick">ทุกแบบเพิ่ม: ช่องกว้าง/สูง · ผลตรวจรวมเป็นที่เดียว · รายการเส้นที่ต่อกับสัญลักษณ์ ย้ายไปอยู่กับเรื่องเส้น · ช่องกรอกสูง 36px เท่าดรอปดาวน์</div>
+    </div>
+  </main>
+  <aside><div class="panel" id="panel"></div></aside>
+</div>
+
+<script>
+var S={opt:'A',sel:'node',tab:'shape',open:{shape:1,color:1,text:0,link:0,edges:0,check:0,e1:1,e2:1,e3:0,m1:1,m2:1},drawer:false};
+var ISSUES=[{s:'e',t:'"จบ" ไม่มีเส้นเข้า',d:'สัญลักษณ์ที่ 6'},{s:'w',t:'"มีของไหม?" มีทางออกทางเดียว',d:'การตัดสินใจควรมีอย่างน้อย 2 ทาง (ใช่ / ไม่ใช่)'}];
+var SW=['#fff','#F3F0FC','#E2F3F1','#E8EEF8','#FFF4D6','#FDE8E8'];
+var I={
+  del:'<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8h5.8l.6-8"/></svg>',
+  dia:'<svg width="20" height="12" viewBox="0 0 20 12"><path d="M10 1l8 5-8 5-8-5z" fill="none" stroke="#6D4FC2" stroke-width="1.4"/></svg>',
+  b:'<b>B</b>',i:'<i style="font-family:serif">I</i>',
+  al:['M3 4h10M3 8h6M3 12h8','M3 4h10M5 8h6M4 12h8','M3 4h10M7 8h6M5 12h8']
+};
+function alIcon(p){return '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="'+p+'"/></svg>'}
+function sw(on){return '<div class="sw">'+SW.map(function(c,i){return '<i class="'+(i==on?'on':'')+'" style="background:'+c+'"></i>'}).join('')+'<i class="plus">+</i></div>'}
+function f(l,h){return '<div class="f"><div class="l">'+l+'</div>'+h+'</div>'}
+function sel(h){return '<div class="sel">'+h+'<span class="car">▾</span></div>'}
+function hdr(icon,title,del){return '<div class="hd">'+icon+'<b>'+title+'</b><button class="ib del" aria-label="ลบ">'+I.del+'</button></div>'}
+
+/* ----- ชิ้นส่วนที่ใช้ร่วมกันทุกแบบ ----- */
+var P={
+ shape:function(){return f('รูปทรง',sel(I.dia+' ข้าวหลามตัด (ตัดสินใจ)'))+'<div class="two">'+f('กว้าง','<input class="field mono" value="160" aria-label="กว้าง">')+f('สูง','<input class="field mono" value="96" aria-label="สูง">')+'</div>'},
+ color:function(){return f('สีพื้น',sw(4))+f('สีเส้นขอบ',sw(0))+f('เส้นขอบ',sel('เส้นทึบ'))},
+ text:function(){return f('ข้อความ','<textarea rows="2" aria-label="ข้อความ">มีของไหม?</textarea>')+f('ตัวอักษร','<div class="row"><div class="sel">13<span class="car">▾</span></div><button class="ib" aria-pressed="false">'+I.b+'</button><button class="ib" aria-pressed="false">'+I.i+'</button><span style="width:6px"></span>'+I.al.map(function(p,k){return '<button class="ib" aria-pressed="'+(k==1)+'">'+alIcon(p)+'</button>'}).join('')+'</div>')+f('สีตัวอักษร',sw(-1))},
+ link:function(){return f('ผูกกับ endpoint','<div class="link"><span class="dot"></span><div class="t"><b>GET /products/{id}</b><span>API · Store API v1</span></div><button class="ib" aria-label="เลิกผูก">×</button></div>')},
+ edges:function(){return '<div class="muted">เส้นออก 2 · เส้นเข้า 1</div><div>'+['→ ตัดสต็อก · ใช่','→ แจ้งของหมด · ไม่ใช่','← รับออเดอร์'].map(function(t){return '<button class="edgeitem">'+t+'</button>'}).join('')+'</div>'},
+ e1:function(){return '<div class="muted">มีของไหม?  →  ตัดสต็อก</div>'+f('ป้ายเส้น','<input class="field" value="ใช่" aria-label="ป้ายเส้น">')},
+ e2:function(){return '<div class="two">'+f('หัวต้นเส้น',sel('ไม่มี'))+f('หัวปลายเส้น',sel('ลูกศรทึบ'))+'</div><div class="two">'+f('ลักษณะเส้น',sel('เส้นทึบ'))+f('ความหนา',sel('1.8 px'))+'</div>'},
+ e3:function(){return f('สีเส้น',sw(-1))+'<button class="btn full">⇄ สลับทิศทาง</button>'},
+ m1:function(){return f('จัดแนว','<div class="row">'+['M3 3v10M6 5h7M6 9h4','M8 3v10M4 5h8M5 9h6','M13 3v10M3 5h7M6 9h4','M3 3h10M5 6v7M9 6v4','M3 8h10M5 4v8M9 5v6','M3 13h10M5 3v7M9 6v4'].map(function(p){return '<button class="ib">'+alIcon(p)+'</button>'}).join('')+'</div>')+f('กระจาย / ขนาด','<div class="row"><button class="ib">'+alIcon('M3 3v10M13 3v10M7 5h2v6H7z')+'</button><button class="ib">'+alIcon('M3 3h10M3 13h10M5 7h6v2H5z')+'</button><button class="ib">'+alIcon('M4 4h8v8H4z')+'</button></div>')},
+ m2:function(){return f('สีพื้น',sw(-1))+f('สีเส้นขอบ',sw(-1))+'<button class="btn full">⧉ ทำสำเนา</button>'},
+ none:function(){return '<div class="hd"><b>Flowchart</b></div><div class="muted">8 สัญลักษณ์ · 9 เส้นเชื่อม</div><div style="display:flex;flex-wrap:wrap;gap:6px"><button class="btn">↓ จัดวางบนลงล่าง</button><button class="btn">→ จัดวางซ้ายไปขวา</button></div><div class="muted">เลือกสัญลักษณ์บนแผนภาพเพื่อแก้รูปทรง สี ขนาด และข้อความ</div>'},
+ check:function(){return ISSUES.map(function(x){return '<div class="issue '+x.s+'">'+x.t+'<small>'+x.d+'</small></div>'}).join('')},
+ hint:function(t){return '<div class="muted">'+t+'</div>'}
+};
+var ICONDIA=I.dia;
+var TITLE={node:'ข้าวหลามตัด (ตัดสินใจ)',edge:'เส้นเชื่อม',multi:'เลือก 3 สัญลักษณ์',none:''};
+function head(){return S.sel=='node'?hdr(ICONDIA,'ข้าวหลามตัด'):S.sel=='edge'?hdr('<span style="width:18px;text-align:center;color:var(--muted)">→</span>','เส้นเชื่อม'):S.sel=='multi'?hdr('','เลือก 3 สัญลักษณ์'):''}
+
+/* ----- A: 3 แท็บ ----- */
+function renderA(){
+  var t=S.tab;
+  var tabs=[['shape','รูปทรง'],['line','เส้น'],['check','ตรวจ · '+ISSUES.length]];
+  var h='<div class="tabs" role="tablist">'+tabs.map(function(x){return '<button role="tab" data-tab="'+x[0]+'" aria-selected="'+(t==x[0])+'">'+x[1]+'</button>'}).join('')+'</div><div class="body">';
+  if(t=='shape'){
+    if(S.sel=='node')h+=head()+P.shape()+P.text()+P.color()+P.link();
+    else if(S.sel=='multi')h+=head()+P.m1()+P.m2();
+    else if(S.sel=='edge')h+=P.hint('กำลังเลือกเส้นเชื่อม ดูที่แท็บ "เส้น"');
+    else h+=P.none();
+  }else if(t=='line'){
+    if(S.sel=='edge')h+=head()+P.e1()+P.e2()+P.e3();
+    else if(S.sel=='node')h+='<div class="hd"><b>มีของไหม?</b></div>'+P.edges();
+    else h+=P.hint('เลือกเส้นเชื่อมเพื่อแก้ลักษณะเส้น หรือเลือกสัญลักษณ์เพื่อดูเส้นที่ต่ออยู่');
+  }else h+=P.check();
+  return h+'</div>';
+}
+/* ----- B: หัวข้อพับได้ ----- */
+function sec(id,title,html,badge){return '<details class="sec" data-id="'+id+'"'+(S.open[id]?' open':'')+'><summary>'+title+(badge||'')+'</summary><div class="in">'+html+'</div></details>'}
+function renderB(){
+  var h='';
+  if(S.sel=='none')return '<div class="body">'+P.none()+'</div>'+sec('check','ตรวจ',P.check(),'<span class="badge bad">'+ISSUES.length+'</span>');
+  h+='<div class="body" style="flex:none;padding-bottom:6px">'+head()+'</div>';
+  if(S.sel=='node')h+=sec('shape','รูปทรงและขนาด',P.shape())+sec('color','สีและเส้นขอบ',P.color())+sec('text','ข้อความ',P.text())+sec('edges','เส้นที่ต่อ',P.edges(),'<span class="badge">3</span>')+sec('link','ผูกกับ endpoint',P.link());
+  if(S.sel=='edge')h+=sec('e1','ป้ายและเส้นทาง',P.e1())+sec('e2','หัวลูกศรและลักษณะ',P.e2())+sec('e3','สี',P.e3());
+  if(S.sel=='multi')h+=sec('m1','จัดแนวและกระจาย',P.m1())+sec('m2','สี',P.m2());
+  return h+sec('check','ตรวจ',P.check(),'<span class="badge bad">'+ISSUES.length+'</span>');
+}
+/* ----- C: กะทัดรัดจอเดียว + ลิ้นชัก ----- */
+function renderC(){
+  var b='';
+  if(S.sel=='node'){
+    b=head()+'<div class="two">'+f('กว้าง','<input class="field mono" value="160" aria-label="กว้าง">')+f('สูง','<input class="field mono" value="96" aria-label="สูง">')+'</div>'
+     +f('รูปทรง',sel(ICONDIA+' ข้าวหลามตัด'))
+     +f('ข้อความ','<textarea rows="2" aria-label="ข้อความ">มีของไหม?</textarea>')
+     +'<div class="two">'+f('สีพื้น','<div class="sw">'+SW.slice(0,4).map(function(c,i){return '<i class="'+(i==3?'on':'')+'" style="background:'+c+'"></i>'}).join('')+'<i class="plus">+</i></div>')+f('ขอบ',sel('ทึบ'))+'</div>'
+     +f('ตัวอักษร','<div class="row"><div class="sel" style="width:60px">13<span class="car">▾</span></div><button class="ib">'+I.b+'</button><button class="ib">'+I.i+'</button>'+I.al.map(function(p,k){return '<button class="ib" aria-pressed="'+(k==1)+'">'+alIcon(p)+'</button>'}).join('')+'</div>')
+     +f('เส้นที่ต่อ · endpoint','<div class="link"><span class="dot"></span><div class="t"><b>GET /products/{id}</b><span>ออก 2 · เข้า 1</span></div><button class="ib" aria-label="เลิกผูก">×</button></div>');
+  }else if(S.sel=='edge')b=head()+P.e1()+'<div class="two">'+f('หัวต้น',sel('ไม่มี'))+f('หัวปลาย',sel('ลูกศรทึบ'))+'</div><div class="two">'+f('ลักษณะ',sel('เส้นทึบ'))+f('หนา',sel('1.8'))+'</div>'+f('สีเส้น',sw(-1))+'<button class="btn full">⇄ สลับทิศทาง</button>';
+  else if(S.sel=='multi')b=head()+P.m1()+P.m2();
+  else b=P.none();
+  return '<div class="body">'+b+'</div><div class="drawer"><button id="drw" aria-expanded="'+S.drawer+'"><span class="badge bad">'+ISSUES.length+'</span> ผลตรวจแผนภาพ<span class="car">'+(S.drawer?'▾':'▴')+'</span></button>'+(S.drawer?'<div class="list">'+P.check()+'</div>':'')+'</div>';
+}
+var NOTES={
+ A:['<h2>A · 3 แท็บ</h2><div>เหมือนแผงขวา ER (ตาราง / สไตล์ / SQL) และตรงกับแบบใน <code>Flowchart.dc.html</code> เดิม</div><ul><li>เลือกสัญลักษณ์ → ไปแท็บรูปทรง เลือกเส้น → ไปแท็บเส้นเอง</li><li>แท็บ "ตรวจ · N" เห็นจำนวนปัญหาตลอด</li><li>แท็บรูปทรงยังยาวพอสมควร ต้องเลื่อน</li></ul>'],
+ B:['<h2>B · หัวข้อพับได้</h2><div>ไม่มีแท็บ แต่แบ่งเป็นหัวข้อที่พับเก็บได้ (จำสถานะไว้)</div><ul><li>เห็นทุกหัวข้อพร้อมกัน ข้ามไปแก้สีได้โดยไม่เปลี่ยนแท็บ</li><li>"ตรวจ" อยู่ท้ายสุดพร้อมตัวเลข</li><li>หัวข้อเยอะ แผงดูยาวถ้าเปิดทั้งหมด</li></ul>'],
+ C:['<h2>C · กะทัดรัด</h2><div>จัดเป็น 2 คอลัมน์ให้ข้อมูลของสัญลักษณ์อยู่ในจอเดียว ผลตรวจเป็นลิ้นชักล่างแผง</div><ul><li>ไม่ต้องเลื่อนในจอ 900px ตอนเลือกสัญลักษณ์</li><li>ผลตรวจกดเปิด/ปิดได้ ไม่เสียพื้นที่</li><li>ตัดสีตัวอักษรและเส้นขอบออกจากหน้าหลัก (เหลือสีพื้น) ต้องตัดสินว่ายอมได้ไหม</li></ul>']
+};
+function render(){
+  var p=document.getElementById('panel');
+  p.className='panel'+(S.opt=='C'?' dense':'');
+  p.innerHTML=S.opt=='A'?renderA():S.opt=='B'?renderB():renderC();
+  document.getElementById('note').innerHTML=NOTES[S.opt][0];
+  [['optSeg','opt'],['selSeg','sel']].forEach(function(x){document.querySelectorAll('#'+x[0]+' button').forEach(function(b){b.setAttribute('aria-pressed',String(S[x[1]]==b.dataset.v))})});
+}
+document.getElementById('optSeg').onclick=function(e){var v=e.target.closest('button');if(v){S.opt=v.dataset.v;render()}};
+document.getElementById('selSeg').onclick=function(e){var v=e.target.closest('button');if(!v)return;S.sel=v.dataset.v;if(S.sel=='edge')S.tab='line';else if(S.sel=='node')S.tab='shape';render()};
+document.getElementById('panel').onclick=function(e){
+  var t=e.target.closest('[data-tab]');if(t){S.tab=t.dataset.tab;render();return}
+  if(e.target.closest('#drw')){S.drawer=!S.drawer;render();return}
+  var s=e.target.closest('details.sec>summary');if(s){e.preventDefault();var id=s.parentNode.dataset.id;S.open[id]=S.open[id]?0:1;render()}
+};
+render();
+</script>

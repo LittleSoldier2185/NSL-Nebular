@@ -120,30 +120,103 @@ class _FlowchartLeftPanelState extends State<FlowchartLeftPanel> {
 }
 
 /// แผงขวาของแท็บ Flowchart: รูปแบบของสัญลักษณ์/เส้นที่เลือก หรือภาพรวม + ปัญหาของแผนภาพเมื่อไม่ได้เลือกอะไร
-class FlowchartRightPanel extends StatelessWidget {
+/// แท็บของแผงขวา Flowchart (แบบ A ของ `design/flowchart-panel`): รูปทรง / เส้น / ตรวจ · N
+enum FcPanelTab { shape, line, check }
+
+class FlowchartRightPanel extends StatefulWidget {
   const FlowchartRightPanel({super.key});
+
+  @override
+  State<FlowchartRightPanel> createState() => _FlowchartRightPanelState();
+}
+
+class _FlowchartRightPanelState extends State<FlowchartRightPanel> {
+  FcPanelTab _tab = FcPanelTab.shape;
+  String? _lastSel;
+
+  Widget _tabBar(int issueCount) {
+    String label(FcPanelTab t) => switch (t) {
+          FcPanelTab.shape => tr('รูปทรง'),
+          FcPanelTab.line => tr('เส้น'),
+          FcPanelTab.check => '${tr('ตรวจ')} · $issueCount',
+        };
+    return Container(
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: C.borderSoft))),
+      child: Row(children: [
+        for (final t in FcPanelTab.values)
+          Expanded(
+            child: InkWell(
+              key: ValueKey('fc-tab-${t.name}'),
+              onTap: () => setState(() => _tab = t),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 11),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: _tab == t ? C.primary : Colors.transparent, width: 2)),
+                ),
+                child: Text(
+                  label(t),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: _tab == t ? FontWeight.w600 : FontWeight.w400,
+                    color: _tab == t ? C.primaryDark : C.muted,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ]),
+    );
+  }
+
+  Widget _hint(String text) => Text(text, style: TextStyle(fontSize: 12.5, color: C.muted));
 
   @override
   Widget build(BuildContext context) {
     final f = context.watchContentIdle<FlowchartController>();
     final node = f.selectedNode;
     final edge = f.selectedEdge;
+    // เลือกชิ้นใหม่ → ไปแท็บที่เกี่ยวข้อง (สัญลักษณ์ = รูปทรง, เส้น = เส้น) ; เลือกชิ้นเดิมซ้ำ = คงแท็บที่ผู้ใช้กดไว้
+    final sel = node?.id ?? (edge == null ? null : 'e:${edge.id}');
+    if (sel != _lastSel) {
+      if (sel != null) _tab = edge != null ? FcPanelTab.line : FcPanelTab.shape;
+      _lastSel = sel;
+    }
+    final issues = validateFlowchart(f.diagram, workspace: f.workspace.workspace);
     final Widget body;
-    if (node != null) {
-      body = _NodeProps(node: node);
-    } else if (edge != null) {
-      body = _EdgeProps(edge: edge);
-    } else if (f.selectedNodeIds.length > 1) {
-      body = _MultiProps(ids: f.selectedNodeIds);
-    } else {
-      body = _Overview(diagram: f.diagram);
+    switch (_tab) {
+      case FcPanelTab.shape:
+        if (node != null) {
+          body = _NodeProps(node: node);
+        } else if (f.selectedNodeIds.length > 1) {
+          body = _MultiProps(ids: f.selectedNodeIds);
+        } else if (edge != null) {
+          body = _hint(tr('กำลังเลือกเส้นเชื่อม ดูที่แท็บ "เส้น"'));
+        } else {
+          body = _Overview(diagram: f.diagram);
+        }
+      case FcPanelTab.line:
+        if (edge != null) {
+          body = _EdgeProps(edge: edge);
+        } else if (node != null) {
+          body = _NodeEdges(node: node);
+        } else {
+          body = _hint(tr('เลือกเส้นเชื่อมเพื่อแก้ลักษณะเส้น หรือเลือกสัญลักษณ์เพื่อดูเส้นที่ต่ออยู่'));
+        }
+      case FcPanelTab.check:
+        body = _Issues(diagram: f.diagram, issues: issues);
     }
     return Container(
-      decoration: BoxDecoration(border: Border(left: BorderSide(color: C.border))),
-      child: Material(
-        color: C.surface,
-        child: SingleChildScrollView(padding: const EdgeInsets.all(16), child: body),
-      ),
+      decoration: BoxDecoration(color: C.surface, border: Border(left: BorderSide(color: C.border))),
+      child: Column(children: [
+        _tabBar(issues.length),
+        Expanded(
+          child: Material(
+            color: C.surface,
+            child: SingleChildScrollView(padding: const EdgeInsets.all(16), child: body),
+          ),
+        ),
+      ]),
     );
   }
 }
@@ -319,9 +392,7 @@ class _NodeProps extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final f = context.read<FlowchartController>();
-    final d = f.diagram;
-    final outs = [for (final e in d.edges) if (e.fromId == node.id) e];
-    final ins = [for (final e in d.edges) if (e.toId == node.id) e];
+    String num(double v) => v.round().toString();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Icon(fcShapeIcon(node.shape), size: 18, color: Color(fcStrokeColor(node))),
@@ -348,6 +419,34 @@ class _NodeProps extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 12),
+      Row(children: [
+        Expanded(
+          child: CommitField(
+            key: ValueKey('fc-w-${node.id}-${num(node.w)}'),
+            label: tr('กว้าง'),
+            value: num(node.w),
+            mono: true,
+            onCommit: (v) {
+              final n = double.tryParse(v.trim());
+              if (n != null) f.setSize(node.id, w: n);
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: CommitField(
+            key: ValueKey('fc-h-${node.id}-${num(node.h)}'),
+            label: tr('สูง'),
+            value: num(node.h),
+            mono: true,
+            onCommit: (v) {
+              final n = double.tryParse(v.trim());
+              if (n != null) f.setSize(node.id, h: n);
+            },
+          ),
+        ),
+      ]),
+      const SizedBox(height: 12),
       CommitField(
         key: ValueKey('fc-text-${node.id}-${node.text}'),
         label: tr('ข้อความ'),
@@ -359,22 +458,47 @@ class _NodeProps extends StatelessWidget {
       const SizedBox(height: 14),
       _StyleSection(ids: {node.id}, sample: node),
       const SizedBox(height: 14),
-      Text(tr('เส้นออก {0} · เส้นเข้า {1}', [outs.length, ins.length]), style: TextStyle(fontSize: 12, color: C.muted)),
-      for (final e in outs)
-        InkWell(
-          onTap: () => f.selectEdge(e.id),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 3),
-            child: Text(
-              '→ ${d.nodeById(e.toId) == null ? '?' : fcNodeTitle(d.nodeById(e.toId)!)}${e.label.isEmpty ? '' : '  ·  ${e.label}'}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12.5),
-            ),
+      ApiRefPicker(value: node.api, onChanged: (r) => f.updateNode(node.id, (n) => n.api = r)),
+    ]);
+  }
+}
+
+/// แท็บเส้นเมื่อเลือกสัญลักษณ์: เส้นที่ออก/เข้า (กดเพื่อเลือกเส้นนั้นแล้วแก้ลักษณะเส้น)
+class _NodeEdges extends StatelessWidget {
+  const _NodeEdges({required this.node});
+  final FcNode node;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = context.read<FlowchartController>();
+    final d = f.diagram;
+    final outs = [for (final e in d.edges) if (e.fromId == node.id) e];
+    final ins = [for (final e in d.edges) if (e.toId == node.id) e];
+    Widget row(FcEdge e, String arrow, String otherId) {
+      final other = d.nodeById(otherId);
+      return InkWell(
+        key: ValueKey('fc-node-edge-${e.id}'),
+        onTap: () => f.selectEdge(e.id),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text(
+            '$arrow ${other == null ? '?' : fcNodeTitle(other)}${e.label.isEmpty ? '' : '  ·  ${e.label}'}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12.5),
           ),
         ),
-      const SizedBox(height: 14),
-      ApiRefPicker(value: node.api, onChanged: (r) => f.updateNode(node.id, (n) => n.api = r)),
+      );
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(fcNodeTitle(node), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+      const SizedBox(height: 4),
+      Text(tr('เส้นออก {0} · เส้นเข้า {1}', [outs.length, ins.length]), style: TextStyle(fontSize: 12, color: C.muted)),
+      const SizedBox(height: 8),
+      for (final e in outs) row(e, '→', e.toId),
+      for (final e in ins) row(e, '←', e.fromId),
+      if (outs.isEmpty && ins.isEmpty) Text(tr('ยังไม่มีเส้นต่อกับสัญลักษณ์นี้'), style: TextStyle(fontSize: 12.5, color: C.muted)),
     ]);
   }
 }
@@ -566,7 +690,6 @@ class _Overview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final f = context.read<FlowchartController>();
-    final issues = validateFlowchart(diagram, workspace: f.workspace.workspace);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('Flowchart', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
       const SizedBox(height: 4),
@@ -596,6 +719,21 @@ class _Overview extends StatelessWidget {
         ),
       ]),
       const SizedBox(height: 14),
+      Text(tr('เลือกสัญลักษณ์บนแผนภาพเพื่อแก้รูปทรง สี ขนาด และข้อความ'), style: TextStyle(fontSize: 12.5, color: C.muted)),
+    ]);
+  }
+}
+
+/// แท็บ "ตรวจ": ผลตรวจกฎของผังงาน (คลิกรายการเพื่อไปที่สัญลักษณ์/เส้น)
+class _Issues extends StatelessWidget {
+  const _Issues({required this.diagram, required this.issues});
+  final FlowchartDiagram diagram;
+  final List<Issue> issues;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = context.read<FlowchartController>();
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text.rich(TextSpan(children: [
         TextSpan(text: tr('ตรวจสอบแผนภาพ'), style: const TextStyle(fontWeight: FontWeight.w600)),
         TextSpan(text: ' (${issues.length})', style: TextStyle(color: C.muted)),

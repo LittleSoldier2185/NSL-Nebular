@@ -1,0 +1,221 @@
+<title>Use Case Designer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: แถบเลือกแนวทางด้านบน แล้วจำลองหน้าต่างเอกสาร Use Case ด้านล่าง ; สี Use Case = เขียว (ใหม่) อีก 6 ชนิดคงตามแอป */
+:root{
+  --bg:#F2F4F8; --surface:#FFFFFF; --surface2:#F6F8FB; --border:#D8DEE6; --border2:#E6EAF0; --input:#CBD3DE;
+  --text:#1B2430; --muted:#5B6778; --primary:#0F766E; --primary-ink:#fff; --tint:#E2F3F1;
+  --danger:#C0392B; --warn:#B7791F; --ok:#0F766E;
+  --uc:#4C8A2E; --uctint:#E9F4E2;
+  --er:#2F9E8F; --dfd:#4A86C8; --fc:#7B5CD6; --wf:#D49A3A; --sf:#D0507F; --api:#3A93B0;
+  --sans:'Noto Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A0E14; --surface:#161E29; --surface2:#1C2633; --border:#2C3947; --border2:#222E3B; --input:#3B4859;
+  --text:#E6EBF2; --muted:#93A0B2; --primary:#1FA89B; --primary-ink:#04201D; --tint:#12332F;
+  --danger:#F07A6C; --warn:#E5B24D; --ok:#4FD1B5; --uc:#8BC568; --uctint:#1E3018;
+  --er:#3FB5A5; --dfd:#6FA3E0; --fc:#9B82E6; --wf:#E0AC55; --sf:#E26C97; --api:#56B0CC; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A0E14; --surface:#161E29; --surface2:#1C2633; --border:#2C3947; --border2:#222E3B; --input:#3B4859;
+  --text:#E6EBF2; --muted:#93A0B2; --primary:#1FA89B; --primary-ink:#04201D; --tint:#12332F;
+  --danger:#F07A6C; --warn:#E5B24D; --ok:#4FD1B5; --uc:#8BC568; --uctint:#1E3018;
+  --er:#3FB5A5; --dfd:#6FA3E0; --fc:#9B82E6; --wf:#E0AC55; --sf:#E26C97; --api:#56B0CC; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,summary:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.top{max-width:1240px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.top h1{margin:0 0 2px;font-size:19px}.top p{margin:0;color:var(--muted);max-width:66ch}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{height:34px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--surface)}
+.seg button[aria-pressed=true]{border-color:var(--primary);background:var(--tint);font-weight:600}
+.note{max-width:1240px;margin:0 auto 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px}
+.note h2{margin:0 0 4px;font-size:14px}.note ul{margin:4px 0 0;padding-left:18px;color:var(--muted)}
+.win{max-width:1240px;margin:0 auto;background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.wh{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.wh b{font-size:15px}.wh .sp{flex:1}
+.dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
+.btn{height:32px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--surface);font-weight:500;font-size:12.5px;display:inline-flex;align-items:center;gap:6px}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:var(--primary-ink);font-weight:600}
+.btn.sm{height:26px;padding:0 8px;font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:6px;padding:1px 7px;font-size:11.5px;background:var(--surface2);white-space:nowrap}
+.chip i{width:7px;height:7px;border-radius:2px;display:inline-block}
+.chip.req{border-color:var(--uc);color:var(--uc);background:var(--uctint);font-family:var(--mono)}
+.chip.bad{border-color:var(--danger);color:var(--danger)}
+.status{font-size:11px;border-radius:9px;padding:0 8px;font-weight:600;white-space:nowrap}
+.status.draft{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.status.review{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.status.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.lbl{font-size:11px;color:var(--muted);margin-bottom:4px;letter-spacing:.03em}
+.in,.ta{width:100%;border:1px solid var(--input);border-radius:6px;background:var(--surface);color:var(--text);padding:0 10px;height:36px;font:inherit}
+.ta{height:auto;padding:8px 10px;resize:none;line-height:1.5}
+.mono{font-family:var(--mono)}
+.sec{margin-top:18px}.sec>h4{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.sec>h4 .n{font-weight:500;text-transform:none;letter-spacing:0}
+.steps{border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden}
+.step{display:grid;grid-template-columns:30px 62px minmax(0,1fr);gap:8px;padding:9px 12px;border-top:1px solid var(--border2);align-items:start}
+.step:first-child{border-top:0}
+.step .no{font-family:var(--mono);color:var(--muted);padding-top:1px}
+.who{font-size:11px;border-radius:5px;padding:1px 6px;text-align:center;font-weight:600;height:20px}
+.who.u{background:var(--uctint);color:var(--uc)}.who.s{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.links{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.alt{border-left:3px solid var(--warn);background:var(--surface);border-radius:0 8px 8px 0;padding:9px 12px;margin-bottom:8px;border-top:1px solid var(--border2);border-right:1px solid var(--border2);border-bottom:1px solid var(--border2)}
+.alt.ex{border-left-color:var(--danger)}
+.alt b{font-family:var(--mono);margin-right:6px}
+.alt small{display:block;color:var(--muted);margin-top:2px}
+.issue{border:1px solid var(--border);border-left-width:3px;border-radius:6px;padding:8px 10px;margin-bottom:6px;background:var(--surface);font-size:12.5px}
+.issue.e{border-left-color:var(--danger)}.issue.w{border-left-color:var(--warn)}.issue small{display:block;color:var(--muted);font-size:11px}
+.side h3{margin:0 0 8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cover{height:6px;border-radius:3px;background:var(--border2);overflow:hidden;margin:6px 0}.cover i{display:block;height:100%;background:var(--uc)}
+/* A */
+.a3{display:grid;grid-template-columns:232px minmax(0,1fr) 262px;min-height:640px}
+@media(max-width:1000px){.a3{grid-template-columns:minmax(0,1fr)}}
+.lcol{background:var(--surface);border-right:1px solid var(--border);padding:12px 0}
+.lcol .grp{padding:10px 14px 4px;font-size:11px;color:var(--muted);letter-spacing:.05em}
+.uci{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;background:none;padding:8px 14px;border-left:3px solid transparent}
+.uci:hover{background:var(--surface2)}.uci[aria-current=true]{background:var(--uctint);border-left-color:var(--uc)}
+.uci .c{font-family:var(--mono);font-size:11.5px;color:var(--muted);width:44px;flex:none}
+.uci .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mid{padding:20px 24px;min-width:0}
+.rcol{background:var(--surface);border-left:1px solid var(--border);padding:16px}
+@media(max-width:1000px){.rcol{border-left:0;border-top:1px solid var(--border)}.lcol{border-right:0;border-bottom:1px solid var(--border)}}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:700px){.two,.three{grid-template-columns:1fr}}
+.title-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+/* B */
+.b2{display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:640px}
+@media(max-width:1000px){.b2{grid-template-columns:minmax(0,1fr)}}
+.canvas{background:var(--surface2);background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:20px 20px;overflow:auto}
+.canvas svg{display:block;min-width:700px;width:100%;height:auto}
+.canvas text{font-family:var(--sans);fill:var(--text)}
+.uce{cursor:pointer}.uce:focus-visible{outline:none}
+.uce ellipse{fill:var(--surface);stroke:var(--uc);stroke-width:1.6}
+.uce.sel ellipse{fill:var(--uctint);stroke-width:2.6}
+.uce:hover ellipse{fill:var(--uctint)}
+/* C */
+.c2{display:grid;grid-template-columns:200px minmax(0,1fr) 240px;min-height:640px}
+@media(max-width:1000px){.c2{grid-template-columns:minmax(0,1fr)}}
+.toc{padding:16px 14px;border-right:1px solid var(--border);background:var(--surface)}
+.toc a{display:block;padding:5px 8px;border-radius:6px;color:var(--text);text-decoration:none;font-size:12.5px;cursor:pointer}
+.toc a:hover{background:var(--surface2)}
+.doc{padding:24px 32px;max-width:760px}
+.doc article{margin-bottom:30px;padding-bottom:24px;border-bottom:1px solid var(--border2)}
+.doc h2{margin:0 0 4px;font-size:19px}
+.doc .metaline{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.doc ol{padding-left:22px;margin:6px 0 10px}.doc ol li{margin:6px 0}
+.doc p{margin:4px 0 8px}
+.pop{border:1px solid var(--input);border-radius:8px;background:var(--surface);box-shadow:0 8px 24px rgba(0,0,0,.18);width:280px;margin:6px 0 0 22px;overflow:hidden}
+.pop div{padding:6px 10px;display:flex;gap:8px;align-items:center;font-size:12.5px}
+.pop div:first-child{background:var(--tint)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="top">
+  <div>
+    <h1>Use Case ของโปรเจกต์</h1>
+    <p>เขียน Use Case ให้อยู่ในโปรเจกต์เดียวกับ ER / Wireframe / API และผูกกับความต้องการ (REQ) ที่มีอยู่ ข้อมูลตัวอย่างจากโปรเจกต์ Hotel Booking ลองสลับแนวทางและกดเลือก Use Case</p>
+  </div>
+  <div class="seg" id="optSeg" role="group" aria-label="เลือกแนวทาง">
+    <button data-v="A">A · ฟอร์มสเปก 3 คอลัมน์</button>
+    <button data-v="B">B · แผนภาพ + สเปก</button>
+    <button data-v="C">C · เขียนเป็นเอกสาร</button>
+  </div>
+</div>
+<div class="note" id="note"></div>
+<div class="win" id="win"></div>
+
+<script>
+var S={opt:'A',uc:'UC-02'};
+var DOCCOL={wf:'--wf',api:'--api',er:'--er',fc:'--fc',sf:'--sf',dfd:'--dfd'};
+var UCS=[
+ {id:'UC-01',name:'ค้นหาห้องว่าง',actor:'Guest',sec:'',status:'ok',pri:'สูง',req:['REQ-02'],trig:'Guest เปิดหน้าแรกและกรอกวันเข้าพัก',goal:'ให้ผู้เข้าพักเห็นห้องที่ว่างตามช่วงวันและจำนวนคน',pre:'ไม่ต้องเข้าสู่ระบบ',post:'แสดงรายการห้องที่ว่างเรียงตามราคา',
+  main:[['u','Guest กรอกวันเข้า-ออกและจำนวนคน',[['wf','Home']]],['s','ระบบค้นหาห้องที่ว่างตลอดช่วงวัน',[['api','GET /rooms/search']]],['s','ระบบแสดงรายการห้อง',[['wf','Rooms']]]],
+  alt:[['2a','ไม่พบห้องว่าง','ระบบแจ้งและเสนอช่วงวันใกล้เคียง · กลับไปขั้นที่ 1']],ex:[],inc:[],ext:[],issues:[]},
+ {id:'UC-02',name:'จองห้องพัก',actor:'Guest',sec:'ระบบอีเมล',status:'review',pri:'สูง',req:['REQ-03','REQ-07'],trig:'Guest กด "จองห้อง" ในหน้ารายละเอียดห้อง',goal:'ให้ผู้เข้าพักจองห้องและได้รับการยืนยันภายในครั้งเดียว',pre:'Guest เข้าสู่ระบบแล้ว และห้องที่เลือกยังว่าง',post:'การจองถูกบันทึกสถานะ "ยืนยัน" ห้องถูกกันไว้ และส่งอีเมลยืนยัน',
+  main:[['u','Guest เลือกห้องจากหน้ารายละเอียด และกด "จองห้อง"',[['wf','Room Detail']]],['s','ระบบตรวจว่าห้องยังว่างในช่วงวันที่เลือก',[['api','GET /rooms/{id}/availability']]],['u','Guest กรอกข้อมูลผู้เข้าพักและยืนยัน',[['wf','Checkout'],['er','bookings.guest_name']]],['s','ระบบสร้างการจองสถานะ pending',[['api','POST /bookings'],['er','bookings']]],['s','ระบบเรียก Use Case "ชำระเงิน" (include)',[['uc','UC-03']]],['s','ระบบเปลี่ยนสถานะเป็นยืนยัน และส่งอีเมล',[['fc','Flowchart · ขั้นตอนการจอง']]]],
+  alt:[['2a','ห้องเต็มแล้ว','ระบบแจ้งว่าห้องเต็มและเสนอห้องอื่น · กลับไปขั้นที่ 1'],['3a','Guest ยังไม่เข้าสู่ระบบ','พาไปหน้าเข้าสู่ระบบ แล้วกลับมาต่อขั้นที่ 3']],
+  ex:[['5x','ชำระเงินไม่สำเร็จ','การจองหมดอายุใน 15 นาที และคืนห้องให้ว่าง']],inc:['UC-03'],ext:[],
+  issues:[{s:'w',t:'ขั้นที่ 6 ยังไม่ผูกกับ endpoint ส่งอีเมล',d:'ขั้นตอนของระบบควรผูกกับ API อย่างน้อยหนึ่งจุด'}]},
+ {id:'UC-03',name:'ชำระเงิน',actor:'Guest',sec:'Payment Gateway',status:'draft',pri:'สูง',req:['REQ-07'],trig:'ถูกเรียกจาก "จองห้องพัก"',goal:'รับชำระเงินของการจองให้สำเร็จ',pre:'มีการจองสถานะ pending',post:'การจองถูกบันทึกว่าชำระแล้ว',
+  main:[['s','ระบบแสดงยอดและช่องทางชำระเงิน',[['wf','Checkout']]],['u','Guest เลือกช่องทางและยืนยัน',[]],['s','ระบบส่งคำขอไปยัง Payment Gateway',[['api','POST /payments']]],['s','ระบบบันทึกผลและแสดงใบเสร็จ',[['er','payments']]]],
+  alt:[['3a','Gateway ไม่ตอบ','ลองใหม่สูงสุด 2 ครั้ง แล้วแจ้งผู้ใช้']],ex:[],inc:[],ext:[],issues:[{s:'e',t:'ขั้นที่ 3a ไม่ระบุขั้นที่ต้องกลับไป',d:'ทางเลือกต้องบอกว่าจบ Use Case หรือกลับไปขั้นไหน'}]},
+ {id:'UC-04',name:'เพิ่มห้อง',actor:'Admin',sec:'',status:'draft',pri:'กลาง',req:[],trig:'Admin กด "เพิ่มห้อง"',goal:'ให้ผู้ดูแลเพิ่มห้องใหม่เข้าระบบ',pre:'Admin เข้าสู่ระบบ',post:'ห้องใหม่ปรากฏในรายการ',
+  main:[['u','Admin กรอกข้อมูลห้องและบันทึก',[['wf','Admin Room']]],['s','ระบบบันทึกห้อง',[['api','POST /rooms'],['er','rooms']]]],
+  alt:[],ex:[],inc:[],ext:[],issues:[{s:'w',t:'ยังไม่ผูกกับความต้องการ (REQ) ข้อใด',d:'ผูกเพื่อให้เมทริกซ์ความครอบคลุมนับ Use Case นี้'}]}
+];
+var REQS=[['REQ-01','ผู้ใช้สมัครสมาชิกได้',0],['REQ-02','ค้นหาห้องตามวันที่',1],['REQ-03','จองห้องออนไลน์',1],['REQ-05','ดูประวัติการจอง',0],['REQ-07','ชำระเงินผ่านบัตร',1],['REQ-09','ผู้ดูแลจัดการห้อง',0]];
+function uc(id){return UCS.filter(function(u){return u.id==id})[0]}
+function cur(){return uc(S.uc)}
+function chipLink(l){var k=l[0];if(k=='uc')return '<span class="chip"><i style="background:var(--uc)"></i>'+l[1]+'</span>';return '<span class="chip"><i style="background:var('+DOCCOL[k]+')"></i>'+l[1]+'</span>'}
+function stBadge(s){return '<span class="status '+(s=='ok'?'ok':s)+'">'+(s=='ok'?'อนุมัติ':s=='review'?'รอตรวจ':'ร่าง')+'</span>'}
+function issBadge(u){var e=u.issues.filter(function(i){return i.s=='e'}).length,w=u.issues.length-e;return e?'<span class="chip bad">'+e+'</span>':w?'<span class="chip" style="color:var(--warn);border-color:var(--warn)">'+w+'</span>':''}
+function steps(u){return '<div class="steps">'+u.main.map(function(s,i){return '<div class="step"><span class="no">'+(i+1)+'</span><span class="who '+s[0]+'">'+(s[0]=='u'?'ผู้ใช้':'ระบบ')+'</span><div><div>'+s[1]+'</div><div class="links">'+s[2].map(chipLink).join('')+'<button class="btn sm" aria-label="ผูกขั้นตอนกับเอกสาร">+ ผูก</button></div></div></div>'}).join('')+'<div class="step" style="background:var(--surface2)"><span></span><span></span><button class="btn sm" style="justify-self:start">+ เพิ่มขั้นตอน</button></div></div>'}
+function alts(u){return u.alt.map(function(a){return '<div class="alt"><b>'+a[0]+'</b>'+a[1]+'<small>'+a[2]+'</small></div>'}).join('')+u.ex.map(function(a){return '<div class="alt ex"><b>'+a[0]+'</b>'+a[1]+'<small>'+a[2]+'</small></div>'}).join('')+(u.alt.length+u.ex.length?'':'<div class="note" style="margin:0;border-style:dashed;color:var(--muted)">ยังไม่มีทางเลือกหรือข้อผิดพลาด</div>')+'<div style="display:flex;gap:6px"><button class="btn sm">+ ทางเลือก</button><button class="btn sm">+ ข้อผิดพลาด</button></div>'}
+function issuesHtml(u){return u.issues.length?u.issues.map(function(i){return '<div class="issue '+i.s+'">'+i.t+'<small>'+i.d+'</small></div>'}).join(''):'<div class="muted" style="color:var(--ok)">✓ ไม่พบปัญหา</div>'}
+function coverHtml(){var n=REQS.filter(function(r){return r[2]}).length;return '<h3>ความครอบคลุมของ REQ</h3><div>'+n+' จาก '+REQS.length+' ข้อมี Use Case</div><div class="cover"><i style="width:'+Math.round(n/REQS.length*100)+'%"></i></div>'+REQS.map(function(r){return '<div style="display:flex;gap:6px;align-items:baseline;margin:3px 0"><span class="chip req">'+r[0]+'</span><span style="color:'+(r[2]?'var(--text)':'var(--warn)')+';flex:1;min-width:0">'+r[1]+'</span>'+(r[2]?'':'<span style="color:var(--warn)">ขาด</span>')+'</div>'}).join('')}
+function wh(extra){return '<div class="wh"><span class="dot" style="background:var(--uc)"></span><b>Use Case</b><span class="chip">'+UCS.length+' รายการ</span><span class="sp"></span>'+(extra||'')+'<button class="btn">ส่งออก</button><button class="btn pri">+ Use Case ใหม่</button></div>'}
+/* ---------- A ---------- */
+function renderA(){
+  var u=cur(),groups={};UCS.forEach(function(x){(groups[x.actor]=groups[x.actor]||[]).push(x)});
+  var list=Object.keys(groups).map(function(a){return '<div class="grp">'+a.toUpperCase()+' · '+groups[a].length+'</div>'+groups[a].map(function(x){return '<button class="uci" data-uc="'+x.id+'" aria-current="'+(x.id==S.uc)+'"><span class="c">'+x.id+'</span><span class="t">'+x.name+'</span>'+issBadge(x)+'</button>'}).join('')}).join('');
+  return wh()+'<div class="a3"><div class="lcol"><div style="padding:0 14px 8px"><input class="in" placeholder="ค้นหา Use Case" aria-label="ค้นหา"></div>'+list+'</div>'
+  +'<div class="mid"><div class="title-row"><div style="width:84px"><div class="lbl">รหัส</div><input class="in mono" value="'+u.id+'" aria-label="รหัส"></div><div style="flex:1;min-width:200px"><div class="lbl">ชื่อ (ขึ้นต้นด้วยคำกริยา)</div><input class="in" value="'+u.name+'" aria-label="ชื่อ"></div><div><div class="lbl">สถานะ</div>'+stBadge(u.status)+'</div></div>'
+  +'<div class="three" style="margin-top:12px"><div><div class="lbl">ผู้กระทำหลัก</div><input class="in" value="'+u.actor+'"></div><div><div class="lbl">ผู้กระทำรอง</div><input class="in" value="'+u.sec+'" placeholder="ไม่มี"></div><div><div class="lbl">ความสำคัญ</div><input class="in" value="'+u.pri+'"></div></div>'
+  +'<div class="two" style="margin-top:12px"><div><div class="lbl">เป้าหมาย</div><textarea class="ta" rows="2">'+u.goal+'</textarea></div><div><div class="lbl">ตัวเริ่มต้น (Trigger)</div><textarea class="ta" rows="2">'+u.trig+'</textarea></div></div>'
+  +'<div class="two" style="margin-top:12px"><div><div class="lbl">เงื่อนไขก่อนเริ่ม</div><textarea class="ta" rows="2">'+u.pre+'</textarea></div><div><div class="lbl">ผลลัพธ์เมื่อสำเร็จ</div><textarea class="ta" rows="2">'+u.post+'</textarea></div></div>'
+  +'<div class="sec"><h4>ขั้นตอนหลัก <span class="n">· '+u.main.length+' ขั้น</span></h4>'+steps(u)+'</div><div class="sec"><h4>ทางเลือกและข้อผิดพลาด</h4>'+alts(u)+'</div></div>'
+  +'<div class="rcol side"><h3>ความต้องการ</h3><div class="links" style="margin:0 0 14px">'+(u.req.length?u.req.map(function(r){return '<span class="chip req">'+r+'</span>'}).join(''):'<span class="muted" style="color:var(--muted)">ยังไม่ผูก</span>')+'<button class="btn sm">+ ผูก REQ</button></div>'
+  +'<h3>เอกสารที่ถูกอ้างถึง</h3><div class="links" style="margin:0 0 14px">'+refs(u)+'</div><h3>ตรวจ · '+u.issues.length+'</h3>'+issuesHtml(u)+'<div style="height:14px"></div>'+coverHtml()+'</div></div>';
+}
+function refs(u){var seen={},out=[];u.main.forEach(function(s){s[2].forEach(function(l){var k=l[0]+l[1];if(!seen[k]){seen[k]=1;out.push(chipLink(l))}})});return out.join('')||'<span style="color:var(--muted)">ยังไม่มี</span>'}
+/* ---------- B ---------- */
+function ell(id,x,y,w,h){var u=uc(id);return '<g class="uce'+(S.uc==id?' sel':'')+'" data-uc="'+id+'" tabindex="0" role="button" aria-label="'+u.name+'"><ellipse cx="'+x+'" cy="'+y+'" rx="'+w+'" ry="'+h+'"/><text x="'+x+'" y="'+(y-3)+'" text-anchor="middle" font-size="13" font-weight="600">'+u.name+'</text><text x="'+x+'" y="'+(y+14)+'" text-anchor="middle" font-size="11" style="fill:var(--muted)">'+id+'</text>'+(u.issues.length?'<circle cx="'+(x+w-14)+'" cy="'+(y-h+14)+'" r="8" style="fill:var(--'+(u.issues.some(function(i){return i.s=='e'})?'danger':'warn')+')"/><text x="'+(x+w-14)+'" y="'+(y-h+18)+'" text-anchor="middle" font-size="10" style="fill:#fff;font-weight:700">'+u.issues.length+'</text>':'')+'</g>'}
+function actor(x,y,n){return '<g><circle cx="'+x+'" cy="'+(y-24)+'" r="10" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--muted)"/><path d="M'+x+' '+(y-14)+'v26M'+(x-16)+' '+(y-4)+'h32M'+x+' '+(y+12)+'l-13 18M'+x+' '+(y+12)+'l13 18" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--muted)"/><text x="'+x+'" y="'+(y+48)+'" text-anchor="middle" font-size="12.5" font-weight="600">'+n+'</text></g>'}
+function line(x1,y1,x2,y2,dash,lab){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="currentColor" stroke-width="1.3" style="color:var(--muted)"'+(dash?' stroke-dasharray="5 4" marker-end="url(#ar)"':'')+'/>'+(lab?'<text x="'+((x1+x2)/2)+'" y="'+((y1+y2)/2-5)+'" text-anchor="middle" font-size="11" style="fill:var(--muted)" font-style="italic">'+lab+'</text>':'')}
+function renderB(){
+  var u=cur();
+  var svg='<svg viewBox="0 0 900 560" role="img" aria-label="แผนภาพ Use Case"><defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" fill="none" stroke="currentColor" style="color:var(--muted)"/></marker></defs>'
+  +'<rect x="170" y="24" width="560" height="510" rx="12" fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--border)"/><text x="190" y="48" font-size="12.5" font-weight="600" style="fill:var(--muted)">ระบบจองห้องพัก</text>'
+  +line(78,170,260,150)+line(78,170,450,300)+line(78,170,640,150)+line(822,200,450,300)+line(822,200,640,430)+line(822,420,450,300)
+  +line(450,330,450,400,1,'«include»')+line(450,300,640,150,0)
+  +actor(60,170,'Guest')+actor(822,170,'Payment Gateway')+actor(822,420,'ระบบอีเมล')
+  +ell('UC-01',260,150,92,38)+ell('UC-02',450,290,100,42)+ell('UC-03',450,420,92,38)+ell('UC-04',640,150,92,38)
+  +'</svg>';
+  var side='<div class="rcol side"><h3>ที่เลือก</h3><div style="font-size:15px;font-weight:700">'+u.name+'</div><div class="chip" style="margin:6px 6px 8px 0">'+u.id+'</div>'+stBadge(u.status)
+   +'<div style="margin-top:12px" class="lbl">ผู้กระทำ</div><div>'+u.actor+(u.sec?' · '+u.sec:'')+'</div><div class="lbl" style="margin-top:10px">เป้าหมาย</div><div>'+u.goal+'</div>'
+   +'<div class="lbl" style="margin-top:10px">ขั้นตอน</div><ol style="margin:0;padding-left:18px">'+u.main.map(function(s){return '<li style="margin:3px 0">'+s[1]+'</li>'}).join('')+'</ol>'
+   +'<div class="lbl" style="margin-top:12px">ความต้องการ</div><div class="links" style="margin:0">'+u.req.map(function(r){return '<span class="chip req">'+r+'</span>'}).join('')+'</div>'
+   +'<div style="margin:14px 0 10px"><button class="btn pri" style="width:100%;justify-content:center">เปิดสเปกเต็ม →</button></div><h3>ตรวจ · '+u.issues.length+'</h3>'+issuesHtml(u)+'</div>';
+  return wh('<button class="btn">+ ผู้กระทำ</button><button class="btn">เส้น include / extend</button>')+'<div class="b2"><div class="canvas">'+svg+'</div>'+side+'</div>';
+}
+/* ---------- C ---------- */
+function renderC(){
+  var toc='<div class="toc"><div class="lbl">สารบัญ</div>'+UCS.map(function(x){return '<a data-uc="'+x.id+'" style="'+(x.id==S.uc?'background:var(--uctint);font-weight:600':'')+'">'+x.id+' '+x.name+'</a>'}).join('')+'<div class="lbl" style="margin-top:16px">ผู้กระทำ</div>'+['Guest · 3','Admin · 1','Payment Gateway · 1','ระบบอีเมล · 1'].map(function(a){return '<div style="padding:3px 8px;color:var(--muted)">'+a+'</div>'}).join('')+'</div>';
+  var docs=UCS.map(function(u,i){
+    return '<article id="'+u.id+'"><div class="eyebrow lbl">'+u.id+'</div><h2>'+u.name+'</h2><div class="metaline"><span class="chip">ผู้กระทำ: '+u.actor+(u.sec?' + '+u.sec:'')+'</span>'+stBadge(u.status)+u.req.map(function(r){return '<span class="chip req">'+r+'</span>'}).join('')+'</div>'
+    +'<p><b>เป้าหมาย</b> '+u.goal+'</p><p><b>ก่อนเริ่ม</b> '+u.pre+'</p>'
+    +'<p style="margin-bottom:0"><b>ขั้นตอนหลัก</b></p><ol>'+u.main.map(function(s,k){return '<li><span class="who '+s[0]+'" style="display:inline-block;margin-right:6px;padding:0 6px">'+(s[0]=='u'?'ผู้ใช้':'ระบบ')+'</span>'+s[1]+' '+s[2].map(chipLink).join(' ')+'</li>'+(u.id==S.uc&&k==u.main.length-1?'<li style="list-style:none;margin-left:-22px"><span style="color:var(--muted)">พิมพ์ <b class="mono">@</b> เพื่อผูกหน้าจอ / endpoint / ตาราง...</span><div class="pop"><div><i class="dot" style="background:var(--wf)"></i>Wireframe · Checkout</div><div><i class="dot" style="background:var(--api)"></i>API · POST /bookings</div><div><i class="dot" style="background:var(--er)"></i>ER · bookings</div></div></li>':'')}).join('')+'</ol>'
+    +(u.alt.length||u.ex.length?'<p style="margin-bottom:0"><b>ทางเลือก / ข้อผิดพลาด</b></p>'+alts(u).replace(/<div style="display:flex;gap:6px">.*$/,''):'')
+    +(u.issues.length?'<div style="margin-top:8px">'+issuesHtml(u)+'</div>':'')+'</article>';
+  }).join('');
+  return wh('<span class="chip">โหมดเอกสาร</span>')+'<div class="c2">'+toc+'<div class="doc">'+docs+'</div><div class="rcol side"><h3>สรุปโปรเจกต์</h3><div class="two" style="gap:8px;margin-bottom:14px"><div class="chip" style="justify-content:space-between">Use Case <b>4</b></div><div class="chip" style="justify-content:space-between">ขั้นตอน <b>15</b></div></div>'+coverHtml()+'<div style="margin-top:14px"><button class="btn" style="width:100%;justify-content:center">ส่งออกเป็น Markdown</button></div></div></div>';
+}
+var NOTES={
+ A:'<h2>A · ฟอร์มสเปก 3 คอลัมน์ <span class="status ok">แนะนำ</span></h2><ul><li>รายการซ้าย (จัดกลุ่มตามผู้กระทำ) · ฟอร์มสเปกกลาง · ผูกกับ REQ/เอกสาร/ตรวจ ขวา เหมือนหน้า Requirements และ API Designer ที่มีอยู่</li><li>ทุกขั้นตอนผูกกับ Wireframe / endpoint / ตาราง / Flowchart ได้ ใช้ระบบลิงก์เดิม ลบเอกสารแล้วเตือนลิงก์ขาด</li><li>ตรวจให้: ไม่มีผู้กระทำ · ไม่มีขั้นตอน · ทางเลือกไม่บอกว่ากลับไปขั้นไหน · REQ ที่ไม่มี Use Case</li><li>แผนภาพ Use Case สร้างอัตโนมัติจากสเปกได้ในรอบถัดไป (แบบ B)</li></ul>',
+ B:'<h2>B · แผนภาพ + สเปก</h2><ul><li>วาดผู้กระทำ วงรี include/extend เหมือน UML กดวงรีดูสเปกย่อที่แถบขวา</li><li>เป็นเอกสารชนิดใหม่เต็มตัว (แคนวาสลากวาง แท็บ ส่งออก PNG/SVG ตัวตรวจ) งานมากที่สุด</li><li>ผู้ใช้ที่คุ้น UML เข้าใจเร็ว แต่การเขียนสเปกยาวอยู่ในแผงแคบ</li></ul>',
+ C:'<h2>C · เขียนเป็นเอกสาร</h2><ul><li>อ่านต่อเนื่องเหมือนเอกสารความต้องการ พิมพ์ <b>@</b> เพื่อผูกหน้าจอ/endpoint/ตาราง</li><li>ส่งออก Markdown ได้ตรงตัว เหมาะกับการส่งให้ผู้ว่าจ้างอ่าน</li><li>แก้ทีละส่วนไม่สะดวกเท่าฟอร์ม และตรวจความครบถ้วนต่อฟิลด์ยากกว่า</li></ul>'
+};
+function render(){
+  document.getElementById('win').innerHTML=S.opt=='A'?renderA():S.opt=='B'?renderB():renderC();
+  document.getElementById('note').innerHTML=NOTES[S.opt];
+  document.querySelectorAll('#optSeg button').forEach(function(b){b.setAttribute('aria-pressed',String(S.opt==b.dataset.v))});
+}
+document.getElementById('optSeg').onclick=function(e){var b=e.target.closest('button');if(b){S.opt=b.dataset.v;render()}};
+document.getElementById('win').onclick=function(e){var t=e.target.closest('[data-uc]');if(t){S.uc=t.dataset.uc;render()}};
+document.getElementById('win').onkeydown=function(e){if(e.key=='Enter'||e.key==' '){var t=e.target.closest('[data-uc]');if(t){e.preventDefault();S.uc=t.dataset.uc;render()}}};
+render();
+</script>

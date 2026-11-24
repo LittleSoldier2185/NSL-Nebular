@@ -23,6 +23,7 @@ import '../core/models/api_model.dart';
 import 'api_controller.dart';
 import '../core/models/traceability.dart';
 import '../core/models/requirement.dart';
+import '../core/models/use_case.dart';
 
 /// ถือทั้งโปรเจกต์ ([Workspace]) ที่เปิดอยู่: ไฟล์ สถานะยังไม่บันทึก แท็บที่เปิด/แท็บที่ใช้งาน
 /// และ controller ของแต่ละเอกสาร (สร้างเมื่อใช้ครั้งแรก, ทิ้งเมื่อเอกสารถูกลบหรือเปิดโปรเจกต์ใหม่)
@@ -30,7 +31,7 @@ import '../core/models/requirement.dart';
 /// การเพิ่ม/ลบ/เปลี่ยนชื่อ/ย้ายเอกสารและโฟลเดอร์ไม่เข้าประวัติ undo (undo เป็นของแต่ละเอกสาร)
 /// controller นี้แจ้งผู้ฟังทุกครั้งที่โครงสร้างเปลี่ยน และทุกครั้งที่ controller ของเอกสารใดแจ้ง
 /// หน้าที่แสดงในพื้นที่หลัก
-enum WorkspacePage { document, home, dictionary, history, trace, codegen, mock }
+enum WorkspacePage { document, home, dictionary, history, trace, useCases, codegen, mock }
 
 class WorkspaceController extends ChangeNotifier {
   WorkspaceController([Workspace? workspace]) : _workspace = workspace ?? Workspace.single(Project()) {
@@ -209,6 +210,49 @@ class WorkspaceController extends ChangeNotifier {
 
   /// แสดง/ซ่อนหน้าความต้องการและการไล่ตาม (ไม่แตะเอกสารหรือสถานะ dirty)
   void showTrace([bool show = true]) => _showPage(WorkspacePage.trace, show);
+
+  /// แสดง/ซ่อนหน้า Use Case (ไม่แตะเอกสารหรือสถานะ dirty)
+  void showUseCases([bool show = true]) => _showPage(WorkspacePage.useCases, show);
+
+  // ---------- Use Case (Phase 27) — ข้อมูลระดับโปรเจกต์ แก้แล้วนับเป็นการแก้โครงสร้าง (dirty ; ไม่มี undo) ----------
+
+  List<UseCase> get useCases => _workspace.useCases;
+
+  UseCase? useCaseById(String id) {
+    for (final u in _workspace.useCases) {
+      if (u.id == id) return u;
+    }
+    return null;
+  }
+
+  /// เพิ่ม Use Case (รหัสถัดไปอัตโนมัติ)
+  UseCase addUseCase({String name = '', String actor = ''}) {
+    final u = UseCase(id: newId('uc'), code: nextUseCaseCode(_workspace), name: name.trim(), actor: actor.trim());
+    _workspace.useCases.add(u);
+    _structureChanged();
+    return u;
+  }
+
+  /// แก้ Use Case [id] ; คืน true ถ้ามีอยู่
+  bool updateUseCase(String id, void Function(UseCase u) change) {
+    final u = useCaseById(id);
+    if (u == null) return false;
+    change(u);
+    _structureChanged();
+    return true;
+  }
+
+  /// ลบ Use Case [id] และเอาออกจากรายการ include ของข้ออื่น
+  bool deleteUseCase(String id) {
+    final before = _workspace.useCases.length;
+    _workspace.useCases.removeWhere((u) => u.id == id);
+    if (_workspace.useCases.length == before) return false;
+    for (final u in _workspace.useCases) {
+      u.includes.remove(id);
+    }
+    _structureChanged();
+    return true;
+  }
 
   // ---------- ความต้องการและการไล่ตาม (Phase 9) — ข้อมูลระดับโปรเจกต์ แก้แล้วนับเป็นการแก้โครงสร้าง (dirty ; ไม่มี undo) ----------
 

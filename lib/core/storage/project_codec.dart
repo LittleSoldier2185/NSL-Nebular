@@ -12,6 +12,7 @@ import 'project_format_exception.dart';
 import '../models/review_note.dart';
 import '../models/api_model.dart';
 import '../models/requirement.dart';
+import '../models/use_case.dart';
 
 export 'project_format_exception.dart';
 
@@ -53,6 +54,7 @@ Map<String, dynamic> encodeProjectMap(Workspace w) => {
       'meta': {
         ...w.meta.toJson(),
         if (w.requirements.isNotEmpty) 'requirements': [for (final r in w.requirements) r.toJson()],
+        if (w.useCases.isNotEmpty) 'useCases': [for (final u in w.useCases) u.toJson()],
       },
       'folders': [for (final f in w.folders) f.toJson()],
       'documents': [
@@ -143,6 +145,7 @@ Workspace _decodeV3(Map<String, dynamic> j) {
   final metaJ = j['meta'] is Map ? Map<String, dynamic>.from(j['meta'] as Map) : <String, dynamic>{};
   final desc = metaJ.remove('description'), created = metaJ.remove('createdAt');
   final reqs = decodeRequirements(metaJ.remove('requirements'));
+  final ucs = decodeUseCases(metaJ.remove('useCases'));
   final meta = WorkspaceMeta(
     description: desc is String ? desc : '',
     createdAt: created is String ? created : null,
@@ -218,6 +221,7 @@ Workspace _decodeV3(Map<String, dynamic> j) {
     documents: docs,
     links: j['links'] is List ? List<Object?>.of(j['links'] as List) : [],
     requirements: reqs,
+    useCases: ucs,
   );
 }
 
