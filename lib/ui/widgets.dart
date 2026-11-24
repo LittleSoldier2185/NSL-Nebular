@@ -169,21 +169,26 @@ class _DropdownState<T> extends State<Dropdown<T>> {
         borderRadius: BorderRadius.circular(6),
       ),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: w.value,
+        // ค่าของเมนูเป็น "ลำดับในรายการ" ไม่ใช่ตัวข้อมูลเอง : ถ้าใช้ตัวข้อมูล ค่า null (เช่น "ทุกชนิด" / "ไม่ผูกตาราง") จะแยกไม่ออกจาก "ไม่ได้เลือก" และถูกทิ้ง
+        child: DropdownButton<int>(
+          value: () {
+            final idx = w.items.indexOf(w.value);
+            return idx < 0 ? null : idx; // ค่าที่ไม่อยู่ในรายการ = ไม่เลือก (เดิมจะ error)
+          }(),
           isExpanded: true,
           isDense: true,
           style: TextStyle(fontSize: 13, color: C.text, fontFamily: kThai),
           items: [
             // บรรทัดเดียวเสมอ (เช่น NO ACTION ในแผงแคบ ย่อด้วย … ไม่ตัดขึ้นบรรทัดใหม่จนกล่องสูงไม่เท่ากัน)
-            for (final i in w.items)
+            for (final (n, i) in w.items.indexed)
               DropdownMenuItem(
-                value: i,
+                value: n,
                 child: Text(w.labelOf(i), maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis),
               ),
           ],
-          onChanged: (v) {
-            if (v != null) widget.onChanged(v); // widget ล่าสุด ไม่ใช่ตัวที่จับไว้ตอนสร้าง
+          onChanged: (n) {
+            // widget ล่าสุด ไม่ใช่ตัวที่จับไว้ตอนสร้าง ; รายการเปลี่ยน = สร้างเมนูใหม่ (คีย์แคชรวมรายการ) จึงลำดับตรงกันเสมอ
+            if (n != null && n < widget.items.length) widget.onChanged(widget.items[n]);
           },
         ),
       ),
