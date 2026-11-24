@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/export/sample_data.dart';
 import '../core/export/seed_csv.dart';
 import '../core/export/seed_data.dart';
 import '../core/l10n/l10n.dart';
@@ -124,6 +125,28 @@ class SeedGridEditorState extends State<SeedGridEditor> {
     return null;
   }
 
+  /// สร้างข้อมูลตัวอย่างให้ตารางนี้ (ตัวสร้างเดียวกับส่งออก SQL / Mock) แล้วแทนที่แถวทั้งหมด ; แก้ต่อในตารางได้
+  Future<void> _generateSample() async {
+    final n = await showDialog<int>(context: context, builder: (_) => _SampleDialog(replacing: _rows.length));
+    if (n == null || !mounted) return;
+    // ตารางในกล่องอาจแก้ค้างอยู่/ยังไม่อยู่ในโปรเจกต์ : ใช้สำเนาของ t แทนที่/ต่อท้าย
+    final copy = TableModel.fromJson(t.toJson())..seedRows = [];
+    final tables = [for (final x in widget.project.tables) x.id == t.id ? copy : x];
+    if (!tables.any((x) => x.id == t.id)) tables.add(copy);
+    final p = Project(name: widget.project.name, dialect: widget.project.dialect, tables: tables, relations: widget.project.relations);
+    final gen = generateSampleSeeds(p, rows: n, tableIds: {t.id})[t.id] ?? const [];
+    setState(() {
+      for (final r in _rows) {
+        r.dispose();
+      }
+      _rows
+        ..clear()
+        ..addAll(gen.map(_fromModel));
+      _notice = gen.isEmpty ? tr('สร้างข้อมูลตัวอย่างไม่ได้ (แถวที่ไม่ซ้ำกันมีไม่พอ)') : tr('สร้างข้อมูลตัวอย่าง {0} แถว', [gen.length]);
+      _revalidate();
+    });
+  }
+
   Future<void> _pasteCsv() async {
     final text = await showDialog<String>(context: context, builder: (_) => const _CsvDialog());
     if (text == null || text.trim().isEmpty) return;
@@ -211,6 +234,12 @@ class SeedGridEditorState extends State<SeedGridEditor> {
           onPressed: _pasteCsv,
           icon: const Icon(Icons.content_paste_rounded, size: 16),
           label: Text(tr('วาง CSV…')),
+        ),
+        TextButton.icon(
+          key: const ValueKey('seed-generate'),
+          onPressed: _generateSample,
+          icon: const Icon(Icons.auto_awesome_outlined, size: 16),
+          label: Text(tr('สร้างข้อมูลตัวอย่าง…')),
         ),
       ]),
     ]);
@@ -361,6 +390,61 @@ class _CsvDialogState extends State<_CsvDialog> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ยกเลิก'))),
           FilledButton(key: const ValueKey('csv-ok'), onPressed: () => Navigator.pop(context, _ctl.text), child: Text(tr('เพิ่มแถว'))),
+        ],
+      );
+}
+
+/// ถามจำนวนแถวตัวอย่าง ; มีแถวอยู่แล้ว = บอกว่าจะถูกแทนที่
+class _SampleDialog extends StatefulWidget {
+  const _SampleDialog({required this.replacing});
+  final int replacing;
+
+  @override
+  State<_SampleDialog> createState() => _SampleDialogState();
+}
+
+class _SampleDialogState extends State<_SampleDialog> {
+  final _ctl = TextEditingController(text: '10');
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  int? get _n {
+    final v = int.tryParse(_ctl.text.trim());
+    return v != null && v >= 1 && v <= 1000 ? v : null;
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(tr('สร้างข้อมูลตัวอย่าง')),
+        content: SizedBox(
+          width: 380,
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(
+              tr('สร้างแถวข้อมูลที่สมเหตุสมผลตามชื่อและชนิดคอลัมน์ (FK ชี้แถวที่มีจริง ไม่ซ้ำ UNIQUE) ผลเหมือนเดิมทุกครั้ง แก้ต่อในตารางได้'),
+              style: TextStyle(fontSize: 12.5, color: C.muted, height: 1.4),
+            ),
+            if (widget.replacing > 0) ...[
+              const SizedBox(height: 8),
+              Text(tr('แถวเดิม {0} แถวจะถูกแทนที่', [widget.replacing]), key: const ValueKey('seed-gen-warn'), style: TextStyle(fontSize: 12.5, color: C.danger)),
+            ],
+            const SizedBox(height: 12),
+            TextField(
+              key: const ValueKey('seed-gen-count'),
+              controller: _ctl,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(labelText: tr('จำนวนแถว (1–1000)'), border: const OutlineInputBorder(), isDense: true),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ยกเลิก'))),
+          FilledButton(key: const ValueKey('seed-gen-ok'), onPressed: _n == null ? null : () => Navigator.pop(context, _n), child: Text(tr('สร้าง'))),
         ],
       );
 }

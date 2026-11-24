@@ -42,6 +42,9 @@ class MockController extends ChangeNotifier {
   /// สถานะที่ตอบล่าสุดของ endpoint [id] (null = ยังไม่เคยถูกเรียก)
   int? lastStatusOf(String id) => _lastStatus[id];
 
+  /// ขั้นถัดไป (เริ่ม 1) ของ "ตอบเป็นลำดับ" ของ endpoint นี้ ; null = ไม่ได้ตั้งลำดับ หรือเซิร์ฟเวอร์ไม่ได้รัน
+  int? sequenceNextOf(String id) => _engine?.sequenceNextOf(id);
+
   bool get running => _server?.running ?? false;
   bool get busy => _busy;
 

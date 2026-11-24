@@ -4,7 +4,7 @@
   "name": "ระบบจองห้องพัก Siam Residence",
   "meta": {
     "description": "เว็บจองห้องพักโรงแรม — ตัวอย่างโปรเจกต์ที่ใช้ครบทุกชนิดเอกสารของ NSL Nebular",
-    "createdAt": "2026-11-20T06:20:36.862191Z",
+    "createdAt": "2026-11-19T09:05:58.661534Z",
     "codegen": {
       "targets": [
         "sqlDdl",
@@ -522,6 +522,912 @@
           }
         }
       }
+    ],
+    "useCases": [
+      {
+        "id": "uc_search",
+        "code": "UC-01",
+        "name": "ค้นหาห้องว่าง",
+        "actor": "ผู้เข้าพัก",
+        "priority": "high",
+        "status": "approved",
+        "goal": "หาห้องที่ว่างตรงกับวันเข้าพัก วันออก และจำนวนผู้เข้าพักที่ต้องการ",
+        "trigger": "ผู้เข้าพักเปิดหน้าแรกของเว็บ",
+        "pre": "ไม่ต้องเข้าสู่ระบบ",
+        "post": "เห็นรายการประเภทห้องที่ว่างพร้อมราคาต่อคืนของช่วงวันนั้น",
+        "steps": [
+          {
+            "id": "uc_search_s1",
+            "who": "user",
+            "text": "กรอกวันเข้าพัก วันออก และจำนวนผู้เข้าพัก",
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_home"
+              },
+              {
+                "doc": "wf_home",
+                "el": "h_btn_search"
+              }
+            ]
+          },
+          {
+            "id": "uc_search_s2",
+            "who": "user",
+            "text": "กดปุ่ม \"ค้นหา\"",
+            "links": [
+              {
+                "doc": "wf_home",
+                "el": "h_btn_search"
+              }
+            ]
+          },
+          {
+            "id": "uc_search_s3",
+            "who": "system",
+            "text": "ตรวจวันที่ แล้วค้นหาห้องที่ไม่มีการจองซ้อนในช่วงวันนั้น",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_rooms_available"
+              },
+              {
+                "doc": "er_main",
+                "el": "rooms"
+              },
+              {
+                "doc": "er_main",
+                "el": "bookings"
+              },
+              {
+                "doc": "fc_booking",
+                "el": "search"
+              },
+              {
+                "doc": "dfd_l1",
+                "el": "p1"
+              }
+            ]
+          },
+          {
+            "id": "uc_search_s4",
+            "who": "system",
+            "text": "แสดงรายการประเภทห้องที่ว่างพร้อมราคาต่อคืน (รวมราคาตามฤดูกาล)",
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_rooms"
+              },
+              {
+                "doc": "wf_rooms"
+              }
+            ]
+          },
+          {
+            "id": "uc_search_s5",
+            "who": "user",
+            "text": "เลือกห้องเพื่อดูรายละเอียด",
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_detail"
+              },
+              {
+                "doc": "wf_detail"
+              }
+            ]
+          }
+        ],
+        "branches": [
+          {
+            "id": "uc_search_b1",
+            "at": "uc_search_s3",
+            "cond": "ไม่มีห้องว่างในช่วงวันที่เลือก",
+            "out": "แจ้งว่าไม่มีห้องว่างและเสนอให้ลองวันอื่น",
+            "ret": "uc_search_s1"
+          },
+          {
+            "id": "uc_search_b2",
+            "at": "uc_search_s3",
+            "ex": true,
+            "cond": "วันออกเป็นวันเดียวกับหรือก่อนวันเข้าพัก",
+            "out": "แจ้งข้อผิดพลาดที่ช่องวันที่ ไม่ค้นหา",
+            "ret": "uc_search_s1"
+          }
+        ],
+        "reqs": [
+          "r1"
+        ]
+      },
+      {
+        "id": "uc_login",
+        "code": "UC-02",
+        "name": "สมัครสมาชิกและเข้าสู่ระบบ",
+        "actor": "ผู้เข้าพัก",
+        "priority": "high",
+        "status": "approved",
+        "goal": "ยืนยันตัวตนด้วยอีเมลเพื่อใช้งานส่วนที่ต้องมีบัญชี เช่น การจองและการดูการจองของตัวเอง",
+        "trigger": "ผู้เข้าพักกดเข้าสู่ระบบ หรือทำรายการที่ต้องเข้าสู่ระบบก่อน",
+        "pre": "ยังไม่ได้เข้าสู่ระบบ",
+        "post": "ได้รับโทเค็นเข้าสู่ระบบ และกลับไปทำรายการที่ค้างไว้ต่อได้",
+        "steps": [
+          {
+            "id": "uc_login_s1",
+            "who": "user",
+            "text": "เลือก \"เข้าสู่ระบบ\" จากแถบเมนู",
+            "links": [
+              {
+                "doc": "wf_home",
+                "el": "h_nav"
+              },
+              {
+                "doc": "sf_main",
+                "el": "sf_home"
+              }
+            ]
+          },
+          {
+            "id": "uc_login_s2",
+            "who": "user",
+            "text": "กรอกอีเมลและรหัสผ่าน"
+          },
+          {
+            "id": "uc_login_s3",
+            "who": "system",
+            "text": "ตรวจอีเมลและรหัสผ่าน แล้วออกโทเค็นเข้าสู่ระบบ",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_login"
+              },
+              {
+                "doc": "er_main",
+                "el": "users"
+              },
+              {
+                "doc": "dfd_l1",
+                "el": "d1"
+              }
+            ]
+          },
+          {
+            "id": "uc_login_s4",
+            "who": "system",
+            "text": "พากลับไปหน้าที่ทำค้างไว้ และแสดงชื่อผู้ใช้บนแถบเมนู",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_me"
+              }
+            ]
+          }
+        ],
+        "branches": [
+          {
+            "id": "uc_login_b1",
+            "at": "uc_login_s1",
+            "cond": "ยังไม่มีบัญชี",
+            "out": "กรอกชื่อ อีเมล และรหัสผ่านเพื่อสมัคร ระบบสร้างบัญชีแล้วเข้าสู่ระบบให้ทันที",
+            "ret": "uc_login_s3"
+          },
+          {
+            "id": "uc_login_b2",
+            "at": "uc_login_s3",
+            "ex": true,
+            "cond": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+            "out": "แจ้งข้อผิดพลาด ให้กรอกใหม่",
+            "ret": "uc_login_s2"
+          },
+          {
+            "id": "uc_login_b3",
+            "at": "uc_login_s1",
+            "ex": true,
+            "cond": "อีเมลที่สมัครมีบัญชีอยู่แล้ว",
+            "out": "แจ้งว่าอีเมลนี้ถูกใช้แล้ว ให้เข้าสู่ระบบแทน",
+            "ret": "uc_login_s2"
+          }
+        ],
+        "reqs": [
+          "r2"
+        ]
+      },
+      {
+        "id": "uc_book",
+        "code": "UC-03",
+        "name": "จองห้องพัก",
+        "actor": "ผู้เข้าพัก",
+        "priority": "high",
+        "status": "approved",
+        "goal": "จองห้องที่เลือกในช่วงวันที่ต้องการ โดยไม่ให้จองซ้อนกับการจองอื่น",
+        "trigger": "ผู้เข้าพักกด \"จองห้อง\" ที่หน้ารายละเอียดห้อง",
+        "pre": "เลือกห้องและช่วงวันเข้าพักแล้ว (UC-01)",
+        "post": "มีการจองสถานะ pending รอชำระเงิน และห้องถูกกันไว้ 15 นาที",
+        "steps": [
+          {
+            "id": "uc_book_s1",
+            "who": "user",
+            "text": "กด \"จองห้อง\" ที่หน้ารายละเอียดห้อง",
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_detail"
+              },
+              {
+                "doc": "wf_detail",
+                "el": "d_btn_book"
+              }
+            ]
+          },
+          {
+            "id": "uc_book_s2",
+            "who": "system",
+            "text": "ตรวจว่าเข้าสู่ระบบแล้ว (ถ้ายังไม่ได้ ให้ทำ UC-02 ก่อน)",
+            "links": [
+              {
+                "doc": "fc_booking",
+                "el": "login"
+              }
+            ]
+          },
+          {
+            "id": "uc_book_s3",
+            "who": "user",
+            "text": "กรอกข้อมูลผู้เข้าพักและคำขอพิเศษ",
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_checkout"
+              },
+              {
+                "doc": "wf_checkout"
+              }
+            ]
+          },
+          {
+            "id": "uc_book_s4",
+            "who": "system",
+            "text": "ตรวจว่าห้องไม่ซ้อนกับการจองอื่นในช่วงวันเดียวกัน แล้วสร้างการจองสถานะ pending",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_booking_create"
+              },
+              {
+                "doc": "er_main",
+                "el": "bookings"
+              },
+              {
+                "doc": "fc_booking",
+                "el": "create"
+              },
+              {
+                "doc": "dfd_l1",
+                "el": "p2"
+              }
+            ]
+          },
+          {
+            "id": "uc_book_s5",
+            "who": "system",
+            "text": "แสดงสรุปราคาและไปขั้นตอนชำระเงิน (UC-04)",
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_checkout"
+              }
+            ]
+          }
+        ],
+        "branches": [
+          {
+            "id": "uc_book_b1",
+            "at": "uc_book_s2",
+            "cond": "ยังไม่ได้เข้าสู่ระบบ",
+            "out": "ทำ UC-02 ให้เสร็จ แล้วกลับมากรอกข้อมูลผู้เข้าพัก",
+            "ret": "uc_book_s3"
+          },
+          {
+            "id": "uc_book_b2",
+            "at": "uc_book_s3",
+            "ex": true,
+            "cond": "ข้อมูลผู้เข้าพักไม่ครบหรือรูปแบบไม่ถูกต้อง",
+            "out": "ไฮไลต์ช่องที่ผิด ให้แก้แล้วกดจองใหม่",
+            "ret": "uc_book_s3"
+          },
+          {
+            "id": "uc_book_b3",
+            "at": "uc_book_s4",
+            "ex": true,
+            "cond": "ห้องถูกจองไปแล้วในช่วงวันเดียวกัน",
+            "out": "แจ้งว่าห้องไม่ว่างแล้ว พากลับไปเลือกห้องหรือวันใหม่",
+            "end": true
+          }
+        ],
+        "reqs": [
+          "r3"
+        ],
+        "includes": [
+          "uc_login",
+          "uc_pay"
+        ]
+      },
+      {
+        "id": "uc_pay",
+        "code": "UC-04",
+        "name": "ชำระเงินออนไลน์",
+        "actor": "ผู้เข้าพัก",
+        "actor2": "ระบบชำระเงิน",
+        "priority": "high",
+        "status": "approved",
+        "goal": "ชำระค่าห้องให้การจองเปลี่ยนจาก pending เป็น confirmed",
+        "trigger": "สร้างการจองสำเร็จแล้ว (UC-03)",
+        "pre": "มีการจองสถานะ pending ที่ยังไม่หมดเวลา 15 นาที",
+        "post": "การชำระเงินสำเร็จ การจองเป็น confirmed และมีอีเมลยืนยันส่งถึงผู้เข้าพัก",
+        "steps": [
+          {
+            "id": "uc_pay_s1",
+            "who": "user",
+            "text": "เลือกวิธีชำระเงิน (บัตร / PromptPay / โอน) แล้วกด \"ชำระเงิน\"",
+            "links": [
+              {
+                "doc": "wf_checkout",
+                "el": "c_btn_pay"
+              }
+            ]
+          },
+          {
+            "id": "uc_pay_s2",
+            "who": "system",
+            "text": "สร้างรายการชำระเงินและพาไปหน้าชำระเงินของธนาคาร",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_pay_create"
+              },
+              {
+                "doc": "er_main",
+                "el": "payments"
+              },
+              {
+                "doc": "sf_main",
+                "el": "sf_gateway"
+              },
+              {
+                "doc": "dfd_l1",
+                "el": "p3"
+              }
+            ]
+          },
+          {
+            "id": "uc_pay_s3",
+            "who": "user",
+            "text": "ชำระเงินผ่านหน้าของระบบชำระเงิน",
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_gateway"
+              }
+            ]
+          },
+          {
+            "id": "uc_pay_s4",
+            "who": "system",
+            "text": "รับผลจากระบบชำระเงิน ถ้าสำเร็จเปลี่ยนการจองเป็น confirmed",
+            "links": [
+              {
+                "doc": "fc_booking",
+                "el": "paid"
+              },
+              {
+                "doc": "dfd_l1",
+                "el": "d4"
+              }
+            ]
+          },
+          {
+            "id": "uc_pay_s5",
+            "who": "system",
+            "text": "ส่งอีเมลยืนยันการจอง (UC-05) และแสดงหน้าสำเร็จ",
+            "links": [
+              {
+                "doc": "fc_booking",
+                "el": "confirm"
+              }
+            ]
+          }
+        ],
+        "branches": [
+          {
+            "id": "uc_pay_b1",
+            "at": "uc_pay_s1",
+            "cond": "ผู้เข้าพักเลือกชำระด้วยการโอนเงิน",
+            "out": "แสดงเลขบัญชีและรอแอดมินยืนยันยอด การจองคงสถานะ pending",
+            "end": true
+          },
+          {
+            "id": "uc_pay_b2",
+            "at": "uc_pay_s4",
+            "ex": true,
+            "cond": "ชำระเงินไม่สำเร็จหรือถูกปฏิเสธ",
+            "out": "แจ้งผล ให้เลือกวิธีชำระเงินใหม่ได้ตราบที่ยังไม่หมดเวลา",
+            "ret": "uc_pay_s1"
+          },
+          {
+            "id": "uc_pay_b3",
+            "at": "uc_pay_s3",
+            "ex": true,
+            "cond": "ไม่ชำระภายใน 15 นาที",
+            "out": "ยกเลิกการจองอัตโนมัติและคืนห้องว่าง",
+            "end": true
+          }
+        ],
+        "reqs": [
+          "r4"
+        ],
+        "includes": [
+          "uc_email"
+        ]
+      },
+      {
+        "id": "uc_email",
+        "code": "UC-05",
+        "name": "ส่งอีเมลยืนยันการจอง",
+        "actor": "ระบบ",
+        "priority": "medium",
+        "status": "review",
+        "goal": "แจ้งรายละเอียดการจองที่ยืนยันแล้วให้ผู้เข้าพักทางอีเมล",
+        "trigger": "การชำระเงินสำเร็จ (UC-04)",
+        "post": "ผู้เข้าพักได้รับอีเมลสรุปการจอง",
+        "steps": [
+          {
+            "id": "uc_email_s1",
+            "who": "system",
+            "text": "สร้างอีเมลสรุปการจอง (ห้อง วันที่ ยอดชำระ เลขที่การจอง)",
+            "links": [
+              {
+                "doc": "er_main",
+                "el": "bookings"
+              }
+            ]
+          },
+          {
+            "id": "uc_email_s2",
+            "who": "system",
+            "text": "ส่งอีเมลไปยังอีเมลของผู้เข้าพัก",
+            "links": [
+              {
+                "doc": "fc_booking",
+                "el": "confirm"
+              }
+            ]
+          }
+        ],
+        "branches": [
+          {
+            "id": "uc_email_b1",
+            "at": "uc_email_s2",
+            "ex": true,
+            "cond": "ส่งอีเมลไม่สำเร็จ",
+            "out": "บันทึกความล้มเหลวและลองส่งใหม่ภายหลัง ไม่กระทบสถานะการจอง",
+            "end": true
+          }
+        ],
+        "reqs": [
+          "r9"
+        ]
+      },
+      {
+        "id": "uc_mybookings",
+        "code": "UC-06",
+        "name": "ดูและยกเลิกการจองของฉัน",
+        "actor": "ผู้เข้าพัก",
+        "priority": "medium",
+        "status": "approved",
+        "goal": "ตรวจสถานะการจองของตัวเอง และยกเลิกการจองที่ยังไม่ถึงวันเข้าพัก",
+        "trigger": "ผู้เข้าพักเปิดหน้า \"การจองของฉัน\"",
+        "pre": "เข้าสู่ระบบแล้ว",
+        "post": "เห็นรายการการจองครบ ; ถ้ายกเลิก การจองเป็น cancelled และห้องกลับมาว่าง",
+        "steps": [
+          {
+            "id": "uc_mybookings_s1",
+            "who": "user",
+            "text": "เปิดหน้า \"การจองของฉัน\"",
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_mybookings"
+              },
+              {
+                "doc": "wf_mybookings"
+              }
+            ]
+          },
+          {
+            "id": "uc_mybookings_s2",
+            "who": "system",
+            "text": "แสดงรายการการจองของผู้ใช้พร้อมสถานะ",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_booking_list"
+              },
+              {
+                "doc": "dfd_l1",
+                "el": "d3"
+              }
+            ]
+          },
+          {
+            "id": "uc_mybookings_s3",
+            "who": "user",
+            "text": "เลือกการจองที่ต้องการยกเลิกแล้วกด \"ยกเลิก\""
+          },
+          {
+            "id": "uc_mybookings_s4",
+            "who": "system",
+            "text": "ตรวจเงื่อนไขการยกเลิก เปลี่ยนสถานะเป็น cancelled และคืนห้องว่าง",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_booking_cancel"
+              },
+              {
+                "doc": "er_main",
+                "el": "bookings"
+              },
+              {
+                "doc": "fc_booking",
+                "el": "cancel"
+              }
+            ]
+          },
+          {
+            "id": "uc_mybookings_s5",
+            "who": "system",
+            "text": "แจ้งผลการยกเลิกและอัปเดตรายการ"
+          }
+        ],
+        "branches": [
+          {
+            "id": "uc_mybookings_b1",
+            "at": "uc_mybookings_s2",
+            "cond": "ผู้ใช้ยังไม่มีการจอง",
+            "out": "แสดงข้อความว่าไม่มีรายการ พร้อมปุ่มไปค้นหาห้อง",
+            "end": true
+          },
+          {
+            "id": "uc_mybookings_b2",
+            "at": "uc_mybookings_s4",
+            "ex": true,
+            "cond": "การจองเริ่มเข้าพักแล้วหรือถูกยกเลิกไปแล้ว",
+            "out": "ปฏิเสธการยกเลิกและบอกเหตุผล",
+            "ret": "uc_mybookings_s2"
+          }
+        ],
+        "reqs": [
+          "r5"
+        ]
+      },
+      {
+        "id": "uc_review",
+        "code": "UC-07",
+        "name": "เขียนรีวิวและให้คะแนน",
+        "actor": "ผู้เข้าพัก",
+        "priority": "medium",
+        "status": "review",
+        "goal": "ให้คะแนนและแสดงความเห็นหลังเข้าพัก เพื่อให้ผู้เข้าพักคนอื่นใช้ตัดสินใจ",
+        "trigger": "ผู้เข้าพักกด \"เขียนรีวิว\" ที่การจองซึ่งเข้าพักเสร็จแล้ว",
+        "pre": "การจองนั้นเข้าพักเสร็จสิ้นแล้วและยังไม่เคยรีวิว",
+        "post": "รีวิวถูกบันทึกและแสดงในหน้ารายละเอียดห้อง",
+        "steps": [
+          {
+            "id": "uc_review_s1",
+            "who": "user",
+            "text": "เลือกการจองที่เข้าพักแล้วและกด \"เขียนรีวิว\"",
+            "links": [
+              {
+                "doc": "wf_mybookings",
+                "el": "m_review"
+              }
+            ]
+          },
+          {
+            "id": "uc_review_s2",
+            "who": "user",
+            "text": "ให้คะแนน 1–5 ดาวและพิมพ์ความเห็น"
+          },
+          {
+            "id": "uc_review_s3",
+            "who": "system",
+            "text": "บันทึกรีวิวผูกกับการจองและผู้เขียน",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_review_create"
+              },
+              {
+                "doc": "er_main",
+                "el": "reviews"
+              },
+              {
+                "doc": "dfd_l1",
+                "el": "p5"
+              }
+            ]
+          },
+          {
+            "id": "uc_review_s4",
+            "who": "system",
+            "text": "แสดงรีวิวในหน้ารายละเอียดห้อง",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_review_list"
+              },
+              {
+                "doc": "wf_detail"
+              }
+            ]
+          }
+        ],
+        "branches": [
+          {
+            "id": "uc_review_b1",
+            "at": "uc_review_s2",
+            "ex": true,
+            "cond": "ยังไม่ได้ให้คะแนน",
+            "out": "แจ้งให้เลือกคะแนนก่อนส่ง",
+            "ret": "uc_review_s2"
+          },
+          {
+            "id": "uc_review_b2",
+            "at": "uc_review_s3",
+            "ex": true,
+            "cond": "การจองนี้เคยรีวิวไปแล้ว",
+            "out": "ปฏิเสธและแสดงรีวิวเดิม",
+            "end": true
+          }
+        ],
+        "reqs": [
+          "r6"
+        ],
+        "extends": [
+          {
+            "base": "uc_mybookings",
+            "cond": "การเข้าพักเสร็จสิ้นแล้ว"
+          }
+        ]
+      },
+      {
+        "id": "uc_rooms_admin",
+        "code": "UC-08",
+        "name": "จัดการห้องและตั้งราคา",
+        "actor": "แอดมิน",
+        "priority": "high",
+        "status": "approved",
+        "goal": "เพิ่ม แก้ไข หรือลบห้อง และตั้งราคาปกติกับราคาตามฤดูกาล",
+        "trigger": "แอดมินเปิดหน้าจัดการห้องจากแดชบอร์ด",
+        "pre": "เข้าสู่ระบบด้วยบัญชีแอดมิน",
+        "post": "ข้อมูลห้องและราคาถูกบันทึก และผู้เข้าพักเห็นผลในการค้นหาครั้งต่อไป",
+        "steps": [
+          {
+            "id": "uc_rooms_admin_s1",
+            "who": "user",
+            "text": "เปิดหน้า \"เพิ่ม/แก้ไขห้อง\"",
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_adminroom"
+              },
+              {
+                "doc": "wf_adminroom"
+              }
+            ]
+          },
+          {
+            "id": "uc_rooms_admin_s2",
+            "who": "user",
+            "text": "กรอกเลขห้อง ประเภทห้อง ราคา และราคาตามฤดูกาล",
+            "links": [
+              {
+                "doc": "wf_adminroom",
+                "el": "x_form"
+              },
+              {
+                "doc": "er_main",
+                "el": "rooms"
+              },
+              {
+                "doc": "er_main",
+                "el": "seasonal_prices"
+              }
+            ]
+          },
+          {
+            "id": "uc_rooms_admin_s3",
+            "who": "user",
+            "text": "กด \"บันทึก\""
+          },
+          {
+            "id": "uc_rooms_admin_s4",
+            "who": "system",
+            "text": "ตรวจข้อมูลและบันทึกห้องกับราคา",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_rooms_create"
+              },
+              {
+                "doc": "api_main",
+                "el": "e_rooms_update"
+              },
+              {
+                "doc": "api_main",
+                "el": "e_seasonal_create"
+              },
+              {
+                "doc": "dfd_l1",
+                "el": "p4"
+              }
+            ]
+          },
+          {
+            "id": "uc_rooms_admin_s5",
+            "who": "system",
+            "text": "แสดงรายการห้องที่อัปเดตแล้ว",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_rooms_list"
+              }
+            ]
+          }
+        ],
+        "branches": [
+          {
+            "id": "uc_rooms_admin_b1",
+            "at": "uc_rooms_admin_s1",
+            "cond": "แอดมินต้องการลบห้อง",
+            "out": "ลบได้เมื่อไม่มีการจองในอนาคต แล้วกลับไปรายการห้อง",
+            "end": true
+          },
+          {
+            "id": "uc_rooms_admin_b2",
+            "at": "uc_rooms_admin_s4",
+            "ex": true,
+            "cond": "เลขห้องซ้ำกับห้องที่มีอยู่",
+            "out": "แจ้งข้อผิดพลาดที่ช่องเลขห้อง",
+            "ret": "uc_rooms_admin_s2"
+          },
+          {
+            "id": "uc_rooms_admin_b3",
+            "at": "uc_rooms_admin_s4",
+            "ex": true,
+            "cond": "ผู้ใช้ไม่ใช่แอดมิน",
+            "out": "ปฏิเสธคำขอ (403) และไม่บันทึกอะไร",
+            "end": true
+          }
+        ],
+        "reqs": [
+          "r7"
+        ]
+      },
+      {
+        "id": "uc_dashboard",
+        "code": "UC-09",
+        "name": "ดูแดชบอร์ดผู้ดูแล",
+        "actor": "แอดมิน",
+        "priority": "medium",
+        "status": "review",
+        "goal": "ดูอัตราการเข้าพัก รายการเช็คอิน/เช็คเอาท์ และรายได้ เพื่อบริหารโรงแรม",
+        "trigger": "แอดมินเข้าสู่ระบบหรือเปิดหน้าแดชบอร์ด",
+        "pre": "เข้าสู่ระบบด้วยบัญชีแอดมิน",
+        "post": "เห็นตัวเลขสรุปของช่วงเวลาที่เลือก",
+        "steps": [
+          {
+            "id": "uc_dashboard_s1",
+            "who": "user",
+            "text": "เปิดหน้าแดชบอร์ด",
+            "links": [
+              {
+                "doc": "sf_main",
+                "el": "sf_admin"
+              },
+              {
+                "doc": "wf_admin",
+                "el": "a_side"
+              }
+            ]
+          },
+          {
+            "id": "uc_dashboard_s2",
+            "who": "system",
+            "text": "รวมอัตราเข้าพัก เช็คอิน/เช็คเอาท์วันนี้ และรายได้ของช่วงเวลา",
+            "links": [
+              {
+                "doc": "api_main",
+                "el": "e_dashboard"
+              },
+              {
+                "doc": "er_main",
+                "el": "bookings"
+              },
+              {
+                "doc": "dfd_l1",
+                "el": "p5"
+              }
+            ]
+          },
+          {
+            "id": "uc_dashboard_s3",
+            "who": "system",
+            "text": "แสดงตัวเลขและกราฟสรุป",
+            "links": [
+              {
+                "doc": "wf_admin"
+              }
+            ]
+          },
+          {
+            "id": "uc_dashboard_s4",
+            "who": "user",
+            "text": "เลือกช่วงเวลาที่ต้องการดู"
+          }
+        ],
+        "branches": [
+          {
+            "id": "uc_dashboard_b1",
+            "at": "uc_dashboard_s2",
+            "cond": "ไม่มีการจองในช่วงเวลาที่เลือก",
+            "out": "แสดงค่าศูนย์และข้อความว่ายังไม่มีข้อมูล",
+            "ret": "uc_dashboard_s4"
+          }
+        ],
+        "reqs": [
+          "r8"
+        ]
+      },
+      {
+        "id": "uc_lang",
+        "code": "UC-10",
+        "name": "เปลี่ยนภาษาการแสดงผล",
+        "actor": "ผู้เข้าพัก",
+        "priority": "low",
+        "status": "draft",
+        "goal": "ใช้งานเว็บเป็นภาษาไทยหรืออังกฤษตามที่ถนัด",
+        "trigger": "ผู้เข้าพักกดสลับภาษาบนแถบเมนู",
+        "post": "ข้อความทั้งหน้าเปลี่ยนภาษา และระบบจำภาษาไว้สำหรับครั้งถัดไป",
+        "steps": [
+          {
+            "id": "uc_lang_s1",
+            "who": "user",
+            "text": "เลือกภาษา ไทย หรือ English ที่แถบเมนู",
+            "links": [
+              {
+                "doc": "wf_home",
+                "el": "h_nav"
+              }
+            ]
+          },
+          {
+            "id": "uc_lang_s2",
+            "who": "system",
+            "text": "สลับข้อความทั้งหน้าและจำภาษาที่เลือก"
+          }
+        ],
+        "branches": [
+          {
+            "id": "uc_lang_b1",
+            "at": "uc_lang_s2",
+            "cond": "ข้อความบางส่วนยังไม่มีคำแปล",
+            "out": "แสดงเป็นภาษาไทยแทนเฉพาะส่วนนั้น",
+            "end": true
+          }
+        ],
+        "reqs": [
+          "r10"
+        ]
+      }
     ]
   },
   "folders": [
@@ -911,11 +1817,7 @@
                 "unique": false,
                 "autoIncrement": false,
                 "default": "'available'",
-                "comment": "สถานะห้อง",
-                "allowed": [
-                  "available",
-                  "maintenance"
-                ]
+                "comment": "available | maintenance"
               }
             ],
             "indexes": [
@@ -1184,7 +2086,7 @@
           {
             "id": "bookings",
             "name": "bookings",
-            "comment": "การจองห้อง (ดัชนี room+วันที่ ช่วยค้นหา แต่ไม่ได้กันการจองซ้อนทับ — ต้องตรวจในระบบ)",
+            "comment": "การจองห้อง",
             "x": 80.0,
             "y": 560.0,
             "width": 270.0,
@@ -1277,13 +2179,7 @@
                 "unique": false,
                 "autoIncrement": false,
                 "default": "'pending'",
-                "comment": "สถานะการจอง",
-                "allowed": [
-                  "pending",
-                  "confirmed",
-                  "cancelled",
-                  "completed"
-                ]
+                "comment": "pending | confirmed | cancelled | completed"
               },
               {
                 "id": "bookings_note",
@@ -1323,18 +2219,6 @@
                   "bookings_user_id"
                 ],
                 "unique": false
-              }
-            ],
-            "checks": [
-              {
-                "id": "chk_bookings_dates",
-                "name": "chk_bookings_dates",
-                "expr": "check_out > check_in"
-              },
-              {
-                "id": "chk_bookings_total",
-                "name": "chk_bookings_total",
-                "expr": "total_price >= 0"
               }
             ]
           },
@@ -1385,12 +2269,7 @@
                 "notNull": true,
                 "unique": false,
                 "autoIncrement": false,
-                "comment": "วิธีชำระเงิน",
-                "allowed": [
-                  "card",
-                  "promptpay",
-                  "transfer"
-                ]
+                "comment": "card | promptpay | transfer"
               },
               {
                 "id": "payments_status",
@@ -1401,13 +2280,7 @@
                 "notNull": true,
                 "unique": false,
                 "autoIncrement": false,
-                "default": "'pending'",
-                "allowed": [
-                  "pending",
-                  "paid",
-                  "failed",
-                  "refunded"
-                ]
+                "default": "'pending'"
               },
               {
                 "id": "payments_transaction_ref",
@@ -1416,27 +2289,17 @@
                 "length": 80,
                 "pk": false,
                 "notNull": false,
-                "unique": true,
+                "unique": false,
                 "autoIncrement": false
               },
               {
                 "id": "payments_paid_at",
                 "name": "paid_at",
-                "type": "timestamp",
+                "type": "datetime",
                 "pk": false,
                 "notNull": false,
                 "unique": false,
                 "autoIncrement": false
-              },
-              {
-                "id": "payments_created_at",
-                "name": "created_at",
-                "type": "timestamp",
-                "pk": false,
-                "notNull": true,
-                "unique": false,
-                "autoIncrement": false,
-                "default": "CURRENT_TIMESTAMP"
               }
             ],
             "indexes": [
@@ -1447,13 +2310,6 @@
                   "payments_booking_id"
                 ],
                 "unique": false
-              }
-            ],
-            "checks": [
-              {
-                "id": "chk_payments_amount",
-                "name": "chk_payments_amount",
-                "expr": "amount >= 0"
               }
             ]
           },
@@ -1642,8 +2498,8 @@
             "id": "e_admin",
             "kind": "entity",
             "name": "แอดมินโรงแรม",
-            "x": 745.0,
-            "y": 60.0,
+            "x": 826.284245927744,
+            "y": 61.69342179016133,
             "w": 150.0,
             "h": 56.0
           },
@@ -1651,8 +2507,8 @@
             "id": "e_gw",
             "kind": "entity",
             "name": "ระบบชำระเงิน",
-            "x": 745.0,
-            "y": 166.0,
+            "x": 790.1085648632552,
+            "y": 288.2172227491621,
             "w": 150.0,
             "h": 56.0
           },
@@ -1715,13 +2571,24 @@
             "id": "f8",
             "from": "p0",
             "to": "e_gw",
-            "label": "คำขอชำระเงิน"
+            "label": "คำขอชำระเงิน",
+            "entry": {
+              "s": "left",
+              "t": 0.86
+            },
+            "bends": [
+              606.8679049925079
+            ]
           },
           {
             "id": "f9",
             "from": "e_gw",
             "to": "p0",
-            "label": "ผลการชำระเงิน"
+            "label": "ผลการชำระเงิน",
+            "exit": {
+              "s": "left",
+              "t": 0.16
+            }
           }
         ]
       }
@@ -2093,8 +2960,8 @@
             "id": "login",
             "shape": "decision",
             "text": "เข้าสู่ระบบแล้ว?",
-            "x": 170.0,
-            "y": 692.0,
+            "x": 44.0,
+            "y": 706.0,
             "w": 150.0,
             "h": 90.0
           },
@@ -2102,8 +2969,8 @@
             "id": "auth",
             "shape": "subroutine",
             "text": "สมัครสมาชิก / เข้าสู่ระบบ",
-            "x": 165.0,
-            "y": 842.0,
+            "x": -139.0,
+            "y": 966.0,
             "w": 160.0,
             "h": 64.0,
             "api": {
@@ -2124,8 +2991,8 @@
             "id": "create",
             "shape": "process",
             "text": "สร้างการจอง (pending)",
-            "x": 165.0,
-            "y": 1090.0,
+            "x": -20.0,
+            "y": 1150.0,
             "w": 160.0,
             "h": 64.0,
             "api": {
@@ -2137,8 +3004,8 @@
             "id": "pay",
             "shape": "subroutine",
             "text": "ชำระเงิน",
-            "x": 165.0,
-            "y": 1214.0,
+            "x": -20.0,
+            "y": 1294.0,
             "w": 160.0,
             "h": 64.0,
             "api": {
@@ -2150,8 +3017,8 @@
             "id": "paid",
             "shape": "decision",
             "text": "ชำระสำเร็จ?",
-            "x": 170.0,
-            "y": 1338.0,
+            "x": -20.0,
+            "y": 1387.0,
             "w": 150.0,
             "h": 90.0
           },
@@ -2159,8 +3026,8 @@
             "id": "confirm",
             "shape": "process",
             "text": "ยืนยันการจอง\nส่งอีเมลยืนยัน",
-            "x": 60.0,
-            "y": 1488.0,
+            "x": -25.0,
+            "y": 1559.0,
             "w": 160.0,
             "h": 64.0
           },
@@ -2177,8 +3044,8 @@
             "id": "end_ok",
             "shape": "end",
             "text": "จบ: จองสำเร็จ",
-            "x": 80.0,
-            "y": 1612.0,
+            "x": -15.0,
+            "y": 1693.0,
             "w": 140.0,
             "h": 50.0
           },
@@ -2186,8 +3053,8 @@
             "id": "end_fail",
             "shape": "end",
             "text": "จบ: ไม่สำเร็จ",
-            "x": 270.0,
-            "y": 1612.0,
+            "x": 500.0,
+            "y": 1655.0,
             "w": 140.0,
             "h": 50.0
           },
@@ -2439,7 +3306,7 @@
             "h": 40.0,
             "fill": 4294829706,
             "align": "center",
-            "rotation": -8.0
+            "rotation": 352.0
           },
           {
             "id": "h_search",
@@ -2861,6 +3728,11 @@
             "w": 1440.0,
             "h": 80.0,
             "align": "center"
+          }
+        ],
+        "groups": [
+          {
+            "id": "g_menu"
           }
         ]
       }
@@ -3487,6 +4359,11 @@
             "h": 80.0,
             "align": "center"
           }
+        ],
+        "groups": [
+          {
+            "id": "g_menu"
+          }
         ]
       }
     },
@@ -3899,6 +4776,11 @@
             "w": 1440.0,
             "h": 80.0,
             "align": "center"
+          }
+        ],
+        "groups": [
+          {
+            "id": "g_menu"
           }
         ]
       }
@@ -4325,6 +5207,11 @@
             "h": 80.0,
             "align": "center"
           }
+        ],
+        "groups": [
+          {
+            "id": "g_menu"
+          }
         ]
       }
     },
@@ -4582,6 +5469,11 @@
             "w": 1440.0,
             "h": 80.0,
             "align": "center"
+          }
+        ],
+        "groups": [
+          {
+            "id": "g_menu"
           }
         ]
       }
@@ -5164,6 +6056,11 @@
             "w": 1440.0,
             "h": 80.0,
             "align": "center"
+          }
+        ],
+        "groups": [
+          {
+            "id": "g_menu"
           }
         ]
       }

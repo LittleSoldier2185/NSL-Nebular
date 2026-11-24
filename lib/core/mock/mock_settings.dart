@@ -21,41 +21,73 @@ enum MockScenario {
   final int? status;
 }
 
+/// จำนวนขั้นสูงสุดของ "ตอบเป็นลำดับ"
+const kMockMaxSequence = 10;
+
 /// ค่าของ endpoint หนึ่งตัว: สถานการณ์ + หน่วงเวลา (มิลลิวินาที ; ใช้ได้กับทุกสถานการณ์)
+///
+/// [sequence] ไม่ว่าง = ตอบตามลำดับ (คำขอที่ 1 ใช้ขั้นแรก, 2 ใช้ขั้นสอง … ครบแล้ววนกลับ) แทน [scenario] ;
+/// ใช้ทดสอบ retry/error handling เช่น 200 → 500 → 200 ; ขั้น "สุ่ม" อยู่ในลำดับได้
 class MockEndpointSetting {
-  const MockEndpointSetting({this.scenario = MockScenario.normal, this.delayMs = 0});
+  const MockEndpointSetting({this.scenario = MockScenario.normal, this.delayMs = 0, this.sequence = const []});
   final MockScenario scenario;
   final int delayMs;
+  final List<MockScenario> sequence;
 
-  bool get isDefault => scenario == MockScenario.normal && delayMs == 0;
+  bool get isDefault => scenario == MockScenario.normal && delayMs == 0 && sequence.isEmpty;
 
-  MockEndpointSetting copyWith({MockScenario? scenario, int? delayMs}) =>
-      MockEndpointSetting(scenario: scenario ?? this.scenario, delayMs: delayMs ?? this.delayMs);
+  MockEndpointSetting copyWith({MockScenario? scenario, int? delayMs, List<MockScenario>? sequence}) => MockEndpointSetting(
+        scenario: scenario ?? this.scenario,
+        delayMs: delayMs ?? this.delayMs,
+        sequence: sequence == null ? this.sequence : sequence.take(kMockMaxSequence).toList(),
+      );
 
   Map<String, dynamic> toJson() => {
         if (scenario != MockScenario.normal) 's': scenario.name,
         if (delayMs > 0) 'delay': delayMs,
+        if (sequence.isNotEmpty) 'seq': [for (final s in sequence) s.name],
       };
 }
 
 const kMockMaxDelayMs = 30000;
 const kMockDefaultPort = 8787;
 
+/// จำนวนแถวตัวอย่างที่ Mock สร้างให้ตารางที่ไม่มีข้อมูลตั้งต้น
+const kMockDefaultSampleRows = 10;
+const kMockMaxSampleRows = 100;
+
 /// ค่าตั้งของ Mock Server ที่เก็บในไฟล์โปรเจกต์ (`meta.mock`)
 class MockSettings {
-  const MockSettings({this.apiDocId, this.port = kMockDefaultPort, this.endpoints = const {}});
+  const MockSettings({
+    this.apiDocId,
+    this.port = kMockDefaultPort,
+    this.endpoints = const {},
+    this.autoSample = true,
+    this.sampleRows = kMockDefaultSampleRows,
+  });
 
   /// เอกสาร API ที่ใช้ (null = เอกสาร API แรกของโปรเจกต์)
   final String? apiDocId;
   final int port;
+
+  /// ตารางที่ไม่มีข้อมูลตั้งต้น = สร้างข้อมูลตัวอย่างให้ (ค่าเริ่มต้นเปิด ; ปิด = ตอบรายการว่างเหมือนเดิม)
+  final bool autoSample;
+
+  /// จำนวนแถวตัวอย่างต่อตาราง ([autoSample])
+  final int sampleRows;
 
   /// id endpoint -> ค่า (ไม่มี = ค่าเริ่มต้น)
   final Map<String, MockEndpointSetting> endpoints;
 
   MockEndpointSetting of(String endpointId) => endpoints[endpointId] ?? const MockEndpointSetting();
 
-  MockSettings copyWith({String? apiDocId, int? port, Map<String, MockEndpointSetting>? endpoints}) =>
-      MockSettings(apiDocId: apiDocId ?? this.apiDocId, port: port ?? this.port, endpoints: endpoints ?? this.endpoints);
+  MockSettings copyWith({String? apiDocId, int? port, Map<String, MockEndpointSetting>? endpoints, bool? autoSample, int? sampleRows}) => MockSettings(
+        apiDocId: apiDocId ?? this.apiDocId,
+        port: port ?? this.port,
+        endpoints: endpoints ?? this.endpoints,
+        autoSample: autoSample ?? this.autoSample,
+        sampleRows: (sampleRows ?? this.sampleRows).clamp(1, kMockMaxSampleRows),
+      );
 
   /// ตั้งค่าของ endpoint หนึ่งตัว (ค่าเริ่มต้น = เอาออก ไม่เก็บในไฟล์)
   MockSettings withEndpoint(String endpointId, MockEndpointSetting s) {
@@ -63,7 +95,7 @@ class MockSettings {
     if (s.isDefault) {
       m.remove(endpointId);
     } else {
-      m[endpointId] = MockEndpointSetting(scenario: s.scenario, delayMs: s.delayMs.clamp(0, kMockMaxDelayMs));
+      m[endpointId] = MockEndpointSetting(scenario: s.scenario, delayMs: s.delayMs.clamp(0, kMockMaxDelayMs), sequence: s.sequence.take(kMockMaxSequence).toList());
     }
     return copyWith(endpoints: m);
   }
@@ -71,6 +103,8 @@ class MockSettings {
   Map<String, dynamic> toJson() => {
         if (apiDocId != null) 'api': apiDocId,
         'port': port,
+        if (!autoSample) 'sample': false,
+        if (sampleRows != kMockDefaultSampleRows) 'sampleRows': sampleRows,
         if (endpoints.isNotEmpty) 'endpoints': {for (final e in endpoints.entries) e.key: e.value.toJson()},
       };
 
@@ -87,7 +121,12 @@ class MockSettings {
         if (e.key is! String || v is! Map) continue;
         final s = byName[v['s']] ?? MockScenario.normal;
         final d = v['delay'] is int ? (v['delay'] as int).clamp(0, kMockMaxDelayMs) : 0;
-        final setting = MockEndpointSetting(scenario: s, delayMs: d);
+        final seq = <MockScenario>[
+          if (v['seq'] is List)
+            for (final n in v['seq'] as List)
+              if (byName[n] != null) byName[n]!,
+        ];
+        final setting = MockEndpointSetting(scenario: s, delayMs: d, sequence: seq.take(kMockMaxSequence).toList());
         if (!setting.isDefault) eps[e.key as String] = setting;
       }
     }
@@ -95,6 +134,8 @@ class MockSettings {
       apiDocId: j['api'] is String && (j['api'] as String).isNotEmpty ? j['api'] as String : null,
       port: p is int && p >= 0 && p <= 65535 ? p : kMockDefaultPort,
       endpoints: eps,
+      autoSample: j['sample'] != false, // ไฟล์เก่าไม่มีคีย์ = เปิด
+      sampleRows: j['sampleRows'] is int ? (j['sampleRows'] as int).clamp(1, kMockMaxSampleRows) : kMockDefaultSampleRows,
     );
   }
 }

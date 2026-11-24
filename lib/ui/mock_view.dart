@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../core/export/mock_requests_export.dart';
 import '../core/l10n/l10n.dart';
 import '../core/mock/mock_engine.dart';
 import '../core/mock/mock_settings.dart';
@@ -12,7 +13,9 @@ import '../core/models/workspace.dart' show ProjectDocument;
 import '../state/mock_controller.dart';
 import '../state/workspace_controller.dart';
 import 'api/api_view.dart' show ApiMethodChip;
+import 'file_actions.dart';
 import 'theme.dart';
+import 'widgets.dart' show Dropdown;
 
 String mockScenarioLabel(MockScenario s) => switch (s) {
       MockScenario.normal => tr('ปกติ'),
@@ -47,7 +50,7 @@ String mockBodyText(String raw) {
 }
 
 /// ความกว้างขั้นต่ำของตาราง endpoint (แคบกว่านี้เลื่อนแนวนอน)
-const double _kTableMinWidth = 900;
+const double _kTableMinWidth = 1012;
 
 /// หน้า Mock Server (แบบ B ของ `design/mock-server`): แถบเซิร์ฟเวอร์ · ตาราง endpoint (สถานการณ์/หน่วง/เรียกแล้ว/ล่าสุด) ·
 /// ลิ้นชักบันทึกคำขอ + รายละเอียด request/response ; แสดงแทนแคนวาสขณะ [WorkspaceController.page] == [WorkspacePage.mock]
@@ -84,6 +87,17 @@ class _MockViewState extends State<MockView> {
   int _typedPort(WorkspaceController w) {
     final n = int.tryParse(_port.text.trim());
     return n != null && n >= 0 && n <= 65535 ? n : w.mockSettings.port;
+  }
+
+  /// ส่งออกชุดคำขอ (Postman / curl) ของ API ที่ Mock ใช้ ; URL ฐาน = ที่อยู่ของ Mock (พอร์ตตามค่าตั้ง)
+  Future<void> _exportRequests(WorkspaceController w, MockController m, ApiDocument api, String kind) async {
+    final base = m.url ?? 'http://127.0.0.1:${_typedPort(w)}';
+    final title = tr('ส่งออกชุดคำขอ');
+    if (kind == 'postman') {
+      await FileActions.saveText(context, exportPostmanCollection(api, baseUrl: base), 'mock-requests.postman_collection.json', title);
+    } else {
+      await FileActions.saveText(context, exportCurlScript(api, baseUrl: base), 'mock-requests.sh', title);
+    }
   }
 
   Future<void> _toggle(WorkspaceController w, MockController m) async {
@@ -224,6 +238,34 @@ class _MockViewState extends State<MockView> {
                 child: Text(tr('ข้อมูลเปลี่ยนจาก seed {0} ครั้ง', [m.changes]), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: C.warnText)),
               ),
             Tooltip(
+              message: tr('ตารางที่ไม่มีข้อมูลตั้งต้น (seed) ให้สร้างแถวตัวอย่างให้ — ไม่งั้น GET ได้รายการว่าง ; มีผลกับตารางที่ยังไม่ถูกเรียกหลังเริ่ม/รีเซ็ตข้อมูล'),
+              child: InkWell(
+                key: const ValueKey('mock-autosample'),
+                borderRadius: BorderRadius.circular(6),
+                onTap: () => w.setMockSettings(settings.copyWith(autoSample: !settings.autoSample)),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(settings.autoSample ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded, size: 18, color: settings.autoSample ? C.primary : C.muted),
+                    const SizedBox(width: 4),
+                    Text(tr('สร้างข้อมูลตัวอย่างให้ตารางที่ไม่มี seed'), style: const TextStyle(fontSize: 12.5)),
+                  ]),
+                ),
+              ),
+            ),
+            PopupMenuButton<String>(
+              key: const ValueKey('mock-export'),
+              tooltip: tr('ส่งออกชุดคำขอของ API นี้ (ไว้ยิงทดสอบ)'),
+              onSelected: (v) => _exportRequests(w, m, api, v),
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'postman', key: const ValueKey('mock-export-postman'), child: Text(tr('Postman Collection (.json)'))),
+                PopupMenuItem(value: 'curl', key: const ValueKey('mock-export-curl'), child: Text(tr('สคริปต์ curl (.sh)'))),
+              ],
+              child: IgnorePointer(
+                child: OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.ios_share_rounded, size: 16), label: Text(tr('ส่งออกคำขอ'))),
+              ),
+            ),
+            Tooltip(
               message: on
                   ? tr('ล้างข้อมูลที่ POST/PUT/PATCH/DELETE เข้ามา แล้วเริ่มจาก seed ของตาราง ER ใหม่ (ใช้กับ endpoint ที่ผูกตาราง)')
                   : tr('เริ่มเซิร์ฟเวอร์ก่อน (ข้อมูลที่จำไว้จะล้างเองเมื่อหยุด)'),
@@ -298,6 +340,7 @@ class _MockViewState extends State<MockView> {
                               cell(64, Text('', style: head)),
                               cell(null, Text('Endpoint', style: head), flex: 3),
                               cell(372, Text(tr('สถานการณ์ที่ตอบ'), style: head)),
+                              cell(112, Text(tr('ลำดับ'), style: head)),
                               cell(92, Text(tr('หน่วง (ms)'), style: head)),
                               cell(76, Text(tr('เรียกแล้ว'), style: head)),
                               cell(60, Text(tr('ล่าสุด'), style: head)),
@@ -312,6 +355,7 @@ class _MockViewState extends State<MockView> {
                                   setting: settings.of(e.id),
                                   hits: m.hitsOf(e.id),
                                   last: m.lastStatusOf(e.id),
+                                  seqNext: m.sequenceNextOf(e.id),
                                   running: m.running,
                                   onChanged: (s) => w.setMockSettings(settings.withEndpoint(e.id, s)),
                                   onDelay: (s) => w.setMockSettings(settings.withEndpoint(e.id, s), coalesce: 'delay-${e.id}'),
@@ -400,6 +444,7 @@ class _EndpointRow extends StatelessWidget {
     required this.setting,
     required this.hits,
     required this.last,
+    required this.seqNext,
     required this.running,
     required this.onChanged,
     required this.onDelay,
@@ -408,16 +453,28 @@ class _EndpointRow extends StatelessWidget {
   final MockEndpointSetting setting;
   final int hits;
   final int? last;
+
+  /// ขั้นถัดไปของลำดับ (เมื่อรันอยู่และตั้งลำดับ)
+  final int? seqNext;
   final bool running;
   final ValueChanged<MockEndpointSetting> onChanged;
 
   /// พิมพ์ค่าหน่วง : ทุกตัวอักษรเรียกครั้งหนึ่ง จึงให้ประวัติรวมเป็นขั้นเดียว
   final ValueChanged<MockEndpointSetting> onDelay;
 
+  Future<void> _editSequence(BuildContext context) async {
+    final res = await showDialog<List<MockScenario>>(
+      context: context,
+      builder: (_) => _SequenceDialog(endpoint: endpoint, initial: setting.sequence, fallback: setting.scenario),
+    );
+    if (res != null) onChanged(setting.copyWith(sequence: res));
+  }
+
   @override
   Widget build(BuildContext context) {
     final e = endpoint;
-    final warn = setting.scenario != MockScenario.normal;
+    final seq = setting.sequence.isNotEmpty;
+    final warn = setting.scenario != MockScenario.normal || seq;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: C.borderSoft))),
@@ -441,19 +498,19 @@ class _EndpointRow extends StatelessWidget {
                     message: mockScenarioLabel(s),
                     child: InkWell(
                       key: ValueKey('mock-scenario-${e.id}-${s.name}'),
-                      onTap: () => onChanged(setting.copyWith(scenario: s)),
+                      onTap: () => onChanged(setting.copyWith(scenario: s, sequence: const [])),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: setting.scenario == s ? (s == MockScenario.normal ? C.primaryTint : (s == MockScenario.serverError ? C.dangerBg : C.warnBg)) : null,
+                          color: !seq && setting.scenario == s ? (s == MockScenario.normal ? C.primaryTint : (s == MockScenario.serverError ? C.dangerBg : C.warnBg)) : null,
                           border: Border(left: BorderSide(color: i == 0 ? Colors.transparent : C.inputBorder)),
                         ),
                         child: Text(
                           _chipLabel(s),
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: setting.scenario == s ? FontWeight.w700 : FontWeight.w400,
-                            color: setting.scenario == s
+                            fontWeight: !seq && setting.scenario == s ? FontWeight.w700 : FontWeight.w400,
+                            color: !seq && setting.scenario == s
                                 ? (s == MockScenario.normal ? C.primaryDark : (s == MockScenario.serverError ? C.dangerText : C.warnText))
                                 : C.muted,
                           ),
@@ -463,6 +520,36 @@ class _EndpointRow extends StatelessWidget {
                   ),
               ]),
             ),
+          ),
+        ),
+        SizedBox(
+          width: 112,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: seq
+                ? InkWell(
+                    key: ValueKey('mock-seq-${e.id}'),
+                    borderRadius: BorderRadius.circular(999),
+                    onTap: () => _editSequence(context),
+                    child: Tooltip(
+                      message: setting.sequence.map(mockScenarioLabel).join(' → '),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                        decoration: BoxDecoration(color: C.warnBg, borderRadius: BorderRadius.circular(999)),
+                        child: Text(
+                          seqNext == null ? tr('ลำดับ {0} ขั้น', [setting.sequence.length]) : tr('ลำดับ {0}/{1}', [seqNext, setting.sequence.length]),
+                          key: ValueKey('mock-seq-label-${e.id}'),
+                          style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: C.warnText),
+                        ),
+                      ),
+                    ),
+                  )
+                : TextButton(
+                    key: ValueKey('mock-seq-${e.id}'),
+                    style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 8)),
+                    onPressed: () => _editSequence(context),
+                    child: Text(tr('ลำดับ…'), style: TextStyle(fontSize: 12, color: C.muted)),
+                  ),
           ),
         ),
         SizedBox(
@@ -588,15 +675,116 @@ class _LogDetail extends StatelessWidget {
           Text('${e.method} · ${e.durationMs} ms · ', style: TextStyle(fontSize: 12, color: C.muted)),
           Text('${e.status}', key: const ValueKey('mock-detail-status'), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _statusColor(e.status))),
         ]),
+        if (e.seqStep != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(tr('ลำดับที่ {0}/{1}', [e.seqStep, e.seqTotal]), key: const ValueKey('mock-detail-seq'), style: TextStyle(fontSize: 12, color: C.warnText)),
+          ),
         if (e.scenario != MockScenario.normal)
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text(tr('สถานการณ์ {0}', [mockScenarioLabel(e.scenario)]), style: TextStyle(fontSize: 12, color: C.warnText)),
+            child: Text(tr('สถานการณ์ {0}'
+, [mockScenarioLabel(e.scenario)]), style: TextStyle(fontSize: 12, color: C.warnText)),
           ),
         const SizedBox(height: 10),
         block('REQUEST', mockBodyText(e.requestBody), key: const ValueKey('mock-detail-request')),
         const SizedBox(height: 10),
         block('RESPONSE', mockBodyText(e.responseBody), key: const ValueKey('mock-detail-response')),
+      ],
+    );
+  }
+}
+
+/// ตัวจัดลำดับการตอบของ endpoint หนึ่ง (เพิ่ม/ลบ/ลากเรียง สูงสุด [kMockMaxSequence] ขั้น) ; ปิดด้วยรายการใหม่ ([] = เลิกใช้ลำดับ) หรือ null = ยกเลิก
+class _SequenceDialog extends StatefulWidget {
+  const _SequenceDialog({required this.endpoint, required this.initial, required this.fallback});
+  final ApiEndpoint endpoint;
+  final List<MockScenario> initial;
+
+  /// ขั้นที่เพิ่มใหม่ครั้งแรก ถ้ายังไม่มีลำดับ (= สถานการณ์เดิมของ endpoint)
+  final MockScenario fallback;
+
+  @override
+  State<_SequenceDialog> createState() => _SequenceDialogState();
+}
+
+class _SequenceDialogState extends State<_SequenceDialog> {
+  late final List<MockScenario> _steps = [...widget.initial];
+
+  /// ชุดสำเร็จรูป : ลองกลไก retry ได้ทันที
+  static const _presets = <(String, List<MockScenario>)>[
+    ('200 → 500 → 200', [MockScenario.normal, MockScenario.serverError, MockScenario.normal]),
+    ('500 → 500 → 200', [MockScenario.serverError, MockScenario.serverError, MockScenario.normal]),
+    ('200 → 409', [MockScenario.normal, MockScenario.conflict]),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(tr('ตอบเป็นลำดับ — {0}', [widget.endpoint.title])),
+      content: SizedBox(
+        width: 440,
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(
+            tr('คำขอที่ 1 ใช้ขั้นแรก คำขอที่ 2 ใช้ขั้นสอง … ครบแล้ววนกลับ ; รีเซ็ตข้อมูลหรือหยุดเซิร์ฟเวอร์ = เริ่มขั้นแรกใหม่'),
+            style: TextStyle(fontSize: 12.5, color: C.muted, height: 1.4),
+          ),
+          const SizedBox(height: 10),
+          Wrap(spacing: 8, runSpacing: 6, children: [
+            for (final (i, p) in _presets.indexed)
+              ActionChip(
+                key: ValueKey('mock-seq-preset-$i'),
+                label: Text(p.$1, style: const TextStyle(fontSize: 12)),
+                onPressed: () => setState(() => _steps..clear()..addAll(p.$2)),
+              ),
+          ]),
+          const SizedBox(height: 8),
+          Flexible(
+            child: ReorderableListView(
+              shrinkWrap: true,
+              buildDefaultDragHandles: false,
+              onReorderItem: (from, to) => setState(() => _steps.insert(to, _steps.removeAt(from))),
+              children: [
+                for (final (i, s) in _steps.indexed)
+                  Row(key: ValueKey('mock-seq-step-$i-${s.name}'), children: [
+                    ReorderableDragStartListener(index: i, child: Icon(Icons.drag_indicator_rounded, size: 18, color: C.muted)),
+                    SizedBox(width: 26, child: Text('${i + 1}', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w700, color: C.muted))),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Dropdown<MockScenario>(
+                          key: ValueKey('mock-seq-pick-$i'),
+                          value: s,
+                          items: MockScenario.values,
+                          labelOf: mockScenarioLabel,
+                          onChanged: (v) => setState(() => _steps[i] = v),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      key: ValueKey('mock-seq-del-$i'),
+                      tooltip: tr('ลบขั้นนี้'),
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => setState(() => _steps.removeAt(i)),
+                      icon: const Icon(Icons.close_rounded, size: 18),
+                    ),
+                  ]),
+              ],
+            ),
+          ),
+          TextButton.icon(
+            key: const ValueKey('mock-seq-add'),
+            onPressed: _steps.length >= kMockMaxSequence ? null : () => setState(() => _steps.add(_steps.isEmpty ? widget.fallback : _steps.last)),
+            icon: const Icon(Icons.add, size: 16),
+            label: Text(tr('เพิ่มขั้น ({0}/{1})', [_steps.length, kMockMaxSequence])),
+          ),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ยกเลิก'))),
+        if (widget.initial.isNotEmpty)
+          TextButton(key: const ValueKey('mock-seq-clear'), onPressed: () => Navigator.pop(context, const <MockScenario>[]), child: Text(tr('เลิกใช้ลำดับ'))),
+        FilledButton(key: const ValueKey('mock-seq-ok'), onPressed: () => Navigator.pop(context, [..._steps]), child: Text(tr('บันทึก'))),
       ],
     );
   }

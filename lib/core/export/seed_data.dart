@@ -6,6 +6,7 @@ import '../models/column_model.dart';
 import '../models/enums.dart';
 import '../models/project.dart';
 import '../models/table_model.dart';
+import '../types/type_map.dart' show isIntegerType;
 
 /// ข้อมูลตั้งต้น (seed data): แถวที่ผู้ใช้กรอกไว้ล่วงหน้าในตาราง เช่น roles, statuses
 /// เก็บใน [TableModel.seedRows] เป็นข้อความต่อคอลัมน์ (id คอลัมน์ -> ข้อความ)
@@ -104,10 +105,22 @@ List<SeedProblem> validateSeed(Project p) {
   for (final t in p.tables) {
     if (t.seedRows.isEmpty) continue;
     for (final c in t.columns) {
-      present['${t.id}.${c.id}'] = {
+      final values = <String>{
         for (final r in t.seedRows)
           if (_parse(c, _raw(r, c)).value != null) _parse(c, _raw(r, c)).value!,
       };
+      // AUTO INCREMENT ที่แถวไม่ได้ใส่ค่า : ฐานข้อมูลตั้งให้ต่อจากเลขสูงสุดที่มี (1,2,3… ถ้าไม่มีเลย) — ลูกชี้ได้
+      if (c.autoIncrement && isIntegerType(c.type)) {
+        var next = 0;
+        for (final r in t.seedRows) {
+          final v = int.tryParse(_parse(c, _raw(r, c)).value ?? '');
+          if (v != null && v > next) next = v;
+        }
+        for (final r in t.seedRows) {
+          if (!r.containsKey(c.id)) values.add('${++next}');
+        }
+      }
+      present['${t.id}.${c.id}'] = values;
     }
   }
 

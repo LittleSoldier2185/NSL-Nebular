@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../ddl/ddl_generator.dart';
+import 'seed_data.dart' show seedNormalized;
 import '../models/column_model.dart';
 import '../models/enums.dart';
 import '../models/project.dart';
@@ -15,6 +16,17 @@ import '../types/type_map.dart';
 String exportSampleData(Project p, {int rows = 10, int seed = 1}) {
   final n = rows.clamp(1, 1000);
   return _Sample(p, n, seed).build();
+}
+
+/// ข้อมูลตัวอย่างในรูป "ข้อมูลตั้งต้น" ([TableModel.seedRows]) : tableId -> แถว (id คอลัมน์ -> ข้อความ ; null = NULL)
+/// ใช้ตัวสร้างชุดเดียวกับ [exportSampleData] (ตารางแม่ก่อนลูก FK ชี้แถวจริง ไม่ซ้ำ UNIQUE/PK ผลคงที่ด้วย [seed])
+/// คอลัมน์ AUTO INCREMENT ไม่อยู่ในแถว (ไม่มี key = ให้ฐานข้อมูล/Mock ตั้งเลขเอง)
+///
+/// [tableIds] = สร้างเฉพาะตารางเหล่านี้ (แทนที่ของเดิมได้) ; null = สร้างให้ทุกตารางที่ **ยังไม่มี** ข้อมูลตั้งต้น
+/// ตารางที่มีข้อมูลตั้งต้นอยู่แล้วและไม่อยู่ใน [tableIds] ไม่ถูกแตะ แต่ค่าของมันถูกใช้เป็นแม่ของ FK (ตารางลูกจึงชี้แถวจริงเสมอ)
+Map<String, List<Map<String, String?>>> generateSampleSeeds(Project p, {int rows = 10, int seed = 1, Set<String>? tableIds}) {
+  final n = rows.clamp(1, 1000);
+  return _Sample(p, n, seed).seeds(tableIds);
 }
 
 class _Rng {
@@ -44,6 +56,12 @@ const _sentences = [
   'รายละเอียดเพิ่มเติมของรายการนี้',
   'Quick brown fox jumps over the lazy dog',
 ];
+
+class _Gen {
+  _Gen(this.insertCols, this.accepted);
+  final List<ColumnModel> insertCols;
+  final List<List<Object?>> accepted;
+}
 
 class _Sample {
   _Sample(this.p, this.rows, int seed)
@@ -90,7 +108,8 @@ class _Sample {
     return out;
   }
 
-  String _table(TableModel t) {
+  /// สร้างแถวของตาราง [t] (ทั้งแถวที่ INSERT ได้และค่าของทุกคอลัมน์ ไว้ให้ตารางลูกใช้เป็นแม่ของ FK)
+  _Gen _generate(TableModel t) {
     final pkCols = t.columns.where((c) => c.isPrimaryKey).toList();
     final fkByCol = {
       for (final r in p.relations)
@@ -130,6 +149,12 @@ class _Sample {
       values['${t.id}.${c.id}'] = all[c.id]!;
     }
 
+    return _Gen(insertCols, accepted);
+  }
+
+  String _table(TableModel t) {
+    final g = _generate(t);
+    final insertCols = g.insertCols, accepted = g.accepted;
     final name = gen.quote(t.name);
     if (accepted.isEmpty) return tr('-- ข้ามตาราง {0}: สร้างแถวที่ไม่ซ้ำไม่ได้', [DdlGenerator.flat(t.name)]);
     if (insertCols.isEmpty) {
@@ -149,6 +174,75 @@ class _Sample {
   }
 
   bool _isAuto(ColumnModel c) => c.autoIncrement && isIntegerType(c.type);
+
+  /// ผลในรูปข้อมูลตั้งต้น (ดู [generateSampleSeeds])
+  Map<String, List<Map<String, String?>>> seeds(Set<String>? only) {
+    final out = <String, List<Map<String, String?>>>{};
+    for (final t in _order()) {
+      if (t.columns.isEmpty) continue;
+      final wanted = only == null ? t.seedRows.isEmpty : only.contains(t.id);
+      if (!wanted && t.seedRows.isNotEmpty) {
+        _useSeed(t); // แม่ที่มีข้อมูลตั้งต้นอยู่แล้ว : ใช้ค่าของมัน ไม่สร้างทับ
+        continue;
+      }
+      final g = _generate(t); // ไม่อยู่ในรายการที่ขอ = สร้างไว้เป็นแม่ของ FK เฉยๆ ไม่ส่งออก
+      if (wanted) out[t.id] = [for (final r in g.accepted) _seedRow(g.insertCols, r)];
+    }
+    return out;
+  }
+
+  /// ค่าของตารางที่มีข้อมูลตั้งต้นอยู่แล้ว เข้ากลุ่ม [values] (AUTO INCREMENT ที่ไม่ได้กรอก = ต่อจากเลขสูงสุด ตามที่ Mock Server ทำ)
+  void _useSeed(TableModel t) {
+    final counters = <String, int>{};
+    for (final c in t.columns.where(_isAuto)) {
+      var max = 0;
+      for (final r in t.seedRows) {
+        final v = r.containsKey(c.id) ? int.tryParse(seedNormalized(c, r[c.id]) ?? '') : null;
+        if (v != null && v > max) max = v;
+      }
+      counters[c.id] = max;
+    }
+    final cols = {for (final c in t.columns) c.id: <Object?>[]};
+    for (final r in t.seedRows) {
+      for (final c in t.columns) {
+        Object? v;
+        if (r.containsKey(c.id)) {
+          v = _parseSeed(c, r[c.id]);
+        } else if (counters.containsKey(c.id)) {
+          v = counters[c.id] = counters[c.id]! + 1;
+        }
+        cols[c.id]!.add(v);
+      }
+    }
+    for (final c in t.columns) {
+      values['${t.id}.${c.id}'] = cols[c.id]!;
+    }
+  }
+
+  Object? _parseSeed(ColumnModel c, String? raw) {
+    final s = seedNormalized(c, raw);
+    if (s == null) return null;
+    return switch (c.type) {
+      DataType.integer || DataType.bigint || DataType.smallint => int.tryParse(s),
+      DataType.decimal || DataType.float => num.tryParse(s),
+      DataType.boolean => s == 'true',
+      _ => s,
+    };
+  }
+
+  /// แถวที่สร้างแล้ว -> ข้อความต่อคอลัมน์ตามกติกาของข้อมูลตั้งต้น (ว่าง = NULL ; สตริงว่าง = "")
+  Map<String, String?> _seedRow(List<ColumnModel> cols, List<Object?> row) {
+    String? text(Object? v) {
+      if (v == null) return null;
+      if (v is bool) return v ? 'true' : 'false';
+      if (v is num) return '$v';
+      if (identical(v, #blob)) return '00'; // BLOB : เลขฐานสิบหก 1 ไบต์
+      final s = v as String;
+      return s.isEmpty ? '""' : s;
+    }
+
+    return {for (var k = 0; k < cols.length; k++) cols[k].id: text(row[k])};
+  }
 
   Object? _value(TableModel t, ColumnModel c, int rowNo, dynamic fk, int attempt) {
     if (fk != null) {

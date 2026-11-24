@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import '../export/openapi_export.dart' show httpStatusText;
+import '../export/sample_data.dart' show generateSampleSeeds;
 import '../export/seed_data.dart' show seedNormalized;
 import '../l10n/l10n.dart';
 import '../models/api_model.dart';
@@ -87,6 +88,8 @@ class MockLogEntry {
     this.issues = const [],
     this.unknown = false,
     this.durationMs = 0,
+    this.seqStep,
+    this.seqTotal,
   });
 
   final DateTime time;
@@ -104,6 +107,9 @@ class MockLogEntry {
 
   /// path/method นี้ไม่มีใน API (เสนอให้เพิ่ม endpoint)
   final bool unknown;
+
+  /// ตอบเป็นลำดับ : ขั้นที่ (เริ่ม 1) จากทั้งหมด [seqTotal] ขั้น ; null = ไม่ได้ใช้ลำดับ
+  final int? seqStep, seqTotal;
 
   /// เวลาตอบรวมการหน่วง (เซิร์ฟเวอร์เป็นคนใส่)
   int durationMs;
@@ -142,6 +148,15 @@ class MockEngine {
   /// ตัวนับ AUTO INCREMENT ต่อตาราง
   final Map<String, int> _counters = {};
 
+  /// จำนวนคำขอที่ endpoint นั้น ๆ ได้รับ (ใช้เลือกขั้นของ "ตอบเป็นลำดับ") ; id endpoint -> จำนวน
+  final Map<String, int> _seqCounts = {};
+
+  /// ขั้นถัดไป (เริ่ม 1) ของลำดับที่ endpoint นี้จะใช้กับคำขอต่อไป ; null = endpoint นี้ไม่ได้ตั้งลำดับ
+  int? sequenceNextOf(String endpointId) {
+    final n = settings().of(endpointId).sequence.length;
+    return n == 0 ? null : (_seqCounts[endpointId] ?? 0) % n + 1;
+  }
+
   /// จำนวนครั้งที่ข้อมูลที่จำไว้ถูกเปลี่ยน (POST เพิ่ม · PUT/PATCH แก้ · DELETE ลบ สำเร็จ) นับตั้งแต่เริ่ม/รีเซ็ตครั้งล่าสุด
   int changes = 0;
 
@@ -149,6 +164,7 @@ class MockEngine {
   void reset() {
     _rows.clear();
     _counters.clear();
+    _seqCounts.clear();
     changes = 0;
   }
 
@@ -172,6 +188,7 @@ class MockEngine {
   MockResult _handle(MockRequest req) {
     final doc = api();
     final fullPath = req.query.isEmpty ? req.path : '${req.path}?${Uri(queryParameters: req.query).query}';
+    int? seqStep, seqTotal;
     MockLogEntry entry0({int status = 0, ApiEndpoint? e, MockScenario s = MockScenario.normal, List<MockIssue> issues = const [], bool unknown = false}) =>
         MockLogEntry(
           time: _now(),
@@ -183,6 +200,8 @@ class MockEngine {
           scenario: s,
           issues: issues,
           unknown: unknown,
+          seqStep: seqStep,
+          seqTotal: seqTotal,
         );
 
     if (doc == null) {
@@ -214,6 +233,14 @@ class MockEngine {
     final cfg = settings().of(e.id);
     final delay = Duration(milliseconds: cfg.delayMs.clamp(0, kMockMaxDelayMs));
     var scenario = cfg.scenario;
+    if (cfg.sequence.isNotEmpty) {
+      // ตอบเป็นลำดับ : นับทุกคำขอที่ถึง endpoint นี้ ครบแล้ววนกลับขั้นแรก
+      final n = _seqCounts[e.id] ?? 0;
+      _seqCounts[e.id] = n + 1;
+      seqTotal = cfg.sequence.length;
+      seqStep = n % seqTotal + 1;
+      scenario = cfg.sequence[seqStep - 1];
+    }
     if (scenario == MockScenario.random) {
       final r = _rnd.nextDouble();
       scenario = r < 0.7 ? MockScenario.normal : (r < 0.9 ? MockScenario.serverError : MockScenario.conflict);
@@ -501,7 +528,7 @@ class MockEngine {
     final key = '${ref.docId}/${ref.tableId}';
     return _rows.putIfAbsent(key, () {
       final out = <Map<String, Object?>>[];
-      for (final s in t.seedRows) {
+      for (final s in _seedsOf(ref, t)) {
         out.add({for (final c in t.columns) c.name: s.containsKey(c.id) ? _typed(c, s[c.id]) : _defaultOf(c)});
       }
       // เติม AUTO INCREMENT ที่ seed ไม่ได้ใส่ ต่อจากเลขสูงสุดที่มี
@@ -519,6 +546,15 @@ class MockEngine {
       }
       return out;
     });
+  }
+
+  /// ข้อมูลตั้งต้นของตาราง ; ไม่มี + เปิด [MockSettings.autoSample] = สร้างข้อมูลตัวอย่าง (ตัวสร้างเดียวกับส่งออก SQL : FK ชี้แถวจริง ไม่ซ้ำ UNIQUE ผลคงที่)
+  List<Map<String, String?>> _seedsOf(ApiTableRef ref, TableModel t) {
+    if (t.seedRows.isNotEmpty) return t.seedRows;
+    final s = settings();
+    final er = workspace().documentById(ref.docId)?.er;
+    if (!s.autoSample || er == null) return t.seedRows;
+    return generateSampleSeeds(er, rows: s.sampleRows, tableIds: {t.id})[t.id] ?? t.seedRows;
   }
 
   int _nextId(ApiTableRef ref, TableModel t, ColumnModel c) {
