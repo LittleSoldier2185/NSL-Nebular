@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import '../layout/usecase_layout.dart';
 import '../models/workspace.dart';
 import 'svg_util.dart';
@@ -11,25 +9,6 @@ class _Theme {
 
 const _light = _Theme(canvas: '#F6F8FB', surface: '#FFFFFF', text: '#1B2430', muted: '#64748B', line: '#64748B', accent: '#4C8A2E', tint: '0.10');
 const _dark = _Theme(canvas: '#121820', surface: '#19212B', text: '#E6EBF2', muted: '#94A3B8', line: '#94A3B8', accent: '#8BC568', tint: '0.18');
-
-/// จุดบนขอบวงรีของ [n] ที่เส้นจากกึ่งกลางไปทาง ([tx], [ty]) ตัดผ่าน
-(double, double) _onEllipse(UcNode n, double tx, double ty) {
-  final dx = tx - n.cx, dy = ty - n.cy;
-  if (dx == 0 && dy == 0) return (n.cx, n.cy);
-  final rx = n.w / 2, ry = n.h / 2;
-  final t = 1 / math.sqrt((dx / rx) * (dx / rx) + (dy / ry) * (dy / ry));
-  return (n.cx + dx * t, n.cy + dy * t);
-}
-
-/// จุดบนขอบของผู้กระทำ (ประมาณเป็นวงกลมรอบตัวคน)
-(double, double) _onActor(UcNode n, double tx, double ty) {
-  final cx = n.cx, cy = n.y + 42; // กึ่งกลางตัวคน (ไม่รวมป้ายชื่อ)
-  final dx = tx - cx, dy = ty - cy;
-  final d = math.sqrt(dx * dx + dy * dy);
-  if (d == 0) return (cx, cy);
-  const r = 34.0;
-  return (cx + dx / d * r, cy + dy / d * r);
-}
 
 /// ภาพ SVG ของแผนภาพ Use Case ที่จัดวางโดย [layoutUseCaseDiagram] — null ถ้าไม่มี Use Case
 /// [overrides] = ตำแหน่งที่ผู้ใช้ลาก ; [dark] = ธีมมืด ; [transparent] = ไม่มีพื้นหลัง
@@ -56,10 +35,9 @@ String? exportUseCaseSvg(Workspace w, {Map<String, (double, double)> overrides =
 
   // เส้น (วาดก่อนโหนด)
   for (final e in d.edges) {
-    final a = d.node(e.fromKey), b = d.node(e.toKey);
-    if (a == null || b == null) continue;
-    final (x1, y1) = a.isActor ? _onActor(a, b.cx, b.cy) : _onEllipse(a, b.cx, b.cy);
-    final (x2, y2) = b.isActor ? _onActor(b, a.cx, a.cy) : _onEllipse(b, a.cx, a.cy);
+    final line = ucEdgeLine(d, e);
+    if (line == null) continue;
+    final (x1, y1, x2, y2) = (line.x1, line.y1, line.x2, line.y2);
     final dashed = e.kind != UcEdgeKind.association;
     out.writeln('<line x1="${svgNum(x1)}" y1="${svgNum(y1)}" x2="${svgNum(x2)}" y2="${svgNum(y2)}" stroke="${th.line}" stroke-width="1.4"'
         '${dashed ? ' stroke-dasharray="7 5" marker-end="url(#uc-arrow)"' : ''}/>');

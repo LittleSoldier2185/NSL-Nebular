@@ -3,16 +3,19 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/export/usecase_export.dart';
 import '../core/l10n/l10n.dart';
 import '../core/models/dfd_model.dart';
 import '../core/models/flowchart_model.dart';
 import '../core/models/workspace.dart';
 import '../core/validate/issue.dart';
+import '../core/validate/usecase_validator.dart';
 import '../core/validate/workspace_validator.dart';
 import '../state/workspace_controller.dart';
 import 'activity_rail.dart';
 import 'app_actions.dart';
 import 'document_actions.dart' show DocTypeDot;
+import 'file_actions.dart';
 import 'shortcuts.dart';
 import 'start_page.dart' show relativeTimeLabel;
 import 'theme.dart';
@@ -99,6 +102,8 @@ class ProjectHomeView extends StatelessWidget {
               _Header(w: w),
               const SizedBox(height: 28),
               _TypeCards(w: w),
+              const SizedBox(height: 14),
+              _UseCaseStrip(w: w),
               const SizedBox(height: 28),
               LayoutBuilder(builder: (context, c) {
                 final recent = _RecentPanel(w: w, perDoc: perDoc);
@@ -560,6 +565,85 @@ class _CrossPanel extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// แถบสรุป Use Case ใต้การ์ดชนิดเอกสาร (แบบ B ของ `design/use-case-phase30-32`) : Use Case เป็นข้อมูลระดับโปรเจกต์ (ชุดเดียว)
+/// จึงแยกจากแถวการ์ดชนิดเอกสาร ; จำนวนข้อ · ขั้นตอน · ความต้องการที่มี Use Case · ปัญหา + ปุ่มส่งออก/เปิด
+class _UseCaseStrip extends StatelessWidget {
+  const _UseCaseStrip({required this.w});
+  final WorkspaceController w;
+
+  @override
+  Widget build(BuildContext context) {
+    final ucs = w.useCases;
+    final steps = ucs.fold<int>(0, (a, u) => a + u.steps.length);
+    final cover = useCaseCoverage(w.workspace);
+    final issues = w.useCaseIssues.where((i) => i.severity != Severity.info).length;
+    Widget kpi(String key, String value, String label, {Color? color, Widget? extra, double minWidth = 70}) => ConstrainedBox(
+          constraints: BoxConstraints(minWidth: minWidth),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text(value, key: ValueKey(key), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: color ?? C.text)),
+            Text(label, style: TextStyle(fontSize: 11.5, color: C.muted)),
+            ?extra,
+          ]),
+        );
+    // กรอบเส้นเดียวกันทุกด้าน (borderRadius ใช้กับเส้นขอบต่างด้านกันไม่ได้) ; แถบสีด้านซ้ายเป็นวิดเจ็ตแยก
+    return Container(
+      key: const ValueKey('home-uc-strip'),
+      decoration: BoxDecoration(color: C.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: C.border)),
+      clipBehavior: Clip.antiAlias,
+      child: IntrinsicHeight(
+        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Container(width: 4, color: C.primary),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Wrap(spacing: 22, runSpacing: 10, crossAxisAlignment: WrapCrossAlignment.center, children: [
+        Text('Use Case', style: TextStyle(fontWeight: FontWeight.w700, color: C.primaryDark)),
+        if (ucs.isEmpty)
+          Text(tr('ยังไม่มี Use Case — เขียนว่าใครใช้ระบบเพื่อทำอะไร แล้วผูกกับความต้องการและหน้าจอ'), key: const ValueKey('home-uc-empty'), style: TextStyle(color: C.muted))
+        else ...[
+          kpi('home-uc-count', '${ucs.length}', tr('ข้อ')),
+          kpi('home-uc-steps', '$steps', tr('ขั้นตอน')),
+          if (cover.total > 0)
+            kpi(
+              'home-uc-cover',
+              '${cover.covered} / ${cover.total}',
+              tr('ความต้องการที่มี Use Case'),
+              minWidth: 170,
+              extra: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: SizedBox(
+                  width: 150,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: LinearProgressIndicator(value: cover.covered / cover.total, minHeight: 6, backgroundColor: C.borderSoft, color: C.primary),
+                  ),
+                ),
+              ),
+            ),
+          kpi('home-uc-issues', '$issues', tr('ปัญหา'), color: issues > 0 ? C.dangerText : C.primaryDark),
+        ],
+        Wrap(spacing: 8, children: [
+          if (ucs.isNotEmpty)
+            OutlinedButton(
+              key: const ValueKey('home-uc-export'),
+              onPressed: () => FileActions.saveText(context, exportUseCaseMarkdown(w.workspace), '${FileActions.safeName(w.workspace.name)}-usecases.md', tr('ส่งออก Use Case เป็นเอกสาร')),
+              child: Text(tr('ส่งออกเอกสาร')),
+            ),
+          FilledButton(
+            key: const ValueKey('home-uc-open'),
+            onPressed: w.showUseCases,
+            child: Text(ucs.isEmpty ? tr('+ เริ่มเขียน Use Case') : tr('เปิด Use Case →')),
+          ),
+        ]),
+      ]),
+            ),
+          ),
+        ]),
+      ),
     );
   }
 }

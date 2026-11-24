@@ -14,9 +14,11 @@ import 'issue_widgets.dart' show IssueCard;
 import 'notes_panel.dart' show gotoNoteTarget;
 import 'project_home.dart' show homeTypeLabel;
 import 'theme.dart';
+import 'usecase_diagram.dart';
+import 'usecase_tests.dart';
 import 'widgets.dart';
 
-enum UcTab { spec, doc }
+enum UcTab { spec, diagram, tests, doc }
 
 /// key ของแถวขั้นตอน (ไว้เลื่อนไปที่ขั้นที่มีปัญหาเมื่อมาจากหน้าต่างปัญหาทั้งโปรเจกต์)
 final Map<String, GlobalKey> _ucStepKeys = {};
@@ -80,6 +82,17 @@ class _UseCaseViewState extends State<UseCaseView> {
                     onQuery: (q) => setState(() => _query = q),
                     onSelect: (id) => setState(() => _selectedId = id),
                   )
+                : _tab == UcTab.diagram
+                ? UcDiagramView(
+                    w: w,
+                    initialUcId: u?.id,
+                    onOpenSpec: (id) => setState(() {
+                      _selectedId = id;
+                      _tab = UcTab.spec;
+                    }),
+                  )
+                : _tab == UcTab.tests
+                ? UcTestsTab(w: w)
                 : _DocTab(w: w),
           ),
         ],
@@ -186,6 +199,8 @@ class _UseCaseViewState extends State<UseCaseView> {
           Row(
             children: [
               tab(UcTab.spec, tr('สเปก')),
+              tab(UcTab.diagram, tr('แผนภาพ')),
+              tab(UcTab.tests, tr('กรณีทดสอบ')),
               tab(UcTab.doc, tr('เอกสาร')),
             ],
           ),
@@ -1537,7 +1552,7 @@ class _SideColumn extends StatelessWidget {
             for (final i in mine)
               Padding(
                 padding: const EdgeInsets.only(bottom: 6),
-                child: _IssueTile(
+                child: UcIssueTile(
                   key: ValueKey('uc-issue-${i.code}'),
                   issue: i,
                 ),
@@ -1569,7 +1584,7 @@ class _SideColumn extends StatelessWidget {
           for (final i in project)
             Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: _IssueTile(key: ValueKey('uc-proj-${i.reqId}'), issue: i),
+              child: UcIssueTile(key: ValueKey('uc-proj-${i.reqId}'), issue: i),
             ),
         ],
       ),
@@ -1577,8 +1592,8 @@ class _SideColumn extends StatelessWidget {
   }
 }
 
-class _IssueTile extends StatelessWidget {
-  const _IssueTile({super.key, required this.issue});
+class UcIssueTile extends StatelessWidget {
+  const UcIssueTile({super.key, required this.issue});
   final UcIssue issue;
 
   @override

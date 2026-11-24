@@ -310,6 +310,21 @@ class FileActions {
     }
   }
 
+  /// บันทึกไบต์ (เช่น ภาพ PNG) ลงไฟล์ที่ผู้ใช้เลือก ; [note] ต่อท้ายข้อความแจ้งผล
+  static Future<void> saveBytes(BuildContext context, Uint8List bytes, String fileName, String title, {String note = ''}) async {
+    try {
+      final uri = await FilePicker.saveFile(dialogTitle: title, fileName: fileName, bytes: bytes);
+      if (uri == null) return;
+      var path = uri.toFilePath();
+      final ext = fileName.contains('.') ? fileName.substring(fileName.lastIndexOf('.')) : '';
+      if (ext.isNotEmpty && !path.toLowerCase().endsWith(ext)) path = '$path$ext';
+      await File(path).writeAsBytes(bytes);
+      if (context.mounted) _toast(context, tr('Export แล้ว: {0}{1}', [path, note]));
+    } catch (e) {
+      if (context.mounted) _toast(context, tr('Export ภาพไม่ได้: {0}', [e]));
+    }
+  }
+
   /// Export แผนภาพเป็น PNG หรือ SVG (ทั้งแผนภาพ ไม่ขึ้นกับว่าตอนนี้ซูม/เลื่อนอยู่ตรงไหน)
   static Future<void> exportImage(BuildContext context, ProjectController c, {ImageArea? initialArea}) async {
     if (c.workspaceController.activeDocument.type == DocType.dfd) return _exportDfdImage(context, c);

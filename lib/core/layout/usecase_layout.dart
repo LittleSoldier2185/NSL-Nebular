@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../models/use_case.dart';
 import '../models/workspace.dart';
 
@@ -186,4 +188,53 @@ UcDiagram layoutUseCaseDiagram(Workspace w, {Map<String, (double, double)> overr
     bounds: (left: bl - 30, top: bt - 20, right: br + 30, bottom: bb + 30),
     systemName: systemName,
   );
+}
+
+/// จุดบนขอบวงรีของ [n] ที่เส้นจากกึ่งกลางไปทาง ([tx], [ty]) ตัดผ่าน
+(double, double) ucOnEllipse(UcNode n, double tx, double ty) {
+  final dx = tx - n.cx, dy = ty - n.cy;
+  if (dx == 0 && dy == 0) return (n.cx, n.cy);
+  final rx = n.w / 2, ry = n.h / 2;
+  final t = 1 / math.sqrt((dx / rx) * (dx / rx) + (dy / ry) * (dy / ry));
+  return (n.cx + dx * t, n.cy + dy * t);
+}
+
+/// จุดบนขอบของผู้กระทำ (ประมาณเป็นวงกลมรอบตัวคน ไม่รวมป้ายชื่อ)
+(double, double) ucOnActor(UcNode n, double tx, double ty) {
+  final cx = n.cx, cy = n.y + 42;
+  final dx = tx - cx, dy = ty - cy;
+  final d = math.sqrt(dx * dx + dy * dy);
+  if (d == 0) return (cx, cy);
+  const r = 34.0;
+  return (cx + dx / d * r, cy + dy / d * r);
+}
+
+/// ปลายทั้งสองของเส้น [e] (ตัดที่ขอบโหนด) ; โหนดปลายทางหาย = null
+({double x1, double y1, double x2, double y2})? ucEdgeLine(UcDiagram d, UcEdge e) {
+  final a = d.node(e.fromKey), b = d.node(e.toKey);
+  if (a == null || b == null) return null;
+  final (x1, y1) = a.isActor ? ucOnActor(a, b.cx, b.cy) : ucOnEllipse(a, b.cx, b.cy);
+  final (x2, y2) = b.isActor ? ucOnActor(b, a.cx, a.cy) : ucOnEllipse(b, a.cx, a.cy);
+  return (x1: x1, y1: y1, x2: x2, y2: y2);
+}
+
+/// โหนดที่อยู่ใต้จุด ([wx], [wy]) ในพิกัดแคนวาส (โหนดที่อยู่ท้ายรายการอยู่บนสุด) ; ไม่มี = null
+UcNode? ucHitTest(UcDiagram d, double wx, double wy) {
+  for (final n in d.nodes.reversed) {
+    if (n.isActor) {
+      if (wx >= n.x && wx <= n.right && wy >= n.y && wy <= n.bottom) return n;
+    } else {
+      final dx = (wx - n.cx) / (n.w / 2), dy = (wy - n.cy) / (n.h / 2);
+      if (dx * dx + dy * dy <= 1) return n;
+    }
+  }
+  return null;
+}
+
+/// สเกลและตำแหน่งที่ทำให้ [bounds] พอดีกับพื้นที่ [viewW]×[viewH] (กึ่งกลาง ; ไม่ขยายเกิน [maxScale])
+({double scale, double dx, double dy}) ucFitTransform(({double left, double top, double right, double bottom}) bounds, double viewW, double viewH, {double maxScale = 1.2}) {
+  final bw = bounds.right - bounds.left, bh = bounds.bottom - bounds.top;
+  if (bw <= 0 || bh <= 0 || viewW <= 0 || viewH <= 0) return (scale: 1, dx: 0, dy: 0);
+  final s = math.min(math.min(viewW / bw, viewH / bh), maxScale).clamp(0.1, maxScale).toDouble();
+  return (scale: s, dx: (viewW - bw * s) / 2 - bounds.left * s, dy: (viewH - bh * s) / 2 - bounds.top * s);
 }

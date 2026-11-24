@@ -245,5 +245,56 @@ void main() {
       await tester.ensureVisible(find.byKey(const ValueKey('home-issue-totals')));
       expect(tester.widget<Text>(find.byKey(const ValueKey('home-issue-totals'))).data, contains('${c.errors} ข้อผิดพลาด · ${c.warnings} คำเตือน'));
     });
+    testWidgets('Home: แถบสรุป Use Case (แบบ B) — ยังไม่มี = ข้อความ + ปุ่มเริ่มเขียน (ไม่มีปุ่มส่งออก) ; กดแล้วเปิดหน้า Use Case', (tester) async {
+      await boot(tester);
+      wc.showHome();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('home-uc-strip')), findsOneWidget);
+      expect(find.byKey(const ValueKey('home-uc-empty')), findsOneWidget);
+      expect(find.byKey(const ValueKey('home-uc-export')), findsNothing);
+      expect(find.text('+ เริ่มเขียน Use Case'), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const ValueKey('home-uc-open')));
+      await tester.tap(find.byKey(const ValueKey('home-uc-open')));
+      await tester.pumpAndSettle();
+      expect(wc.page, WorkspacePage.useCases);
+    });
+
+    testWidgets('Home: แถบสรุปบอกจำนวนข้อ ขั้นตอน ความต้องการที่มี Use Case (มีแถบความคืบหน้า) และปัญหา ตรงกับข้อมูลจริง', (tester) async {
+      await boot(tester);
+      final r1 = wc.addRequirement(text: 'จอง');
+      wc.addRequirement(text: 'ชำระเงิน');
+      final u = seedBroken(wc);
+      wc.updateUseCase(u.id, (x) => x.reqIds.add(r1.id));
+      wc.addUseCase(name: 'ข้อสอง', actor: 'Admin');
+      wc.showHome();
+      await tester.pumpAndSettle();
+      String t(String k) => tester.widget<Text>(find.byKey(ValueKey(k))).data!;
+      expect(t('home-uc-count'), '2');
+      expect(t('home-uc-steps'), '3');
+      expect(t('home-uc-cover'), '1 / 2');
+      expect(find.byType(LinearProgressIndicator), findsWidgets);
+      final issues = wc.useCaseIssues.where((i) => i.severity.name != 'info').length;
+      expect(issues, greaterThan(0));
+      expect(t('home-uc-issues'), '$issues');
+      expect(find.byKey(const ValueKey('home-uc-empty')), findsNothing);
+      expect(find.byKey(const ValueKey('home-uc-export')), findsOneWidget);
+      expect(find.text('เปิด Use Case →'), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const ValueKey('home-uc-open')));
+      await tester.tap(find.byKey(const ValueKey('home-uc-open')));
+      await tester.pumpAndSettle();
+      expect(wc.page, WorkspacePage.useCases);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Home: ไม่มีความต้องการ = ไม่แสดงช่องความครอบคลุม ; ไม่มีปัญหา = 0', (tester) async {
+      await boot(tester);
+      final u = wc.addUseCase(name: 'ครบ', actor: 'Guest');
+      wc.updateUseCase(u.id, (x) => x.steps.add(UcStep(id: 's', text: 'ทำ')));
+      wc.showHome();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('home-uc-cover')), findsNothing);
+      expect(tester.widget<Text>(find.byKey(const ValueKey('home-uc-issues'))).data, '0');
+    });
+
   });
 }
