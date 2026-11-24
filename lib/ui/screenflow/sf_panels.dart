@@ -306,13 +306,16 @@ class _Palette extends StatelessWidget {
 
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       _sec(tr('วางโหนด')),
-      GridView.count(
-        crossAxisCount: 2,
+      // ความสูงปุ่มคงที่ 54 (ไม่ใช้ childAspectRatio: ความสูงจะผันตามความกว้างแผง แผงแคบแล้วเนื้อหาล้น — เหมือนพาเล็ตของ DFD)
+      GridView(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 6,
-        crossAxisSpacing: 6,
-        childAspectRatio: 2,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 6,
+          crossAxisSpacing: 6,
+          mainAxisExtent: 54,
+        ),
         children: [for (final k in const [SfKind.screen, SfKind.start, SfKind.external, SfKind.end]) tile(k)],
       ),
       const SizedBox(height: 6),
@@ -868,13 +871,16 @@ class _Overview extends StatelessWidget {
       title: w.activeDocument.name,
       subtitle: tr('{0} หน้าจอ · {1} การเปลี่ยนหน้า', [d.nodes.length, d.edges.length]),
       children: [
-        GridView.count(
-          crossAxisCount: 2,
+        // ความสูงช่องสถิติคงที่ (ไม่ผันตามความกว้างแผง)
+        GridView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childAspectRatio: 2.1,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            mainAxisExtent: 68,
+          ),
           children: [
             stat('sf-stat-nodes', '${d.nodes.length}', tr('หน้าจอ / จุด')),
             stat('sf-stat-edges', '${d.edges.length}', tr('การเปลี่ยนหน้า')),
@@ -912,11 +918,15 @@ class _Overview extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Row(children: [
-                Expanded(child: Text(sfNodeTitle(n), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5))),
-                TextButton(
-                  key: ValueKey('sf-unlinked-${n.id}'),
-                  onPressed: () => f.createWireframeFor(n.id),
-                  child: Text(tr('สร้าง Wireframe')),
+                Expanded(flex: 2, child: Text(sfNodeTitle(n), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5))),
+                // ปุ่มหดตามพื้นที่ได้ (แผงขวาแคบสุด/ฟอนต์กว้าง) แทนที่จะล้นขอบ
+                Flexible(
+                  flex: 3,
+                  child: TextButton(
+                    key: ValueKey('sf-unlinked-${n.id}'),
+                    onPressed: () => f.createWireframeFor(n.id),
+                    child: Text(tr('สร้าง Wireframe'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
                 ),
               ]),
             ),

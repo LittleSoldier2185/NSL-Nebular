@@ -154,4 +154,23 @@ void main() {
     ];
     expect(leaked, isEmpty, reason: '$leaked');
   });
+  testWidgets('ปุ่มวางโหนดและช่องสถิติไม่ล้นเมื่อแผงซ้าย/ขวาแคบสุด (ความสูงคงที่ ไม่ผันตามความกว้าง) ทั้งไทยและอังกฤษ', (tester) async {
+    for (final lang in [Lang.th, Lang.en]) {
+      await boot(tester, lang: lang);
+      final settings = tester.element(find.byType(HomePage)).read<AppSettings>();
+      settings.layout.setLeft(PanelLayout.kLeftMin);
+      settings.layout.setRight(PanelLayout.kRightMin);
+      f.clearSelection();
+      await tester.pumpAndSettle();
+      for (final k in ['screen', 'start', 'external', 'end']) {
+        expect(tester.getSize(find.byKey(ValueKey('sf-tool-$k'))).height, 54, reason: '$lang $k');
+      }
+      // แผงขวาตอนไม่เลือกอะไร = ภาพรวม (ช่องสถิติ 4 ช่อง สูงเท่ากัน)
+      final stats = ['sf-stat-nodes', 'sf-stat-edges', 'sf-stat-linked', 'sf-stat-api'];
+      for (final k in stats) {
+        expect(tester.getSize(find.byKey(ValueKey(k))).height, 68, reason: '$lang $k');
+      }
+      expect(tester.takeException(), isNull, reason: '$lang');
+    }
+  });
 }
