@@ -1,0 +1,210 @@
+<title>Use Case Phases 30-32</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: แถบเลือกหัวข้อ (Home / แผนภาพ / กรณีทดสอบ) + แถบเลือกแบบ แล้วจำลองหน้าต่างด้านล่าง ; สีตามแอป (เขียว = Use Case) */
+:root{
+  --bg:#F2F4F8; --surface:#FFFFFF; --surface2:#F6F8FB; --border:#D8DEE6; --border2:#E6EAF0; --input:#CBD3DE;
+  --text:#1B2430; --muted:#5B6778; --primary:#0F766E; --primary-ink:#fff; --tint:#E2F3F1;
+  --danger:#C0392B; --warn:#B7791F; --ok:#0F766E; --uc:#4C8A2E; --uctint:#E9F4E2;
+  --er:#2F9E8F; --dfd:#4A86C8; --fc:#7B5CD6; --wf:#D49A3A; --sf:#D0507F; --api:#3A93B0;
+  --sans:'Noto Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A0E14; --surface:#161E29; --surface2:#1C2633; --border:#2C3947; --border2:#222E3B; --input:#3B4859;
+  --text:#E6EBF2; --muted:#93A0B2; --primary:#1FA89B; --primary-ink:#04201D; --tint:#12332F;
+  --danger:#F07A6C; --warn:#E5B24D; --ok:#4FD1B5; --uc:#8BC568; --uctint:#1E3018;
+  --er:#3FB5A5; --dfd:#6FA3E0; --fc:#9B82E6; --wf:#E0AC55; --sf:#E26C97; --api:#56B0CC; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A0E14; --surface:#161E29; --surface2:#1C2633; --border:#2C3947; --border2:#222E3B; --input:#3B4859;
+  --text:#E6EBF2; --muted:#93A0B2; --primary:#1FA89B; --primary-ink:#04201D; --tint:#12332F;
+  --danger:#F07A6C; --warn:#E5B24D; --ok:#4FD1B5; --uc:#8BC568; --uctint:#1E3018;
+  --er:#3FB5A5; --dfd:#6FA3E0; --fc:#9B82E6; --wf:#E0AC55; --sf:#E26C97; --api:#56B0CC; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.top{max-width:1240px;margin:0 auto 12px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.top h1{margin:0 0 2px;font-size:19px}.top p{margin:0;color:var(--muted);max-width:66ch}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{height:34px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--surface)}
+.seg button[aria-pressed=true]{border-color:var(--primary);background:var(--tint);font-weight:600}
+.opts{max-width:1240px;margin:0 auto 12px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.eyebrow{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.note{max-width:1240px;margin:0 auto 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px}
+.note h2{margin:0 0 4px;font-size:14px}.note ul{margin:4px 0 0;padding-left:18px;color:var(--muted)}
+.badge{font-size:11px;border-radius:9px;padding:0 8px;font-weight:600;white-space:nowrap;background:var(--tint);color:var(--primary);border:1px solid var(--primary)}
+.win{max-width:1240px;margin:0 auto;background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative}
+.mono{font-family:var(--mono)}
+.btn{height:32px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--surface);font-weight:500;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:var(--primary-ink);font-weight:600}
+.btn.sm{height:26px;padding:0 9px;font-size:12px}
+.btn[aria-pressed=true]{background:var(--tint);border-color:var(--primary)}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:6px;padding:1px 7px;font-size:11.5px;background:var(--surface2);white-space:nowrap}
+.chip i{width:7px;height:7px;border-radius:2px;display:inline-block}
+.chip.req{border-color:var(--uc);color:var(--uc);background:var(--uctint);font-family:var(--mono)}
+.bar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border)}
+.bar .sp{flex:1}
+.dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.prog{height:6px;border-radius:3px;background:var(--border2);overflow:hidden}.prog i{display:block;height:100%;background:var(--uc)}
+.kb{font-family:var(--mono);font-size:11px;border:1px solid var(--border);border-radius:4px;padding:0 5px;background:var(--surface2)}
+/* Home */
+.home{padding:26px 28px}
+.hname{font-size:26px;font-weight:700;margin:0 0 4px}
+.cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:20px}
+@media(max-width:900px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.card{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--c);border-radius:12px;padding:12px;min-height:108px;display:flex;flex-direction:column;gap:4px}
+.card .n{font-size:24px;font-weight:700;line-height:1.1}.card .t{font-weight:600;color:var(--c);font-size:12px}.card .d{color:var(--muted);font-size:11.5px;flex:1}
+.card.uc{border-top-color:var(--uc);--c:var(--uc)}
+.strip{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;margin-top:14px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--uc);border-radius:10px}
+.strip .k{display:flex;flex-direction:column;min-width:74px}.strip .k b{font-size:17px}.strip .k span{font-size:11px;color:var(--muted)}
+/* diagram */
+.dgwrap{display:grid;grid-template-columns:minmax(0,1fr) auto}
+.dgwrap.B{grid-template-columns:minmax(0,1fr) 296px}
+@media(max-width:900px){.dgwrap.B{grid-template-columns:minmax(0,1fr)}}
+.canvas{background:var(--surface2);background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:20px 20px;overflow:auto;position:relative;min-height:470px}
+.canvas svg{display:block;min-width:760px;width:100%;height:auto}
+.canvas text{font-family:var(--sans);fill:var(--text)}
+.uce{cursor:pointer}.uce ellipse{fill:var(--surface);stroke:var(--uc);stroke-width:1.6}.uce.sel ellipse{fill:var(--uctint);stroke-width:2.8}
+.float{position:absolute;left:16px;bottom:16px;width:290px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.14)}
+.side{background:var(--surface);border-left:1px solid var(--border);padding:16px}
+.side h3,.float h3{margin:0 0 6px;font-size:15px}
+.lbl{font-size:11px;color:var(--muted);margin:10px 0 4px;letter-spacing:.04em}
+.menu{position:absolute;right:14px;top:50px;z-index:3;width:250px;background:var(--surface);border:1px solid var(--input);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.2);overflow:hidden}
+.menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;border-top:1px solid var(--border2)}
+.menu button:first-child{border-top:0}.menu button:hover{background:var(--surface2)}
+.menu small{display:block;color:var(--muted)}
+/* tests */
+table.tc{width:100%;border-collapse:collapse}
+.tc th{font-size:11px;font-weight:600;color:var(--muted);text-align:left;padding:8px 12px;background:var(--surface2);white-space:nowrap}
+.tc td{padding:8px 12px;border-top:1px solid var(--border2);vertical-align:top}
+.tc tr.rowbtn{cursor:pointer}.tc tr.rowbtn:hover td{background:var(--surface2)}
+.tc .steps{margin:6px 0 0;padding-left:20px;color:var(--muted)}.tc .steps li{margin:2px 0}
+.who{font-size:10.5px;font-weight:700;border-radius:4px;padding:0 5px;margin-right:4px}
+.who.u{background:var(--uctint);color:var(--uc)}.who.s{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.kind{font-size:11px;font-weight:600;border-radius:9px;padding:0 8px;white-space:nowrap}
+.kind.m{background:var(--uctint);color:var(--uc)}.kind.a{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}.kind.e{background:color-mix(in srgb,var(--danger) 16%,transparent);color:var(--danger)}
+.grp{margin:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden}
+.grp>h3{margin:0;padding:11px 14px;font-size:14px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border2);background:var(--surface2)}
+.tcard{padding:12px 14px;border-top:1px solid var(--border2)}.tcard:first-of-type{border-top:0}
+.tcard .hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tcard ol{margin:6px 0 0;padding-left:20px}.tcard ol li{margin:3px 0}
+.exp{margin-top:6px;padding:6px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="top">
+  <div>
+    <h1>Use Case: ส่วนหน้าจอที่รอเลือก</h1>
+    <p>Phase 29–30 และส่วนแกนของ 31–32 ทำเสร็จแล้ว หน้านี้ให้เลือกหน้าตาของส่วนที่เหลือ 3 เรื่อง ข้อมูลตัวอย่างคือ Hotel Booking กดสลับหัวข้อและแบบได้</p>
+  </div>
+  <div class="seg" id="topSeg" role="group" aria-label="หัวข้อ">
+    <button data-v="home">1 · ตัวชี้บนหน้า Home</button>
+    <button data-v="dg">2 · แท็บแผนภาพ</button>
+    <button data-v="tc">3 · แท็บกรณีทดสอบ</button>
+  </div>
+</div>
+<div class="opts"><span class="eyebrow">แบบ</span><div class="seg" id="varSeg"></div></div>
+<div class="note" id="note"></div>
+<div class="win" id="win"></div>
+
+<script>
+var S={top:'home',v:{home:'B',dg:'A',tc:'A'},sel:'UC-02',open:{},menu:false,fmt:'table'};
+var UC={'UC-01':{n:'ค้นหาห้องว่าง',a:'Guest',x:240,y:130},'UC-02':{n:'จองห้องพัก',a:'Guest',x:240,y:260},'UC-03':{n:'ชำระเงิน',a:'Guest',x:480,y:260},'UC-04':{n:'ใช้โค้ดส่วนลด',a:'Guest',x:480,y:130},'UC-05':{n:'เพิ่มห้อง',a:'Admin',x:240,y:390}};
+var TCS=[
+ {id:'TC-UC02-01',uc:'UC-02',k:'m',t:'หลัก',pre:'เข้าสู่ระบบแล้ว',steps:[['u','เลือกห้องจากหน้ารายละเอียด'],['s','ตรวจห้องว่าง · GET /rooms/{id}/availability'],['u','กรอกข้อมูลผู้เข้าพักและยืนยัน'],['s','สร้างการจอง · POST /bookings']],exp:'มีการจองในระบบและห้องถูกกันไว้',refs:'REQ-03 · API: POST /bookings · ER: bookings'},
+ {id:'TC-UC02-02',uc:'UC-02',k:'a',t:'ทางเลือก 2a',pre:'เข้าสู่ระบบแล้ว',steps:[['u','เลือกห้องจากหน้ารายละเอียด'],['u','ที่ขั้นที่ 2 : เมื่อ ห้องเต็มแล้ว'],['s','เสนอห้องอื่น'],['s','กลับไปขั้นที่ 1']],exp:'เสนอห้องอื่น · กลับไปขั้นที่ 1',refs:'REQ-03 · API: GET /rooms/{id}/availability'},
+ {id:'TC-UC02-03',uc:'UC-02',k:'e',t:'ข้อผิดพลาด 4x',pre:'เข้าสู่ระบบแล้ว',steps:[['u','เลือกห้อง · กรอกข้อมูล · ยืนยัน'],['u','ที่ขั้นที่ 4 : เมื่อ ฐานข้อมูลล่ม'],['s','แจ้งให้ลองใหม่'],['s','จบ Use Case']],exp:'แจ้งให้ลองใหม่ · จบ Use Case',refs:'REQ-03 · ER: bookings'},
+ {id:'TC-UC03-01',uc:'UC-03',k:'m',t:'หลัก',pre:'มีการจองสถานะ pending',steps:[['s','แสดงยอดและช่องทางชำระเงิน'],['u','เลือกช่องทางและยืนยัน'],['s','ส่งคำขอไปยัง Payment Gateway · POST /payments']],exp:'การจองถูกบันทึกว่าชำระแล้ว',refs:'REQ-07 · API: POST /payments'},
+ {id:'TC-UC03-02',uc:'UC-03',k:'a',t:'ทางเลือก 3a',pre:'มีการจองสถานะ pending',steps:[['s','แสดงยอดและช่องทางชำระเงิน'],['u','เลือกช่องทางและยืนยัน'],['u','ที่ขั้นที่ 3 : เมื่อ Gateway ไม่ตอบ'],['s','ลองใหม่สูงสุด 2 ครั้ง'],['s','จบ Use Case']],exp:'ลองใหม่สูงสุด 2 ครั้ง · จบ Use Case',refs:'REQ-07 · API: POST /payments'}
+];
+var NAMES={home:'หน้า Home',dg:'แท็บแผนภาพ',tc:'แท็บกรณีทดสอบ'};
+var VARS={home:[['A','A · การ์ดที่ 7'],['B','B · แถบสรุปใต้การ์ด'],['C','C · ป้ายบนปุ่มเครื่องมือ']],dg:[['A','A · ผืนผ้าใบเต็ม + การ์ดลอย'],['B','B · ผืนผ้าใบ + แผงสรุปขวา']],tc:[['A','A · ตารางพรีวิว'],['B','B · การ์ดจัดกลุ่มตาม Use Case']]};
+var NOTES={
+ home:{A:'<h2>A · การ์ดใบที่ 7</h2><ul><li>เข้ากับแถวการ์ดเดิม เห็นจำนวนและปัญหาในที่เดียวกับชนิดเอกสารอื่น</li><li>Use Case ไม่ใช่เอกสารชนิดหนึ่ง (ชุดเดียวต่อโปรเจกต์) การ์ดสีเขียวแยกออกมาอาจทำให้เข้าใจว่าสร้างได้หลายอัน และแถวจะแน่นขึ้นเป็น 7 ใบ</li></ul>',
+        B:'<h2>B · แถบสรุปใต้การ์ด <span class="badge">แนะนำ</span></h2><ul><li>แยกชัดว่าเป็นข้อมูลระดับโปรเจกต์ มีที่ว่างให้ตัวเลขสำคัญ: จำนวนข้อ ขั้นตอน ความครอบคลุมของ REQ และปัญหา พร้อมปุ่มเปิด/ส่งออก</li><li>ไม่เปลี่ยนแถวการ์ดเดิม เพิ่มได้ภายหลัง (เช่น ตัวเลขกรณีทดสอบ)</li></ul>',
+        C:'<h2>C · ป้ายบนปุ่มเครื่องมือ</h2><ul><li>เบาที่สุด: ปุ่ม "Use Case" ที่มีอยู่แล้วเพิ่มตัวเลขและจุดแดงเมื่อมีปัญหา</li><li>เล็กเกินไปจะไม่ถูกสังเกต และไม่มีที่แสดงความครอบคลุม</li></ul>'},
+ dg:{A:'<h2>A · ผืนผ้าใบเต็ม + การ์ดลอย</h2><ul><li>พื้นที่วาดกว้างที่สุด คลิกวงรีเพื่อเลือก การ์ดลอยมุมซ้ายล่างสรุปสเปกพร้อมปุ่ม "แก้สเปก →" (ดับเบิลคลิกวงรีก็ไปแท็บสเปก)</li><li>แถบเครื่องมือ: ซูม · พอดีจอ · จัดวางใหม่ · แสดงตำนานเส้น · ส่งออก PNG/SVG</li></ul>',
+      B:'<h2>B · ผืนผ้าใบ + แผงสรุปขวา <span class="badge">แนะนำ</span></h2><ul><li>แผงขวากว้างเท่าแผงอื่นของแอป แสดงสเปกย่อ ผลตรวจ และ REQ ของข้อที่เลือก อ่านได้ครบโดยไม่บังภาพ</li><li>ใช้พื้นที่แคนวาสน้อยลง แต่ตรงกับโครงที่ผู้ใช้คุ้นจากแผนภาพอื่น (DFD, Screen Flow)</li></ul>'},
+ tc:{A:'<h2>A · ตารางพรีวิว <span class="badge">แนะนำ</span></h2><ul><li>1 แถวต่อกรณี กดแถวเพื่อขยายขั้นตอน ตัวกรองตามชนิด/Use Case ; หัวสรุป: จำนวนกรณีและ REQ ที่มีกรณีทดสอบ</li><li>ปุ่ม "ส่งออก" เปิดเมนู: Markdown ตาราง · Markdown Given/When/Then · CSV (Excel)</li></ul>',
+      B:'<h2>B · การ์ดจัดกลุ่มตาม Use Case</h2><ul><li>อ่านลื่นเหมือนเอกสาร เห็นขั้นตอนทุกกรณีโดยไม่ต้องกดขยาย เหมาะกับโปรเจกต์เล็ก</li><li>โปรเจกต์ที่มีหลายสิบกรณีจะยาวและกรองได้ยากกว่า</li></ul>'}
+};
+function ucDot(c){return '<span class="dot" style="background:var(--'+c+')"></span>'}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+/* ---------- Home ---------- */
+function home(){
+  var v=S.v.home;
+  var cards=[['er','ER Diagram',1,'9 ตาราง · 8 ความสัมพันธ์'],['dfd','Data Flow',2,'6 กระบวนการ'],['fc','Flowchart',1,'17 สัญลักษณ์'],['wf','Wireframe',7,'250 ชิ้นส่วน'],['sf','Screen Flow',1,'10 หน้าจอ'],['api','API',1,'23 endpoint']].map(function(c){return '<div class="card" style="--c:var(--'+c[0]+')"><span class="t">'+ucDot(c[0])+' '+c[1]+'</span><span class="n">'+c[2]+'</span><span class="d">'+c[3]+'</span></div>'}).join('');
+  if(v=='A')cards+='<div class="card uc"><span class="t">'+ucDot('uc')+' Use Case</span><span class="n">5</span><span class="d">15 ขั้นตอน · REQ 3/5 · <b style="color:var(--danger)">ปัญหา 2</b></span></div>';
+  var tools=['พจนานุกรมข้อมูล','ประวัติเวอร์ชัน','ความต้องการ','Use Case'+(v=='C'?' <span class="badge" style="margin-left:4px">5</span><i style="width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block"></i>':''),'สร้างโค้ด','Mock Server'].map(function(t){return '<button class="btn sm">'+t+'</button>'}).join('');
+  var strip=v=='B'?'<div class="strip"><b style="color:var(--uc)">Use Case</b><div class="k"><b>5</b><span>ข้อ</span></div><div class="k"><b>15</b><span>ขั้นตอน</span></div><div class="k" style="min-width:190px"><b>3 / 5</b><span>ความต้องการที่มี Use Case</span><div class="prog" style="margin-top:4px"><i style="width:60%"></i></div></div><div class="k"><b style="color:var(--danger)">2</b><span>ปัญหา</span></div><span style="flex:1"></span><button class="btn sm">ส่งออกเอกสาร</button><button class="btn sm pri">เปิด Use Case →</button></div>':'';
+  return '<div class="home"><div style="color:var(--muted);font-size:12px">โปรเจกต์</div><div class="hname">Hotel Booking</div><div style="color:var(--muted)">14 เอกสาร · hotel_booking.nsln</div><div style="margin:14px 0 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="eyebrow">เครื่องมือของโปรเจกต์</span>'+tools+'</div><div class="cards" style="'+(v=='A'?'grid-template-columns:repeat(7,minmax(0,1fr))':'')+'">'+cards+'</div>'+strip+'</div>';
+}
+/* ---------- Diagram ---------- */
+function dgSvg(){
+  var ell=function(id){var u=UC[id];return '<g class="uce'+(S.sel==id?' sel':'')+'" data-uc="'+id+'" tabindex="0" role="button" aria-label="'+u.n+'"><ellipse cx="'+u.x+'" cy="'+u.y+'" rx="92" ry="36"/><text x="'+u.x+'" y="'+(u.y-3)+'" text-anchor="middle" font-size="13" font-weight="600">'+u.n+'</text><text x="'+u.x+'" y="'+(u.y+14)+'" text-anchor="middle" font-size="11" style="fill:var(--muted)">'+id+'</text></g>'};
+  var actor=function(x,y,n){return '<g><circle cx="'+x+'" cy="'+(y-24)+'" r="10" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--text)"/><path d="M'+x+' '+(y-14)+'v26M'+(x-16)+' '+(y-4)+'h32M'+x+' '+(y+12)+'l-13 18M'+x+' '+(y+12)+'l13 18" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--text)"/><text x="'+x+'" y="'+(y+48)+'" text-anchor="middle" font-size="12.5" font-weight="600">'+n+'</text></g>'};
+  var ln=function(x1,y1,x2,y2,d,t){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="currentColor" stroke-width="1.3" style="color:var(--muted)"'+(d?' stroke-dasharray="6 4" marker-end="url(#ar)"':'')+'/>'+(t?'<text x="'+((x1+x2)/2)+'" y="'+((y1+y2)/2-6)+'" text-anchor="middle" font-size="11" font-style="italic" style="fill:var(--muted)">'+t+'</text>':'')};
+  return '<svg viewBox="0 0 760 470" role="img" aria-label="แผนภาพ Use Case"><defs><marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" fill="none" stroke="currentColor" style="color:var(--muted)"/></marker></defs>'
+   +'<rect x="150" y="30" width="470" height="420" rx="12" fill="none" stroke="currentColor" stroke-width="1.4" style="color:var(--border)"/><text x="168" y="54" font-size="12.5" font-weight="600" style="fill:var(--muted)">Hotel Booking</text>'
+   +ln(78,190,148,130)+ln(78,190,148,260)+ln(78,190,148,390)+ln(78,420,148,390)+ln(640,230,572,260)
+   +ln(332,260,388,260,1,'«include»')+ln(480,166,300,236,0)+ln(388,130,332,130)
+   +actor(60,190,'Guest')+actor(60,420,'Admin')+actor(700,250,'Payment Gateway')
+   +['UC-01','UC-02','UC-03','UC-04','UC-05'].map(ell).join('')+'</svg>';
+}
+function dgInfo(){
+  var u=UC[S.sel];
+  return '<h3>'+u.n+'</h3><div class="mono" style="color:var(--muted);margin-bottom:8px">'+S.sel+' · ผู้กระทำ '+u.a+'</div>'
+   +'<div class="lbl">เป้าหมาย</div><div>ให้ผู้เข้าพักจองห้องและได้รับการยืนยันภายในครั้งเดียว</div>'
+   +'<div class="lbl">ขั้นตอน · ทางเลือก</div><div>6 ขั้นตอน · 2 ทางเลือก · 1 ข้อผิดพลาด</div>'
+   +'<div class="lbl">ความต้องการ</div><div style="display:flex;gap:6px"><span class="chip req">REQ-03</span><span class="chip req">REQ-07</span></div>'
+   +(S.v.dg=='B'?'<div class="lbl">ผลตรวจ</div><div style="color:var(--warn)">⚠ ขั้นที่ 6 ยังไม่ผูก endpoint</div>':'')
+   +'<div style="margin-top:12px"><button class="btn pri">แก้สเปก →</button></div>';
+}
+function dg(){
+  var v=S.v.dg;
+  var tb='<div class="bar"><b>แผนภาพ</b><span class="chip">5 Use Case · 3 ผู้กระทำ</span><span class="sp"></span><button class="btn sm">−</button><span class="kb">100%</span><button class="btn sm">+</button><button class="btn sm">พอดีจอ</button><button class="btn sm">จัดวางใหม่</button><button class="btn sm" aria-pressed="true">ตำนาน</button><button class="btn" data-menu="1">ส่งออก ▾</button></div>';
+  var menu=S.menu?'<div class="menu"><button>PNG<small>ภาพความละเอียดสูงสำหรับเอกสาร</small></button><button>SVG<small>เวกเตอร์ แก้ต่อใน Figma/Inkscape</small></button></div>':'';
+  var legend='<div style="position:absolute;right:14px;bottom:14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:11.5px;color:var(--muted)">— ผู้กระทำ ⇢ <i>«include»</i> / <i>«extend»</i> (เส้นประ)</div>';
+  var canvas='<div class="canvas">'+dgSvg()+(v=='A'?'<div class="float">'+dgInfo()+'</div>':'')+legend+'</div>';
+  if(v=='A')return tb+menu+'<div class="dgwrap">'+canvas+'</div>';
+  return tb+menu+'<div class="dgwrap B">'+canvas+'<div class="side">'+dgInfo()+'</div></div>';
+}
+/* ---------- Test cases ---------- */
+function stepsHtml(c){return c.steps.map(function(s){return '<li><span class="who '+s[0]+'">'+(s[0]=='u'?'ผู้ใช้':'ระบบ')+'</span>'+esc(s[1])+'</li>'}).join('')}
+function tcHead(){
+  return '<div class="bar"><b>กรณีทดสอบ</b><span class="chip">12 กรณี</span><span class="chip">หลัก 5</span><span class="chip">ทางเลือก 5</span><span class="chip">ข้อผิดพลาด 2</span><span class="chip req">REQ 3/5 มีกรณีทดสอบ</span><span class="sp"></span>'
+   +'<button class="btn sm">ทุกชนิด ▾</button><button class="btn sm">ทุก Use Case ▾</button><button class="btn pri" data-menu="1">ส่งออก ▾</button></div>'
+   +(S.menu?'<div class="menu"><button data-fmt="table">Markdown · ตาราง<small>ขั้นตอน / ผลที่คาดหวัง (ค่าเริ่มต้น)</small></button><button data-fmt="gwt">Markdown · Given/When/Then<small>อ่านเป็นประโยคทดสอบ</small></button><button data-fmt="csv">CSV<small>เปิดใน Excel/Sheets · ภาษาไทยไม่เพี้ยน (UTF-8 BOM)</small></button></div>':'');
+}
+function tc(){
+  var v=S.v.tc,h=tcHead();
+  if(v=='A'){
+    var rows=TCS.map(function(c){var o=S.open[c.id];return '<tr class="rowbtn" data-tc="'+c.id+'"><td class="mono" style="white-space:nowrap">'+(o?'▾ ':'▸ ')+c.id+'</td><td>'+UC[c.uc].n+'</td><td><span class="kind '+c.k+'">'+c.t+'</span></td><td>'+esc(c.pre)+(o?'<ol class="steps">'+stepsHtml(c)+'</ol>':'')+'</td><td>'+esc(c.exp)+'</td><td style="color:var(--muted);font-size:12px">'+esc(c.refs)+'</td></tr>'}).join('');
+    return h+'<div style="overflow-x:auto"><table class="tc"><thead><tr><th>รหัส</th><th>Use Case</th><th>ประเภท</th><th>เงื่อนไขก่อนเริ่ม / ขั้นตอน</th><th>ผลที่คาดหวัง</th><th>อ้างอิง</th></tr></thead><tbody>'+rows+'</tbody></table></div><div style="padding:10px 14px;color:var(--muted);font-size:12px">แสดง 5 จาก 12 กรณี · กดแถวเพื่อ'+'ขยายขั้นตอน</div>';
+  }
+  var by={};TCS.forEach(function(c){(by[c.uc]=by[c.uc]||[]).push(c)});
+  return h+Object.keys(by).map(function(u){return '<div class="grp"><h3>'+ucDot('uc')+'<span class="mono" style="color:var(--muted)">'+u+'</span> '+UC[u].n+'<span class="chip" style="margin-left:auto">'+by[u].length+' กรณี</span></h3>'+by[u].map(function(c){return '<div class="tcard"><div class="hd"><span class="mono" style="font-weight:600">'+c.id+'</span><span class="kind '+c.k+'">'+c.t+'</span><span style="color:var(--muted);font-size:12px">'+esc(c.refs)+'</span></div><div style="color:var(--muted);margin-top:4px">ก่อนเริ่ม: '+esc(c.pre)+'</div><ol>'+stepsHtml(c)+'</ol><div class="exp"><b>ผลที่คาดหวัง</b> '+esc(c.exp)+'</div></div>'}).join('')+'</div>'}).join('');
+}
+function render(){
+  var t=S.top;
+  document.getElementById('win').innerHTML=t=='home'?home():t=='dg'?dg():tc();
+  document.getElementById('note').innerHTML=NOTES[t][S.v[t]];
+  document.getElementById('varSeg').innerHTML=VARS[t].map(function(x){return '<button data-v="'+x[0]+'" aria-pressed="'+(S.v[t]==x[0])+'">'+x[1]+'</button>'}).join('');
+  document.querySelectorAll('#topSeg button').forEach(function(b){b.setAttribute('aria-pressed',String(S.top==b.dataset.v))});
+}
+document.getElementById('topSeg').onclick=function(e){var b=e.target.closest('button');if(b){S.top=b.dataset.v;S.menu=false;render()}};
+document.getElementById('varSeg').onclick=function(e){var b=e.target.closest('button');if(b){S.v[S.top]=b.dataset.v;S.menu=false;render()}};
+document.getElementById('win').onclick=function(e){
+  if(e.target.closest('[data-menu]')){S.menu=!S.menu;render();return}
+  var f=e.target.closest('[data-fmt]');if(f){S.menu=false;render();return}
+  var u=e.target.closest('[data-uc]');if(u){S.sel=u.dataset.uc;render();return}
+  var r=e.target.closest('[data-tc]');if(r){S.open[r.dataset.tc]=!S.open[r.dataset.tc];render();return}
+  if(S.menu){S.menu=false;render()}
+};
+document.getElementById('win').onkeydown=function(e){if(e.key=='Enter'||e.key==' '){var u=e.target.closest('[data-uc]');if(u){e.preventDefault();S.sel=u.dataset.uc;render()}}};
+render();
+</script>

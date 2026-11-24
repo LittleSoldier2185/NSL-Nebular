@@ -18,6 +18,9 @@ import 'widgets.dart';
 
 enum UcTab { spec, doc }
 
+/// key ของแถวขั้นตอน (ไว้เลื่อนไปที่ขั้นที่มีปัญหาเมื่อมาจากหน้าต่างปัญหาทั้งโปรเจกต์)
+final Map<String, GlobalKey> _ucStepKeys = {};
+
 /// หน้า Use Case (Phase 27): แท็บ "สเปก" แก้ไข · แท็บ "เอกสาร" อ่านต่อเนื่องและส่งออก Markdown
 /// ข้อมูลชุดเดียว (`Workspace.useCases`) แก้ที่แท็บสเปกเท่านั้น ; แสดงแทนแคนวาสขณะ [WorkspacePage.useCases]
 class UseCaseView extends StatefulWidget {
@@ -44,6 +47,19 @@ class _UseCaseViewState extends State<UseCaseView> {
   @override
   Widget build(BuildContext context) {
     final w = context.watch<WorkspaceController>();
+    // คำขอ "ไปที่ Use Case/ขั้นตอนนี้" (จากหน้าต่างปัญหาทั้งโปรเจกต์) : เลือกข้อนั้น กลับแท็บสเปก แล้วเลื่อนไปที่ขั้น
+    final focus = w.takeUseCaseFocus();
+    if (focus != null && w.useCaseById(focus.id) != null) {
+      _selectedId = focus.id;
+      _tab = UcTab.spec;
+      final stepId = focus.stepId;
+      if (stepId != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = _ucStepKeys[stepId]?.currentContext;
+          if (ctx != null) Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 200), alignment: 0.3);
+        });
+      }
+    }
     final u = _current(w);
     final cover = useCaseCoverage(w.workspace);
     return Container(
@@ -253,6 +269,9 @@ class _SpecTab extends StatelessWidget {
       onSelect: onSelect,
     );
     final side = _SideColumn(w: w, u: current, issues: issues);
+    // คอลัมน์ข้างในเลย์เอาต์กว้างต้องเลื่อนได้ (เนื้อหายาวกว่าความสูงหน้าจอ = ล้น) ; ความสูงขั้นต่ำเต็มพื้นที่ เพื่อให้พื้นหลัง/เส้นขอบเต็มความสูงเหมือนเดิม
+    Widget scrolling(BoxConstraints c, Widget child) =>
+        SingleChildScrollView(child: ConstrainedBox(constraints: BoxConstraints(minHeight: c.maxHeight), child: child));
     return LayoutBuilder(
       builder: (context, c) {
         if (c.maxWidth < 1000) {
@@ -267,14 +286,14 @@ class _SpecTab extends StatelessWidget {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(width: 244, child: list),
+            SizedBox(width: 244, child: scrolling(c, list)),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
                 child: editor,
               ),
             ),
-            SizedBox(width: 272, child: side),
+            SizedBox(width: 272, child: scrolling(c, side)),
           ],
         );
       },
@@ -752,6 +771,16 @@ class _Steps extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ลากเรียงด้วยมือจับด้านซ้าย (ปุ่ม ▲▼ ยังอยู่ไว้ใช้ด้วยคีย์บอร์ด) ; ทางเลือกอ้างขั้นด้วย id จึงไม่พังเมื่อเรียงใหม่
+          ReorderableListView(
+            key: const ValueKey('uc-steps-list'),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
+            onReorderItem: (from, to) {
+              if (to != from) edit((x) => x.steps.insert(to, x.steps.removeAt(from)));
+            },
+            children: [
           for (final (i, s) in u.steps.indexed)
             Container(
               key: ValueKey('uc-step-${s.id}'),
@@ -764,8 +793,24 @@ class _Steps extends StatelessWidget {
                 ),
               ),
               child: Row(
+                key: _ucStepKeys.putIfAbsent(s.id, () => GlobalKey()),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  ReorderableDragStartListener(
+                    index: i,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.grab,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 8, right: 4),
+                        child: Icon(
+                          Icons.drag_indicator_rounded,
+                          key: ValueKey('uc-step-drag-${s.id}'),
+                          size: 18,
+                          color: C.muted,
+                        ),
+                      ),
+                    ),
+                  ),
                   SizedBox(
                     width: 26,
                     child: Padding(
@@ -905,6 +950,8 @@ class _Steps extends StatelessWidget {
                 ],
               ),
             ),
+            ],
+          ),
           Container(
             color: C.surfaceHi,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -989,7 +1036,16 @@ class _Branches extends StatelessWidget {
               style: TextStyle(color: C.muted),
             ),
           ),
-        for (final b in u.branches)
+        ReorderableListView(
+          key: const ValueKey('uc-branches-list'),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: false,
+          onReorderItem: (from, to) {
+            if (to != from) edit((x) => x.branches.insert(to, x.branches.removeAt(from)));
+          },
+          children: [
+        for (final (bi, b) in u.branches.indexed)
           Container(
             key: ValueKey('uc-branch-${b.id}'),
             margin: const EdgeInsets.only(bottom: 8),
@@ -1019,6 +1075,18 @@ class _Branches extends StatelessWidget {
                             runSpacing: 8,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
+                              ReorderableDragStartListener(
+                                index: bi,
+                                child: MouseRegion(
+                                  cursor: SystemMouseCursors.grab,
+                                  child: Icon(
+                                    Icons.drag_indicator_rounded,
+                                    key: ValueKey('uc-branch-drag-${b.id}'),
+                                    size: 18,
+                                    color: C.muted,
+                                  ),
+                                ),
+                              ),
                               Text(
                                 u.branchLabel(b),
                                 key: ValueKey('uc-branch-label-${b.id}'),
@@ -1149,6 +1217,8 @@ class _Branches extends StatelessWidget {
               ),
             ),
           ),
+          ],
+        ),
         Wrap(
           spacing: 8,
           children: [
@@ -1245,9 +1315,14 @@ class _SideColumn extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            text,
-            style: monoStyle.copyWith(fontSize: 11.5, color: C.primaryDark),
+          // ข้อความยาว (เช่น เงื่อนไขของ extend) หดด้วย … แทนที่จะล้นคอลัมน์
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: monoStyle.copyWith(fontSize: 11.5, color: C.primaryDark),
+            ),
           ),
           InkWell(
             onTap: onRemove,
@@ -1380,6 +1455,57 @@ class _SideColumn extends StatelessWidget {
                     u.id,
                     (x) => x.includes.contains(choice) ? x.includes.remove(choice) : x.includes.add(choice),
                   );
+                }
+              }),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Text(tr('ขยายจาก Use Case อื่น').toUpperCase(), style: head),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final e in u.extendsFrom)
+                InkWell(
+                  key: ValueKey('uc-ext-${e.baseId}'),
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () => _editExtendCondition(context, w, u, e),
+                  child: pill(
+                    _extendLabel(w, e),
+                    () => w.updateUseCase(u.id, (x) => x.extendsFrom.removeWhere((y) => y.baseId == e.baseId)),
+                  ),
+                ),
+              chipBtn('uc-ext-add', tr('+ ขยายจาก'), (ctx) async {
+                final box = ctx.findRenderObject()! as RenderBox;
+                final pos = box.localToGlobal(Offset(0, box.size.height));
+                final others = [
+                  for (final o in w.useCases)
+                    if (o.id != u.id) o,
+                ];
+                final choice = await showMenu<String>(
+                  context: ctx,
+                  position: RelativeRect.fromLTRB(pos.dx, pos.dy, pos.dx + 1, pos.dy + 1),
+                  items: [
+                    for (final o in others)
+                      CheckedPopupMenuItem<String>(
+                        value: o.id,
+                        checked: u.extendsFrom.any((e) => e.baseId == o.id),
+                        height: 34,
+                        child: Text('${o.code}  ${o.name}', style: const TextStyle(fontSize: 13)),
+                      ),
+                    if (others.isEmpty)
+                      PopupMenuItem<String>(enabled: false, child: Text(tr('ยังไม่มี Use Case อื่น'), style: const TextStyle(fontSize: 13))),
+                  ],
+                );
+                if (choice != null) {
+                  w.updateUseCase(u.id, (x) {
+                    if (!x.extendsFrom.any((e) => e.baseId == choice)) {
+                      x.extendsFrom.add(UcExtend(baseId: choice));
+                    } else {
+                      x.extendsFrom.removeWhere((e) => e.baseId == choice);
+                    }
+                  });
                 }
               }),
             ],
@@ -1685,4 +1811,65 @@ class _Tag extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// ป้ายของ extend : รหัสของ Use Case ฐาน + เงื่อนไข (ฐานที่ไม่มีแล้ว = ?)
+String _extendLabel(WorkspaceController w, UcExtend e) {
+  final base = w.useCaseById(e.baseId);
+  final c = e.condition.trim();
+  return '${base?.code ?? '?'}${c.isEmpty ? '' : ' · [$c]'}';
+}
+
+/// กล่องแก้เงื่อนไขของ extend (ว่าง = ไม่มีเงื่อนไข)
+Future<void> _editExtendCondition(BuildContext context, WorkspaceController w, UseCase u, UcExtend e) async {
+  final base = w.useCaseById(e.baseId);
+  final v = await showDialog<String>(
+    context: context,
+    builder: (_) => _ExtendConditionDialog(title: tr('เงื่อนไขของการขยาย {0}', [base?.code ?? '?']), initial: e.condition),
+  );
+  if (v == null) return;
+  w.updateUseCase(u.id, (x) {
+    for (final t in x.extendsFrom) {
+      if (t.baseId == e.baseId) t.condition = v.trim();
+    }
+  });
+}
+
+/// กล่องพิมพ์เงื่อนไข : ถือ controller เอง (dispose ตอนกล่องถูกถอดจริง ไม่ใช่ตอนเริ่มปิด จึงไม่ชนกับแอนิเมชันปิด)
+class _ExtendConditionDialog extends StatefulWidget {
+  const _ExtendConditionDialog({required this.title, required this.initial});
+  final String title, initial;
+
+  @override
+  State<_ExtendConditionDialog> createState() => _ExtendConditionDialogState();
+}
+
+class _ExtendConditionDialogState extends State<_ExtendConditionDialog> {
+  late final TextEditingController _ctl = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        key: const ValueKey('uc-ext-dialog'),
+        title: Text(widget.title),
+        content: SizedBox(
+          width: 360,
+          child: TextField(
+            key: const ValueKey('uc-ext-condition'),
+            controller: _ctl,
+            autofocus: true,
+            decoration: InputDecoration(hintText: tr('เช่น มีโค้ดส่วนลด (เว้นว่าง = ไม่มีเงื่อนไข)')),
+            onSubmitted: (t) => Navigator.pop(context, t),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ยกเลิก'))),
+          FilledButton(key: const ValueKey('uc-ext-ok'), onPressed: () => Navigator.pop(context, _ctl.text), child: Text(tr('ตกลง'))),
+        ],
+      );
 }

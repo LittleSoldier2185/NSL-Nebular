@@ -13,6 +13,7 @@ import '../core/l10n/l10n.dart';
 import '../core/models/workspace.dart';
 import '../core/storage/project_file.dart';
 import '../core/validate/issue.dart';
+import '../core/validate/usecase_validator.dart';
 import '../core/validate/workspace_validator.dart';
 
 /// แกนของ CLI และ MCP server (Dart ล้วน ไม่แตะ Flutter) — เรียกตัวตรวจ/ตัวส่งออก/ตัวสร้างโค้ดของโปรแกรมโดยตรง
@@ -58,8 +59,8 @@ Map<String, dynamic> projectInfo(Workspace w, {String? path}) {
   for (final d in w.documents) {
     byType.update(docTypeName(d), (n) => n + 1, ifAbsent: () => 1);
   }
-  final issues = validateWorkspace(w);
-  int count(Severity s) => issues.where((i) => i.issue.severity == s).length;
+  final issues = [...validateWorkspace(w).map((i) => i.issue), ...validateUseCases(w).map((i) => i.toIssue())];
+  int count(Severity s) => issues.where((i) => i.severity == s).length;
   return {
     'name': w.name,
     'path': ?path,
@@ -74,6 +75,7 @@ Map<String, dynamic> projectInfo(Workspace w, {String? path}) {
     'screens': c.screens,
     'endpoints': [for (final d in w.documents) d.api?.endpoints.length ?? 0].fold<int>(0, (a, b) => a + b),
     'requirements': w.requirements.length,
+    'useCases': w.useCases.length,
     'issues': {'errors': count(Severity.error), 'warnings': count(Severity.warning), 'info': count(Severity.info)},
   };
 }
@@ -111,9 +113,11 @@ Severity? parseSeverity(String? s) => switch (s?.toLowerCase()) {
 /// ผลตรวจทั้งโปรเจกต์ — [minSeverity] = แสดงเฉพาะระดับนี้ขึ้นไป (ไม่ระบุ = ทุกระดับ) ; [language] ตั้งภาษาของข้อความ
 Map<String, dynamic> validateReport(Workspace w, {Severity? minSeverity}) {
   final all = validateWorkspace(w);
+  final uc = validateUseCases(w); // Use Case ไม่ผูกกับเอกสาร จึงรายงานแยก (type = usecase)
   int rank(Severity s) => switch (s) { Severity.error => 0, Severity.warning => 1, Severity.info => 2 };
   final shown = [for (final i in all) if (minSeverity == null || rank(i.issue.severity) <= rank(minSeverity)) i];
-  int count(Severity s) => all.where((i) => i.issue.severity == s).length;
+  final ucShown = [for (final i in uc) if (minSeverity == null || rank(i.severity) <= rank(minSeverity)) i];
+  int count(Severity s) => all.where((i) => i.issue.severity == s).length + uc.where((i) => i.severity == s).length;
   return {
     'errors': count(Severity.error),
     'warnings': count(Severity.warning),
@@ -129,6 +133,18 @@ Map<String, dynamic> validateReport(Workspace w, {Severity? minSeverity}) {
           'title': i.issue.title,
           'message': i.issue.message,
           if (i.issue.tableId != null) 'elementId': i.issue.tableId,
+        },
+      for (final i in ucShown)
+        {
+          'documentId': '',
+          'document': 'Use Case',
+          'type': 'usecase',
+          'severity': i.severity.name,
+          'code': i.code,
+          'title': i.title,
+          'message': i.detail,
+          if (i.ucId != null) 'elementId': i.ucId,
+          if (i.stepId != null) 'stepId': i.stepId,
         },
     ],
   };

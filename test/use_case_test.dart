@@ -16,6 +16,7 @@ import 'package:nsl_nebular/main.dart';
 import 'package:nsl_nebular/state/app_settings.dart';
 import 'package:nsl_nebular/state/workspace_controller.dart';
 import 'package:nsl_nebular/ui/home_page.dart';
+import 'package:nsl_nebular/ui/left_panel.dart';
 import 'package:provider/provider.dart';
 
 /// Phase 27: Use Case ของโปรเจกต์ (รอบ 1 = สเปก + เอกสาร)
@@ -245,6 +246,45 @@ void main() {
     }
 
     final view = find.byKey(const ValueKey('usecase-view'));
+
+    testWidgets('จอกว้างแต่เตี้ย + ข้อมูลเยอะ: แผงซ้าย/ขวาเลื่อนได้ ไม่ล้น (บั๊กเดิม: แผงขวาล้น 344px)', (tester) async {
+      await boot(tester, size: const Size(1600, 560));
+      for (var i = 0; i < 12; i++) {
+        wc.addRequirement(text: 'ความต้องการข้อ $i');
+      }
+      for (var i = 0; i < 25; i++) {
+        seedApp(name: 'Use Case ที่ $i', actor: i.isEven ? 'Guest' : 'Admin');
+      }
+      final u = wc.useCases.first;
+      wc.updateUseCase(u.id, (x) {
+        x.branches.addAll([for (var i = 0; i < 4; i++) UcBranch(id: 'ov$i', atStepId: 's1', condition: '')]); // ผลตรวจหลายข้อ
+        x.reqIds.addAll([for (final r in wc.requirements.take(8)) r.id]);
+      });
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      // เลื่อนไปท้ายแผงขวาและท้ายรายการซ้ายได้
+      await tester.ensureVisible(find.byKey(const ValueKey('uc-cover-side')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(ValueKey('uc-item-${wc.useCases.last.id}')));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('หน้า Use Case ไม่มีแผงซ้ายของโหมดอื่น (ER/DFD/...) ; กลับไปเอกสาร = แผงซ้ายกลับมา', (tester) async {
+      await boot(tester);
+      expect(find.byType(LeftPanel), findsNothing, reason: 'ไม่ใช้แผงตารางของ ER ในหน้านี้');
+      expect(find.byKey(const ValueKey('splitter-left')), findsNothing);
+      expect(view, findsOneWidget);
+      wc.openDocument(wc.mainEr.docId);
+      await tester.pumpAndSettle();
+      expect(view, findsNothing);
+      expect(find.byType(LeftPanel), findsOneWidget);
+      expect(find.byKey(const ValueKey('splitter-left')), findsOneWidget);
+      wc.showUseCases();
+      await tester.pumpAndSettle();
+      expect(find.byType(LeftPanel), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
 
     testWidgets('เข้าได้จากปุ่มบน Project Home ; ยังไม่มี = หน้าว่างพร้อมปุ่มเริ่ม', (tester) async {
       await boot(tester);

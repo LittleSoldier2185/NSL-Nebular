@@ -110,6 +110,30 @@ class UcBranch {
   }
 }
 
+/// ความสัมพันธ์ «extend» : Use Case นี้เป็นส่วนขยายของ Use Case ฐาน [baseId] ที่ทำงานเพิ่มเมื่อ [condition] เป็นจริง
+/// (ลูกศรในแผนภาพชี้จากส่วนขยายไปที่ฐาน)
+class UcExtend {
+  UcExtend({required this.baseId, this.condition = '', Map<String, dynamic>? extra}) : extra = extra ?? {};
+
+  String baseId;
+  String condition;
+  final Map<String, dynamic> extra;
+
+  Map<String, dynamic> toJson() => {...extra, 'base': baseId, if (condition.isNotEmpty) 'cond': condition};
+
+  static UcExtend? tryFromJson(Object? j) {
+    if (j is! Map || j['base'] is! String || (j['base'] as String).isEmpty) return null;
+    return UcExtend(
+      baseId: j['base'] as String,
+      condition: j['cond'] is String ? j['cond'] as String : '',
+      extra: {
+        for (final e in j.entries)
+          if (e.key is String && e.key != 'base' && e.key != 'cond') e.key as String: e.value,
+      },
+    );
+  }
+}
+
 /// Use Case หนึ่งข้อ
 class UseCase {
   UseCase({
@@ -128,11 +152,13 @@ class UseCase {
     List<UcBranch>? branches,
     List<String>? reqIds,
     List<String>? includes,
+    List<UcExtend>? extendsFrom,
     Map<String, dynamic>? extra,
   })  : steps = steps ?? [],
         branches = branches ?? [],
         reqIds = reqIds ?? [],
         includes = includes ?? [],
+        extendsFrom = extendsFrom ?? [],
         extra = extra ?? {};
 
   final String id;
@@ -157,6 +183,9 @@ class UseCase {
 
   /// id ของ Use Case อื่นที่ Use Case นี้เรียกใช้ (include)
   final List<String> includes;
+
+  /// Use Case ฐานที่ข้อนี้ขยาย (extend) พร้อมเงื่อนไข — แผนภาพวาดลูกศร «extend» จากข้อนี้ไปที่ฐาน
+  final List<UcExtend> extendsFrom;
   final Map<String, dynamic> extra;
 
   UcStep? stepById(String id) {
@@ -183,7 +212,7 @@ class UseCase {
   List<String> get secondaryActors => [for (final a in secondaryActor.split(',')) if (a.trim().isNotEmpty) a.trim()];
 
   static const _keys = {
-    'id', 'code', 'name', 'actor', 'actor2', 'priority', 'status', 'goal', 'trigger', 'pre', 'post', 'steps', 'branches', 'reqs', 'includes',
+    'id', 'code', 'name', 'actor', 'actor2', 'priority', 'status', 'goal', 'trigger', 'pre', 'post', 'steps', 'branches', 'reqs', 'includes', 'extends',
   };
 
   Map<String, dynamic> toJson() => {
@@ -203,6 +232,7 @@ class UseCase {
         if (branches.isNotEmpty) 'branches': [for (final b in branches) b.toJson()],
         if (reqIds.isNotEmpty) 'reqs': reqIds,
         if (includes.isNotEmpty) 'includes': includes,
+        if (extendsFrom.isNotEmpty) 'extends': [for (final e in extendsFrom) e.toJson()],
       };
 
   static UseCase? tryFromJson(Object? j) {
@@ -240,6 +270,10 @@ class UseCase {
       ],
       reqIds: ids(j['reqs']),
       includes: ids(j['includes']),
+      extendsFrom: [
+        for (final e in (j['extends'] is List ? j['extends'] as List : const []))
+          ?UcExtend.tryFromJson(e),
+      ],
       extra: {
         for (final e in j.entries)
           if (e.key is String && !_keys.contains(e.key)) e.key as String: e.value,

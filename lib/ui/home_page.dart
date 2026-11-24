@@ -132,7 +132,10 @@ class _HomePageState extends State<HomePage> {
     if (s == null || s.cmd == null) return KeyEventResult.ignored;
     if (_typing && !s.global) return KeyEventResult.ignored;
     // หน้า Project Home ไม่มีแคนวาส: คำสั่งแก้ไขเอกสาร (ลบ/วาง/เครื่องมือ) ต้องไม่ไปแตะเอกสารที่ซ่อนอยู่
-    if (!s.global && context.read<WorkspaceController>().pageView) return KeyEventResult.ignored;
+    final ws = context.read<WorkspaceController>();
+    // Undo/Redo บนหน้า Use Case / ความต้องการ / Mock ใช้ประวัติระดับโปรเจกต์ (Phase 29) ; คำสั่งอื่นบนหน้าระดับโปรเจกต์ยังถูกปิด
+    final projectUndo = ws.usesProjectHistory && (s.cmd == Cmd.undo || s.cmd == Cmd.redo);
+    if (!s.global && ws.pageView && !projectUndo) return KeyEventResult.ignored;
     // คำสั่งถูกส่งต่อให้ AppActions: แท็บ DFD ใช้ชุดคำสั่งของ DFD (คำสั่งแก้ตารางไม่แตะ ER ที่ซ่อนอยู่)
     AppActions(context).run(s.cmd!);
     return KeyEventResult.handled;
@@ -181,10 +184,13 @@ class _HomePageState extends State<HomePage> {
           // แคนวาสผูกกับเอกสาร: สลับเอกสาร = สร้าง State ใหม่ (ตัวฟัง/ตัวแปรที่จับ controller ของเอกสารเดิมไว้ไม่ค้าง)
           final page = context.select<WorkspaceController, WorkspacePage>((w) => w.page);
           final home = page != WorkspacePage.document; // หน้าระดับโปรเจกต์: ไม่มีแผงขวา
+          // หน้าระดับโปรเจกต์ไม่ใช่เอกสารชนิดใดชนิดหนึ่ง : ไม่แสดงแผงซ้ายของโหมดอื่น (ER/DFD/...) ที่ค้างจากเอกสารที่เปิดล่าสุด
+          final noLeft = home;
           final notes = context.select<WorkspaceController, bool>((w) => w.notesPanel);
           final docId = context.select<WorkspaceController, String>((w) => isEr ? w.currentEr.docId : w.activeId);
           return Stack(children: [
             Row(children: [
+              if (!noLeft)
               SizedBox(
                 width: leftW,
                 height: double.infinity, // เต็มความสูงเสมอ (Row ให้ความสูงแบบหลวม แผงที่เนื้อหาสั้นจะหดแล้วลอยกลางแนวตั้ง)
@@ -245,6 +251,7 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
             ]),
+            if (!noLeft)
             Positioned(
               left: leftW - 4,
               top: 0,

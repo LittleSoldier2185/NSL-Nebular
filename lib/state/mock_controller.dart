@@ -32,6 +32,16 @@ class MockController extends ChangeNotifier {
   /// บันทึกคำขอ เรียงจากเก่าไปใหม่
   List<MockLogEntry> get log => List.unmodifiable(_log);
 
+  // ตัวนับต่อ endpoint (แยกจากบันทึก จึงไม่ลดเมื่อบันทึกเกิน [maxLog]) ; ล้างพร้อม [clearLog]
+  final Map<String, int> _hits = {};
+  final Map<String, int> _lastStatus = {};
+
+  /// จำนวนคำขอที่ตรงกับ endpoint [id] นับตั้งแต่ล้างบันทึกครั้งล่าสุด
+  int hitsOf(String id) => _hits[id] ?? 0;
+
+  /// สถานะที่ตอบล่าสุดของ endpoint [id] (null = ยังไม่เคยถูกเรียก)
+  int? lastStatusOf(String id) => _lastStatus[id];
+
   bool get running => _server?.running ?? false;
   bool get busy => _busy;
 
@@ -92,14 +102,21 @@ class MockController extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  /// ล้างข้อมูลที่จำไว้ (POST/PUT/DELETE) กลับไปเริ่มจาก seed
-  void resetData() {
+  /// จำนวนครั้งที่ข้อมูลที่จำไว้เปลี่ยนไปจาก seed (0 = ยังเป็นค่าเริ่มต้น หรือไม่ได้รัน)
+  int get changes => _engine?.changes ?? 0;
+
+  /// ล้างข้อมูลที่จำไว้ (POST/PUT/DELETE) กลับไปเริ่มจาก seed ; คืนจำนวนครั้งที่เปลี่ยนที่ถูกล้าง
+  int resetData() {
+    final n = changes;
     _engine?.reset();
     notifyListeners();
+    return n;
   }
 
   void clearLog() {
     _log.clear();
+    _hits.clear();
+    _lastStatus.clear();
     notifyListeners();
   }
 
@@ -118,6 +135,11 @@ class MockController extends ChangeNotifier {
 
   void _add(MockLogEntry e) {
     _log.add(e);
+    final id = e.endpointId;
+    if (id != null) {
+      _hits[id] = (_hits[id] ?? 0) + 1;
+      _lastStatus[id] = e.status;
+    }
     if (_log.length > maxLog) _log.removeRange(0, _log.length - maxLog);
     if (!_disposed) notifyListeners();
   }

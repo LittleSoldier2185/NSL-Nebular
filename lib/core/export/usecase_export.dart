@@ -106,3 +106,67 @@ String exportUseCaseMarkdown(Workspace w) {
   }
   return b.toString();
 }
+
+/// ส่วน Use Case สำหรับ "ส่งออกทั้งโปรเจกต์" (Markdown) — หัวข้อระดับ [level] ; ไม่มี Use Case = ''
+String useCaseMarkdownSection(Workspace w, {int level = 2}) {
+  if (w.useCases.isEmpty) return '';
+  final steps = w.useCases.fold<int>(0, (a, u) => a + u.steps.length);
+  final b = StringBuffer()
+    ..writeln()
+    ..writeln('${'#' * level} Use Case')
+    ..writeln()
+    ..writeln('- ${tr('{0} Use Case · {1} ขั้นตอน', [w.useCases.length, steps])}');
+  for (final u in w.useCases) {
+    b
+      ..writeln()
+      ..write(useCaseMarkdown(w, u, level: level + 1));
+  }
+  return b.toString();
+}
+
+/// ส่วน Use Case แบบ HTML ([esc] = ฟังก์ชัน escape ของผู้เรียก) ; ไม่มี Use Case = ''
+String useCaseHtmlSection(Workspace w, String Function(String) esc) {
+  if (w.useCases.isEmpty) return '';
+  final b = StringBuffer()
+    ..writeln('<section class="group" id="usecases">')
+    ..writeln('<h2>Use Case</h2>');
+  for (final u in w.useCases) {
+    final reqs = [
+      for (final id in u.reqIds)
+        for (final r in w.requirements)
+          if (r.id == id) r.code,
+    ];
+    b
+      ..writeln('<h3>${esc(u.code)} ${esc(u.name.trim().isEmpty ? tr('(ไม่มีชื่อ)') : u.name.trim())}</h3>')
+      ..writeln('<p class="meta">${esc(tr('ผู้กระทำหลัก'))}: ${esc(u.actor.trim().isEmpty ? '-' : u.actor.trim())}'
+          '${u.secondaryActors.isEmpty ? '' : ' + ${esc(u.secondaryActors.join(', '))}'}'
+          ' · ${esc(ucStatusLabel(u.status))} · ${esc(tr('ความสำคัญ'))}: ${esc(ucPriorityLabel(u.priority))}'
+          '${reqs.isEmpty ? '' : ' · ${esc(reqs.join(', '))}'}</p>');
+    void para(String label, String v) {
+      if (v.trim().isNotEmpty) b.writeln('<p><strong>${esc(label)}:</strong> ${esc(_line(v))}</p>');
+    }
+
+    para(tr('เป้าหมาย'), u.goal);
+    para(tr('ตัวเริ่มต้น'), u.trigger);
+    para(tr('เงื่อนไขก่อนเริ่ม'), u.preconditions);
+    if (u.steps.isNotEmpty) {
+      b.writeln('<ol>');
+      for (final s in u.steps) {
+        final links = [for (final l in s.links) traceLinkLabel(w, l) ?? tr('(ลิงก์ที่ขาด)')];
+        b.writeln('<li>[${esc(ucWhoLabel(s.who))}] ${esc(_line(s.text))}${links.isEmpty ? '' : ' — ${esc(links.join(', '))}'}</li>');
+      }
+      b.writeln('</ol>');
+    }
+    if (u.branches.isNotEmpty) {
+      b.writeln('<ul>');
+      for (final x in u.branches) {
+        b.writeln('<li><strong>${esc(u.branchLabel(x))}</strong> ${esc(_line(x.condition))} → '
+            '${_line(x.outcome).isEmpty ? '' : '${esc(_line(x.outcome))} · '}${esc(ucBranchTarget(u, x))}</li>');
+      }
+      b.writeln('</ul>');
+    }
+    para(tr('ผลลัพธ์เมื่อสำเร็จ'), u.postconditions);
+  }
+  b.writeln('</section>');
+  return b.toString();
+}

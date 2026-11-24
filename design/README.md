@@ -28,6 +28,8 @@
 | `er-table-form/` | กล่องสร้าง/แก้ตาราง 4 แท็บ + แถบ SQL + ค่าที่อนุญาต/CHECK (เล่นได้ ใช้แบบ C) — สำเนาของ Artifact https://claude.ai/artifact/QPLeHKnAx5NZPaUrJ1ro5z | 19 |
 | `wireframe-library/` | ตัวเลือกแถบเครื่องมือเต็มความกว้าง + คลังชิ้นส่วน 6 หมวด 3 แบบของ Wireframe (ใช้แบบ A + มุมมองรายการแบบ B) — สำเนาของ Artifact "Wireframe Library Panel" https://claude.ai/artifact/73Ygw8uCen2XzVcpCSSyGr | 18 |
 | `use-case/` | Use Case 3 แนวทาง (รวม A+B+C : สเปก / แผนภาพ / เอกสาร ; รอบ 1 ทำสเปก+เอกสาร) — สำเนาของ Artifact "Use Case Designer" https://claude.ai/artifact/PUN4uJvV2h9fnKxyT9GrHQ | 27 |
+| `use-case-phase30-32/` | ตัวเลือกหน้าตาของส่วนที่เหลือใน Phase 30–32 : ตัวชี้ Use Case บน Home (3 แบบ), แท็บแผนภาพ (2 แบบ), แท็บกรณีทดสอบ (2 แบบ) — สำเนาของ Artifact https://claude.ai/artifact/4hdgjY1AdTMj3rFgZwft2i | 30–32 |
+| `mock-server/` | หน้า Mock Server 3 แบบ (ใช้แบบ B: ตารางเดียว + ลิ้นชักบันทึก) + ภาพเทียบแถบที่เอาออกจากหน้าระดับโปรเจกต์ — สำเนาของ Artifact "Mock Server Redesign" https://claude.ai/artifact/SY3MRkevLo6xuC7v8xrGEc | 28 |
 | `project-home/` | หน้า Project Home 3 แบบ (ใช้แบบ A: ปรับของเดิม) — สำเนาของ Artifact "Project Home" https://claude.ai/artifact/5cPyrDfXRPZgsFsDpiuCeE | 26 |
 | `flowchart-panel/` | แผงขวา Flowchart 3 แบบ (ใช้แบบ A: 3 แท็บ รูปทรง / เส้น / ตรวจ) — สำเนาของ Artifact "Flowchart Panel" https://claude.ai/artifact/Gy8NzyEygyNDMeJkp4HPne | 25 |
 | `wireframe-components/` | ชิ้นส่วน Wireframe ใหม่ 15 ชนิด + แม่แบบ 8 ชุด + หมวดใหม่ในคลัง (สไตล์ร่าง/เรียบร้อย) — สำเนาของ Artifact "Wireframe Components" https://claude.ai/artifact/DrdFBbFPPesG9w3oBi3tat | 18b |

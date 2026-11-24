@@ -161,6 +161,11 @@ class AppActions {
       c.workspaceController.cancelPinRequest(); // Esc ระหว่างรอคลิกปักหมุด = เลิกปักหมุดก่อนอย่างอื่น
       return;
     }
+    // หน้าที่ข้อมูลเป็นของโปรเจกต์ (ความต้องการ/Use Case/Mock) : Undo/Redo ใช้ประวัติโปรเจกต์ ไม่ไปแตะเอกสารที่ค้างหลังหน้า
+    if ((cmd == Cmd.undo || cmd == Cmd.redo) && c.workspaceController.usesProjectHistory) {
+      cmd == Cmd.undo ? c.workspaceController.undo() : c.workspaceController.redo();
+      return;
+    }
     if (workspaceCmds.contains(cmd)) {
       map[cmd]!();
       return;

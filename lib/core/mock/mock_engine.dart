@@ -71,6 +71,9 @@ class MockIssue {
       };
 }
 
+/// ความยาวสูงสุดของ body ที่เก็บในบันทึกคำขอ (เกินแล้วตัดและต่อท้าย …)
+const int kMockBodyClip = 4000;
+
 /// บันทึกคำขอหนึ่งครั้ง
 class MockLogEntry {
   MockLogEntry({
@@ -105,6 +108,9 @@ class MockLogEntry {
   /// เวลาตอบรวมการหน่วง (เซิร์ฟเวอร์เป็นคนใส่)
   int durationMs;
 
+  /// body ของคำขอ/คำตอบ (ข้อความ ; ตัดที่ [kMockBodyClip] ตัวอักษร ; ว่าง = ไม่มี) — ใช้แสดงรายละเอียดในหน้า Mock Server
+  String requestBody = '', responseBody = '';
+
   bool get hasIssue => issues.any((i) => i.fatal);
 }
 
@@ -136,10 +142,14 @@ class MockEngine {
   /// ตัวนับ AUTO INCREMENT ต่อตาราง
   final Map<String, int> _counters = {};
 
+  /// จำนวนครั้งที่ข้อมูลที่จำไว้ถูกเปลี่ยน (POST เพิ่ม · PUT/PATCH แก้ · DELETE ลบ สำเร็จ) นับตั้งแต่เริ่ม/รีเซ็ตครั้งล่าสุด
+  int changes = 0;
+
   /// ล้างข้อมูลที่จำไว้ (กลับไปเริ่มจาก seed)
   void reset() {
     _rows.clear();
     _counters.clear();
+    changes = 0;
   }
 
   /// แถวที่จำอยู่ของตารางที่ endpoint นี้ผูก (null = ไม่ผูก/ไม่มีตาราง)
@@ -148,7 +158,18 @@ class MockEngine {
     return t == null ? null : _store(e.table!, t);
   }
 
+  /// ตอบคำขอ และเก็บ body ของคำขอ/คำตอบลงบันทึก (ตัดตาม [kMockBodyClip])
   MockResult handle(MockRequest req) {
+    final r = _handle(req);
+    r.entry
+      ..requestBody = _clip(req.body)
+      ..responseBody = _clip(r.reply.body);
+    return r;
+  }
+
+  static String _clip(String s) => s.length <= kMockBodyClip ? s : '${s.substring(0, kMockBodyClip)}…';
+
+  MockResult _handle(MockRequest req) {
     final doc = api();
     final fullPath = req.query.isEmpty ? req.path : '${req.path}?${Uri(queryParameters: req.query).query}';
     MockLogEntry entry0({int status = 0, ApiEndpoint? e, MockScenario s = MockScenario.normal, List<MockIssue> issues = const [], bool unknown = false}) =>
@@ -388,7 +409,9 @@ class MockEngine {
           final r = find();
           return r == null ? notFound() : _json(ok == 201 ? 200 : ok, r);
         }
-        return _create(e, table, rows, body ?? const {}, ok);
+        final created = _create(e, table, rows, body ?? const {}, ok);
+        if (created.status < 300) changes++;
+        return created;
       case ApiMethod.put:
       case ApiMethod.patch:
         if (!item) return _static(e, body);
@@ -400,12 +423,14 @@ class MockEngine {
           if (c.isPrimaryKey) continue;
           if (body != null && body.containsKey(c.name)) r[c.name] = body[c.name];
         }
+        changes++;
         return _json(ok, r);
       case ApiMethod.delete:
         if (!item) return _static(e, body);
         final r = find();
         if (r == null) return notFound();
         rows.remove(r);
+        changes++;
         return ok == 204 ? const MockReply(204) : _json(ok, r);
     }
   }

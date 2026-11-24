@@ -305,4 +305,51 @@ void main() {
       expect(w.mockApiDocument!.api, same(api), reason: 'เอกสารที่เลือกหายไป ใช้เอกสาร API แรก');
     });
   });
+  group('บันทึกคำขอเก็บ body', () {
+    test('เก็บ body ของคำขอและคำตอบ (ทั้งสำเร็จ/ไม่พบ endpoint)', () {
+      final ok = call('POST', '/login', body: {'user': 'a'});
+      expect(ok.entry.requestBody, '{"user":"a"}');
+      expect(jsonDecode(ok.entry.responseBody), {'token': 't'});
+      final nf = call('GET', '/nope');
+      expect(nf.entry.unknown, isTrue);
+      expect(nf.entry.requestBody, isEmpty);
+      expect(nf.entry.responseBody, isNotEmpty, reason: 'คำตอบ 404 มี body');
+    });
+
+    test('body ยาวเกิน kMockBodyClip ถูกตัดและต่อท้าย …', () {
+      final big = 'x' * (kMockBodyClip + 500);
+      final r = call('POST', '/login', body: big);
+      expect(r.entry.requestBody.length, kMockBodyClip + 1);
+      expect(r.entry.requestBody.endsWith('…'), isTrue);
+      expect(call('POST', '/login', body: 'x' * 10).entry.requestBody, 'x' * 10);
+    });
+  });
+
+  group('ตัวนับการเปลี่ยนข้อมูล (changes) + reset', () {
+    test('POST/PUT/DELETE ที่สำเร็จนับ ; GET และคำขอที่ล้มเหลวไม่นับ ; reset = 0 และข้อมูลกลับไปเริ่มจาก seed', () {
+      expect(engine.changes, 0);
+      call('GET', '/orders');
+      call('GET', '/orders/1');
+      expect(engine.changes, 0, reason: 'GET ไม่เปลี่ยนข้อมูล');
+      expect(call('POST', '/orders', body: {'name': 'n1', 'code': 'K1'}, headers: auth).reply.status, 201);
+      expect(engine.changes, 1);
+      call('POST', '/orders', body: {'code': 'no-name'}, headers: auth);
+      expect(engine.changes, 1, reason: 'ขาด name = 422 ไม่นับ');
+      expect(call('PUT', '/orders/1', body: {'name': 'edited'}).reply.status, 200);
+      expect(engine.changes, 2);
+      expect(call('PUT', '/orders/999', body: {'name': 'x'}).reply.status, 404);
+      expect(engine.changes, 2, reason: 'ไม่พบแถว = ไม่นับ');
+      expect(call('DELETE', '/orders/1').reply.status, anyOf(200, 204));
+      expect(engine.changes, 3);
+      expect(call('DELETE', '/orders/1').reply.status, 404);
+      expect(engine.changes, 3);
+
+      engine.reset();
+      expect(engine.changes, 0);
+      final rows = json(call('GET', '/orders')) as List;
+      expect(rows.length, 2, reason: 'กลับไปเริ่มจาก seed (2 แถว)');
+      expect((rows.first as Map)['name'], isNot('edited'));
+    });
+  });
+
 }

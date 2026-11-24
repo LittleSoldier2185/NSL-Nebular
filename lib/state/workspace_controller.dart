@@ -24,6 +24,9 @@ import 'api_controller.dart';
 import '../core/models/traceability.dart';
 import '../core/models/requirement.dart';
 import '../core/models/use_case.dart';
+import 'project_history.dart';
+import '../core/validate/usecase_validator.dart';
+import '../core/l10n/l10n.dart';
 
 /// ถือทั้งโปรเจกต์ ([Workspace]) ที่เปิดอยู่: ไฟล์ สถานะยังไม่บันทึก แท็บที่เปิด/แท็บที่ใช้งาน
 /// และ controller ของแต่ละเอกสาร (สร้างเมื่อใช้ครั้งแรก, ทิ้งเมื่อเอกสารถูกลบหรือเปิดโปรเจกต์ใหม่)
@@ -189,11 +192,11 @@ class WorkspaceController extends ChangeNotifier {
   MockSettings get mockSettings => MockSettings.fromJson(_workspace.meta.extra['mock']);
 
   /// บันทึกค่าตั้ง Mock Server ลงไฟล์โปรเจกต์ (นับเป็นการแก้ ; ต้องบันทึกไฟล์) — ค่าเท่าเดิมไม่ทำให้ dirty
-  void setMockSettings(MockSettings s) {
+  void setMockSettings(MockSettings s, {String? coalesce}) {
     final j = s.toJson();
     final old = _workspace.meta.extra['mock'];
     if (old != null && jsonEncode(old) == jsonEncode(j)) return;
-    _workspace.meta.extra['mock'] = j;
+    _recordProject(tr('ตั้งค่า Mock Server'), () => _workspace.meta.extra['mock'] = j, coalesce: coalesce);
     _structureChanged();
   }
 
@@ -214,9 +217,81 @@ class WorkspaceController extends ChangeNotifier {
   /// แสดง/ซ่อนหน้า Use Case (ไม่แตะเอกสารหรือสถานะ dirty)
   void showUseCases([bool show = true]) => _showPage(WorkspacePage.useCases, show);
 
+  // ---------- ตำแหน่งในแผนภาพ Use Case (Phase 31) : เก็บเฉพาะที่ผู้ใช้ลาก ที่เหลือจัดวางอัตโนมัติ ----------
+
+  /// คีย์ `uc:<id>` / `actor:<ชื่อ>` -> (x, y)
+  Map<String, (double, double)> get useCaseLayout {
+    final j = _workspace.meta.extra['useCaseLayout'];
+    if (j is! Map) return const {};
+    final out = <String, (double, double)>{};
+    for (final e in j.entries) {
+      final v = e.value;
+      if (e.key is String && v is List && v.length == 2 && v[0] is num && v[1] is num) {
+        out[e.key as String] = ((v[0] as num).toDouble(), (v[1] as num).toDouble());
+      }
+    }
+    return out;
+  }
+
+  Map<String, dynamic> _ucLayoutJson() {
+    final j = _workspace.meta.extra['useCaseLayout'];
+    return j is Map ? Map<String, dynamic>.from(j) : <String, dynamic>{};
+  }
+
+  void _ucLayoutRemove(String key) {
+    final j = _ucLayoutJson();
+    if (j.remove(key) == null) return;
+    if (j.isEmpty) {
+      _workspace.meta.extra.remove('useCaseLayout');
+    } else {
+      _workspace.meta.extra['useCaseLayout'] = j;
+    }
+  }
+
+  /// ตั้งตำแหน่งของโหนด [key] (ผู้ใช้ลาก) — ลากต่อเนื่องรวมเป็นขั้นเดียวในประวัติ
+  void setUseCaseNodePosition(String key, double x, double y) {
+    final j = _ucLayoutJson();
+    final old = j[key];
+    if (old is List && old.length == 2 && old[0] == x && old[1] == y) return;
+    _recordProject(tr('ย้ายในแผนภาพ Use Case'), () {
+      j[key] = [x, y];
+      _workspace.meta.extra['useCaseLayout'] = j;
+    }, coalesce: 'ucpos:$key');
+    _structureChanged();
+  }
+
+  /// ล้างตำแหน่งที่ผู้ใช้ลากทั้งหมด = จัดวางอัตโนมัติใหม่
+  void resetUseCaseLayout() {
+    if (_workspace.meta.extra['useCaseLayout'] == null) return;
+    _recordProject(tr('จัดวางแผนภาพ Use Case ใหม่'), () => _workspace.meta.extra.remove('useCaseLayout'));
+    _structureChanged();
+  }
+
   // ---------- Use Case (Phase 27) — ข้อมูลระดับโปรเจกต์ แก้แล้วนับเป็นการแก้โครงสร้าง (dirty ; ไม่มี undo) ----------
 
   List<UseCase> get useCases => _workspace.useCases;
+
+  String? _ucFocusId, _ucFocusStep;
+
+  /// เปิดหน้า Use Case และเลือกข้อ [id] (ถ้าระบุ [stepId] เลื่อนไปที่ขั้นตอนนั้น) — ใช้จากหน้าต่างปัญหาทั้งโปรเจกต์
+  void showUseCase(String id, {String? stepId}) {
+    _ucFocusId = id;
+    _ucFocusStep = stepId;
+    if (_page == WorkspacePage.useCases) {
+      notifyListeners();
+    } else {
+      showUseCases();
+    }
+  }
+
+  /// หน้า Use Case อ่านคำขอ "ไปที่ข้อนี้" แล้วล้างทิ้ง (อ่านได้ครั้งเดียว)
+  ({String id, String? stepId})? takeUseCaseFocus() {
+    final id = _ucFocusId;
+    if (id == null) return null;
+    final r = (id: id, stepId: _ucFocusStep);
+    _ucFocusId = _ucFocusStep = null;
+    return r;
+  }
 
   UseCase? useCaseById(String id) {
     for (final u in _workspace.useCases) {
@@ -227,29 +302,39 @@ class WorkspaceController extends ChangeNotifier {
 
   /// เพิ่ม Use Case (รหัสถัดไปอัตโนมัติ)
   UseCase addUseCase({String name = '', String actor = ''}) {
-    final u = UseCase(id: newId('uc'), code: nextUseCaseCode(_workspace), name: name.trim(), actor: actor.trim());
-    _workspace.useCases.add(u);
+    final u = _recordProject(tr('เพิ่ม Use Case'), () {
+      final u = UseCase(id: newId('uc'), code: nextUseCaseCode(_workspace), name: name.trim(), actor: actor.trim());
+      _workspace.useCases.add(u);
+      return u;
+    });
     _structureChanged();
     return u;
   }
 
   /// แก้ Use Case [id] ; คืน true ถ้ามีอยู่
-  bool updateUseCase(String id, void Function(UseCase u) change) {
+  bool updateUseCase(String id, void Function(UseCase u) change, {String? label}) {
     final u = useCaseById(id);
     if (u == null) return false;
-    change(u);
+    final before = label == null ? jsonDecode(jsonEncode(u.toJson())) as Map<String, dynamic> : const <String, dynamic>{};
+    _recordProject(label ?? '', () => change(u), lazyLabel: label == null ? () => ucChangeLabel(before, u.toJson()) : null);
     _structureChanged();
     return true;
   }
 
   /// ลบ Use Case [id] และเอาออกจากรายการ include ของข้ออื่น
   bool deleteUseCase(String id) {
-    final before = _workspace.useCases.length;
-    _workspace.useCases.removeWhere((u) => u.id == id);
-    if (_workspace.useCases.length == before) return false;
-    for (final u in _workspace.useCases) {
-      u.includes.remove(id);
-    }
+    final removed = _recordProject(tr('ลบ Use Case'), () {
+      final before = _workspace.useCases.length;
+      _workspace.useCases.removeWhere((u) => u.id == id);
+      if (_workspace.useCases.length == before) return false;
+      for (final u in _workspace.useCases) {
+        u.includes.remove(id);
+        u.extendsFrom.removeWhere((e) => e.baseId == id);
+        _ucLayoutRemove('uc:$id');
+      }
+      return true;
+    });
+    if (!removed) return false;
     _structureChanged();
     return true;
   }
@@ -257,6 +342,77 @@ class WorkspaceController extends ChangeNotifier {
   // ---------- ความต้องการและการไล่ตาม (Phase 9) — ข้อมูลระดับโปรเจกต์ แก้แล้วนับเป็นการแก้โครงสร้าง (dirty ; ไม่มี undo) ----------
 
   List<Requirement> get requirements => _workspace.requirements;
+
+  // ---------- ประวัติ Undo/Redo ระดับโปรเจกต์ (Phase 29) : ความต้องการ + Use Case + ค่าตั้ง Mock ----------
+
+  final ProjectHistory projectHistory = ProjectHistory();
+
+  /// สแนปช็อต (JSON) ของข้อมูลระดับโปรเจกต์ทั้งสามส่วน
+  String _projectSnapshot() => jsonEncode({
+        'r': [for (final r in _workspace.requirements) r.toJson()],
+        'u': [for (final u in _workspace.useCases) u.toJson()],
+        'm': _workspace.meta.extra['mock'],
+        'l': _workspace.meta.extra['useCaseLayout'],
+      });
+
+  /// ทำการแก้ [change] พร้อมจดประวัติ (ก่อน/หลังต่างกัน = เข้า stack ; เท่าเดิม = ไม่เข้า)
+  /// [lazyLabel] ถ้าให้มา = ตั้งชื่อหลังแก้ (ดูจากข้อมูลก่อน/หลัง) แทน [label]
+  T _recordProject<T>(String label, T Function() change, {String? coalesce, String Function()? lazyLabel}) {
+    final before = _projectSnapshot();
+    final result = change();
+    final after = _projectSnapshot();
+    if (before != after) projectHistory.record(lazyLabel?.call() ?? label, before, coalesce: coalesce);
+    return result;
+  }
+
+  /// ตั้งชื่อการแก้ Use Case จากข้อมูลก่อน/หลัง (เพิ่ม/ลบ/ย้ายขั้นตอน · ทางเลือก · ลิงก์ · REQ · include · แก้ฟิลด์)
+  static String ucChangeLabel(Map<String, dynamic> a, Map<String, dynamic> b) {
+    List<dynamic> list(Map<String, dynamic> m, String k) => (m[k] as List?) ?? const [];
+    String ids(List<dynamic> l) => l.map((e) => (e as Map)['id']).join(',');
+    final sa = list(a, 'steps'), sb = list(b, 'steps');
+    if (sb.length > sa.length) return tr('เพิ่มขั้นตอน');
+    if (sb.length < sa.length) return tr('ลบขั้นตอน');
+    if (ids(sa) != ids(sb)) return tr('ย้ายขั้นตอน');
+    final ba = list(a, 'branches'), bb = list(b, 'branches');
+    if (bb.length > ba.length) return tr('เพิ่มทางเลือก/ข้อผิดพลาด');
+    if (bb.length < ba.length) return tr('ลบทางเลือก/ข้อผิดพลาด');
+    if (ids(ba) != ids(bb)) return tr('ย้ายทางเลือก/ข้อผิดพลาด');
+    String links(List<dynamic> l) => l.map((e) => jsonEncode((e as Map)['links'])).join('|');
+    if (links(sa) != links(sb)) return tr('ผูกลิงก์ขั้นตอน');
+    if (jsonEncode(list(a, 'reqs')) != jsonEncode(list(b, 'reqs'))) return tr('ผูกความต้องการ');
+    if (jsonEncode(list(a, 'includes')) != jsonEncode(list(b, 'includes'))) return tr('แก้การเรียกใช้ Use Case');
+    if (jsonEncode(list(a, 'extends')) != jsonEncode(list(b, 'extends'))) return tr('แก้การขยาย Use Case');
+    return tr('แก้ Use Case');
+  }
+
+  void _restoreProject(String snapshot) {
+    final j = jsonDecode(snapshot) as Map<String, dynamic>;
+    _workspace.requirements
+      ..clear()
+      ..addAll(decodeRequirements(j['r']));
+    _workspace.useCases
+      ..clear()
+      ..addAll(decodeUseCases(j['u']));
+    if (j['m'] == null) {
+      _workspace.meta.extra.remove('mock');
+    } else {
+      _workspace.meta.extra['mock'] = j['m'];
+    }
+    if (j['l'] == null) {
+      _workspace.meta.extra.remove('useCaseLayout');
+    } else {
+      _workspace.meta.extra['useCaseLayout'] = j['l'];
+    }
+    _structureChanged();
+  }
+
+  /// หน้าที่ข้อมูลเป็นของโปรเจกต์ (Undo/Redo ใช้ [projectHistory] ไม่ใช่ของเอกสารที่ค้างหลังหน้า) — ความต้องการ, Use Case, Mock
+  /// (พจนานุกรม/ประวัติ/Home/สร้างโค้ด ยังใช้ของเอกสารเหมือนเดิม เพราะพจนานุกรมแก้คำอธิบายคอลัมน์ของ ER)
+  bool get usesProjectHistory => _page == WorkspacePage.trace || _page == WorkspacePage.useCases || _page == WorkspacePage.mock;
+
+  /// ชื่อการกระทำที่ Undo/Redo จะทำ ตอนอยู่หน้าที่ใช้ประวัติโปรเจกต์ (null = ไม่มีหรือไม่ใช่หน้านั้น)
+  String? get undoLabel => usesProjectHistory ? projectHistory.undoLabel : null;
+  String? get redoLabel => usesProjectHistory ? projectHistory.redoLabel : null;
 
   Requirement? requirementById(String id) {
     for (final r in _workspace.requirements) {
@@ -267,31 +423,37 @@ class WorkspaceController extends ChangeNotifier {
 
   /// เพิ่มความต้องการ (รหัสถัดไปอัตโนมัติ)
   Requirement addRequirement({String text = '', ReqPriority priority = ReqPriority.medium}) {
-    final r = Requirement(id: newId('r'), code: nextRequirementCode(_workspace), text: text.trim(), priority: priority);
-    _workspace.requirements.add(r);
+    final r = _recordProject(tr('เพิ่มความต้องการ'), () {
+      final r = Requirement(id: newId('r'), code: nextRequirementCode(_workspace), text: text.trim(), priority: priority);
+      _workspace.requirements.add(r);
+      return r;
+    });
     _structureChanged();
     return r;
   }
 
   /// แก้ความต้องการ [id] ; คืน true ถ้ามีอยู่
-  bool updateRequirement(String id, void Function(Requirement r) change) {
+  bool updateRequirement(String id, void Function(Requirement r) change, {String? label}) {
     final r = requirementById(id);
     if (r == null) return false;
-    change(r);
+    _recordProject(label ?? tr('แก้ความต้องการ'), () => change(r));
     _structureChanged();
     return true;
   }
 
   bool deleteRequirement(String id) {
-    final before = _workspace.requirements.length;
-    _workspace.requirements.removeWhere((r) => r.id == id);
-    if (_workspace.requirements.length == before) return false;
+    final removed = _recordProject(tr('ลบความต้องการ'), () {
+      final before = _workspace.requirements.length;
+      _workspace.requirements.removeWhere((r) => r.id == id);
+      return _workspace.requirements.length != before;
+    });
+    if (!removed) return false;
     _structureChanged();
     return true;
   }
 
   /// สลับลิงก์ [link] ในช่อง [t] ของความต้องการ [reqId] (มี = เอาออก ; ไม่มี = เพิ่ม และยกเลิก "ไม่จำเป็น")
-  void toggleTraceLink(String reqId, DocType t, TraceLink link) => updateRequirement(reqId, (r) {
+  void toggleTraceLink(String reqId, DocType t, TraceLink link) => updateRequirement(reqId, label: tr('ผูกลิงก์ความต้องการ'), (r) {
         final c = r.cell(t);
         if (!c.links.remove(link)) {
           c.links.add(link);
@@ -300,7 +462,7 @@ class WorkspaceController extends ChangeNotifier {
       });
 
   /// ตั้งช่อง [t] เป็น "ไม่จำเป็น" (ล้างลิงก์) หรือยกเลิก
-  void setTraceNotNeeded(String reqId, DocType t, bool v) => updateRequirement(reqId, (r) {
+  void setTraceNotNeeded(String reqId, DocType t, bool v) => updateRequirement(reqId, label: tr('ตั้งช่องเป็นไม่จำเป็น'), (r) {
         final c = r.cell(t);
         c.notNeeded = v;
         if (v) c.links.clear();
@@ -465,6 +627,13 @@ class WorkspaceController extends ChangeNotifier {
     return _wsIssues = validateWorkspace(_workspace);
   }
 
+  /// ผลตรวจของ Use Case (ข้อมูลระดับโปรเจกต์ ไม่ผูกกับเอกสารใด จึงแยกจาก [workspaceIssues])
+  List<UcIssue> get useCaseIssues => validateUseCases(_workspace);
+
+  /// จำนวนปัญหาทั้งโปรเจกต์ = ทุกเอกสาร + Use Case (ใช้บน Home / แถบสถานะ / เมนู)
+  ({int errors, int warnings, int infos}) get projectIssueCounts =>
+      countIssues([...workspaceIssues.map((x) => x.issue), ...useCaseIssues.map((x) => x.toIssue())]);
+
   // ---------- เปิด / ใหม่ / กู้คืน / บันทึก ----------
 
   void newProject({double boardWidth = kDefaultBoardWidth, double boardHeight = kDefaultBoardHeight}) =>
@@ -539,6 +708,7 @@ class WorkspaceController extends ChangeNotifier {
     _filePath = path;
     _structureDirty = dirty;
     _touched.clear();
+    projectHistory.clear();
     _resetTabs(er.id);
     notifyListeners();
   }
@@ -981,10 +1151,20 @@ class WorkspaceController extends ChangeNotifier {
   /// controller ของเอกสารที่ใช้งานอยู่
   DocController get activeController => controllerOf(activeId) ?? _mainEr;
 
-  bool get canUndo => activeController.canUndo;
-  bool get canRedo => activeController.canRedo;
-  void undo() => activeController.undo();
-  void redo() => activeController.redo();
+  bool get canUndo => usesProjectHistory ? projectHistory.canUndo : activeController.canUndo;
+  bool get canRedo => usesProjectHistory ? projectHistory.canRedo : activeController.canRedo;
+
+  void undo() {
+    if (!usesProjectHistory) return activeController.undo();
+    final s = projectHistory.undo(_projectSnapshot());
+    if (s != null) _restoreProject(s);
+  }
+
+  void redo() {
+    if (!usesProjectHistory) return activeController.redo();
+    final s = projectHistory.redo(_projectSnapshot());
+    if (s != null) _restoreProject(s);
+  }
 
   @override
   void dispose() {

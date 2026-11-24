@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../core/app_info.dart';
 import '../core/l10n/l10n.dart';
 import '../core/models/workspace.dart';
-import '../core/validate/issue.dart';
 import '../state/app_settings.dart';
 import '../state/mock_controller.dart';
 import '../state/project_controller.dart';
@@ -37,7 +36,8 @@ class TopBar extends StatelessWidget {
 
     // ใช้แถบของแอปเป็นแถบชื่อหน้าต่าง: ลากพื้นที่ว่างเพื่อย้ายหน้าต่าง ปุ่มควบคุมชิดมุมขวา
     final controls = WindowChrome.customControls;
-    final isEr = w.activeDocument.type == DocType.er;
+    // ปุ่มของโหมด ER (จัดวางอัตโนมัติ / Dialect / Export .sql) แสดงเฉพาะตอนอยู่ในเอกสาร ER จริง ไม่ใช่หน้าระดับโปรเจกต์
+    final isEr = w.activeDocument.type == DocType.er && !w.pageView;
     return Container(
       height: 52,
       padding: EdgeInsets.only(
@@ -92,13 +92,13 @@ class TopBar extends StatelessWidget {
                     ],
                     _IconBtn(
                       Icons.undo,
-                      tr('ย้อนกลับ (Ctrl+Z)'),
+                      w.undoLabel == null ? tr('ย้อนกลับ (Ctrl+Z)') : '${tr('ย้อนกลับ')} · ${w.undoLabel} (Ctrl+Z)',
                       w.canUndo ? w.undo : null,
                     ),
                     const SizedBox(width: 4),
                     _IconBtn(
                       Icons.redo,
-                      tr('ทำซ้ำ (Ctrl+Shift+Z)'),
+                      w.redoLabel == null ? tr('ทำซ้ำ (Ctrl+Shift+Z)') : '${tr('ทำซ้ำ')} · ${w.redoLabel} (Ctrl+Shift+Z)',
                       w.canRedo ? w.redo : null,
                     ),
                     const SizedBox(width: 4),
@@ -490,7 +490,8 @@ class TopBar extends StatelessWidget {
     PopupMenuEntry<VoidCallback> Function(String, Cmd, {bool enabled, IconData? icon, bool? checked, Widget? tag}) cmd,
   ) {
     final erCanvas = w.activeDocument.type == DocType.er && !w.pageView;
-    final problems = w.workspaceIssues.where((i) => i.issue.severity != Severity.info).length;
+    final pc = w.projectIssueCounts;
+    final problems = pc.errors + pc.warnings;
     final mock = context.read<MockController>();
     const div = PopupMenuDivider();
     return [

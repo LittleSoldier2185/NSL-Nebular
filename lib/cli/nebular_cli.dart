@@ -165,7 +165,7 @@ String _infoText(Map<String, dynamic> i) {
   return [
     '${i['name']}  (${i['path']})',
     'เอกสาร ${i['documents']}: $types',
-    'ตาราง ${i['tables']} · ความสัมพันธ์ ${i['relations']} · endpoint ${i['endpoints']} · ชิ้นส่วน Wireframe ${i['wireframeComponents']} · ความต้องการ ${i['requirements']}',
+    'ตาราง ${i['tables']} · ความสัมพันธ์ ${i['relations']} · endpoint ${i['endpoints']} · ชิ้นส่วน Wireframe ${i['wireframeComponents']} · ความต้องการ ${i['requirements']} · Use Case ${i['useCases']}',
     'ปัญหา: error ${issues['errors']} · warning ${issues['warnings']} · info ${issues['info']}',
   ].join('\n');
 }

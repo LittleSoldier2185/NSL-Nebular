@@ -1,7 +1,7 @@
 import '../l10n/l10n.dart';
 import '../models/use_case.dart';
 import '../models/workspace.dart';
-import 'issue.dart' show Severity;
+import 'issue.dart' show Issue, Severity;
 
 /// ผลตรวจของ Use Case ; [ucId] = null คือปัญหาระดับโปรเจกต์ (เช่น ความต้องการที่ไม่มี Use Case) ; [reqId] ใช้กับปัญหาของความต้องการ
 class UcIssue {
@@ -10,6 +10,9 @@ class UcIssue {
   final Severity severity;
   final String title, detail;
   final String? ucId, stepId, reqId;
+
+  /// รูปแบบ [Issue] ร่วมของแอป (ใช้นับรวม/แสดงในหน้าต่างปัญหาทั้งโปรเจกต์) : tableId = Use Case · columnId = ขั้นตอน · relationId = ความต้องการ
+  Issue toIssue() => Issue(severity: severity, code: code, title: title, message: detail, tableId: ucId, columnId: stepId, relationId: reqId);
 }
 
 /// ตรวจ Use Case ทั้งโปรเจกต์ (เรียงตามลำดับ Use Case แล้วปัญหาระดับโปรเจกต์ต่อท้าย)
@@ -41,6 +44,16 @@ List<UcIssue> validateUseCases(Workspace w) {
       } else if (!ids.contains(i)) {
         add('uc_include_missing', Severity.error, tr('เรียกใช้ Use Case ที่ไม่มีอยู่แล้ว'), label);
       }
+    }
+    for (final e in u.extendsFrom) {
+      if (e.baseId == u.id) {
+        add('uc_extend_self', Severity.error, tr('ขยายตัวเอง'), label);
+      } else if (!ids.contains(e.baseId)) {
+        add('uc_extend_missing', Severity.error, tr('ขยาย Use Case ที่ไม่มีอยู่แล้ว'), label);
+      }
+    }
+    if (_onCycle(w, u.id)) {
+      add('uc_cycle', Severity.error, tr('เรียกใช้/ขยายวนกลับมาที่ตัวเอง'), tr('Use Case ที่ include หรือ extend กันเป็นวงจะอธิบายไม่ได้ว่าอะไรเกิดก่อน'));
     }
     for (final (i, s) in u.steps.indexed) {
       for (final l in s.links) {
@@ -84,4 +97,21 @@ List<UcIssue> validateUseCases(Workspace w) {
 ({int covered, int total}) useCaseCoverage(Workspace w) {
   final covered = {for (final u in w.useCases) ...u.reqIds};
   return (covered: w.requirements.where((r) => covered.contains(r.id)).length, total: w.requirements.length);
+}
+
+/// Use Case [id] อยู่บนวงจรของ include/extend หรือไม่ (ตามลูกศรของแผนภาพ : include ข้อ → ข้อที่ถูกเรียก, extend ข้อขยาย → ฐาน)
+bool _onCycle(Workspace w, String id) {
+  Iterable<String> next(String x) {
+    final u = w.useCases.where((e) => e.id == x).firstOrNull;
+    return u == null ? const [] : [...u.includes, for (final e in u.extendsFrom) e.baseId];
+  }
+
+  final seen = <String>{};
+  final stack = [...next(id)];
+  while (stack.isNotEmpty) {
+    final x = stack.removeLast();
+    if (x == id) return true;
+    if (seen.add(x)) stack.addAll(next(x));
+  }
+  return false;
 }

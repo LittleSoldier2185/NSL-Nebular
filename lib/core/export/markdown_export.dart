@@ -11,6 +11,7 @@ import '../l10n/l10n.dart';
 import 'notes_export.dart';
 import '../models/api_model.dart';
 import 'trace_export.dart';
+import 'usecase_export.dart';
 
 /// Data dictionary เป็น Markdown: ตาราง -> คอลัมน์ / FK ขาออก / FK ขาเข้า / INDEX
 /// ใช้ส่งงานหรือแปะใน README — ผลลัพธ์คงที่ ไม่มีวันที่
@@ -40,7 +41,7 @@ String exportDataDictionary(Project p) {
 /// Data dictionary ของทั้งโปรเจกต์: ภาพรวม (เอกสาร ตัวเลขสรุป ปัญหา) -> ER ทุกอัน -> DFD ทุกอัน
 /// โปรเจกต์ที่มี ER ชิ้นเดียวและไม่มีเอกสารอื่น = ผลลัพธ์เดียวกับ [exportDataDictionary] ทุกตัวอักษร
 String exportWorkspaceDictionary(Workspace w, {bool includeNotes = true}) {
-  if (isSingleErWorkspace(w)) return exportDataDictionary(knownDocs(w).first.er!) + traceMarkdownSection(w) + (includeNotes ? notesMarkdown(w) : '');
+  if (isSingleErWorkspace(w)) return exportDataDictionary(knownDocs(w).first.er!) + traceMarkdownSection(w) + useCaseMarkdownSection(w) + (includeNotes ? notesMarkdown(w) : '');
   // ER ทุกอันก่อน แล้ว DFD ทุกอัน (ตามลำดับเอกสารในแต่ละชนิด)
   final docs = [
     ...w.documentsOf(DocType.er),
@@ -125,6 +126,7 @@ String exportWorkspaceDictionary(Workspace w, {bool includeNotes = true}) {
     }
   }
   b.write(traceMarkdownSection(w));
+  b.write(useCaseMarkdownSection(w));
   if (includeNotes) b.write(notesMarkdown(w));
   return b.toString();
 }

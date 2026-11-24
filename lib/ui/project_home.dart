@@ -85,7 +85,7 @@ class ProjectHomeView extends StatelessWidget {
       }
     }
     final cross = crossDocIssues(all);
-    final n = countIssues(all.map((x) => x.issue));
+    final n = w.projectIssueCounts; // รวม Use Case
 
     return Container(
       key: const ValueKey('project-home'),

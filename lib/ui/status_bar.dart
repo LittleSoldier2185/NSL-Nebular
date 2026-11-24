@@ -82,8 +82,11 @@ class StatusBar extends StatelessWidget {
       issues = validateDfd(d, workspace: w.workspace, diagramId: w.activeId);
       zoom = dfd.scale;
     }
-    final errors = issues.where((i) => i.severity == Severity.error).length;
-    final warnings = issues.where((i) => i.severity == Severity.warning).length;
+    // หน้าระดับโปรเจกต์ : ไม่มีสรุป/ซูมของเอกสารที่เปิด ; นับปัญหาทั้งโปรเจกต์แทน
+    final pageMode = w.pageView;
+    final counts = pageMode ? w.projectIssueCounts : null; // ทุกเอกสาร + Use Case
+    final errors = counts?.errors ?? issues.where((i) => i.severity == Severity.error).length;
+    final warnings = counts?.warnings ?? issues.where((i) => i.severity == Severity.warning).length;
 
     Widget sep() => Container(width: 1, height: 12, margin: const EdgeInsets.symmetric(horizontal: 10), color: C.border);
     final small = TextStyle(fontSize: 11.5, color: C.muted);
@@ -150,7 +153,7 @@ class StatusBar extends StatelessWidget {
         // ---- ขวา ----
         Flexible(
           child: Text(
-            '$fileName · ${w.activeDocument.name} · $summary',
+            pageMode ? fileName : '$fileName · ${w.activeDocument.name} · $summary',
             key: const ValueKey('status-summary'),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -160,9 +163,11 @@ class StatusBar extends StatelessWidget {
         sep(),
         _NotesButton(open: openNoteCount(w.workspace), active: w.notesPanel, onTap: () => w.showNotesPanel()),
         sep(),
-        _IssueBadge(errors: errors, warnings: warnings, onTap: isEr ? () => cv.showDock(DockTab.issues) : () => showWorkspaceIssues(context)),
-        sep(),
-        Text('${(zoom * 100).round()}%', key: const ValueKey('status-zoom'), style: small),
+        _IssueBadge(errors: errors, warnings: warnings, onTap: isEr && !pageMode ? () => cv.showDock(DockTab.issues) : () => showWorkspaceIssues(context)),
+        if (!pageMode) ...[
+          sep(),
+          Text('${(zoom * 100).round()}%', key: const ValueKey('status-zoom'), style: small),
+        ],
         if (w.dirty) ...[
           sep(),
           Text(tr('● ยังไม่ได้บันทึก'), key: const ValueKey('status-dirty'), style: small),

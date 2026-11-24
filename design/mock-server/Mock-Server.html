@@ -1,0 +1,251 @@
+<title>Mock Server Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: แถบเลือกแบบ + สถานะด้านบน, จำลองหน้า Mock Server เต็มความกว้างด้านล่าง, ส่วน "แถบที่เอาออก" อยู่ท้ายสุด */
+:root{
+  --bg:#F2F4F8; --surface:#FFFFFF; --surface2:#F6F8FB; --border:#D8DEE6; --border2:#E6EAF0; --input:#CBD3DE;
+  --text:#1B2430; --muted:#5B6778; --primary:#0F766E; --primary-ink:#fff; --tint:#E2F3F1;
+  --danger:#C0392B; --warn:#B7791F; --ok:#0F766E; --info:#2F6FB5;
+  --get:#2F6FB5; --post:#0F766E; --put:#B7791F; --patch:#8A5CC2; --del:#C0392B;
+  --sans:'Noto Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A0E14; --surface:#161E29; --surface2:#1C2633; --border:#2C3947; --border2:#222E3B; --input:#3B4859;
+  --text:#E6EBF2; --muted:#93A0B2; --primary:#1FA89B; --primary-ink:#04201D; --tint:#12332F;
+  --danger:#F07A6C; --warn:#E5B24D; --ok:#4FD1B5; --info:#6FA3E0;
+  --get:#6FA3E0; --post:#4FD1B5; --put:#E5B24D; --patch:#B59AE6; --del:#F07A6C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A0E14; --surface:#161E29; --surface2:#1C2633; --border:#2C3947; --border2:#222E3B; --input:#3B4859;
+  --text:#E6EBF2; --muted:#93A0B2; --primary:#1FA89B; --primary-ink:#04201D; --tint:#12332F;
+  --danger:#F07A6C; --warn:#E5B24D; --ok:#4FD1B5; --info:#6FA3E0;
+  --get:#6FA3E0; --post:#4FD1B5; --put:#E5B24D; --patch:#B59AE6; --del:#F07A6C; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+button,select,input{font-family:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.top{max-width:1240px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.top h1{margin:0 0 2px;font-size:19px}.top p{margin:0;color:var(--muted);max-width:66ch}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{height:34px;padding:0 12px;border:1px solid var(--input);border-radius:8px;background:var(--surface)}
+.seg button[aria-pressed=true]{border-color:var(--primary);background:var(--tint);font-weight:600}
+.opts{max-width:1240px;margin:0 auto 14px;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+.eyebrow{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.note{max-width:1240px;margin:0 auto 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px}
+.note h2{margin:0 0 4px;font-size:14px}.note ul{margin:4px 0 0;padding-left:18px;color:var(--muted)}
+.win{max-width:1240px;margin:0 auto;background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.mono{font-family:var(--mono)}
+.btn{height:34px;padding:0 14px;border:1px solid var(--input);border-radius:8px;background:var(--surface);font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.btn.stop{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.sm{height:28px;padding:0 10px;font-size:12.5px;font-weight:500}
+.btn[disabled]{opacity:.5;cursor:default}
+.field{height:34px;border:1px solid var(--input);border-radius:6px;background:var(--surface);padding:0 10px;font-size:13px}
+.m{display:inline-block;min-width:50px;text-align:center;font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;font-family:var(--mono);color:#fff}
+.m.GET{background:var(--get)}.m.POST{background:var(--post)}.m.PUT{background:var(--put)}.m.PATCH{background:var(--patch)}.m.DELETE{background:var(--del)}
+.st{font-family:var(--mono);font-weight:700}
+.st.s2{color:var(--ok)}.st.s4{color:var(--warn)}.st.s5{color:var(--danger)}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--surface2);color:var(--muted)}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.pill.on{background:color-mix(in srgb,var(--ok) 14%,transparent);border-color:var(--ok);color:var(--ok)}.pill.on i{background:var(--ok)}
+.sbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.sbar .sp{flex:1}
+.url{display:inline-flex;align-items:center;gap:6px;background:var(--tint);color:var(--primary);border-radius:8px;padding:4px 10px;font-family:var(--mono);font-size:12.5px}
+.src{color:var(--muted);font-size:12.5px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.panel>h3{margin:0;padding:11px 14px;font-size:13.5px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px}
+.panel>h3 small{font-weight:400;color:var(--muted);font-size:12px}
+.cnt{margin-left:auto;font-size:12px;color:var(--muted);font-weight:400}
+.row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid var(--border2);min-width:0;width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0}
+.row:first-of-type{border-top:0}
+button.row:hover{background:var(--surface2)}
+.row[aria-current=true]{background:var(--tint)}
+.row .path{flex:1;min-width:0;font-family:var(--mono);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-size:11px;border-radius:9px;padding:0 8px;font-weight:600;white-space:nowrap}
+.badge.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.badge.bad{background:color-mix(in srgb,var(--danger) 18%,transparent);color:var(--danger)}
+.badge.mute{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.chips{display:inline-flex;border:1px solid var(--input);border-radius:7px;overflow:hidden}
+.chips button{border:0;border-right:1px solid var(--input);background:var(--surface);padding:3px 8px;font-size:12px;color:var(--muted)}
+.chips button:last-child{border-right:0}
+.chips button[aria-pressed=true]{background:var(--tint);color:var(--text);font-weight:600}
+.chips button[aria-pressed=true].bad{background:color-mix(in srgb,var(--danger) 16%,transparent);color:var(--danger)}
+.chips button[aria-pressed=true].warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.lbl{font-size:11px;color:var(--muted);margin-bottom:4px}
+.radio{display:flex;gap:8px;align-items:center;padding:6px 0}
+.log{display:grid;grid-template-columns:70px 64px minmax(0,1fr) 46px 64px;gap:8px;align-items:center;padding:7px 14px;border-top:1px solid var(--border2);width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;font-size:12.5px}
+.log.h{font-size:11px;color:var(--muted);border-top:0;background:var(--surface2);cursor:default}
+button.log:hover{background:var(--surface2)}.log[aria-current=true]{background:var(--tint)}
+.log .p{font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log .t,.log .d{color:var(--muted);font-family:var(--mono);font-size:12px}
+.unk{display:flex;gap:8px;align-items:center;padding:6px 14px 8px 148px;color:var(--warn);font-size:12px}
+pre{margin:0;padding:10px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);font-family:var(--mono);font-size:12px;line-height:1.55;overflow:auto;white-space:pre-wrap}
+.empty{padding:28px 18px;text-align:center;color:var(--muted)}
+.empty code{display:block;text-align:left;margin:8px auto 0;max-width:420px}
+.grid3{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:14px;padding:14px;align-items:start}
+@media(max-width:900px){.grid3{grid-template-columns:minmax(0,1fr)}}
+.stack{display:flex;flex-direction:column;gap:14px}
+.cell{padding:14px}
+/* B ตาราง */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:11px;font-weight:600;color:var(--muted);text-align:left;padding:8px 10px;background:var(--surface2);white-space:nowrap}
+.tbl td{padding:6px 10px;border-top:1px solid var(--border2);vertical-align:middle}
+.tbl input.d{width:64px;height:28px;border:1px solid var(--input);border-radius:6px;background:var(--surface);padding:0 8px;font-family:var(--mono);font-size:12px}
+.scroll{overflow-x:auto}
+.drawer{border-top:1px solid var(--border);background:var(--surface)}
+.drawer>button{width:100%;border:0;background:var(--surface2);padding:9px 16px;display:flex;align-items:center;gap:10px;text-align:left;font-weight:600}
+.drawer .car{margin-left:auto;color:var(--muted)}
+.dgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:220px}
+@media(max-width:800px){.dgrid{grid-template-columns:minmax(0,1fr)}}
+.dgrid>div{max-height:300px;overflow:auto}
+.dgrid>div+div{border-left:1px solid var(--border2);padding:12px}
+/* chrome diagram */
+.chrome{max-width:1240px;margin:20px auto 0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.chrome h2{margin:0 0 4px;font-size:14px}
+.cwin{margin-top:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:11.5px;background:var(--bg)}
+.cbar{display:flex;gap:8px;align-items:center;padding:6px 10px;background:var(--surface2);border-bottom:1px solid var(--border2);flex-wrap:wrap}
+.cbody{display:flex;min-height:150px}
+.crail{width:34px;background:var(--surface2);border-right:1px solid var(--border2)}
+.cexp{width:120px;border-right:1px solid var(--border2);padding:8px;color:var(--muted)}
+.cleft{width:120px;border-right:1px solid var(--border2);padding:8px;background:color-mix(in srgb,var(--danger) 10%,transparent);color:var(--danger)}
+.cmain{flex:1;padding:10px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.gone{text-decoration:line-through;color:var(--danger);opacity:.85}
+.keep{color:var(--ok)}
+.cstat{display:flex;gap:12px;padding:5px 10px;background:var(--surface2);border-top:1px solid var(--border2);flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="top">
+  <div>
+    <h1>Mock Server</h1>
+    <p>ข้อมูลตัวอย่างจากโปรเจกต์ Hotel Booking (API 23 endpoint) กดสลับแบบ กด "เริ่ม" เพื่อดูตอนทำงาน และเลือกแถวเพื่อดูสถานการณ์หรือรายละเอียดคำขอ</p>
+  </div>
+  <div class="seg" id="optSeg" role="group" aria-label="เลือกแบบ">
+    <button data-v="A">A · สามส่วนตามดีไซน์เดิม</button>
+    <button data-v="B">B · ตารางเดียว + ลิ้นชักบันทึก</button>
+    <button data-v="C">C · ปรับของเดิมเล็กน้อย</button>
+  </div>
+</div>
+<div class="opts">
+  <span class="eyebrow">ตัวอย่างสถานะ</span>
+  <div class="seg" id="runSeg"><button data-v="stopped">หยุดอยู่</button><button data-v="running">กำลังทำงาน</button></div>
+</div>
+<div class="note" id="note"></div>
+<div class="win" id="win"></div>
+
+<div class="chrome">
+  <h2>แถบที่เอาออกจากหน้านี้</h2>
+  <div class="note" style="margin:6px 0 0;padding:0;border:0;background:none;color:var(--muted)">ตอนนี้หน้า Mock Server ยังแสดงแผงและปุ่มของโหมด ER ค้างอยู่ ผมเสนอเอาออกจากทุกหน้าระดับโปรเจกต์ (Home, พจนานุกรม, ประวัติ, ความต้องการ, Use Case, Mock Server, สร้างโค้ด)</div>
+  <div class="seg" id="chSeg" style="margin-top:10px"><button data-v="before">ตอนนี้</button><button data-v="after">หลังแก้</button></div>
+  <div class="cwin" id="cwin"></div>
+</div>
+
+<script>
+var S={opt:'B',run:'running',sel:0,logSel:0,drawer:true,chrome:'before'};
+var SC=[['normal','ปกติ',''],['conflict','409 ซ้ำ','warn'],['unauthorized','401','warn'],['serverError','500','bad'],['random','สุ่ม','warn']];
+var EPS=[
+ {m:'POST',p:'/auth/register',sc:'normal',d:0,hits:3},{m:'POST',p:'/auth/login',sc:'normal',d:0,hits:12},{m:'GET',p:'/me',sc:'normal',d:0,hits:9},
+ {m:'GET',p:'/room-types',sc:'normal',d:0,hits:6},{m:'GET',p:'/rooms/available',sc:'normal',d:0,hits:21},{m:'POST',p:'/bookings',sc:'conflict',d:0,hits:5},
+ {m:'GET',p:'/bookings',sc:'normal',d:0,hits:7},{m:'GET',p:'/bookings/{id}',sc:'normal',d:0,hits:4},{m:'PATCH',p:'/bookings/{id}',sc:'normal',d:0,hits:1},
+ {m:'POST',p:'/payments',sc:'normal',d:600,hits:2},{m:'GET',p:'/admin/dashboard',sc:'normal',d:300,hits:3},{m:'DELETE',p:'/admin/rooms/{id}',sc:'unauthorized',d:0,hits:1}
+];
+var LOG=[
+ {t:'10:42:18',m:'POST',p:'/bookings',s:409,ms:304,sc:'409 ซ้ำ',req:'{\n  "room_id": 5,\n  "check_in": "2026-12-01",\n  "check_out": "2026-12-03",\n  "guests": 2\n}',res:'{\n  "error": "CONFLICT",\n  "message": "ห้องนี้ถูกจองในช่วงวันที่เลือกแล้ว"\n}'},
+ {t:'10:42:11',m:'GET',p:'/rooms/available?from=2026-12-01&to=2026-12-03',s:200,ms:12,sc:'',req:'(ไม่มี body)',res:'[\n  { "id": 5, "name": "Deluxe 502", "price": 2400 },\n  { "id": 8, "name": "Suite 801", "price": 4200 }\n]'},
+ {t:'10:41:57',m:'POST',p:'/payments',s:200,ms:612,sc:'',req:'{ "booking_id": 14, "method": "card" }',res:'{ "id": 31, "status": "paid" }'},
+ {t:'10:41:40',m:'POST',p:'/auth/login',s:200,ms:8,sc:'',req:'{ "email": "a@hotel.test", "password": "••••" }',res:'{ "token": "mock-7f3a…" }'},
+ {t:'10:41:22',m:'GET',p:'/customers/17',s:404,ms:3,sc:'',unk:1,req:'(ไม่มี body)',res:'{ "error": "NOT_FOUND" }'},
+ {t:'10:41:05',m:'DELETE',p:'/admin/rooms/3',s:401,ms:2,sc:'401',req:'(ไม่มี body)',res:'{ "error": "UNAUTHORIZED" }'}
+];
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function sc(code){return SC.filter(function(x){return x[0]==code})[0]}
+function stc(s){return 'st s'+Math.floor(s/100)}
+function running(){return S.run=='running'}
+function serverBar(){
+  var on=running();
+  return '<div class="sbar"><span class="pill'+(on?' on':'')+'"><i></i>'+(on?'กำลังทำงาน':'หยุดอยู่')+'</span>'
+   +(on?'<span class="url">http://localhost:8787 <button class="btn sm" style="height:22px;padding:0 8px">คัดลอก</button></span>':'<label class="src">พอร์ต <input class="field mono" style="width:84px;height:30px" value="8787" aria-label="พอร์ต"></label>')
+   +'<span class="src">จาก API — ระบบจองห้องพัก · 23 endpoint · ข้อมูลเริ่มจาก seed ของ ER</span><span class="sp"></span>'
+   +'<button class="btn sm"'+(on?'':' disabled')+'>รีเซ็ตข้อมูล</button><button class="btn '+(on?'stop':'pri')+'">'+(on?'■ หยุด':'▶ เริ่ม')+'</button></div>';
+}
+function scenarioPanel(e){
+  return '<div class="cell"><div style="font-weight:600;margin-bottom:6px"><span class="m '+e.m+'">'+e.m+'</span> <span class="mono">'+e.p+'</span></div>'
+   +'<div class="lbl">สถานการณ์ที่ตอบ</div>'+[['normal','ปกติ · ตามสัญญา API'],['conflict','409 ซ้ำ (Conflict)'],['unauthorized','401 ยังไม่ได้ล็อกอิน'],['serverError','500 เซิร์ฟเวอร์ผิดพลาด'],['random','สุ่ม · ปกติ 70% · 500 20% · 409 10%']].map(function(x){return '<label class="radio"><input type="radio" name="sc" data-sc="'+x[0]+'"'+(e.sc==x[0]?' checked':'')+'> '+x[1]+'</label>'}).join('')
+   +'<div class="lbl" style="margin-top:8px">หน่วงเวลาก่อนตอบ</div><div style="display:flex;gap:10px;align-items:center"><input type="range" min="0" max="3000" step="100" value="'+e.d+'" data-d style="flex:1" aria-label="หน่วงเวลา"><span class="mono" style="width:64px;text-align:right">'+e.d+' ms</span></div></div>';
+}
+function logTable(compact){
+  if(!running()&&true){return '<div class="empty">ยังไม่ได้เริ่มเซิร์ฟเวอร์<br>กด "เริ่ม" แล้วเรียก API จากแอปหรือเครื่องมือของคุณ</div>'}
+  var h='<div class="log h"><span>เวลา</span><span>Method</span><span>Path</span><span>สถานะ</span><span style="text-align:right">ใช้เวลา</span></div>';
+  LOG.forEach(function(l,i){h+='<button class="log" data-log="'+i+'" aria-current="'+(S.logSel==i)+'"><span class="t">'+l.t+'</span><span><span class="m '+l.m+'" style="min-width:48px">'+l.m+'</span></span><span class="p" title="'+esc(l.p)+'">'+esc(l.p)+'</span><span class="'+stc(l.s)+'">'+l.s+'</span><span class="d" style="text-align:right">'+l.ms+' ms</span></button>'+(l.unk?'<div class="unk">ไม่มี endpoint นี้ใน API <button class="btn sm">เพิ่มเข้า API</button></div>':'')});
+  return h;
+}
+function detail(){
+  var l=LOG[S.logSel]||LOG[0];
+  return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><span class="m '+l.m+'">'+l.m+'</span><span class="mono" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(l.p)+'</span><span class="'+stc(l.s)+'" style="margin-left:auto">'+l.s+'</span></div>'
+   +'<div class="lbl">REQUEST</div><pre>'+esc(l.req)+'</pre><div class="lbl" style="margin-top:10px">RESPONSE'+(l.sc?' · สถานการณ์ '+l.sc:'')+'</div><pre>'+esc(l.res)+'</pre>';
+}
+/* ---------- A ---------- */
+function renderA(){
+  var e=EPS[S.sel];
+  var list=EPS.map(function(x,i){var s=sc(x.sc);return '<button class="row" data-ep="'+i+'" aria-current="'+(S.sel==i)+'"><span class="m '+x.m+'">'+x.m+'</span><span class="path">'+x.p+'</span>'+(x.sc!='normal'?'<span class="badge '+s[2]+'">'+s[1]+'</span>':'')+(x.d?'<span class="badge mute">'+x.d+' ms</span>':'')+'</button>'}).join('');
+  return serverBar()+'<div class="grid3"><div class="stack"><div class="panel"><h3>Endpoint <span class="cnt">23 · แสดง 12</span></h3>'+list+'</div><div class="panel"><h3>สถานการณ์ของ endpoint ที่เลือก</h3>'+scenarioPanel(e)+'</div></div>'
+   +'<div class="stack"><div class="panel"><h3>คำขอที่เข้ามา <span class="cnt">'+(running()?LOG.length+' รายการ':'0')+'</span><button class="btn sm" style="margin-left:8px"'+(running()?'':' disabled')+'>ล้าง</button></h3>'+logTable()+'</div>'+(running()?'<div class="panel"><h3>รายละเอียดคำขอ <small>(ต้องเก็บ body ในบันทึก — เพิ่มใหม่)</small></h3><div class="cell">'+detail()+'</div></div>':'')+'</div></div>';
+}
+/* ---------- B ---------- */
+function renderB(){
+  var rows=EPS.map(function(x,i){
+    var chips='<span class="chips" data-ep="'+i+'">'+SC.map(function(s){return '<button data-sc="'+s[0]+'" aria-pressed="'+(x.sc==s[0])+'" class="'+s[2]+'">'+s[1]+'</button>'}).join('')+'</span>';
+    var last=running()?lastOf(x):null;
+    return '<tr><td><span class="m '+x.m+'">'+x.m+'</span></td><td class="mono" style="font-size:12.5px;white-space:nowrap">'+x.p+'</td><td>'+chips+'</td><td><input class="d" data-d="'+i+'" value="'+(x.d||'')+'" placeholder="0" aria-label="หน่วง ms"></td>'
+     +'<td class="mono" style="color:var(--muted)">'+(running()?x.hits:'—')+'</td><td>'+(last?'<span class="'+stc(last)+'">'+last+'</span>':'<span style="color:var(--muted)">—</span>')+'</td></tr>'}).join('');
+  var drawer='<div class="drawer"><button data-drawer aria-expanded="'+S.drawer+'">บันทึกคำขอ <span class="badge mute">'+(running()?LOG.length:0)+'</span><span class="car">'+(S.drawer?'▾ ซ่อน':'▴ แสดง')+'</span></button>'
+   +(S.drawer?(running()?'<div class="dgrid"><div>'+logTable()+'</div><div>'+detail()+'</div></div>':'<div class="empty">ยังไม่ได้เริ่มเซิร์ฟเวอร์</div>'):'')+'</div>';
+  return serverBar()+'<div class="scroll"><table class="tbl"><thead><tr><th></th><th>Endpoint</th><th>สถานการณ์ที่ตอบ</th><th>หน่วง (ms)</th><th>เรียกแล้ว</th><th>ล่าสุด</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+drawer;
+}
+function lastOf(x){var f=null;LOG.forEach(function(l){if(!f&&l.m==x.m&&l.p.split('?')[0]==x.p.replace('{id}','14'))f=l.s});if(!f&&x.m=='POST'&&x.p=='/bookings')f=409;if(!f&&x.m=='GET'&&x.p=='/rooms/available')f=200;return f}
+/* ---------- C ---------- */
+function renderC(){
+  var rows=EPS.map(function(x,i){return '<div class="row" style="flex-wrap:wrap"><span class="m '+x.m+'">'+x.m+'</span><span class="path" style="min-width:140px">'+x.p+'</span><span class="chips" data-ep="'+i+'">'+SC.map(function(s){return '<button data-sc="'+s[0]+'" aria-pressed="'+(x.sc==s[0])+'" class="'+s[2]+'">'+s[1]+'</button>'}).join('')+'</span><input class="field mono" data-d="'+i+'" style="width:78px;height:28px" value="'+(x.d||'')+'" placeholder="หน่วง ms" aria-label="หน่วง ms"></div>'}).join('');
+  var logc=running()?logTable():'<div class="empty">กด "เริ่ม" แล้วเรียก API ตามตัวอย่าง<code class="mono pre" style="background:var(--surface2);padding:10px;border-radius:8px;border:1px solid var(--border2)">curl http://localhost:8787/rooms/available\ncurl -X POST http://localhost:8787/bookings</code></div>';
+  return serverBar()+'<div style="display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:0"><div class="panel" style="border-radius:0;border-width:0 1px 0 0"><h3>Endpoint · 23 <small>สุ่ม = ปกติ 70% · 500 20% · 409 10%</small></h3>'+rows+'</div><div class="panel" style="border-radius:0;border:0"><h3>คำขอที่เข้ามา <span class="cnt">'+(running()?LOG.length:0)+'</span></h3>'+logc+'</div></div>';
+}
+var NOTES={
+ A:'<h2>A · สามส่วนตามดีไซน์เดิม</h2><ul><li>แถบเซิร์ฟเวอร์เต็มความกว้าง: สถานะ ที่อยู่พร้อมปุ่มคัดลอก พอร์ต เริ่ม/หยุด รีเซ็ต</li><li>ซ้าย: รายการ endpoint กดเลือก แล้วตั้งสถานการณ์ด้วย radio และตัวเลื่อนหน่วงเวลา · ขวา: บันทึกคำขอ + รายละเอียด request/response</li><li>ตรงกับ <code>Mock.dc.html</code> เดิมมากที่สุด แต่เปลี่ยนสถานการณ์ได้ทีละ endpoint เท่านั้น (กดเลือกก่อน)</li><li>รายละเอียดคำขอต้องให้เซิร์ฟเวอร์เก็บ body ลงบันทึกเพิ่ม</li></ul>',
+ B:'<h2>B · ตารางเดียว + ลิ้นชักบันทึก <span class="badge mute" style="background:var(--tint);color:var(--primary);border-color:var(--primary)">แนะนำ</span></h2><ul><li>ทุก endpoint อยู่ในตารางเดียว สลับสถานการณ์ได้ในแถวด้วยปุ่มกลุ่ม (ปกติ / 409 / 401 / 500 / สุ่ม) และพิมพ์หน่วงเวลาตรงช่อง เหมาะกับ 20+ endpoint และการทดสอบที่สลับสถานการณ์บ่อย</li><li>คอลัมน์ "เรียกแล้ว" และ "ล่าสุด" บอกว่า endpoint ไหนถูกเรียกจริง (นับจากบันทึกคำขอ)</li><li>บันทึกคำขออยู่ในลิ้นชักด้านล่าง พับเก็บได้ เลือกแถวเพื่อดู request/response</li></ul>',
+ C:'<h2>C · ปรับของเดิมเล็กน้อย</h2><ul><li>โครงเดิม (endpoint ซ้าย · บันทึกขวา) แต่เพิ่มแถบเซิร์ฟเวอร์ชัดเจน เปลี่ยนดรอปดาวน์เป็นปุ่มกลุ่ม และเพิ่มคำสั่ง curl ตัวอย่างตอนยังว่าง</li><li>แก้น้อยที่สุด ไม่แตะเซิร์ฟเวอร์ ไม่มีรายละเอียดคำขอ</li></ul>'
+};
+function renderChrome(){
+  var b=S.chrome=='before';
+  var g=function(t){return b?t:'<span class="gone">'+t+'</span>'};
+  return '<div class="cbar"><b>NSL Nebular</b><span>ไฟล์ แก้ไข มุมมอง</span><span>ค้นหา Ctrl+K</span><span>↶ ↷ ☀ 🎨</span>'+(b?'<span class="gone" style="text-decoration:none;color:var(--danger)">[จัดวางอัตโนมัติ] [Dialect MySQL] [Export .sql]</span>':'<span class="gone">จัดวางอัตโนมัติ · Dialect · Export .sql</span>')+'</div>'
+   +'<div class="cbar" style="background:var(--surface)">แท็บเอกสาร: ER · DFD · Flowchart · Wireframe … <span class="keep">(คงไว้)</span></div>'
+   +'<div class="cbody"><div class="crail">&nbsp;</div><div class="cexp">ตัวสำรวจโปรเจกต์<br><span class="keep">(คงไว้)</span></div>'+(b?'<div class="cleft">แผงซ้ายของ ER<br>Tables (9)<br>Table templates</div>':'')+'<div class="cmain">'+(b?'หน้า Mock Server (พื้นที่แคบลง)':'หน้า Mock Server (ได้พื้นที่เพิ่ม ~250px)')+'</div></div>'
+   +'<div class="cstat">'+(b?'<span class="gone" style="text-decoration:none;color:var(--danger)">hotel_booking.nsln · ER — ระบบจองห้องพัก · 9 tables · 8 relationships</span><span class="gone" style="text-decoration:none;color:var(--danger)">7 open</span><span class="gone" style="text-decoration:none;color:var(--danger)">100%</span>':'<span class="gone">สรุปของ ER · 9 tables · 8 relationships</span><span class="gone">7 open</span><span class="gone">100%</span>')+'<span class="keep">'+(b?'':'hotel_booking.nsln · ')+'เอกสาร 13 · ไม่พบปัญหา · ยังไม่ได้บันทึก (คงไว้)</span></div>';
+}
+function render(){
+  document.getElementById('win').innerHTML=S.opt=='A'?renderA():S.opt=='B'?renderB():renderC();
+  document.getElementById('note').innerHTML=NOTES[S.opt];
+  document.getElementById('cwin').innerHTML=renderChrome();
+  [['optSeg','opt'],['runSeg','run'],['chSeg','chrome']].forEach(function(x){document.querySelectorAll('#'+x[0]+' button').forEach(function(b){b.setAttribute('aria-pressed',String(S[x[1]]==b.dataset.v))})});
+}
+document.getElementById('optSeg').onclick=function(e){var b=e.target.closest('button');if(b){S.opt=b.dataset.v;render()}};
+document.getElementById('runSeg').onclick=function(e){var b=e.target.closest('button');if(b){S.run=b.dataset.v;render()}};
+document.getElementById('chSeg').onclick=function(e){var b=e.target.closest('button');if(b){S.chrome=b.dataset.v;render()}};
+var win=document.getElementById('win');
+win.onclick=function(e){
+  var chip=e.target.closest('.chips button');if(chip){EPS[+chip.parentNode.dataset.ep].sc=chip.dataset.sc;render();return}
+  var ep=e.target.closest('[data-ep]');if(ep&&!e.target.closest('.chips')){S.sel=+ep.dataset.ep;render();return}
+  var lg=e.target.closest('[data-log]');if(lg){S.logSel=+lg.dataset.log;render();return}
+  if(e.target.closest('[data-drawer]')){S.drawer=!S.drawer;render();return}
+  var r=e.target.closest('input[type=radio]');if(r){EPS[S.sel].sc=r.dataset.sc;render()}
+};
+win.oninput=function(e){
+  var t=e.target;
+  if(t.matches('input[type=range]')){EPS[S.sel].d=+t.value;t.nextElementSibling.textContent=t.value+' ms';return}
+  if(t.dataset.d!==undefined&&t.dataset.d!==''&&t.matches('input.d, input.field')){EPS[+t.dataset.d].d=parseInt(t.value,10)||0}
+};
+render();
+</script>

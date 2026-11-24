@@ -5,6 +5,7 @@ import '../core/l10n/l10n.dart';
 import '../core/models/workspace.dart';
 import '../core/validate/issue.dart';
 import '../core/validate/workspace_validator.dart';
+import '../core/validate/usecase_validator.dart';
 import '../state/workspace_controller.dart';
 import 'canvas/canvas_controller.dart';
 import 'issue_widgets.dart';
@@ -95,7 +96,10 @@ class _WorkspaceIssuesDialogState extends State<WorkspaceIssuesDialog> {
     final one = widget.docId;
     final all = [for (final x in validateWorkspace(w.workspace)) if (one == null || x.docId == one) x];
     final shown = _showInfo ? all : all.where((x) => x.issue.severity != Severity.info).toList();
-    final n = countIssues(all.map((x) => x.issue));
+    // Use Case เป็นข้อมูลระดับโปรเจกต์ : แสดงเฉพาะมุมมองทั้งโปรเจกต์ ไม่แสดงตอนกรองเอกสารเดียว
+    final ucAll = one == null ? w.useCaseIssues : const <UcIssue>[];
+    final ucShown = _showInfo ? ucAll : ucAll.where((x) => x.severity != Severity.info).toList();
+    final n = countIssues([...all.map((x) => x.issue), ...ucAll.map((x) => x.toIssue())]);
 
     // จัดกลุ่มตามเอกสารตามลำดับที่เจอ
     final groups = <String, List<WorkspaceIssue>>{};
@@ -113,9 +117,9 @@ class _WorkspaceIssuesDialogState extends State<WorkspaceIssuesDialog> {
           Row(children: [
             Expanded(
               child: Text(
-                all.isEmpty
+                all.isEmpty && ucAll.isEmpty
                     ? (one == null ? tr('✓ ไม่พบปัญหาในทุกเอกสาร') : tr('✓ ไม่พบปัญหาในเอกสารนี้'))
-                    : tr('{0} ข้อผิดพลาด · {1} คำเตือน · {2} คำแนะนำ — ใน {3} เอกสาร', [n.errors, n.warnings, n.infos, groups.length]),
+                    : tr('{0} ข้อผิดพลาด · {1} คำเตือน · {2} คำแนะนำ — ใน {3} เอกสาร', [n.errors, n.warnings, n.infos, groups.length + (ucAll.isEmpty ? 0 : 1)]),
                 key: const ValueKey('workspace-issues-summary'),
                 style: TextStyle(fontSize: 12.5, color: C.muted),
               ),
@@ -145,6 +149,34 @@ class _WorkspaceIssuesDialogState extends State<WorkspaceIssuesDialog> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: IssueCard(issue: x.issue, onTap: () => _goto(x)),
+                  ),
+              ],
+              if (ucShown.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, bottom: 6),
+                  child: Row(children: [
+                    Icon(Icons.account_tree_outlined, size: 15, color: C.muted),
+                    const SizedBox(width: 6),
+                    const Text('Use Case', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text('  (${ucShown.length})', style: TextStyle(fontSize: 12.5, color: C.muted)),
+                  ]),
+                ),
+                for (final x in ucShown)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: IssueCard(
+                      key: ValueKey('workspace-issue-uc-${x.code}-${x.ucId ?? x.reqId}'),
+                      issue: x.toIssue(),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        final uc = x.ucId;
+                        if (uc != null) {
+                          w.showUseCase(uc, stepId: x.stepId);
+                        } else {
+                          w.showUseCases();
+                        }
+                      },
+                    ),
                   ),
               ],
             ]),
