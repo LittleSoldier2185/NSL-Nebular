@@ -94,5 +94,37 @@ void main() {
         expect(thai.hasMatch(tip.message ?? ''), false, reason: '$t: ${tip.message}');
       }
     });
+
+    testWidgets('ปุ่ม Use Case บนแถบ: กด = เปิดหน้า Use Case ; กดซ้ำ = กลับเอกสาร ; ไฮไลต์ตอนเปิด ; ป้ายบอกจำนวน', (tester) async {
+      await boot(tester);
+      final btn = find.byKey(const ValueKey('rail-usecase'));
+      expect(btn, findsOneWidget);
+      expect(tester.widget<Tooltip>(find.descendant(of: btn, matching: find.byType(Tooltip)).first).message, contains('Use Case'));
+
+      await tester.tap(btn);
+      await tester.pumpAndSettle();
+      expect(w.page, WorkspacePage.useCases);
+      expect(find.byKey(const ValueKey('usecase-view')), findsOneWidget);
+      // ปุ่มชนิดเอกสารไม่ไฮไลต์ขณะอยู่หน้านี้ (ปุ่ม ER ไม่มีแถบสีซ้าย)
+      w.addUseCase(name: 'จองห้อง', actor: 'Guest');
+      await tester.pumpAndSettle();
+      expect(tester.widget<Tooltip>(find.descendant(of: btn, matching: find.byType(Tooltip)).first).message, contains('1'));
+
+      await tester.tap(btn);
+      await tester.pumpAndSettle();
+      expect(w.page, WorkspacePage.document);
+      expect(find.byKey(const ValueKey('usecase-view')), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('แถบไอคอนพอดีหน้าต่างเตี้ย (560px) : ไม่ล้น และปุ่ม Use Case ยังอยู่', (tester) async {
+      tester.view.physicalSize = const Size(1200, 560);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(NslDevApp(settings: AppSettings(lang: Lang.th)));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('rail-usecase')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
   });
 }

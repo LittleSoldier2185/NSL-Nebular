@@ -79,9 +79,57 @@ class ActivityRail extends StatelessWidget {
               onTap: () => go(w, t),
             ),
           ),
+        // หน้าระดับโปรเจกต์ (ไม่ใช่เอกสารชนิดหนึ่ง) : Use Case — กดซ้ำเพื่อกลับไปที่เอกสาร
+        Padding(
+          padding: const EdgeInsets.only(top: 2, bottom: 8, left: 8, right: 8),
+          child: Divider(height: 1, color: C.border),
+        ),
+        _PageRailButton(
+          key: const ValueKey('rail-usecase'),
+          icon: Icons.account_tree_outlined,
+          label: 'Use Case',
+          tooltip: w.useCases.isEmpty ? 'Use Case — ${tr('สร้างใหม่')}' : 'Use Case · ${w.useCases.length}',
+          active: w.page == WorkspacePage.useCases,
+          onTap: () => w.showUseCases(w.page != WorkspacePage.useCases),
+        ),
       ]),
     );
   }
+}
+
+/// ปุ่มหน้าระดับโปรเจกต์บนแถบ (หน้าตาเหมือนปุ่มชนิดเอกสาร แต่ใช้สีหลักของแอป)
+class _PageRailButton extends StatelessWidget {
+  const _PageRailButton({super.key, required this.icon, required this.label, required this.tooltip, required this.active, required this.onTap});
+
+  final IconData icon;
+  final String label, tooltip;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: tooltip,
+        child: Semantics(
+          button: true,
+          selected: active,
+          label: label,
+          excludeSemantics: true,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: active ? C.primaryTint : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                border: Border(left: BorderSide(color: active ? C.primary : Colors.transparent, width: 3)),
+              ),
+              child: Icon(icon, size: 20, color: active ? C.primaryDark : C.muted),
+            ),
+          ),
+        ),
+      );
 }
 
 class _RailButton extends StatelessWidget {
