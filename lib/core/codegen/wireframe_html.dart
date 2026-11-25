@@ -4,6 +4,7 @@ import '../layout/wireframe_render.dart' show wfGray, wfPalette, WfPalette;
 import '../models/api_model.dart';
 import '../models/project.dart';
 import '../models/table_model.dart';
+import '../models/wf_icons.dart';
 import '../models/wireframe_model.dart';
 import '../models/workspace.dart';
 
@@ -499,7 +500,10 @@ select.wf-field { appearance: none; padding-right: 28px; background-image: url("
                 '${_n(w * .7)} ${_n(h * .52)} ${_n(w * .88)} ${_n(h * .8)}Z" fill="#C4CAD4"/><circle cx="${_n(w * .7)}" cy="${_n(h * .3)}" r="${_n(m * .08)}" fill="#C4CAD4"/></svg>';
         return ('div', 'wf-img', ' role="img" aria-label="${t.isEmpty ? 'image' : t}"', art, false);
       case WfKind.icon:
-        final art = sketch
+        final def = wfIconById(c.symbol);
+        final art = def != null
+            ? '<svg viewBox="-4.67 -4.67 33.34 33.34" fill="none" stroke="var(--wf-text)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${wfIconSvgBody(def)}</svg>'
+            : sketch
             ? '<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M25 25L75 75M75 25L25 75" stroke="var(--wf-border)" stroke-width="4"/></svg>'
             : '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="22" fill="none" stroke="var(--wf-muted)" stroke-width="7"/></svg>';
         return ('span', 'wf-icon', ' aria-hidden="true"', art, false);

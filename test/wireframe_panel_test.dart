@@ -186,4 +186,47 @@ void main() {
     expect(find.text('Layers'), findsOneWidget);
     expect(find.text('Appearance'), findsOneWidget);
   });
+
+  testWidgets('จัดแนวและกระจาย: เลือกชิ้นเดียวก็จัดชิดหน้าจอ/กึ่งกลางหน้าจอได้ ; เลือกหลายชิ้นมีสลับ ตามหน้าจอ/ตามกัน', (tester) async {
+    await boot(tester);
+    final a = f.addComponent(WfKind.button, 300, 200)!;
+    f.selectBox(a.id);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('wf-align-section')), findsOneWidget);
+    expect(find.byKey(const ValueKey('wf-align-target')), findsNothing, reason: 'ชิ้นเดียว ไม่มีให้เลือกว่าตามกัน');
+
+    await tester.ensureVisible(find.byKey(const ValueKey('wf-al-left')));
+    await tester.tap(find.byKey(const ValueKey('wf-al-left')));
+    await tester.pumpAndSettle();
+    expect(f.diagram.componentById(a.id)!.x, 0);
+
+    await tester.ensureVisible(find.byKey(const ValueKey('wf-al-center')));
+    await tester.tap(find.byKey(const ValueKey('wf-al-center')));
+    await tester.pumpAndSettle();
+    final c = f.diagram.componentById(a.id)!;
+    expect(c.x + c.w / 2, closeTo(f.diagram.width / 2, 0.01));
+
+    await tester.ensureVisible(find.byKey(const ValueKey('wf-al-bottom')));
+    await tester.tap(find.byKey(const ValueKey('wf-al-bottom')));
+    await tester.pumpAndSettle();
+    final c2 = f.diagram.componentById(a.id)!;
+    expect(c2.y + c2.h, closeTo(f.diagram.height.toDouble(), 0.01));
+
+    // หลายชิ้น : ค่าเริ่มต้นชิดหน้าจอ ; สลับเป็นตามกันแล้วชิดซ้ายตามชิ้นซ้ายสุด
+    final b = f.addComponent(WfKind.button, 700, 400)!;
+    f.selectBox(a.id);
+    f.selectBox(b.id, add: true);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('wf-align-target')), findsOneWidget);
+    await tester.ensureVisible(find.text('ตามกัน'));
+    await tester.tap(find.text('ตามกัน'));
+    await tester.pumpAndSettle();
+    final leftMost = [f.diagram.componentById(a.id)!.x, f.diagram.componentById(b.id)!.x].reduce((p, q) => p < q ? p : q);
+    await tester.ensureVisible(find.byKey(const ValueKey('wf-al-left')));
+    await tester.tap(find.byKey(const ValueKey('wf-al-left')));
+    await tester.pumpAndSettle();
+    expect(f.diagram.componentById(a.id)!.x, closeTo(leftMost, 0.01));
+    expect(f.diagram.componentById(b.id)!.x, closeTo(leftMost, 0.01));
+    expect(tester.widget<OutlinedButton>(find.byKey(const ValueKey('wf-dist-h'))).onPressed, isNull, reason: 'กระจายต้อง 3 ชิ้นขึ้นไป');
+  });
 }

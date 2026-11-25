@@ -1,3 +1,4 @@
+import '../models/wf_icons.dart';
 import '../models/wireframe_model.dart';
 import '../models/workspace.dart';
 import 'naming.dart';
@@ -49,7 +50,7 @@ String _flutterWidget(WfComponent c) {
     WfKind.select => 'DropdownButtonFormField<String>(items: [${items.map((i) => 'DropdownMenuItem(value: ${_dartStr(i)}, child: Text(${_dartStr(i)}))').join(', ')}], onChanged: (_) {})',
     WfKind.slider => 'Slider(value: 0.5, onChanged: (_) {})',
     WfKind.image || WfKind.map || WfKind.chart => 'Container(height: ${c.h.round()}, color: Colors.black12, alignment: Alignment.center, child: Text($t))',
-    WfKind.icon => 'const Icon(Icons.star_outline)',
+    WfKind.icon => 'const Icon(Icons.${wfIconById(c.symbol)?.flutter ?? 'star_outline'})',
     WfKind.avatar => 'const CircleAvatar(child: Icon(Icons.person))',
     WfKind.table => 'DataTable(columns: [${(c.columns.isEmpty ? ['Column'] : c.columns).map((h) => 'DataColumn(label: Text(${_dartStr(h)}))').join(', ')}], rows: const [])',
     WfKind.list => 'Column(children: [${items.map((i) => 'ListTile(title: Text(${_dartStr(i)}))').join(', ')}])',

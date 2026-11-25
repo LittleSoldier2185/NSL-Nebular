@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../models/color_utils.dart';
+import '../models/wf_icons.dart';
 import '../models/wireframe_model.dart';
 import 'ortho_route.dart' show RoutePoint;
 
@@ -391,6 +392,40 @@ void _component(_Builder b, WireframeDiagram d, WfComponent c) {
       }
     case WfKind.icon:
       final m = math.min(w, h);
+      final def = wfIconById(c.symbol);
+      if (def != null) {
+        // สัญลักษณ์ที่เลือก: เส้นในกริด 24×24 ย่อให้พอดีกลางกรอบ ; มีพื้นเฉพาะเมื่อผู้ใช้ระบุสีพื้น
+        if (c.fill != null) b.rect(x, y, w, h, fill: surface, r: m * 0.2);
+        final s = m * 0.72, k = s / 24, ox = x + (w - s) / 2, oy = y + (h - s) / 2;
+        final stroke = col(c.stroke, ink);
+        final lw = math.max(1.2, s / 24 * 1.8);
+        (double, double) pt(List<double> a, int i) => (ox + a[i] * k, oy + a[i + 1] * k);
+        void seg(List<double> a, {required bool close}) {
+          final n = a.length ~/ 2;
+          for (var i = 0; i + 1 < n; i++) {
+            final p1 = pt(a, i * 2), p2 = pt(a, i * 2 + 2);
+            b.line(p1.$1, p1.$2, p2.$1, p2.$2, stroke: stroke, width: lw);
+          }
+          if (close && n > 2) {
+            final p1 = pt(a, (n - 1) * 2), p2 = pt(a, 0);
+            b.line(p1.$1, p1.$2, p2.$1, p2.$2, stroke: stroke, width: lw);
+          }
+        }
+
+        for (final (op, a) in def.ops) {
+          switch (op) {
+            case 'L':
+              seg(a, close: false);
+            case 'P':
+              seg(a, close: true);
+            case 'C':
+              b.ellipse(ox + a[0] * k, oy + a[1] * k, a[2] * k, a[2] * k, stroke: stroke, width: lw);
+            case 'R':
+              b.rect(ox + a[0] * k, oy + a[1] * k, a[2] * k, a[3] * k, stroke: stroke, width: lw, r: a[4] * k);
+          }
+        }
+        break;
+      }
       b.rect(x, y, w, h, fill: c.fill != null ? surface : col(null, p.subtle), stroke: p.sketch ? border : null, width: sw, r: m * 0.2);
       if (p.sketch) {
         b.line(x + w * 0.25, y + h * 0.25, x + w * 0.75, y + h * 0.75, stroke: border);

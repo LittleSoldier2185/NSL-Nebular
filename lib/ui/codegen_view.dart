@@ -46,6 +46,8 @@ class _CodegenViewState extends State<CodegenView> {
   late Set<GenTarget> _targets;
   late final TextEditingController _folder;
   String? _previewPath;
+  String _filter = '';
+  final Set<String> _collapsed = {};
   bool _busy = false;
 
   @override
@@ -53,7 +55,9 @@ class _CodegenViewState extends State<CodegenView> {
     super.initState();
     final preset = context.read<WorkspaceController>().codegenPreset;
     final byName = GenTarget.values.asNameMap();
-    _targets = preset == null ? {GenTarget.sqlDdl, GenTarget.typescript} : {for (final n in preset.targets) ?byName[n]};
+    _targets = preset == null
+        ? {GenTarget.sqlDdl, GenTarget.typescript}
+        : {for (final n in preset.targets) ?byName[n]};
     _folder = TextEditingController(text: preset?.folder ?? '');
   }
 
@@ -64,11 +68,15 @@ class _CodegenViewState extends State<CodegenView> {
   }
 
   Future<void> _browse() async {
-    final p = await FilePicker.getDirectoryPath(dialogTitle: tr('เลือกโฟลเดอร์ปลายทาง'));
+    final p = await FilePicker.getDirectoryPath(
+      dialogTitle: tr('เลือกโฟลเดอร์ปลายทาง'),
+    );
     if (p != null) setState(() => _folder.text = p);
   }
 
-  void _toast(String m) => ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(m)));
+  void _toast(String m) =>
+      ScaffoldMessenger.maybeOf(context)
+          ?.showSnackBar(SnackBar(content: Text(m)));
 
   Future<void> _generate(List<GenFile> files) async {
     final folder = _folder.text.trim();
@@ -84,7 +92,8 @@ class _CodegenViewState extends State<CodegenView> {
         if (!mounted) return;
         final choice = await showDialog<String>(
           context: context,
-          builder: (_) => _EditedDialog(paths: [for (final f in plan.edited) f.path]),
+          builder: (_) =>
+              _EditedDialog(paths: [for (final f in plan.edited) f.path]),
         );
         if (choice == null) return;
         overwrite = choice == 'overwrite';
@@ -93,8 +102,14 @@ class _CodegenViewState extends State<CodegenView> {
       final skipped = overwrite ? 0 : plan.edited.length;
       _toast(
         skipped == 0
-            ? tr('เขียนแล้ว {0} ไฟล์ · ไม่เปลี่ยน {1} ไฟล์', [n, plan.unchanged.length])
-            : tr('เขียนแล้ว {0} ไฟล์ · ไม่เปลี่ยน {1} ไฟล์ · ข้ามไฟล์ที่แก้ด้วยมือ {2} ไฟล์', [n, plan.unchanged.length, skipped]),
+            ? tr('เขียนแล้ว {0} ไฟล์ · ไม่เปลี่ยน {1} ไฟล์', [
+                n,
+                plan.unchanged.length,
+              ])
+            : tr(
+                'เขียนแล้ว {0} ไฟล์ · ไม่เปลี่ยน {1} ไฟล์ · ข้ามไฟล์ที่แก้ด้วยมือ {2} ไฟล์',
+                [n, plan.unchanged.length, skipped],
+              ),
       );
     } catch (e) {
       _toast(tr('เขียนไฟล์ไม่ได้: {0}', [e]));
@@ -102,6 +117,41 @@ class _CodegenViewState extends State<CodegenView> {
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  static String _dir(String path) {
+    final i = path.lastIndexOf('/');
+    return i < 0 ? './' : path.substring(0, i + 1);
+  }
+
+  /// ชื่อที่โชว์ในรายการ : ตัดโฟลเดอร์ออก และย่อ timestamp หน้าชื่อ migration ให้เห็นชื่อตารางชัด ๆ
+  static String _shortName(String path) {
+    final name = path.substring(path.lastIndexOf('/') + 1);
+    return name.replaceFirst(RegExp(r'^\d{4}_\d{2}_\d{2}_\d{6}_'), '…');
+  }
+
+  static String _size(String s) {
+    final b = s.length;
+    return b < 1024 ? '$b B' : '${(b / 1024).toStringAsFixed(1)} KB';
+  }
+
+  Widget _sectionTitle(String text, {Widget? trailing}) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: C.text,
+            ),
+          ),
+        ),
+        ?trailing,
+      ],
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -113,82 +163,210 @@ class _CodegenViewState extends State<CodegenView> {
     final chosen = _targets.intersection(avail);
     final result = generateFiles(w.workspace, chosen);
     final files = result.files;
-    final preview = files.where((f) => f.path == _previewPath).firstOrNull ?? files.firstOrNull;
+    final preview =
+        files.where((f) => f.path == _previewPath).firstOrNull ??
+        files.firstOrNull;
+    final perTarget = <GenTarget, int>{};
+    for (final f in files) {
+      perTarget[f.target] = (perTarget[f.target] ?? 0) + 1;
+    }
+    final q = _filter.trim().toLowerCase();
+    final shown = q.isEmpty
+        ? files
+        : [
+            for (final f in files)
+              if (f.path.toLowerCase().contains(q)) f,
+          ];
+    final folders = <String, List<GenFile>>{};
+    for (final f in shown) {
+      folders.putIfAbsent(_dir(f.path), () => []).add(f);
+    }
+    final allFolders = {for (final f in files) _dir(f.path)};
 
+    // ───── ซ้าย : เลือกว่าจะสร้างอะไร (การ์ดต่อกลุ่ม) + โฟลเดอร์ปลายทาง ─────
     final targetsPanel = Material(
       color: C.surface,
       shape: Border(right: BorderSide(color: C.border)),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              tr('สร้างอะไรบ้าง'),
-              style: TextStyle(fontWeight: FontWeight.w700, color: C.text),
-            ),
-            for (final s in GenSource.values) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(2, 12, 2, 2),
-                child: Text(
-                  genSourceLabel(s),
-                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: C.muted),
-                ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _sectionTitle(
+            tr('สร้างอะไรบ้าง'),
+            trailing: Text(
+              tr('เปิด {0} จาก {1}', [chosen.length, avail.length]),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: C.primaryDark,
               ),
-              for (final t in GenTarget.values.where((t) => t.source == s))
-                CheckboxListTile(
-                  key: ValueKey('gen-target-${t.name}'),
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  value: chosen.contains(t),
-                  onChanged: avail.contains(t) ? (v) => setState(() => v == true ? _targets.add(t) : _targets.remove(t)) : null,
-                  title: Text(genTargetLabel(t), style: const TextStyle(fontSize: 13)),
-                ),
-            ],
-            const SizedBox(height: 14),
-            Text(
-              tr('ส่งออกไปที่โฟลเดอร์'),
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: C.muted),
             ),
-            const SizedBox(height: 6),
-            Row(
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               children: [
-                Expanded(
-                  child: TextField(
-                    key: const ValueKey('gen-folder'),
-                    controller: _folder,
-                    style: const TextStyle(fontSize: 12.5, fontFamily: 'monospace'),
-                    decoration: const InputDecoration(isDense: true, hintText: r'C:\project'),
+                for (final s in GenSource.values)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Material(
+                      color: C.bg,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        side: BorderSide(color: C.borderSoft),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+                            child: Text(
+                              genSourceLabel(s),
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: C.muted,
+                              ),
+                            ),
+                          ),
+                          Divider(height: 1, color: C.borderSoft),
+                          for (final t in GenTarget.values.where(
+                            (t) => t.source == s,
+                          ))
+                            CheckboxListTile(
+                              key: ValueKey('gen-target-${t.name}'),
+                              dense: true,
+                              visualDensity: VisualDensity.compact,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              value: chosen.contains(t),
+                              onChanged: avail.contains(t)
+                                  ? (v) => setState(
+                                      () => v == true
+                                          ? _targets.add(t)
+                                          : _targets.remove(t),
+                                    )
+                                  : null,
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      genTargetLabel(t),
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                  if (chosen.contains(t))
+                                    Text(
+                                      '${perTarget[t] ?? 0}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: C.muted,
+                                        fontFamily: kMono,
+                                        fontFamilyFallback: const ['Consolas'],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: C.border),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tr('ส่งออกไปที่โฟลเดอร์'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: C.muted,
                   ),
                 ),
-                IconButton(
-                  key: const ValueKey('gen-browse'),
-                  tooltip: tr('เลือกโฟลเดอร์…'),
-                  onPressed: _browse,
-                  icon: const Icon(Icons.folder_open_rounded, size: 20),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        key: const ValueKey('gen-folder'),
+                        controller: _folder,
+                        onChanged: (_) => setState(() {}),
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontFamily: 'monospace',
+                        ),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          hintText: r'C:\project',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    IconButton.outlined(
+                      key: const ValueKey('gen-browse'),
+                      tooltip: tr('เลือกโฟลเดอร์…'),
+                      onPressed: _browse,
+                      icon: const Icon(Icons.folder_open_rounded, size: 18),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
 
+    // ───── กลาง : ไฟล์ที่จะได้ จัดเป็นโฟลเดอร์ ─────
     final tree = Material(
       color: C.surface,
       shape: Border(right: BorderSide(color: C.border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
-            child: Text(
-              tr('ไฟล์ที่จะได้ · {0}', [files.length]),
-              key: const ValueKey('gen-count'),
-              style: TextStyle(fontWeight: FontWeight.w700, color: C.text),
+          _sectionTitle(
+            tr('ไฟล์ที่จะได้'),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+              decoration: BoxDecoration(
+                color: C.field,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${files.length}',
+                key: const ValueKey('gen-count'),
+                style: TextStyle(fontSize: 12, color: C.muted),
+              ),
             ),
           ),
+          if (files.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: TextField(
+                key: const ValueKey('gen-filter'),
+                onChanged: (v) => setState(() => _filter = v),
+                style: const TextStyle(fontSize: 12.5),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: tr('กรองไฟล์'),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
           for (final m in result.warnings)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
@@ -201,7 +379,9 @@ class _CodegenViewState extends State<CodegenView> {
                       padding: const EdgeInsets.all(16),
                       child: Text(
                         avail.isEmpty
-                            ? tr('ยังไม่มีเอกสารที่สร้างโค้ดได้ (ER ที่มีตาราง / API ที่มี endpoint / Wireframe ที่มีชิ้นส่วน)')
+                            ? tr(
+                                'ยังไม่มีเอกสารที่สร้างโค้ดได้ (ER ที่มีตาราง / API ที่มี endpoint / Wireframe ที่มีชิ้นส่วน)',
+                              )
                             : tr('เลือกเป้าหมายทางซ้าย'),
                         textAlign: TextAlign.center,
                         style: TextStyle(color: C.muted),
@@ -209,24 +389,102 @@ class _CodegenViewState extends State<CodegenView> {
                     ),
                   )
                 : ListView(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                     children: [
-                      for (final f in files)
-                        Material(
-                          color: f.path == preview?.path ? C.primaryTint : Colors.transparent,
-                          child: InkWell(
-                            key: ValueKey('gen-file-${f.path}'),
-                            onTap: () => setState(() => _previewPath = f.path),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                              child: Text(
-                                f.path,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 12.5, fontFamily: 'monospace', color: C.text),
-                              ),
+                      for (final e in folders.entries) ...[
+                        InkWell(
+                          key: ValueKey('gen-folder-${e.key}'),
+                          borderRadius: BorderRadius.circular(6),
+                          onTap: () => setState(
+                            () => _collapsed.contains(e.key)
+                                ? _collapsed.remove(e.key)
+                                : _collapsed.add(e.key),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _collapsed.contains(e.key) && q.isEmpty
+                                      ? Icons.chevron_right_rounded
+                                      : Icons.expand_more_rounded,
+                                  size: 16,
+                                  color: C.muted,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    e.key,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: C.muted,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '${e.value.length}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: C.muted,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
+                        if (q.isNotEmpty || !_collapsed.contains(e.key))
+                          for (final f in e.value)
+                            Tooltip(
+                              message: f.path,
+                              waitDuration: const Duration(milliseconds: 500),
+                              child: Material(
+                                color: f.path == preview?.path
+                                    ? C.primaryTint
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(6),
+                                child: InkWell(
+                                  key: ValueKey('gen-file-${f.path}'),
+                                  borderRadius: BorderRadius.circular(6),
+                                  onTap: () =>
+                                      setState(() => _previewPath = f.path),
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      26,
+                                      5,
+                                      8,
+                                      5,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.insert_drive_file_outlined,
+                                          size: 14,
+                                          color: C.muted,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            _shortName(f.path),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: C.text,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                      ],
                     ],
                   ),
           ),
@@ -234,6 +492,7 @@ class _CodegenViewState extends State<CodegenView> {
       ),
     );
 
+    // ───── ขวา : พรีวิวไฟล์ ─────
     final previewPane = Container(
       color: C.bg,
       child: preview == null
@@ -242,7 +501,7 @@ class _CodegenViewState extends State<CodegenView> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 14, 12, 10),
                   child: Row(
                     children: [
                       Expanded(
@@ -251,22 +510,30 @@ class _CodegenViewState extends State<CodegenView> {
                           children: [
                             Text(
                               preview.path,
-                              style: TextStyle(fontWeight: FontWeight.w700, fontFamily: 'monospace', color: C.text),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontFamily: 'monospace',
+                                color: C.text,
+                              ),
                             ),
+                            const SizedBox(height: 2),
                             Text(
-                              tr('จาก {0} · {1}', [preview.origin, genTargetLabel(preview.target)]),
+                              '${tr('จาก {0} · {1}', [preview.origin, genTargetLabel(preview.target)])}'
+                              ' · ${tr('{0} บรรทัด', ['\n'.allMatches(preview.content).length + 1])} · ${_size(preview.content)}',
                               style: TextStyle(fontSize: 12, color: C.muted),
                             ),
                           ],
                         ),
                       ),
-                      TextButton.icon(
+                      OutlinedButton.icon(
                         key: const ValueKey('gen-copy'),
                         onPressed: () async {
-                          await Clipboard.setData(ClipboardData(text: preview.content));
+                          await Clipboard.setData(
+                            ClipboardData(text: preview.content),
+                          );
                           _toast(tr('คัดลอกแล้ว'));
                         },
-                        icon: const Icon(Icons.copy_rounded, size: 16),
+                        icon: const Icon(Icons.copy_rounded, size: 15),
                         label: Text(tr('คัดลอก')),
                       ),
                     ],
@@ -274,18 +541,23 @@ class _CodegenViewState extends State<CodegenView> {
                 ),
                 Expanded(
                   child: Container(
-                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                     decoration: BoxDecoration(
                       color: C.surface,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: C.border),
                     ),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       child: SelectableText(
                         preview.content,
                         key: const ValueKey('gen-preview'),
-                        style: TextStyle(fontSize: 12, fontFamily: 'monospace', color: C.text, height: 1.45),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                          color: C.text,
+                          height: 1.45,
+                        ),
                       ),
                     ),
                   ),
@@ -294,19 +566,58 @@ class _CodegenViewState extends State<CodegenView> {
             ),
     );
 
+    // ───── แถบล่าง : สรุป + ปุ่มหลัก ─────
+    final folderText = _folder.text.trim();
     final bottom = Material(
       color: C.surface,
       shape: Border(top: BorderSide(color: C.border)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Row(
           children: [
-            Expanded(
-              child: Text(
-                tr('{0} ชนิดเป้าหมาย · {1} ไฟล์', [chosen.length, files.length]),
-                style: TextStyle(fontSize: 12.5, color: C.muted),
-              ),
+            Text(
+              tr('{0} ชนิดเป้าหมาย · {1} ไฟล์ · {2} โฟลเดอร์', [
+                chosen.length,
+                files.length,
+                allFolders.length,
+              ]),
+              style: TextStyle(fontSize: 13, color: C.muted),
             ),
+            if (folderText.isNotEmpty) ...[
+              const SizedBox(width: 14),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: C.field,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.folder_outlined, size: 14, color: C.muted),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          folderText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: C.muted,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            const Spacer(),
             OutlinedButton(
               key: const ValueKey('gen-save-preset'),
               onPressed: () {
@@ -314,15 +625,24 @@ class _CodegenViewState extends State<CodegenView> {
                   for (final t in GenTarget.values)
                     if (_targets.contains(t)) t.name,
                 ], _folder.text);
-                _toast(tr('บันทึกชุดตั้งค่าในโปรเจกต์แล้ว (บันทึกไฟล์เพื่อเก็บถาวร)'));
+                _toast(
+                  tr(
+                    'บันทึกชุดตั้งค่าในโปรเจกต์แล้ว (บันทึกไฟล์เพื่อเก็บถาวร)',
+                  ),
+                );
               },
               child: Text(tr('บันทึกเป็นชุดตั้งค่า')),
             ),
             const SizedBox(width: 8),
-            FilledButton(
+            FilledButton.icon(
               key: const ValueKey('gen-write'),
               onPressed: files.isEmpty || _busy ? null : () => _generate(files),
-              child: Text(tr('สร้างไฟล์')),
+              icon: const Icon(Icons.download_rounded, size: 18),
+              label: Text(
+                files.isEmpty
+                    ? tr('สร้างไฟล์')
+                    : tr('สร้าง {0} ไฟล์', [files.length]),
+              ),
             ),
           ],
         ),
@@ -334,6 +654,36 @@ class _CodegenViewState extends State<CodegenView> {
       color: C.bg,
       child: Column(
         children: [
+          Container(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: C.borderSoft)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.code_rounded, size: 20, color: C.primaryDark),
+                const SizedBox(width: 10),
+                Text(
+                  tr('สร้างโค้ด'),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: C.text,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    tr('เลือกสิ่งที่จะสร้าง ดูไฟล์ แล้วเขียนลงโฟลเดอร์'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12.5, color: C.muted),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: LayoutBuilder(
               builder: (context, box) {
@@ -341,7 +691,7 @@ class _CodegenViewState extends State<CodegenView> {
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(width: 250, child: targetsPanel),
+                      SizedBox(width: 270, child: targetsPanel),
                       Expanded(
                         child: Column(
                           children: [
@@ -356,8 +706,8 @@ class _CodegenViewState extends State<CodegenView> {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(width: 270, child: targetsPanel),
-                    SizedBox(width: 290, child: tree),
+                    SizedBox(width: 300, child: targetsPanel),
+                    SizedBox(width: 340, child: tree),
                     Expanded(child: previewPane),
                   ],
                 );
@@ -385,20 +735,36 @@ class _EditedDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(tr('ไฟล์เหล่านี้ต่างจากที่โปรแกรมสร้างไว้ครั้งก่อน (หรือมีอยู่ก่อนแล้ว) — เขียนทับจะทำให้การแก้ไขหาย')),
+          Text(
+            tr(
+              'ไฟล์เหล่านี้ต่างจากที่โปรแกรมสร้างไว้ครั้งก่อน (หรือมีอยู่ก่อนแล้ว) — เขียนทับจะทำให้การแก้ไขหาย',
+            ),
+          ),
           const SizedBox(height: 10),
           ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 220),
             child: ListView(
               shrinkWrap: true,
-              children: [for (final p in paths) Text(p, style: const TextStyle(fontSize: 12.5, fontFamily: 'monospace'))],
+              children: [
+                for (final p in paths)
+                  Text(
+                    p,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
       ),
     ),
     actions: [
-      TextButton(onPressed: () => Navigator.pop(context), child: Text(tr('ยกเลิก'))),
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(tr('ยกเลิก')),
+      ),
       OutlinedButton(
         key: const ValueKey('gen-skip-edited'),
         onPressed: () => Navigator.pop(context, 'skip'),

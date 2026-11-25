@@ -515,6 +515,14 @@ abstract class BoxDiagramController<C extends DocContent, B extends EditableBox>
     return true;
   }
 
+  /// จัดกล่องที่เลือก (ตั้งแต่ 1 ใบ) ชิดกรอบ [frame] ทีละใบ — คืน false ถ้าไม่ได้เลือกอะไร
+  bool alignToFrame(BoxAlign k, ({double left, double top, double right, double bottom}) frame) {
+    final sel = selectedBoxes;
+    if (sel.isEmpty) return false;
+    _place(alignBoxesTo(sel, k, frame));
+    return true;
+  }
+
   /// กระจายกล่องที่เลือก (อย่างน้อย 3 ใบ) ให้ช่องว่างเท่ากัน
   bool distribute({required bool horizontal}) {
     final sel = selectedBoxes;

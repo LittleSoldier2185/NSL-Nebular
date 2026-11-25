@@ -10,6 +10,9 @@ import '../../core/l10n/l10n.dart';
 import '../../core/layout/box_ops.dart';
 import '../../core/models/wf_block.dart';
 import '../../core/models/wf_templates.dart';
+import '../../core/layout/wireframe_slots.dart' show wfItemsKind, wfKindHasText, wfSlotValues;
+import '../../core/models/wf_icons.dart';
+import 'wf_items_editor.dart';
 import '../../core/models/wireframe_model.dart';
 import '../../core/validate/wireframe_validator.dart';
 import '../../state/wireframe_controller.dart';
@@ -510,17 +513,26 @@ class _ComponentProps extends StatelessWidget {
         ),
       ),
       const SizedBox(height: 12),
-      if (c.kind == WfKind.table) ...[
-        CommitField(
-          key: ValueKey('wf-columns-${c.id}-${c.columns.join('|')}'),
-          label: tr('หัวคอลัมน์ (บรรทัดละคอลัมน์)'),
-          value: c.columns.join('\n'),
-          minLines: 3,
-          maxLines: 8,
-          onCommit: (v) => f.setColumns(c.id, [for (final l in v.split('\n')) if (l.trim().isNotEmpty) l.trim()]),
+      if (c.kind == WfKind.icon) ...[
+        _SymbolPicker(
+          key: const ValueKey('wf-symbol-picker'),
+          value: c.symbol,
+          onPick: (id) => f.updateComponents([c.id], (x) => x.symbol = id),
         ),
         const SizedBox(height: 12),
-      ] else ...[
+      ] else if (wfItemsKind(c.kind)) ...[
+        // รายการหลายค่า (หัวคอลัมน์ตาราง / แท็บ / เมนู ฯลฯ): หนึ่งแถวต่อรายการ ลากเรียง ลบ เพิ่ม
+        WfItemsEditor(
+          key: ValueKey('wf-items-${c.id}'),
+          label: c.kind == WfKind.table ? tr('คอลัมน์') : tr('รายการ'),
+          values: wfSlotValues(c),
+          newItemText: c.kind == WfKind.table ? tr('คอลัมน์ใหม่') : tr('รายการใหม่'),
+          addLabel: c.kind == WfKind.table ? tr('เพิ่มคอลัมน์') : tr('เพิ่มรายการ'),
+          hint: tr('ลากที่จับเพื่อเรียงลำดับ · Enter เพิ่มรายการต่อจากแถวนี้'),
+          onChanged: (v) => c.kind == WfKind.table ? f.setColumns(c.id, v) : f.setText(c.id, v.join('\n')),
+        ),
+        const SizedBox(height: 12),
+      ] else if (wfKindHasText(c.kind)) ...[
         CommitField(
           key: ValueKey('wf-text-${c.id}-${c.text}'),
           label: wfMultiline(c.kind) ? tr('ข้อความ (บรรทัดละรายการ)') : tr('ข้อความ'),
@@ -530,18 +542,20 @@ class _ComponentProps extends StatelessWidget {
           onCommit: (v) => f.setText(c.id, v),
         ),
         const SizedBox(height: 12),
+      ] else ...[
+        Row(children: [
+          Icon(Icons.text_fields_rounded, size: 15, color: C.muted),
+          const SizedBox(width: 6),
+          Expanded(child: Text(tr('ชิ้นส่วนชนิดนี้ไม่มีข้อความ'), key: const ValueKey('wf-no-text'), style: TextStyle(fontSize: 12, color: C.muted))),
+        ]),
+        const SizedBox(height: 12),
       ],
       if (c.kind == WfKind.table || c.kind == WfKind.list || c.kind == WfKind.kanban) ...[
         LabeledField(
           label: c.kind == WfKind.kanban ? tr('จำนวนการ์ดตัวอย่าง (คอลัมน์แรก)') : tr('จำนวนแถวตัวอย่าง'),
           child: KeyedSubtree(
             key: const ValueKey('wf-rows'),
-            child: Dropdown<int>(
-              value: c.rows.clamp(0, 12),
-              items: const [0, 1, 2, 3, 4, 5, 6, 8, 10, 12],
-              labelOf: (v) => '$v',
-              onChanged: (v) => f.updateComponents([c.id], (x) => x.rows = v),
-            ),
+            child: _RowsStepper(value: c.rows.clamp(0, 12), onChanged: (v) => f.updateComponents([c.id], (x) => x.rows = v)),
           ),
         ),
         const SizedBox(height: 8),
@@ -587,6 +601,8 @@ class _ComponentProps extends StatelessWidget {
       ],
       const SizedBox(height: 10),
       _GeometryRows(id: c.id),
+      const SizedBox(height: 10),
+      const _AlignSection(key: ValueKey('wf-align-section'), count: 1),
       if (c.locked) ...[
         const SizedBox(height: 6),
         Row(children: [
@@ -623,8 +639,6 @@ class _MultiProps extends StatelessWidget {
   Widget build(BuildContext context) {
     final f = context.read<WireframeController>();
     final sample = f.diagram.componentById(ids.first) ?? WfComponent(id: '', kind: WfKind.label);
-    Widget btn(String key, IconData icon, String tip, VoidCallback tap) =>
-        IconButton(key: ValueKey(key), tooltip: tip, visualDensity: VisualDensity.compact, icon: Icon(icon, size: 18, color: C.muted), onPressed: tap);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(children: [
         Expanded(child: Text(tr('เลือก {0} ชิ้นส่วน', [ids.length]), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
@@ -636,26 +650,7 @@ class _MultiProps extends StatelessWidget {
         ),
       ]),
       const SizedBox(height: 8),
-      LabeledField(
-        label: tr('จัดแนว'),
-        child: Wrap(children: [
-          btn('wf-al-left', Icons.align_horizontal_left_rounded, tr('จัดชิดซ้าย'), () => f.align(BoxAlign.left)),
-          btn('wf-al-center', Icons.align_horizontal_center_rounded, tr('จัดกึ่งกลางแนวตั้ง'), () => f.align(BoxAlign.centerH)),
-          btn('wf-al-right', Icons.align_horizontal_right_rounded, tr('จัดชิดขวา'), () => f.align(BoxAlign.right)),
-          btn('wf-al-top', Icons.align_vertical_top_rounded, tr('จัดชิดบน'), () => f.align(BoxAlign.top)),
-          btn('wf-al-middle', Icons.align_vertical_center_rounded, tr('จัดกึ่งกลางแนวนอน'), () => f.align(BoxAlign.middle)),
-          btn('wf-al-bottom', Icons.align_vertical_bottom_rounded, tr('จัดชิดล่าง'), () => f.align(BoxAlign.bottom)),
-        ]),
-      ),
-      const SizedBox(height: 6),
-      LabeledField(
-        label: tr('กระจาย / ขนาด'),
-        child: Wrap(children: [
-          btn('wf-dist-h', Icons.horizontal_distribute_rounded, tr('กระจายแนวนอน (3 ชิ้นขึ้นไป)'), () => f.distribute(horizontal: true)),
-          btn('wf-dist-v', Icons.vertical_distribute_rounded, tr('กระจายแนวตั้ง (3 ชิ้นขึ้นไป)'), () => f.distribute(horizontal: false)),
-          btn('wf-same-size', Icons.photo_size_select_small_rounded, tr('ขนาดเท่ากับชิ้นแรกที่เลือก'), f.sameSize),
-        ]),
-      ),
+      _AlignSection(key: const ValueKey('wf-align-section'), count: ids.length),
       const SizedBox(height: 10),
       _StyleSection(ids: ids, sample: sample),
       const SizedBox(height: 12),
@@ -1578,4 +1573,208 @@ Widget _blockInteractions(BuildContext context, WireframeController f, WfBlock b
       ),
     ),
   );
+}
+
+/// "จัดแนวและกระจาย" : จัดชิ้นที่เลือกชิดกรอบหน้าจอ (ใช้ได้แม้ชิ้นเดียว) หรือชิดกันเอง (2 ชิ้นขึ้นไป) + กระจายระยะเท่ากัน (3 ชิ้นขึ้นไป)
+class _AlignSection extends StatefulWidget {
+  const _AlignSection({super.key, required this.count});
+  final int count;
+
+  @override
+  State<_AlignSection> createState() => _AlignSectionState();
+}
+
+class _AlignSectionState extends State<_AlignSection> {
+  /// true = ชิดกรอบหน้าจอ ; false = ชิดกันเอง (ได้เมื่อเลือก 2 ชิ้นขึ้นไป)
+  bool _toScreen = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final f = context.read<WireframeController>();
+    final multi = widget.count > 1;
+    final screen = _toScreen || !multi;
+    void al(BoxAlign k) => screen ? f.alignToScreen(k) : f.align(k);
+    Widget btn(String key, IconData icon, String tip, BoxAlign k) =>
+        IconButton(key: ValueKey(key), tooltip: tip, visualDensity: VisualDensity.compact, icon: Icon(icon, size: 18, color: C.muted), onPressed: () => al(k));
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+      decoration: BoxDecoration(border: Border.all(color: C.borderSoft), borderRadius: BorderRadius.circular(10)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(tr('จัดแนวและกระจาย'), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: C.text)),
+        if (multi) ...[
+          const SizedBox(height: 8),
+          SegmentedButton<bool>(
+            key: const ValueKey('wf-align-target'),
+            showSelectedIcon: false,
+            style: const ButtonStyle(visualDensity: VisualDensity.compact, textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12))),
+            segments: [
+              ButtonSegment(value: true, label: Text(tr('ตามหน้าจอ'))),
+              ButtonSegment(value: false, label: Text(tr('ตามกัน'))),
+            ],
+            selected: {_toScreen},
+            onSelectionChanged: (s) => setState(() => _toScreen = s.first),
+          ),
+        ],
+        const SizedBox(height: 6),
+        Wrap(children: [
+          btn('wf-al-left', Icons.align_horizontal_left_rounded, screen ? tr('ชิดซ้ายของหน้าจอ') : tr('จัดชิดซ้าย'), BoxAlign.left),
+          btn('wf-al-center', Icons.align_horizontal_center_rounded, screen ? tr('กึ่งกลางหน้าจอ (แนวตั้ง)') : tr('จัดกึ่งกลางแนวตั้ง'), BoxAlign.centerH),
+          btn('wf-al-right', Icons.align_horizontal_right_rounded, screen ? tr('ชิดขวาของหน้าจอ') : tr('จัดชิดขวา'), BoxAlign.right),
+          const SizedBox(width: 10),
+          btn('wf-al-top', Icons.align_vertical_top_rounded, screen ? tr('ชิดบนของหน้าจอ') : tr('จัดชิดบน'), BoxAlign.top),
+          btn('wf-al-middle', Icons.align_vertical_center_rounded, screen ? tr('กึ่งกลางหน้าจอ (แนวนอน)') : tr('จัดกึ่งกลางแนวนอน'), BoxAlign.middle),
+          btn('wf-al-bottom', Icons.align_vertical_bottom_rounded, screen ? tr('ชิดล่างของหน้าจอ') : tr('จัดชิดล่าง'), BoxAlign.bottom),
+        ]),
+        if (multi) ...[
+          const SizedBox(height: 6),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                key: const ValueKey('wf-dist-h'),
+                onPressed: widget.count >= 3 ? () => f.distribute(horizontal: true) : null,
+                icon: const Icon(Icons.horizontal_distribute_rounded, size: 16),
+                label: Text(tr('แนวนอน'), style: const TextStyle(fontSize: 12)),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: OutlinedButton.icon(
+                key: const ValueKey('wf-dist-v'),
+                onPressed: widget.count >= 3 ? () => f.distribute(horizontal: false) : null,
+                icon: const Icon(Icons.vertical_distribute_rounded, size: 16),
+                label: Text(tr('แนวตั้ง'), style: const TextStyle(fontSize: 12)),
+              ),
+            ),
+          ]),
+          if (widget.count < 3)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(tr('กระจายระยะเท่ากันต้องเลือก 3 ชิ้นขึ้นไป'), style: TextStyle(fontSize: 11, color: C.muted)),
+            ),
+          const SizedBox(height: 2),
+          TextButton.icon(
+            key: const ValueKey('wf-same-size'),
+            onPressed: f.sameSize,
+            icon: const Icon(Icons.photo_size_select_small_rounded, size: 16),
+            label: Text(tr('ขนาดเท่าชิ้นแรกที่เลือก'), style: const TextStyle(fontSize: 12)),
+          ),
+        ],
+      ]),
+    );
+  }
+}
+
+/// ตัวนับจำนวนแถวตัวอย่าง (− ค่า +) แทนดรอปดาวน์ ; 0–12
+class _RowsStepper extends StatelessWidget {
+  const _RowsStepper({required this.value, required this.onChanged});
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget btn(String key, IconData icon, String tip, bool enabled, VoidCallback tap) => IconButton.outlined(
+          key: ValueKey(key),
+          tooltip: tip,
+          visualDensity: VisualDensity.compact,
+          onPressed: enabled ? tap : null,
+          icon: Icon(icon, size: 18),
+        );
+    return Row(children: [
+      btn('wf-rows-dec', Icons.remove_rounded, tr('ลดแถว'), value > 0, () => onChanged(value - 1)),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Container(
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: C.field, border: Border.all(color: C.border), borderRadius: BorderRadius.circular(8)),
+          child: Text('$value', key: const ValueKey('wf-rows-value'), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+        ),
+      ),
+      const SizedBox(width: 10),
+      btn('wf-rows-inc', Icons.add_rounded, tr('เพิ่มแถว'), value < 12, () => onChanged(value + 1)),
+    ]);
+  }
+}
+
+/// เลือกสัญลักษณ์ของชิ้นไอคอน : ตารางปุ่มเล็ก ๆ (ช่องแรก = กล่องแทนที่แบบเดิม) ; ชี้ดูชื่อได้
+class _SymbolPicker extends StatelessWidget {
+  const _SymbolPicker({super.key, required this.value, required this.onPick});
+  final String value;
+  final ValueChanged<String> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget cell(String id, String tip, Widget child) {
+      final on = id == value;
+      return Tooltip(
+        message: tip,
+        child: InkWell(
+          key: ValueKey('wf-symbol-${id.isEmpty ? 'none' : id}'),
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => onPick(id),
+          child: Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: on ? C.primaryTint : null,
+              border: Border.all(color: on ? C.primary : C.borderSoft, width: on ? 1.5 : 1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: child,
+          ),
+        ),
+      );
+    }
+
+    final current = wfIconById(value);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Row(children: [
+        Expanded(child: Text(tr('สัญลักษณ์'), style: TextStyle(fontSize: 12, color: C.muted, fontWeight: FontWeight.w600))),
+        Text(current == null ? tr('ไม่ระบุ') : (currentLang == Lang.en ? current.en : current.th),
+            key: const ValueKey('wf-symbol-name'), style: TextStyle(fontSize: 11.5, color: C.muted)),
+      ]),
+      const SizedBox(height: 6),
+      Wrap(spacing: 6, runSpacing: 6, children: [
+        cell('', tr('ไม่ระบุ (กล่องแทนที่)'), Icon(Icons.crop_square_rounded, size: 18, color: C.muted)),
+        for (final d in kWfIcons)
+          cell(d.id, currentLang == Lang.en ? d.en : d.th, CustomPaint(size: const Size(22, 22), painter: _GlyphPainter(d, d.id == value ? C.primaryDark : C.text))),
+      ]),
+    ]);
+  }
+}
+
+class _GlyphPainter extends CustomPainter {
+  const _GlyphPainter(this.def, this.color);
+  final WfIconDef def;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final k = size.width / 24;
+    final p = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8 * k
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    for (final (op, a) in def.ops) {
+      switch (op) {
+        case 'L' || 'P':
+          final path = Path()..moveTo(a[0] * k, a[1] * k);
+          for (var i = 2; i + 1 < a.length; i += 2) {
+            path.lineTo(a[i] * k, a[i + 1] * k);
+          }
+          if (op == 'P') path.close();
+          canvas.drawPath(path, p);
+        case 'C':
+          canvas.drawCircle(Offset(a[0] * k, a[1] * k), a[2] * k, p);
+        case 'R':
+          canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(a[0] * k, a[1] * k, a[2] * k, a[3] * k), Radius.circular(a[4] * k)), p);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_GlyphPainter old) => old.def != def || old.color != color;
 }

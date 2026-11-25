@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -11,7 +13,8 @@ import '../../state/workspace_controller.dart';
 import '../canvas/box_canvas.dart';
 import '../canvas/canvas_chrome.dart';
 import '../canvas/context_menu.dart';
-import '../canvas/inline_text_editor.dart';
+import '../canvas/inline_items_popover.dart';
+import '../../core/layout/wireframe_slots.dart';
 import '../../core/layout/box_ops.dart' show BoxAlign;
 import '../shortcuts.dart' show Cmd, shortcutText;
 import '../theme.dart';
@@ -134,6 +137,7 @@ class WireframeCanvas extends StatefulWidget {
 class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeController> {
   bool _fitted = false;
 
+
   @override
   FocusNode? get focusNode => widget.focusNode;
 
@@ -213,7 +217,7 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
       final many = ids.length > 1;
       final comp = c.diagram.componentById(id)!;
       showContextMenu(context, t.globalPosition, [
-        MenuSpec(tr('แก้ข้อความ'), Icons.edit_outlined, () => c.beginEdit(id), shortcut: 'F2', enabled: !many),
+        MenuSpec(tr('แก้ข้อความ'), Icons.edit_outlined, () => c.beginEdit(id), shortcut: 'F2', enabled: !many && wfKindHasText(comp.kind)),
         if (!many && kWfBindableKinds.contains(comp.kind))
           MenuSpec(tr('ผูกกับข้อมูลใน ER…'), Icons.storage_rounded, () => a.bindData(id)),
         MenuSpec(tr('คัดลอก'), Icons.copy_rounded, a.copy, shortcut: 'Ctrl+C'),
@@ -290,22 +294,53 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
     }
     final editing = c.editing;
     final comp = editing == null ? null : c.diagram.componentById(editing.id);
-    return [
-      if (editing != null && comp != null)
-        InlineTextEditor(
+    Widget? editor;
+    if (editing != null && comp != null) {
+      if (wfItemsKind(comp.kind)) {
+        // ชิ้นที่มีหลายค่า : การ์ดรายการใต้ชิ้นส่วน (ชิ้นส่วนอัปเดตสดระหว่างพิมพ์ ; ทั้งช่วง = undo ขั้นเดียว)
+        final original = wfSlotValues(comp);
+        editor = InlineItemsPopover(
+          key: ValueKey('wf-edit-items-${editing.id}'),
+          anchor: _screenBounds(c, comp),
+          viewport: size,
+          title: comp.kind == WfKind.table ? tr('หัวคอลัมน์') : tr('รายการ'),
+          values: original,
+          newItemText: comp.kind == WfKind.table ? tr('คอลัมน์ใหม่') : tr('รายการใหม่'),
+          onChanged: (v) {
+            if (c.editing == editing) c.previewItems(editing.id, v);
+          },
+          onCommit: (v) {
+            if (c.editing == editing) c.finishItemsEdit(editing.id, v);
+          },
+          onCancel: () {
+            if (c.editing == editing) c.cancelEditing();
+          },
+          onDone: () => widget.focusNode?.requestFocus(),
+        );
+      } else {
+        // ข้อความเดียว/ข้อความอิสระ : การ์ดข้อความใต้ชิ้นส่วน แบบเดียวกับการ์ดรายการ (ชิ้นส่วนแสดงสดตามที่พิมพ์)
+        editor = InlineTextPopover(
           key: ValueKey('wf-edit-${editing.id}'),
-          fieldKey: const ValueKey('wf-inline-field'),
-          rect: _editorRect(c, comp),
+          anchor: _screenBounds(c, comp),
+          viewport: size,
+          title: tr('ข้อความ'),
           initial: c.inlineText(comp),
           multiline: wfMultiline(comp.kind),
-          fontSize: comp.effectiveFontSize * c.scale,
-          align: switch (comp.align) { WfAlign.left => TextAlign.left, WfAlign.center => TextAlign.center, WfAlign.right => TextAlign.right },
-          onCommit: (text) {
-            if (c.editing == editing) c.commitEditing(text);
+          onChanged: (v) {
+            if (c.editing == editing) c.previewText(editing.id, v);
           },
-          onCancel: c.cancelEditing,
+          onCommit: (v) {
+            if (c.editing == editing) c.finishTextEdit(editing.id, v);
+          },
+          onCancel: () {
+            if (c.editing == editing) c.cancelEditing();
+          },
           onDone: () => widget.focusNode?.requestFocus(),
-        ),
+        );
+      }
+    }
+    return [
+      ?editor,
       Positioned(right: 14, bottom: 14, child: CanvasZoomBar(controller: c, size: size, keyPrefix: 'wf')),
       if (c.diagram.components.isEmpty)
         Positioned(
@@ -321,13 +356,22 @@ class _WireframeCanvasState extends BoxCanvasState<WireframeCanvas, WireframeCon
         ),
     ];
   }
-
-  Rect _editorRect(WireframeController c, WfComponent comp) {
-    var r = toScreenRect(c, Rect.fromLTWH(comp.x, comp.y, comp.w, comp.h));
-    final minH = wfMultiline(comp.kind) ? 80.0 : 28.0;
-    if (r.height < minH) r = Rect.fromLTWH(r.left, r.top, r.width, minH);
-    if (r.width < 120) r = Rect.fromLTWH(r.left, r.top, 120, r.height);
-    return r;
-  }
 }
 
+/// กรอบบนจอที่ครอบชิ้นส่วน (รวมที่หมุนอยู่)
+Rect _screenBounds(WireframeController c, WfComponent comp) {
+  final r = Rect.fromPoints(c.toScreen(Offset(comp.x, comp.y)), c.toScreen(Offset(comp.x + comp.w, comp.y + comp.h)));
+  if (comp.rotation == 0) return r;
+  final a = comp.rotation * math.pi / 180, cs = math.cos(a), sn = math.sin(a);
+  final ctr = r.center;
+  var l = double.infinity, t = double.infinity, rr = -double.infinity, b = -double.infinity;
+  for (final p in [r.topLeft, r.topRight, r.bottomLeft, r.bottomRight]) {
+    final dx = p.dx - ctr.dx, dy = p.dy - ctr.dy;
+    final x = ctr.dx + dx * cs - dy * sn, y = ctr.dy + dx * sn + dy * cs;
+    if (x < l) l = x;
+    if (x > rr) rr = x;
+    if (y < t) t = y;
+    if (y > b) b = y;
+  }
+  return Rect.fromLTRB(l, t, rr, b);
+}

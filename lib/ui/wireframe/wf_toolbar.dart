@@ -33,7 +33,7 @@ class WireframeToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      LayoutBuilder(builder: (context, box) => _Body(compact: box.maxWidth < 860, medium: box.maxWidth < 1100));
+      LayoutBuilder(builder: (context, box) => _Body(compact: box.maxWidth < 1000, medium: box.maxWidth < 1500));
 }
 
 class _Body extends StatelessWidget {
@@ -48,7 +48,7 @@ class _Body extends StatelessWidget {
     final problems = f.issues.where((i) => i.severity != Severity.info).length;
     final quick = wfQuickKinds(s.wfRecentKinds);
 
-    Widget seg(String key, String label, Widget icon, bool on, VoidCallback onTap, {String? tip, String? shortcut}) => Tooltip(
+    Widget seg(String key, String label, Widget icon, bool on, VoidCallback onTap, {String? tip, String? shortcut, bool alwaysIcon = false}) => Tooltip(
           message: tip ?? label,
           child: InkWell(
             key: ValueKey(key),
@@ -64,7 +64,7 @@ class _Body extends StatelessWidget {
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 icon,
-                if (!compact) ...[
+                if (!compact && !alwaysIcon) ...[
                   const SizedBox(width: 6),
                   Text(label, style: TextStyle(fontSize: 12, fontWeight: on ? FontWeight.w600 : FontWeight.w400, color: on ? dc.ink : C.text)),
                   if (shortcut != null && shortcut.isNotEmpty && !medium) ...[
@@ -204,11 +204,13 @@ class _Body extends StatelessWidget {
               Container(width: 1, height: 20, margin: const EdgeInsets.symmetric(horizontal: 8), color: C.border),
               group([
                 seg('wf-style-sketch', wfStyleLabel(WfStyle.sketch), Icon(Icons.gesture_rounded, size: 15, color: style == WfStyle.sketch ? dc.ink : C.muted),
-                    style == WfStyle.sketch, () => f.setStyle(WfStyle.sketch)),
+                    style == WfStyle.sketch, () => f.setStyle(WfStyle.sketch),
+                    alwaysIcon: medium),
                 const SizedBox(width: 2),
                 seg('wf-style-clean', wfStyleLabel(WfStyle.clean),
                     Icon(Icons.auto_awesome_mosaic_outlined, size: 15, color: style == WfStyle.clean ? dc.ink : C.muted),
-                    style == WfStyle.clean, () => f.setStyle(WfStyle.clean)),
+                    style == WfStyle.clean, () => f.setStyle(WfStyle.clean),
+                    alwaysIcon: medium),
               ]),
             ]),
           ),

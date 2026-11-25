@@ -1,7 +1,17 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/export/dictionary_model.dart';
+import '../core/export/docx_export.dart';
+import '../core/export/workspace_summary.dart' show isSingleErWorkspace;
+import '../core/layout/usecase_layout.dart';
+import 'export/dfd_png.dart';
+import 'usecase_diagram.dart' show exportUseCasePng;
+import 'export/diagram_png.dart';
+import 'export/flowchart_png.dart';
+import 'export/wireframe_png.dart';
 import '../core/export/html_doc_export.dart';
 import '../core/export/markdown_export.dart';
 import '../core/l10n/l10n.dart';
@@ -14,8 +24,44 @@ import 'file_actions.dart';
 import 'notes_panel.dart' show gotoNoteTarget;
 import 'theme.dart';
 
-/// รูปแบบไฟล์ที่ส่งออกจากหน้าพจนานุกรม (PDF/Word ยังไม่รองรับ — ต้องเพิ่มไลบรารี ; ดู progress.md Phase 6)
-enum DictFormat { html, markdown }
+/// รูปแบบไฟล์ที่ส่งออกจากหน้าพจนานุกรม (word = .docx สร้างจาก Markdown ; PDF ใช้พิมพ์จาก HTML)
+enum DictFormat { html, markdown, word }
+
+/// ไบต์ของไฟล์ Word (.docx) ของพจนานุกรมข้อมูล ; [diagrams] = ฝังภาพแผนภาพ (PNG ธีมสว่าง) ใต้หัวข้อของแต่ละเอกสาร
+Future<Uint8List> buildDictionaryDocx(Workspace w,
+    {bool notes = true, bool diagrams = true, Lang? lang, Map<String, (double, double)>? useCaseLayout}) async {
+  final md = buildDictionaryExport(w, format: DictFormat.markdown, notes: notes, lang: lang);
+  final images = <String, List<DocxImage>>{};
+  if (diagrams) {
+    final single = isSingleErWorkspace(w);
+    void put(String key, PngExport? p) {
+      if (p != null) images.putIfAbsent(key, () => []).add(DocxImage(p.bytes, p.width, p.height, scale: p.scale));
+    }
+
+    for (final d in w.documentsOf(DocType.er)) {
+      put(single ? kDocxFirstHeading : 'ER: ${_oneLine(d.name)}', await exportPng(d.er!));
+    }
+    put('Use Case', await exportUseCasePng(layoutUseCaseDiagram(w, overrides: useCaseLayout ?? savedUseCaseLayout(w))));
+    if (!single) {
+      for (final d in w.documentsOf(DocType.dfd)) {
+        put('DFD: ${_oneLine(d.name)}', await exportDfdPng(d.dfd!));
+      }
+      for (final d in w.documentsOf(DocType.flowchart)) {
+        put('Flowchart: ${_oneLine(d.name)}', await exportFlowchartPng(d.flowchart!));
+      }
+      for (final d in w.documentsOf(DocType.wireframe)) {
+        put('Wireframe: ${_oneLine(d.name)}', await exportWireframePng(d.wireframe!));
+      }
+      for (final d in w.documentsOf(DocType.screenflow)) {
+        put('Screen Flow: ${_oneLine(d.name)}',
+            await exportScreenFlowPng(d.screenflow!, wireframeOf: (id) => w.documentById(id)?.wireframe));
+      }
+    }
+  }
+  return markdownToDocx(md, title: w.name, imagesAfter: images);
+}
+
+String _oneLine(String s) => s.replaceAll(RegExp(r'\s+'), ' ').trim();
 
 /// เนื้อหาไฟล์พจนานุกรมที่จะส่งออก ตามตัวเลือก (ภาษา [lang] ใช้ชั่วคราวระหว่างสร้าง แล้วคืนภาษาเดิม)
 String buildDictionaryExport(Workspace w, {required DictFormat format, bool diagrams = true, bool notes = true, Lang? lang}) {
@@ -24,7 +70,7 @@ String buildDictionaryExport(Workspace w, {required DictFormat format, bool diag
   try {
     return switch (format) {
       DictFormat.html => exportHtmlDocument(w, includeDiagrams: diagrams, includeNotes: notes),
-      DictFormat.markdown => exportWorkspaceDictionary(w, includeNotes: notes),
+      DictFormat.markdown || DictFormat.word => exportWorkspaceDictionary(w, includeNotes: notes),
     };
   } finally {
     currentLang = old;
@@ -548,6 +594,13 @@ class _ExportPanelState extends State<_ExportPanel> {
 
   Future<void> _export() async {
     final w = context.read<WorkspaceController>();
+    final base = '${FileActions.safeName(w.workspace.name)}-dictionary';
+    if (_format == DictFormat.word) {
+      final bytes = await buildDictionaryDocx(w.workspace, notes: _notes, diagrams: _diagrams, lang: _lang, useCaseLayout: w.useCaseLayout);
+      if (!mounted) return;
+      await FileActions.saveBytes(context, bytes, '$base.docx', tr('ส่งออกพจนานุกรมข้อมูล'));
+      return;
+    }
     final text = buildDictionaryExport(w.workspace, format: _format, diagrams: _diagrams, notes: _notes, lang: _lang);
     final ext = _format == DictFormat.html ? 'html' : 'md';
     await FileActions.saveText(context, text, '${FileActions.safeName(w.workspace.name)}-dictionary.$ext', tr('ส่งออกพจนานุกรมข้อมูล'));
@@ -576,17 +629,22 @@ class _ExportPanelState extends State<_ExportPanel> {
             SegmentedButton<DictFormat>(
               key: const ValueKey('dict-format'),
               showSelectedIcon: false,
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
+              style: const ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 4)),
+                textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12.5)),
+              ),
               segments: const [
-                ButtonSegment(value: DictFormat.html, label: Text('HTML')),
-                ButtonSegment(value: DictFormat.markdown, label: Text('Markdown')),
+                ButtonSegment(value: DictFormat.html, label: Text('HTML', maxLines: 1, softWrap: false)),
+                ButtonSegment(value: DictFormat.markdown, label: Text('Markdown', maxLines: 1, softWrap: false)),
+                ButtonSegment(value: DictFormat.word, label: Text('Word', maxLines: 1, softWrap: false)),
               ],
               selected: {_format},
               onSelectionChanged: (s) => setState(() => _format = s.first),
             ),
             const SizedBox(height: 4),
             Text(
-              tr('PDF / Word: เปิดไฟล์ HTML ในเบราว์เซอร์แล้วสั่งพิมพ์เป็น PDF หรือเปิดด้วย Word'),
+              tr('Word (.docx) ฝังภาพแผนภาพได้ · PDF: เปิดไฟล์ HTML ในเบราว์เซอร์แล้วสั่งพิมพ์'),
               style: TextStyle(fontSize: 11, color: C.muted),
             ),
             const SizedBox(height: 14),
@@ -596,9 +654,9 @@ class _ExportPanelState extends State<_ExportPanel> {
               dense: true,
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
-              value: _format == DictFormat.html && _diagrams,
-              onChanged: _format == DictFormat.html ? (v) => setState(() => _diagrams = v ?? true) : null,
-              title: Text(tr('แผนภาพ (HTML เท่านั้น)'), style: const TextStyle(fontSize: 13)),
+              value: _format != DictFormat.markdown && _diagrams,
+              onChanged: _format != DictFormat.markdown ? (v) => setState(() => _diagrams = v ?? true) : null,
+              title: Text(tr('แผนภาพ (HTML / Word)'), style: const TextStyle(fontSize: 13)),
             ),
             CheckboxListTile(
               key: const ValueKey('dict-opt-notes'),
@@ -627,11 +685,29 @@ class _ExportPanelState extends State<_ExportPanel> {
             FilledButton(
               key: const ValueKey('dict-export-go'),
               onPressed: _export,
-              child: Text(_format == DictFormat.html ? tr('ส่งออก HTML…') : tr('ส่งออก Markdown…')),
+              child: Text(switch (_format) {
+                DictFormat.html => tr('ส่งออก HTML…'),
+                DictFormat.markdown => tr('ส่งออก Markdown…'),
+                DictFormat.word => tr('ส่งออก Word…'),
+              }),
             ),
           ],
         ),
       ),
     );
   }
+}
+
+/// ตำแหน่งที่ผู้ใช้ลากไว้ในแผนภาพ Use Case (เก็บที่ meta.useCaseLayout) — ใช้เมื่อไม่มีตัวควบคุมโปรเจกต์
+Map<String, (double, double)> savedUseCaseLayout(Workspace w) {
+  final j = w.meta.extra['useCaseLayout'];
+  if (j is! Map) return const {};
+  final out = <String, (double, double)>{};
+  for (final e in j.entries) {
+    final v = e.value;
+    if (e.key is String && v is List && v.length == 2 && v[0] is num && v[1] is num) {
+      out[e.key as String] = ((v[0] as num).toDouble(), (v[1] as num).toDouble());
+    }
+  }
+  return out;
 }

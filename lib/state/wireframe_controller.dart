@@ -1,6 +1,8 @@
 import '../core/clipboard/wireframe_clipboard.dart';
 import '../core/l10n/l10n.dart';
 import '../core/layout/box_ops.dart';
+import '../core/layout/wireframe_slots.dart' show wfKindHasText, wfSlotValues;
+import '../core/models/wf_icons.dart' show kWfDefaultSymbol;
 import '../core/layout/diagram_geometry.dart' show snapToGrid;
 import '../core/models/wf_block.dart';
 import '../core/models/wireframe_model.dart';
@@ -23,6 +25,95 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
       : super(ProjectDocument.wireframe(id: '', name: '', content: WireframeDiagram()), workspace);
 
   WireframeDiagram get diagram => content;
+
+  /// แก้ข้อความได้เฉพาะชิ้นที่แสดงข้อความ (รูป ไอคอน เส้นคั่น แผนที่ ฯลฯ พิมพ์ใส่ไม่ได้)
+  @override
+  bool editTargetExists(({String id, bool isEdge}) t) {
+    final c = t.isEdge ? null : diagram.componentById(t.id);
+    return c != null && wfKindHasText(c.kind);
+  }
+
+  // ---------- แก้รายการของชิ้นที่มีหลายค่าในการ์ด (แสดงสดระหว่างพิมพ์ ; ทั้งช่วง = undo ขั้นเดียว) ----------
+
+  /// ค่าเดิมของรายการที่กำลังแก้ในการ์ด (ไว้คืนเมื่อยกเลิก) — null = ยังไม่ได้แก้อะไร
+  ({String id, List<String> values})? _itemsEdit;
+
+  void _applyItems(String id, List<String> values) => live((d) {
+        final c = d.componentById(id);
+        if (c == null) return;
+        if (c.kind == WfKind.table) {
+          c.columns
+            ..clear()
+            ..addAll(values.take(30));
+        } else {
+          c.text = values.join('\n');
+        }
+      });
+
+  /// ใส่รายการ [values] ให้ชิ้น [id] สด ๆ (ยังไม่เข้าประวัติ — ปิดด้วย [finishItemsEdit] หรือ [cancelEditing])
+  void previewItems(String id, List<String> values) {
+    final comp = diagram.componentById(id);
+    if (comp == null) return;
+    if (_itemsEdit == null) {
+      _itemsEdit = (id: id, values: wfSlotValues(comp));
+      beginGesture();
+    }
+    _applyItems(id, values);
+  }
+
+  /// บันทึกรายการ [values] ของชิ้น [id] (undo ขั้นเดียวทั้งช่วงที่พิมพ์) แล้วปิดโหมดแก้ไข
+  void finishItemsEdit(String id, List<String> values) {
+    previewItems(id, values);
+    _itemsEdit = null;
+    endGesture();
+    super.cancelEditing();
+  }
+
+  /// ข้อความเดิมของชิ้นที่กำลังแก้ในการ์ดข้อความ (ไว้คืนเมื่อยกเลิก) — null = ยังไม่ได้แก้อะไร
+  ({String id, String text})? _textEdit;
+
+  void _applyText(String id, String text) => live((d) => d.componentById(id)?.text = text);
+
+  /// ใส่ข้อความ [text] ให้ชิ้น [id] สด ๆ (ยังไม่เข้าประวัติ — ปิดด้วย [finishTextEdit] หรือ [cancelEditing])
+  void previewText(String id, String text) {
+    final comp = diagram.componentById(id);
+    if (comp == null) return;
+    if (_textEdit == null) {
+      _textEdit = (id: id, text: comp.text);
+      beginGesture();
+    }
+    _applyText(id, text);
+  }
+
+  /// บันทึกข้อความของชิ้น [id] (undo ขั้นเดียวทั้งช่วงที่พิมพ์) แล้วปิดโหมดแก้ไข
+  void finishTextEdit(String id, String text) {
+    previewText(id, text);
+    _textEdit = null;
+    endGesture();
+    super.cancelEditing();
+  }
+
+  /// ยกเลิกการแก้ : ถ้าแก้สดไว้แล้ว (รายการ/ข้อความ) คืนค่าเดิม
+  @override
+  void cancelEditing() {
+    final o = _itemsEdit;
+    if (o != null) {
+      _itemsEdit = null;
+      _applyItems(o.id, o.values);
+      endGesture();
+    }
+    final t = _textEdit;
+    if (t != null) {
+      _textEdit = null;
+      _applyText(t.id, t.text);
+      endGesture();
+    }
+    super.cancelEditing();
+  }
+
+  /// จัดชิ้นที่เลือกชิดกรอบหน้าจอ (0,0)–(กว้าง,สูง) ของเอกสารนี้
+  bool alignToScreen(BoxAlign k) =>
+      alignToFrame(k, (left: 0.0, top: 0.0, right: diagram.width.toDouble(), bottom: diagram.height.toDouble()));
 
   @override
   Object? encodeContent(WireframeDiagram c) => c.toJson();
@@ -486,6 +577,7 @@ class WireframeController extends BoxDiagramController<WireframeDiagram, WfCompo
         w: w,
         h: h,
         columns: kind == WfKind.table ? [tr('ชื่อ'), tr('สถานะ'), tr('วันที่')] : null,
+        symbol: kind == WfKind.icon ? kWfDefaultSymbol : '',
         align: const {WfKind.button, WfKind.badge, WfKind.chip, WfKind.tooltip, WfKind.footer}.contains(kind) ? WfAlign.center : WfAlign.left,
       );
       d.components.add(c);

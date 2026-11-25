@@ -97,6 +97,8 @@ List<PaletteEntry> buildPaletteEntries(BuildContext context) {
     byCmd('Export Data dictionary (Markdown)', tr('export markdown dictionary เอกสาร'), Cmd.exportText),
     cmd('Export HTML (whole project)', 'export html document project whole all ทั้งโปรเจกต์',
         () => FileActions.exportText(context, c, kind: TextExportKind.html)),
+    cmd('Export Word (.docx, whole project)', 'export word docx document project whole all ทั้งโปรเจกต์ เวิร์ด',
+        () => FileActions.exportText(context, c, kind: TextExportKind.word)),
     cmd('Export SQL (all ERs)', 'export sql ddl all project whole every er ทุก ER ทั้งโปรเจกต์',
         () => FileActions.exportText(context, c, kind: TextExportKind.sqlAll)),
     cmd('Export Mermaid', 'export mermaid er diagram',

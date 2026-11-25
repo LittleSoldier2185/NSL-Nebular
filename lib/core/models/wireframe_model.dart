@@ -244,6 +244,7 @@ class WfComponent implements EditableBox {
     this.disabled = false,
     this.checked = false,
     this.secondary = false,
+    this.symbol = '',
     this.ref,
     this.hidden = false,
     this.locked = false,
@@ -285,6 +286,9 @@ class WfComponent implements EditableBox {
 
   /// สถานะ: ใช้งานไม่ได้ (disabled) / เลือกอยู่ (checkbox, radio, switch) / ปุ่มรอง (secondary)
   bool disabled, checked, secondary;
+
+  /// สัญลักษณ์ของชิ้นไอคอน (id ใน [kWfIcons]) ; ว่าง = กล่องแทนที่ (placeholder) เหมือนเดิม
+  String symbol;
 
   /// ผูกกับตาราง/คอลัมน์ใน ER (null = ไม่ผูก)
   WfDataRef? ref;
@@ -330,6 +334,7 @@ class WfComponent implements EditableBox {
         if (disabled) 'disabled': true,
         if (checked) 'checked': true,
         if (secondary) 'secondary': true,
+        if (symbol.isNotEmpty) 'symbol': symbol,
         if (ref != null) 'ref': ref!.toJson(),
         if (api != null) 'api': api!.toJson(),
         if (hidden) 'hidden': true,
@@ -376,6 +381,7 @@ class WfComponent implements EditableBox {
       disabled: j['disabled'] == true,
       checked: j['checked'] == true,
       secondary: j['secondary'] == true,
+      symbol: j['symbol'] is String ? j['symbol'] as String : '',
       ref: WfDataRef.tryFromJson(j['ref']),
       hidden: j['hidden'] == true,
       locked: j['locked'] == true,

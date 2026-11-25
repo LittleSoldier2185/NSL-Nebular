@@ -48,6 +48,22 @@ Map<String, (double, double)> alignBoxes(List<EditableBox> sel, BoxAlign k) {
   return out;
 }
 
+/// ตำแหน่งใหม่ของกล่องแต่ละใบเมื่อจัดชิด [frame] (เช่น กรอบหน้าจอ) ทีละใบ — ใช้ได้กับกล่องใบเดียว ; ไม่แก้ข้อมูล
+Map<String, (double, double)> alignBoxesTo(List<EditableBox> sel, BoxAlign k, ({double left, double top, double right, double bottom}) frame) {
+  final out = <String, (double, double)>{};
+  for (final n in sel) {
+    out[n.id] = switch (k) {
+      BoxAlign.left => (frame.left, n.y),
+      BoxAlign.centerH => ((frame.left + frame.right) / 2 - n.w / 2, n.y),
+      BoxAlign.right => (frame.right - n.w, n.y),
+      BoxAlign.top => (n.x, frame.top),
+      BoxAlign.middle => (n.x, (frame.top + frame.bottom) / 2 - n.h / 2),
+      BoxAlign.bottom => (n.x, frame.bottom - n.h),
+    };
+  }
+  return out;
+}
+
 /// ตำแหน่งใหม่ของกล่อง (อย่างน้อย 3 ใบ) ให้ช่องว่างระหว่างกันเท่ากัน — น้อยกว่า 3 = ว่าง
 Map<String, (double, double)> distributeBoxes(List<EditableBox> sel, {required bool horizontal}) {
   final out = <String, (double, double)>{};

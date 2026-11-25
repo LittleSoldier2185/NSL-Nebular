@@ -33,14 +33,14 @@ void main() {
   testWidgets('ค่าเริ่มต้น SQL + TypeScript ; เป้าหมายที่ไม่มีเอกสารต้นทางกดไม่ได้ ; ติ๊กเพิ่มแล้วรายการไฟล์/พรีวิวเปลี่ยน', (tester) async {
     await boot(tester);
     expect(view, findsOneWidget);
-    expect(find.text('ไฟล์ที่จะได้ · 2'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(const ValueKey('gen-count'))).data, '2');
     expect(find.byKey(const ValueKey('gen-file-database/schema.sql')), findsOneWidget);
     final api = tester.widget<CheckboxListTile>(find.byKey(const ValueKey('gen-target-openApi')));
     expect(api.onChanged, isNull);
 
     await tester.tap(find.byKey(const ValueKey('gen-target-laravelMigration')));
     await tester.pumpAndSettle();
-    expect(find.text('ไฟล์ที่จะได้ · 3'), findsOneWidget);
+    expect(tester.widget<Text>(find.byKey(const ValueKey('gen-count'))).data, '3');
     await tester.tap(find.byKey(const ValueKey('gen-file-database/migrations/0001_01_01_000001_create_orders_table.php')));
     await tester.pumpAndSettle();
     final preview = tester.widget<SelectableText>(find.byKey(const ValueKey('gen-preview')));
