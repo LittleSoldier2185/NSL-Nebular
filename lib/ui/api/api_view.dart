@@ -557,11 +557,12 @@ void _gotoCaller(BuildContext context, ProjectDocument src, String el) {
   }
 }
 
-/// บันทึกเอกสาร OpenAPI 3.1 (JSON) ของ [a] ลงไฟล์ที่ผู้ใช้เลือก
-Future<void> exportOpenApiFile(BuildContext context, ApiController a) {
+/// บันทึกเอกสาร OpenAPI 3.1 ของ [a] (JSON หรือ YAML) ลงไฟล์ที่ผู้ใช้เลือก
+Future<void> exportOpenApiFile(BuildContext context, ApiController a, {bool yaml = false}) {
   final w = context.read<WorkspaceController>();
-  final text = exportOpenApiJson(a.api, w: w.workspace, fallbackTitle: a.doc.name);
-  return FileActions.saveText(context, text, '${FileActions.safeName(a.doc.name)}.openapi.json', tr('ส่งออก OpenAPI'));
+  final text = (yaml ? exportOpenApiYaml : exportOpenApiJson)(a.api, w: w.workspace, fallbackTitle: a.doc.name);
+  final name = '${FileActions.safeName(a.doc.name)}.openapi.${yaml ? 'yaml' : 'json'}';
+  return FileActions.saveText(context, text, name, tr('ส่งออก OpenAPI'));
 }
 
 // ======================= แผงขวา =======================
@@ -623,6 +624,12 @@ class ApiRightPanel extends StatelessWidget {
               key: const ValueKey('api-export-openapi'),
               onPressed: () => exportOpenApiFile(context, a),
               child: Text(tr('ส่งออก OpenAPI…')),
+            ),
+            const SizedBox(height: 6),
+            OutlinedButton(
+              key: const ValueKey('api-export-openapi-yaml'),
+              onPressed: () => exportOpenApiFile(context, a, yaml: true),
+              child: Text(tr('ส่งออก OpenAPI แบบ YAML…')),
             ),
           ] else ...[
             Text(

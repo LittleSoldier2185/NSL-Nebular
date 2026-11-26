@@ -131,7 +131,7 @@ void main() {
 
     test('codegen: targets / preview (ไม่เขียน) / write (ไม่ทับที่แก้ด้วยมือ) / overwrite_edited', () async {
       final (_, targets) = await call('nebular_list_codegen_targets', {'path': project});
-      expect(jsonDecode(targets), hasLength(12));
+      expect(jsonDecode(targets), hasLength(13));
       final out = '${tmp.path}/gen';
       final (_, prev) = await call('nebular_codegen_preview', {'path': project, 'targets': ['sqlDdl']});
       expect(((jsonDecode(prev) as Map)['files'] as List).single['path'], 'database/schema.sql');

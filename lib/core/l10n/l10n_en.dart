@@ -1524,6 +1524,7 @@ const Map<String, String> kEn = {
   'ล็อกอิน': 'Login',
   'ส่งออก OpenAPI': 'Export OpenAPI',
   'ส่งออก OpenAPI…': 'Export OpenAPI…',
+  'ส่งออก OpenAPI แบบ YAML…': 'Export OpenAPI as YAML…',
   'endpoint ที่ผูกไว้ถูกลบไปแล้ว': 'the linked endpoint was deleted',
   '{0} → endpoint {1}': '{0} → endpoint {1}',
   '{0}: {1} — เลือก endpoint ใหม่หรือเลิกผูก': '{0}: {1} — pick another endpoint or unlink',
@@ -2228,6 +2229,8 @@ const Map<String, String> kEn = {
   'ข้อมูลตั้งต้นของตาราง: ปุ่ม "สร้างข้อมูลตัวอย่าง…" เติมแถวที่สมเหตุสมผล (FK ชี้แถวจริง ไม่ซ้ำ UNIQUE) ให้แก้ต่อได้': 'Table seed data: a "Generate sample data…" button fills in realistic rows (FKs point to real rows, UNIQUE respected) that you can keep editing',
   'Mock Server: ตารางที่ไม่มีข้อมูลตั้งต้นตอบแถวตัวอย่าง 10 แถวแทนรายการว่าง (ปิดหรือเปลี่ยนจำนวนได้ในหน้า Mock Server)': 'Mock Server: tables without seed data now return 10 sample rows instead of an empty list (turn off or change the count on the Mock Server page)',
   'Mock Server: ตอบเป็นลำดับต่อ endpoint (เช่น 200 → 500 → 200) ไว้ทดสอบ retry และการจัดการข้อผิดพลาด': 'Mock Server: respond in sequence per endpoint (e.g. 200 → 500 → 200) to test retries and error handling',
+  'ส่งออก OpenAPI เป็น YAML ได้ จาก API Designer หน้าสร้างโค้ด และ CLI': 'Export OpenAPI as YAML from the API Designer, the code generation page and the CLI',
+  'สร้างโค้ดหน้าจอ Flutter จาก Wireframe วางใกล้เคียงแบบ (แถว คอลัมน์ ซ้อน ภาชนะ การหมุน) แทนการเรียงเป็นคอลัมน์เดียว': 'Flutter screen code generated from a Wireframe now follows the design (rows, columns, stacking, containers, rotation) instead of a single column',
   'Mock Server: ส่งออกชุดคำขอของ API เป็น Postman Collection หรือสคริปต์ curl': 'Mock Server: export an API\'s requests as a Postman Collection or a curl script',
   'ตรวจข้อมูลตั้งต้น: FK ที่ชี้ไปค่า AUTO INCREMENT ของตารางแม่ (ที่ไม่ได้พิมพ์ค่า) ไม่ถูกแจ้งว่าผิดอีก': 'Seed data check: FKs pointing at a parent AUTO INCREMENT value (left blank) are no longer reported as invalid',
 };

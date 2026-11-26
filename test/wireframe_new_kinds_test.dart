@@ -197,7 +197,7 @@ void main() {
       expect(ht(WfKind.progress, text: '25%'), contains('aria-valuenow="25"'));
       expect(fl(WfKind.link), contains('TextButton'));
       expect(ht(WfKind.link), contains('<a class="wf wf-t wf-link"'));
-      expect(fl(WfKind.stepper, text: 'a\nb'), contains('Stepper('));
+      expect(fl(WfKind.stepper, text: 'a\nb'), allOf(contains('CircleAvatar('), contains("Text('b'"))); // กรอบแนวนอน = แถบขั้นตอนแนวนอน
       expect(ht(WfKind.stepper, text: 'a\nb'), contains('<ol'));
       expect(fl(WfKind.accordion, text: 'a\nb'), contains('ExpansionTile'));
       expect(ht(WfKind.accordion, text: 'a\nb'), contains('<details'));

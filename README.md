@@ -121,7 +121,7 @@ nebular docs      shop.nsln                       รายการเอกส
 nebular show      shop.nsln "Shop API"            เนื้อหาเอกสารเป็น JSON
 nebular validate  shop.nsln [--json] [--min-severity error|warning|info] [--lang en]
                                                   ตรวจทั้งโปรเจกต์ — จบด้วยรหัส 1 ถ้าพบ error (ใช้ใน CI ได้)
-nebular export    shop.nsln --format markdown|html|sql|openapi [--out ไฟล์]
+nebular export    shop.nsln --format markdown|html|sql|openapi|openapi-yaml [--out ไฟล์]
 nebular targets   [shop.nsln]                     เป้าหมายสร้างโค้ด (ใส่ไฟล์ = บอกว่าตัวไหนสร้างได้)
 nebular codegen   shop.nsln --targets sqlDdl,typescript|all --out โฟลเดอร์ [--dry-run] [--overwrite-edited]
 ```
@@ -148,7 +148,7 @@ nebular codegen   shop.nsln --targets sqlDdl,typescript|all --out โฟลเ�
 | `nebular_list_documents` | รายการเอกสาร (id ชนิด ชื่อ) | ไม่ |
 | `nebular_read_document` | เนื้อหาเอกสารเป็น JSON | ไม่ |
 | `nebular_validate` | ตรวจปัญหาทั้งโปรเจกต์ | ไม่ |
-| `nebular_export` | ส่งออกเป็นข้อความ (markdown/html/sql/openapi) | ไม่ |
+| `nebular_export` | ส่งออกเป็นข้อความ (markdown/html/sql/openapi/openapi-yaml) | ไม่ |
 | `nebular_export_to_file` | ส่งออกลงไฟล์ | ไฟล์ที่ระบุ |
 | `nebular_list_codegen_targets` | เป้าหมายสร้างโค้ดที่สร้างได้ | ไม่ |
 | `nebular_codegen_preview` | ดูไฟล์ที่จะสร้าง (ยังไม่เขียน) | ไม่ |

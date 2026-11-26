@@ -96,7 +96,7 @@ void main() {
 
     test('สร้างโค้ดทุกเป้าหมาย: ไม่มีคำเตือน ไฟล์ไม่ซ้ำ และผลคงที่ (สร้างซ้ำได้ไฟล์เดิมทุกตัวอักษร)', () {
       final all = parseTargets(w, ['all']);
-      expect(all.length, 12);
+      expect(all.length, 13);
       final a = generateFiles(w, all);
       final b = generateFiles(w, all);
       expect(a.warnings, isEmpty);

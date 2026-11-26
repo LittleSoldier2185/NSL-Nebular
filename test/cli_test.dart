@@ -153,8 +153,8 @@ void main() {
 
     test('เป้าหมายสร้างโค้ด: all = เฉพาะที่สร้างได้ ; ชื่อผิด/ว่าง = ข้อผิดพลาด', () async {
       final w = await loadProject(project);
-      expect(listTargets(w).length, 12);
-      expect(parseTargets(w, ['all']).length, 12);
+      expect(listTargets(w).length, 13);
+      expect(parseTargets(w, ['all']).length, 13);
       expect(parseTargets(w, ['sqlDdl', ' typescript ', '']).map((t) => t.name), ['sqlDdl', 'typescript']);
       expect(() => parseTargets(w, ['nope']), throwsA(isA<NebularError>().having((e) => e.message, 'm', contains('sqlDdl'))));
       expect(() => parseTargets(w, []), throwsA(isA<NebularError>()));
@@ -267,7 +267,7 @@ void main() {
     test('targets / codegen: --dry-run ไม่เขียน ; เขียนจริง ; แก้ด้วยมือถูกข้ามและรายงาน ; --overwrite-edited', () async {
       expect((await run(['targets'])).out, contains('laravelMigration'));
       expect((await run(['targets', project])).out, contains('✓ sqlDdl'));
-      expect(jsonDecode((await run(['targets', project, '--json'])).out), hasLength(12));
+      expect(jsonDecode((await run(['targets', project, '--json'])).out), hasLength(13));
 
       final out = '${tmp.path}/gen';
       final dry = await run(['codegen', project, '--targets', 'sqlDdl,openApi', '--out', out, '--dry-run']);

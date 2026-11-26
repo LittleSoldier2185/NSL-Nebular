@@ -154,6 +154,8 @@ List<PaletteEntry> buildPaletteEntries(BuildContext context) {
     cmd(tr('เพิ่ม API'), 'new api endpoint rest openapi', () => w.addDocument(DocType.api)),
     if (w.activeDocument.type == DocType.api)
       cmd(tr('ส่งออก OpenAPI…'), 'export openapi swagger json', () => exportOpenApiFile(context, w.currentApi)),
+    if (w.activeDocument.type == DocType.api)
+      cmd(tr('ส่งออก OpenAPI แบบ YAML…'), 'export openapi swagger yaml yml', () => exportOpenApiFile(context, w.currentApi, yaml: true)),
     cmd(tr('สลับรูปแบบ Wireframe (ร่าง / เรียบร้อย)'), 'wireframe style sketch clean fidelity รูปแบบ', () {
       final f = context.read<WireframeController>();
       if (w.activeDocument.type == DocType.wireframe) {

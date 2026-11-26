@@ -28,6 +28,7 @@ String genTargetLabel(GenTarget t) => switch (t) {
   GenTarget.java => 'Java (JPA)',
   GenTarget.csharp => 'C# (EF Core)',
   GenTarget.openApi => 'OpenAPI 3.1 (JSON)',
+  GenTarget.openApiYaml => 'OpenAPI 3.1 (YAML)',
   GenTarget.laravelRoutes => tr('Route + Controller ว่าง (Laravel)'),
   GenTarget.flutterScreen => tr('Flutter widget โครงหน้า'),
   GenTarget.htmlTailwind => 'HTML + Tailwind',

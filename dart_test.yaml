@@ -1,0 +1,3 @@
+tags:
+  codegen-analyze:
+    skip: "ช้า (เรียก dart analyze) — รันด้วย: flutter test --run-skipped --tags codegen-analyze"

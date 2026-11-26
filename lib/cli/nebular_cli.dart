@@ -15,7 +15,7 @@ nebular — เครื่องมือบรรทัดคำสั่ง�
   docs      <ไฟล์>                 รายการเอกสาร (id ชนิด ชื่อ)
   show      <ไฟล์> <เอกสาร>         เนื้อหาเอกสารเป็น JSON (อ้างด้วย id หรือชื่อ)
   validate  <ไฟล์>                 ตรวจปัญหาทั้งโปรเจกต์ — จบด้วยรหัส 1 ถ้าพบ error
-  export    <ไฟล์> --format F      ส่งออกเป็นข้อความ F = markdown | html | sql | openapi
+  export    <ไฟล์> --format F      ส่งออกเป็นข้อความ F = markdown | html | sql | openapi | openapi-yaml
   targets   [ไฟล์]                 รายการเป้าหมายสร้างโค้ด (ใส่ไฟล์ = บอกว่าตัวไหนสร้างได้)
   codegen   <ไฟล์> --targets T --out โฟลเดอร์
                                    สร้างโค้ด T = ชื่อคั่นด้วย , หรือ all ; ไม่ทับไฟล์ที่แก้ด้วยมือ
@@ -26,7 +26,7 @@ nebular — เครื่องมือบรรทัดคำสั่ง�
   --lang th|en           ภาษาของข้อความจากตัวตรวจ (ค่าเริ่มต้น th)
   --min-severity S       validate: แสดงเฉพาะ error | warning | info ขึ้นไป
   --out PATH             export: เขียนลงไฟล์นี้ (ไม่ระบุ = พิมพ์ออกหน้าจอ) ; codegen: โฟลเดอร์ปลายทาง
-  --document D           export openapi: เอกสาร API ที่ใช้
+  --document D           export openapi / openapi-yaml: เอกสาร API ที่ใช้
   --overwrite-edited     codegen: เขียนทับไฟล์ที่ถูกแก้ด้วยมือด้วย (ค่าเริ่มต้นคือข้าม)
   --dry-run              codegen: แสดงไฟล์ที่จะสร้างโดยไม่เขียน
 

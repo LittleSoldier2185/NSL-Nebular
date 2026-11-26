@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../models/api_model.dart';
 import '../models/workspace.dart';
+import 'yaml_writer.dart';
 
 /// ค่าตัวอย่างจากข้อความ: JSON ที่ถูกต้อง = ค่าที่อ่านได้ ; ไม่ใช่ JSON = ข้อความเดิม
 Object? _example(String s) {
@@ -132,6 +133,10 @@ String? _description(Workspace? w, ApiField f) {
 /// ข้อความ OpenAPI 3.1 แบบ JSON จัดย่อหน้า
 String exportOpenApiJson(ApiDocument api, {Workspace? w, String fallbackTitle = 'API'}) =>
     const JsonEncoder.withIndent('  ').convert(openApiDocument(api, w: w, fallbackTitle: fallbackTitle));
+
+/// ข้อความ OpenAPI 3.1 แบบ YAML (โครงเดียวกับ JSON ทุกประการ)
+String exportOpenApiYaml(ApiDocument api, {Workspace? w, String fallbackTitle = 'API'}) =>
+    writeYaml(openApiDocument(api, w: w, fallbackTitle: fallbackTitle));
 
 /// ค่าที่อนุญาตของคอลัมน์ ER ที่ฟิลด์นี้มาจาก (เฉพาะฟิลด์ชนิด string) — ไม่มี = null
 List<String>? _allowedOf(Workspace? w, ApiField f) {

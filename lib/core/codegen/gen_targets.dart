@@ -22,6 +22,7 @@ enum GenTarget {
   java(GenSource.models, DocType.er),
   csharp(GenSource.models, DocType.er),
   openApi(GenSource.api, DocType.api),
+  openApiYaml(GenSource.api, DocType.api),
   laravelRoutes(GenSource.api, DocType.api),
   flutterScreen(GenSource.screens, DocType.wireframe),
   htmlTailwind(GenSource.screens, DocType.wireframe);
@@ -113,6 +114,9 @@ GenResult generateFiles(Workspace w, Set<GenTarget> targets) {
   for (final d in apis) {
     if (targets.contains(GenTarget.openApi)) {
       add(GenTarget.openApi, d, 'api/${apiSlug[d.id]}.openapi.json', exportOpenApiJson(d.api!, w: w, fallbackTitle: d.name));
+    }
+    if (targets.contains(GenTarget.openApiYaml)) {
+      add(GenTarget.openApiYaml, d, 'api/${apiSlug[d.id]}.openapi.yaml', exportOpenApiYaml(d.api!, w: w, fallbackTitle: d.name));
     }
     if (targets.contains(GenTarget.laravelRoutes)) {
       for (final f in laravelApiStubs(d.api!, routesPath: multiApi ? 'routes/${apiSlug[d.id]}.php' : 'routes/api.php')) {

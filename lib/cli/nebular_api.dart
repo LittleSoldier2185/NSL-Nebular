@@ -151,7 +151,7 @@ Map<String, dynamic> validateReport(Workspace w, {Severity? minSeverity}) {
 }
 
 /// รูปแบบที่ส่งออกเป็นข้อความได้
-const kExportFormats = ['markdown', 'html', 'sql', 'openapi'];
+const kExportFormats = ['markdown', 'html', 'sql', 'openapi', 'openapi-yaml'];
 
 /// ส่งออกทั้งโปรเจกต์เป็นข้อความ — `openapi` ใช้เอกสาร API [document] (ไม่ระบุ = เอกสาร API ตัวแรก)
 String exportProject(Workspace w, String format, {String? document}) {
@@ -163,7 +163,7 @@ String exportProject(Workspace w, String format, {String? document}) {
     case 'sql':
       if (w.documentsOf(DocType.er).isEmpty) throw NebularError('โปรเจกต์นี้ไม่มีเอกสาร ER จึงสร้าง SQL ไม่ได้');
       return buildWorkspaceSql(w);
-    case 'openapi':
+    case 'openapi' || 'openapi-yaml':
       final ProjectDocument? d;
       if (document != null) {
         d = findDocument(w, document);
@@ -172,7 +172,7 @@ String exportProject(Workspace w, String format, {String? document}) {
         d = w.documentsOf(DocType.api).firstOrNull;
       }
       if (d == null) throw NebularError('โปรเจกต์นี้ไม่มีเอกสาร API');
-      return exportOpenApiJson(d.api!, w: w, fallbackTitle: d.name);
+      return (format == 'openapi' ? exportOpenApiJson : exportOpenApiYaml)(d.api!, w: w, fallbackTitle: d.name);
     default:
       throw NebularError('ไม่รู้จักรูปแบบ "$format" — ใช้ได้: ${kExportFormats.join(', ')}');
   }

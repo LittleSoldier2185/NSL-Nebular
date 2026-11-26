@@ -1,0 +1,118 @@
+openapi: "3.1.0"
+info:
+  title: Shop
+  version: "1.0.0"
+paths:
+  /orders:
+    get:
+      operationId: getOrders
+      summary: List orders
+      tags:
+        - orders
+      responses:
+        "200":
+          description: OK
+    post:
+      operationId: postOrders
+      summary: Create orders
+      tags:
+        - orders
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                status:
+                  type: string
+                  description: "สถานะ"
+                total:
+                  type: number
+              required:
+                - customer_id
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+  /orders/{id}:
+    get:
+      operationId: getOrdersById
+      summary: Get orders
+      tags:
+        - orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+    patch:
+      operationId: patchOrdersById
+      summary: Update orders
+      tags:
+        - orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                status:
+                  type: string
+                  description: "สถานะ"
+                total:
+                  type: number
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+    delete:
+      operationId: deleteOrdersById
+      summary: Delete orders
+      tags:
+        - orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+  /auth/login:
+    post:
+      operationId: postAuthLogin
+      tags:
+        - auth
+      responses:
+        "201":
+          description: Created
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
