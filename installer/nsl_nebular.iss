@@ -48,6 +48,11 @@ Name: "assoc_erd"; Description: "ผูกไฟล์ .erd รุ่นเก�
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; VC++ runtime แบบ app-local (build_installer.ps1 ก๊อป 64 บิตจาก System32 ไว้ที่ build\vcrt) ให้เปิดได้บนเครื่องที่ไม่เคยลง Visual C++ Redistributable
+Source: "..\build\vcrt\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\vcrt\msvcp140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\vcrt\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\build\vcrt\vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
 ; ไอคอนไฟล์โปรเจกต์ (.nsln) — ใช้เป็น DefaultIcon ของสกุลไฟล์
 Source: "..\windows\runner\resources\nsln_file_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 

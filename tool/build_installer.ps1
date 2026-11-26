@@ -33,8 +33,17 @@ if (-not (Test-Path (Join-Path $release 'nsl_nebular.exe'))) {
   throw "ไม่พบ $release\nsl_nebular.exe — build ก่อน (ไม่ใส่ -SkipBuild)"
 }
 
+# VC++ runtime (64 บิต) แบบ app-local ให้ตัวติดตั้งแนบไป
+$vcrt = Join-Path $root 'build\vcrt'
+New-Item -ItemType Directory -Force $vcrt | Out-Null
+$sys64 = if ([Environment]::Is64BitProcess) { "$env:WINDIR\System32" } else { "$env:WINDIR\Sysnative" }
+foreach ($d in 'msvcp140.dll','msvcp140_1.dll','vcruntime140.dll','vcruntime140_1.dll') {
+  Copy-Item (Join-Path $sys64 $d) $vcrt -Force
+}
+
 if (-not $Iscc) {
   $candidates = @(
+    "$env:LOCALAPPDATA\Programs\Inno Setup 7\ISCC.exe",
     (Get-Command ISCC.exe -ErrorAction SilentlyContinue | ForEach-Object { $_.Source }),
     "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
     "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",

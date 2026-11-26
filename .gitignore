@@ -52,3 +52,6 @@ app.*.map.json
 
 # ใช้เฉพาะเครื่อง: ชี้ NSL-UI-Core ในเครื่องแทน git
 pubspec_overrides.yaml
+
+# ทางลัดในเครื่อง
+*.lnk
