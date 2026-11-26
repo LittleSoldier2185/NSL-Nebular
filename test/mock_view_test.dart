@@ -221,6 +221,8 @@ void main() {
         ApiEndpoint(id: 'list', path: '/items', table: ApiTableRef(docId: w.mainEr.docId, tableId: 'it'), responses: [ApiResponse(status: 200)]),
         ApiEndpoint(id: 'make', method: ApiMethod.post, path: '/items', table: ApiTableRef(docId: w.mainEr.docId, tableId: 'it'), fields: [ApiField(id: 'f', name: 'name')], responses: [ApiResponse(status: 201)]),
       ]);
+    // ปิดข้อมูลตัวอย่างอัตโนมัติ (Phase 33) ให้ตารางที่ไม่มี seed เริ่มจาก 0 แถว
+    w.setMockSettings(w.mockSettings.copyWith(autoSample: false));
     await tester.pumpAndSettle();
     expect(tester.widget<OutlinedButton>(find.byKey(const ValueKey('mock-reset'))).onPressed, isNull, reason: 'หยุดอยู่ = รีเซ็ตไม่ได้');
     expect(find.byKey(const ValueKey('mock-changes')), findsNothing);
