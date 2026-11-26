@@ -151,14 +151,16 @@ void paintFlowchart(
       ..style = PaintingStyle.stroke
       ..strokeWidth = selected ? e.width + 1.4 : e.width
       ..strokeJoin = StrokeJoin.round
-      ..strokeCap = StrokeCap.round;
+      // ปลายมนใช้เฉพาะเส้นจุด ; เส้นอื่นปลายตัด เพื่อไม่ให้โผล่เข้าไปในหัวลูกศร
+      ..strokeCap = e.dash == FcDash.dotted ? StrokeCap.round : StrokeCap.butt;
+    final line = fcPath(roundedRoute(fcLineRoute(e, r), radius: 6));
     if (selected) {
-      canvas.drawPath(fcPath(roundedRoute(r, radius: 6)), Paint()
+      canvas.drawPath(line, Paint()
         ..color = C.primary.withValues(alpha: 0.25)
         ..style = PaintingStyle.stroke
         ..strokeWidth = e.width + 6);
     }
-    _strokePath(canvas, fcPath(roundedRoute(r, radius: 6)), paint, e.dash);
+    _strokePath(canvas, line, paint, e.dash);
     _arrow(canvas, e.endArrow, r[r.length - 2], r.last, paint);
     _arrow(canvas, e.startArrow, r[1], r.first, paint);
   }
@@ -197,7 +199,7 @@ void paintFlowchart(
 }
 
 void _arrow(Canvas canvas, FcArrow a, RoutePoint from, RoutePoint to, Paint line) {
-  final (filled, pts) = fcArrowHead(a, from, to, size: 9 + line.strokeWidth);
+  final (filled, pts) = fcArrowHead(a, from, to, size: fcArrowSize(line.strokeWidth));
   if (pts.isEmpty) return;
   final p = Path()..moveTo(pts[0].$1, pts[0].$2);
   for (final q in pts.skip(1)) {

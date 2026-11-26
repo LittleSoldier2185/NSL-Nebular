@@ -61,7 +61,7 @@ void paintScreenFlow(
     if (r == null) continue;
     final selected = e.id == selectedEdge;
     final color = C.text.withValues(alpha: 0.75);
-    final path = fcPath(roundedRoute(r, radius: 6));
+    final path = fcPath(roundedRoute(sfLineRoute(r), radius: 6));
     if (selected) {
       canvas.drawPath(path, Paint()
         ..color = C.primary.withValues(alpha: 0.25)
@@ -71,10 +71,10 @@ void paintScreenFlow(
     canvas.drawPath(path, Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = selected ? 3.2 : 1.8
+      ..strokeWidth = selected ? 3.2 : kSfEdgeWidth
       ..strokeJoin = StrokeJoin.round
-      ..strokeCap = StrokeCap.round);
-    final (_, pts) = fcArrowHead(FcArrow.arrow, r[r.length - 2], r.last, size: 10.8);
+      ..strokeCap = StrokeCap.butt); // ปลายตัด ไม่โผล่เข้าไปในหัวลูกศร
+    final (_, pts) = fcArrowHead(FcArrow.arrow, r[r.length - 2], r.last, size: kSfArrowSize);
     if (pts.isNotEmpty) {
       final p = Path()..moveTo(pts[0].$1, pts[0].$2);
       for (final q in pts.skip(1)) {

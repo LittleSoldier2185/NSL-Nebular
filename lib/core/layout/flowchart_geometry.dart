@@ -444,7 +444,7 @@ Map<String, List<RoutePoint>> fcRoutes(FlowchartDiagram d) {
     final route = List.of(pts);
     route[0] = fcSnapToOutline(a, _sideOf(a, pts.first), pts.first);
     route[route.length - 1] = fcSnapToOutline(b, _sideOf(b, pts.last), pts.last);
-    out[e.id] = route;
+    out[e.id] = fcRoomForArrows(e, route);
   }
   return out;
 }
@@ -502,6 +502,69 @@ String? fcEdgeAt(FlowchartDiagram d, double x, double y, {double tolerance = 7, 
     }
   }
   return (left: l - pad, top: t - pad, right: r + pad, bottom: b + pad);
+}
+
+/// ความยาวหัวลูกศรของเส้นหนา [width]
+double fcArrowSize(double width) => 9 + width;
+
+/// ระยะที่ต้องมีบนท่อนปลายเส้นที่มีหัวลูกศร: หัวลูกศร + รัศมีมุมโค้ง — สั้นกว่านี้มุมหักจะเข้าไปอยู่ในหัวลูกศร
+double fcArrowStub(FcEdge e, FcArrow a) => a == FcArrow.none ? 0 : fcArrowSize(e.width) + 6;
+
+/// ยืดท่อนสุดท้ายให้ยาวอย่างน้อย [need] โดยเลื่อนท่อนขวางก่อนถึงปลายถอยหลัง (จุดปลายทั้งสองอยู่ที่เดิม)
+/// ทำได้เฉพาะเส้นที่ท่อนก่อนท่อนขวางวิ่งทางเดียวกับท่อนปลาย ; เหลือท่อนนั้นไว้อย่างน้อย [keep] ; ที่ไม่พอ = ยืดเท่าที่มี
+List<RoutePoint> _stretchEnd(List<RoutePoint> pts, double need, double keep) {
+  final n = pts.length;
+  if (n < 4) return pts;
+  final a = pts[n - 4], b = pts[n - 3], c = pts[n - 2], d = pts[n - 1];
+  final dx = d.$1 - c.$1, dy = d.$2 - c.$2;
+  final len = math.sqrt(dx * dx + dy * dy);
+  if (len < 0.001 || len >= need) return pts;
+  final ux = dx / len, uy = dy / len;
+  final lead = (b.$1 - a.$1) * ux + (b.$2 - a.$2) * uy;
+  final across = (c.$1 - b.$1) * ux + (c.$2 - b.$2) * uy;
+  if (across.abs() > 0.5) return pts;
+  final shift = math.min(need - len, lead - keep);
+  if (shift <= 0) return pts;
+  return [...pts.take(n - 3), (b.$1 - ux * shift, b.$2 - uy * shift), (c.$1 - ux * shift, c.$2 - uy * shift), d];
+}
+
+/// เผื่อที่ให้หัวลูกศรทั้งสองปลาย (ปลายทางก่อน เพราะมีหัวลูกศรเป็นปกติ) ; stub 0 = ปลายนั้นไม่มีหัว
+List<RoutePoint> routeRoomForArrows(List<RoutePoint> pts, {required double endStub, double startStub = 0}) {
+  var out = _stretchEnd(pts, endStub, math.max(2, startStub));
+  if (startStub > 0) {
+    // เส้น 4 จุด ท่อนที่ยอมให้หดตอนยืดต้นทางคือท่อนปลายทาง จึงต้องเหลือที่ของหัวลูกศรปลายทางไว้
+    out = _stretchEnd(out.reversed.toList(), startStub, out.length == 4 ? math.max(2, endStub) : 2).reversed.toList();
+  }
+  return out;
+}
+
+/// ตัดปลายท้ายเส้นออก [cut] (ไม่เกินความยาวท่อนสุดท้าย)
+List<RoutePoint> _trimEnd(List<RoutePoint> pts, double cut) {
+  final a = pts[pts.length - 2], b = pts.last;
+  final dx = b.$1 - a.$1, dy = b.$2 - a.$2;
+  final len = math.sqrt(dx * dx + dy * dy);
+  if (len < 0.001) return pts;
+  final k = math.min(cut, len) / len;
+  return [...pts.take(pts.length - 1), (b.$1 - dx * k, b.$2 - dy * k)];
+}
+
+/// [routeRoomForArrows] ของเส้น Flowchart [e]
+List<RoutePoint> fcRoomForArrows(FcEdge e, List<RoutePoint> pts) =>
+    routeRoomForArrows(pts, endStub: fcArrowStub(e, e.endArrow), startStub: fcArrowStub(e, e.startArrow));
+
+/// ตัดตัวเส้นที่ปลาย [endCut] / ต้น [startCut] (0 = ไม่ตัด)
+List<RoutePoint> routeTrimForArrows(List<RoutePoint> pts, {double endCut = 0, double startCut = 0}) {
+  var out = pts;
+  if (endCut > 0) out = _trimEnd(out, endCut);
+  if (startCut > 0) out = _trimEnd(out.reversed.toList(), startCut).reversed.toList();
+  return out;
+}
+
+/// เส้นทางสำหรับ "วาดตัวเส้น": ปลายที่เป็นหัวลูกศรทึบจบที่ฐานหัวลูกศร ตัวเส้นจึงไม่ทะลุหัว/โผล่เลยปลายแหลม
+/// (ซ้อนไว้ครึ่งพิกเซลกันรอยต่อ) ; ตัวหัวลูกศรยังคิดจากเส้นทางเต็ม
+List<RoutePoint> fcLineRoute(FcEdge e, List<RoutePoint> route) {
+  final cut = fcArrowSize(e.width) - 0.5;
+  return routeTrimForArrows(route, endCut: e.endArrow == FcArrow.arrow ? cut : 0, startCut: e.startArrow == FcArrow.arrow ? cut : 0);
 }
 
 /// รูปหัวลูกศรที่ปลาย [to] ของช่วง [from]→[to] : (เส้นปิดเติมสี?, จุด) — none = ว่าง

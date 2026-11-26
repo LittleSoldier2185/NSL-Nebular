@@ -1524,6 +1524,7 @@ const Map<String, String> kEn = {
   'ล็อกอิน': 'Login',
   'ส่งออก OpenAPI': 'Export OpenAPI',
   'ส่งออก OpenAPI…': 'Export OpenAPI…',
+  'Flowchart และ Screen Flow: เส้นไม่ทะลุหัวลูกศรแล้ว (บนแคนวาส PNG และ SVG) และกล่องที่อยู่ชิดกันเลื่อนมุมหักให้พ้นหัวลูกศร': 'Flowchart and Screen Flow: connector lines no longer run through arrowheads (canvas, PNG and SVG), and bends between close boxes are moved clear of the arrowhead',
   'ส่งออก OpenAPI แบบ YAML…': 'Export OpenAPI as YAML…',
   'endpoint ที่ผูกไว้ถูกลบไปแล้ว': 'the linked endpoint was deleted',
   '{0} → endpoint {1}': '{0} → endpoint {1}',

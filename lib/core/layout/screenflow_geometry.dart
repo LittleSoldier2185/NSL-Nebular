@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../models/screenflow_model.dart';
+import 'flowchart_geometry.dart' show routeRoomForArrows, routeTrimForArrows;
 import 'layered_layout.dart';
 import 'ortho_route.dart';
 
@@ -31,6 +32,13 @@ int sfNodeColor(SfNode n) => n.color ?? kSfKindColors[n.kind]!;
   return (scale: s, dx: box.left + (box.width - fw * s) / 2, dy: box.top + (box.height - fh * s) / 2);
 }
 
+/// ความหนาเส้น และความยาวหัวลูกศร
+const double kSfEdgeWidth = 1.8;
+const double kSfArrowSize = 10.8;
+
+/// เส้นทางสำหรับวาดตัวเส้น: จบที่ฐานหัวลูกศร (ซ้อนครึ่งพิกเซลกันรอยต่อ)
+List<RoutePoint> sfLineRoute(List<RoutePoint> route) => routeTrimForArrows(route, endCut: kSfArrowSize - 0.5);
+
 /// ระยะห่างระหว่างชั้น/ระหว่างโหนดตอนจัดวางอัตโนมัติ
 const double kSfLayerGap = 110;
 const double kSfRowGap = 50;
@@ -55,7 +63,7 @@ Map<String, List<RoutePoint>> sfRoutes(ScreenFlowDiagram d) {
       continue;
     }
     final pts = raw[e.id];
-    if (pts != null && pts.length >= 2) out[e.id] = pts;
+    if (pts != null && pts.length >= 2) out[e.id] = routeRoomForArrows(pts, endStub: kSfArrowSize + 6);
   }
   return out;
 }

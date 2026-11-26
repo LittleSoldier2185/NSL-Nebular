@@ -123,11 +123,12 @@ String? exportFlowchartSvg(FlowchartDiagram d, {bool dark = false, String title 
     final r = routes[e.id];
     if (r == null) continue;
     final color = e.color != null ? hexRgb(e.color!) : th.text;
-    final segs = roundedRoute(r, radius: 6);
+    final segs = roundedRoute(fcLineRoute(e, r), radius: 6);
+    final faded = e.color == null;
     out.writeln('<path d="${_d(segs)}" fill="none" stroke="$color" stroke-width="${_n(e.width)}" '
-        'stroke-linejoin="round" stroke-linecap="round"${_dash(e.dash, e.width)}${e.color == null ? ' stroke-opacity="0.75"' : ''}/>');
-    out.write(_arrow(e.endArrow, r[r.length - 2], r.last, color, e.width));
-    out.write(_arrow(e.startArrow, r[1], r.first, color, e.width));
+        'stroke-linejoin="round" stroke-linecap="${e.dash == FcDash.dotted ? 'round' : 'butt'}"${_dash(e.dash, e.width)}${faded ? ' stroke-opacity="0.75"' : ''}/>');
+    out.write(_arrow(e.endArrow, r[r.length - 2], r.last, color, e.width, faded));
+    out.write(_arrow(e.startArrow, r[1], r.first, color, e.width, faded));
   }
 
   // ---- ป้ายเส้น ----
@@ -145,11 +146,11 @@ String? exportFlowchartSvg(FlowchartDiagram d, {bool dark = false, String title 
   return out.toString();
 }
 
-String _arrow(FcArrow a, RoutePoint from, RoutePoint to, String color, double width) {
-  final (filled, pts) = fcArrowHead(a, from, to, size: 9 + width);
+String _arrow(FcArrow a, RoutePoint from, RoutePoint to, String color, double width, bool faded) {
+  final (filled, pts) = fcArrowHead(a, from, to, size: fcArrowSize(width));
   if (pts.isEmpty) return '';
   final ps = pts.map((p) => '${_n(p.$1)},${_n(p.$2)}').join(' ');
   return filled
-      ? '<polygon points="$ps" fill="$color"/>\n'
+      ? '<polygon points="$ps" fill="$color"${faded ? ' fill-opacity="0.75"' : ''}/>\n'
       : '<polyline points="$ps" fill="none" stroke="$color" stroke-width="${_n(width)}" stroke-linejoin="round" stroke-linecap="round"/>\n';
 }

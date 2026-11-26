@@ -76,9 +76,9 @@ String? exportScreenFlowSvg(ScreenFlowDiagram d,
   for (final e in d.edges) {
     final r = routes[e.id];
     if (r == null) continue;
-    out.writeln('<path d="${svgPathData(roundedRoute(r, radius: 6))}" fill="none" stroke="${th.text}" stroke-opacity="0.75" '
-        'stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>');
-    final (_, pts) = fcArrowHead(FcArrow.arrow, r[r.length - 2], r.last, size: 10.8);
+    out.writeln('<path d="${svgPathData(roundedRoute(sfLineRoute(r), radius: 6))}" fill="none" stroke="${th.text}" stroke-opacity="0.75" '
+        'stroke-width="$kSfEdgeWidth" stroke-linejoin="round" stroke-linecap="butt"/>');
+    final (_, pts) = fcArrowHead(FcArrow.arrow, r[r.length - 2], r.last, size: kSfArrowSize);
     if (pts.isNotEmpty) {
       out.writeln('<polygon points="${pts.map((p) => '${svgNum(p.$1)},${svgNum(p.$2)}').join(' ')}" fill="${th.text}" fill-opacity="0.75"/>');
     }
